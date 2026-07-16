@@ -1,105 +1,21 @@
-# Sandbox 生命周期、Lease 与 Snapshot
+# Sandbox Lifecycle and Snapshot — v0.8.2
 
-## 1. Sandbox 状态机
+## Two state levels
 
-```text
-requested -> provisioning -> ready
-ready -> suspending -> suspended
-suspended -> resuming -> ready
-* -> terminating -> terminated
-* -> expired
-* -> failed
-```
+Provider transport attempt 返回 `SandboxOperationStatus`：accepted/running/succeeded/failed/cancelled/outcome_unknown。平台不得把 outcome_unknown 作为持久化终点；它必须原子转换为 SandboxOperation `reconciling`。
 
-Sandbox 状态与 ExecOperation 状态分离。
+平台逻辑聚合使用 `sandbox-operation-record:v2` 和 `contracts/state-machines/sandbox-operation-v2.json`，支持 retry、reconciliation deadline、manual review 和 abandoned。每个 Attempt 拥有新 attempt_id 与更高 fencing_token，旧响应被拒绝。
 
-## 2. ExecOperation
+## Lease and lifecycle
 
-```text
-accepted -> running
-running -> completed | failed | outcome_unknown
-running -> cancel_requested -> cancelled
-```
+SandboxRegistry 保存期望状态、租约、Slot 与代数；Provider Adapter 保存实际 Pod/VM/Container/endpoint。Lease 过期由 Temporal 定时器驱动 terminate/reconcile，不能依赖 Redis TTL 作为事实。
 
-Terminate 和 Exec 并发时：
+## Snapshot
 
-- Terminate 提升 Sandbox generation。
-- 未完成 Exec 收到取消。
-- 旧 Fencing Token 的 Exec Result 被拒绝。
-- 已发生但无法确认的外部副作用进入 Reconciliation。
+SnapshotManifest 固化 provider_revision_id、level、digest、size、content_reference 和兼容性。workspace 级 Snapshot 可跨符合 Contract 的 Provider 迁移；filesystem/process 级默认只在声明兼容时恢复。
 
-## 3. Lease
+Restore 是标准 mutation envelope：operation_id、attempt_id、fencing_token、idempotency_key、request_digest、deadline_at。恢复后的 Sandbox 使用新 sandbox_id 和显式 slot；Snapshot 本身不可变。
 
-每个 Sandbox 必须有明确 `lease_expires_at`。
+## Reconciliation
 
-Lease 到期流程：
-
-1. 发送 `sandbox.expiring`。
-2. 停止接受新 Exec/Session。
-3. 取消活动操作。
-4. 根据策略保存 Workspace Snapshot。
-5. 终止 Backend。
-6. 标记 expired/terminated。
-
-Lease Extension：
-
-- 幂等
-- expected_generation
-- 受 ExecutionBudget 和平台上限约束
-
-## 4. Snapshot Level
-
-### Workspace Snapshot
-
-v1 必须支持或明确声明不支持。
-
-包含：
-
-- `/workspace`
-- Path/Permission
-- Content Digest
-- Manifest
-- Optional Git metadata
-
-应尽量 Provider-neutral、可跨 Provider 恢复。
-
-### Filesystem Snapshot
-
-包含 Root Filesystem Delta 和 Workspace，通常绑定 Runtime Profile/Image。
-
-### Process Snapshot
-
-可选。
-
-可能绑定：
-
-- CPU Architecture
-- Kernel
-- Runtime version
-- Image Digest
-- Device/GPU
-- Network state
-
-必须声明 portable=false 或严格 Compatibility。
-
-## 5. Restore
-
-Restore 前校验：
-
-- Capability
-- Snapshot Digest
-- ProviderRevision
-- Runtime Profile
-- Architecture
-- Image
-- Security Policy
-- Tenant
-- Data residency
-
-不兼容返回：
-
-```text
-SANDBOX_RESTORE_INCOMPATIBLE
-```
-
-禁止悄悄降级为普通 Create，除非 Workflow 明确允许 Workspace-only fallback。
+Provider response 丢失时，先用 provider_operation_id/idempotency key 查询证据；不得盲目重试非幂等副作用。证据不足到 deadline 后进入人工复核；人工 Decision 必须 append-only、带 evidence references 和 digest。

@@ -1,0 +1,27 @@
+{
+  "machine_id": "sandbox-operation-record",
+  "version": 2,
+  "initial_state": "pending",
+  "terminal_states": ["succeeded", "failed", "cancelled", "abandoned"],
+  "transitions": [
+    { "from": "pending", "event": "attempt_started", "to": "running" },
+    { "from": "running", "event": "attempt_succeeded", "to": "succeeded" },
+    { "from": "running", "event": "attempt_known_failed", "to": "failed" },
+    { "from": "running", "event": "retryable_failure", "to": "retry_scheduled" },
+    { "from": "running", "event": "outcome_unknown", "to": "reconciling" },
+    { "from": "retry_scheduled", "event": "retry_due", "to": "running" },
+    { "from": "reconciling", "event": "evidence_succeeded", "to": "succeeded" },
+    { "from": "reconciling", "event": "evidence_failed", "to": "failed" },
+    { "from": "reconciling", "event": "retry_approved", "to": "retry_scheduled" },
+    { "from": "reconciling", "event": "deadline_expired", "to": "manual_review_required" },
+    { "from": "manual_review_required", "event": "resolve_success", "to": "succeeded" },
+    { "from": "manual_review_required", "event": "resolve_failure", "to": "failed" },
+    { "from": "manual_review_required", "event": "retry_approved", "to": "retry_scheduled" },
+    { "from": "manual_review_required", "event": "abandon", "to": "abandoned" },
+    { "from": "pending", "event": "cancel", "to": "cancelled" },
+    { "from": "running", "event": "cancel", "to": "cancelled" },
+    { "from": "retry_scheduled", "event": "cancel", "to": "cancelled" },
+    { "from": "reconciling", "event": "cancel", "to": "cancelled" },
+    { "from": "manual_review_required", "event": "cancel", "to": "cancelled" }
+  ]
+}

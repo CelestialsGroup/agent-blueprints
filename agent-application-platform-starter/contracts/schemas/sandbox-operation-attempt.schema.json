@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:sandbox-operation-attempt:v1",
+  "title": "SandboxOperationAttempt",
+  "type": "object",
+  "required": [
+    "operation_id", "attempt_id", "attempt_number", "fencing_token", "status",
+    "idempotency_key", "request_digest", "deadline_at", "created_at", "updated_at"
+  ],
+  "properties": {
+    "operation_id": { "type": "string", "minLength": 1 },
+    "attempt_id": { "type": "string", "minLength": 1 },
+    "attempt_number": { "type": "integer", "minimum": 1 },
+    "fencing_token": { "type": "integer", "minimum": 1 },
+    "status": {
+      "enum": [
+        "created", "dispatching", "running", "succeeded", "known_failed",
+        "outcome_unknown", "cancel_requested", "cancelled"
+      ]
+    },
+    "idempotency_key": { "type": "string", "minLength": 16, "maxLength": 200 },
+    "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "deadline_at": { "type": "string", "format": "date-time" },
+    "provider_operation_id": { "type": "string", "minLength": 1 },
+    "result_reference": { "type": "string", "minLength": 1 },
+    "error": {
+      "type": "object",
+      "required": ["code", "message", "retryable", "outcome"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{2,127}$" },
+        "message": { "type": "string" },
+        "retryable": { "type": "boolean" },
+        "outcome": { "enum": ["known_failed", "outcome_unknown"] },
+        "provider_code": { "type": "string" },
+        "details": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "completed_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "succeeded" } }, "required": ["status"] },
+      "then": { "required": ["result_reference", "completed_at"] }
+    },
+    {
+      "if": { "properties": { "status": { "const": "known_failed" } }, "required": ["status"] },
+      "then": {
+        "required": ["error", "completed_at"],
+        "properties": { "error": { "properties": { "outcome": { "const": "known_failed" } } } }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "outcome_unknown" } }, "required": ["status"] },
+      "then": {
+        "required": ["error"],
+        "properties": { "error": { "properties": { "outcome": { "const": "outcome_unknown" } } } }
+      }
+    }
+  ]
+}

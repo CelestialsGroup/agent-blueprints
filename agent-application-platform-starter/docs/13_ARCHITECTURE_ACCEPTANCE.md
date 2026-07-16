@@ -1,104 +1,27 @@
-# v0.8.1 架构验收
+# v0.8.2 Architecture Acceptance
 
-## Contract Tooling
+## Contract admission
 
-- [ ] 所有 Schema 有绝对 `$id`。
-- [ ] 跨 Schema `$ref` 可在标准 Registry 中解析。
-- [ ] SchemaReference Digest 与发布内容一致。
-- [ ] 固定工具版本。
-- [ ] 4 份 OpenAPI 0 error / 0 warning。
-- [ ] OpenAPI Bundle 成功。
+- [ ] `./scripts/bootstrap_contracts.sh` 在公共 Registry 和 Python 3.11/3.13 成功。
+- [ ] `make validate-all` 全绿，包括 Python/Node/Go Strict I-JSON。
+- [ ] 4 个 OpenAPI 0 error/0 warning 且 Bundle deterministic。
+- [ ] Contract Manifest Python/Node 一致。
+- [ ] Compatibility 明确为 frozen baseline pass 或首冻前 N/A。
+- [ ] Supply-chain Gate 全绿。
 
-## Identity / Session
+## Boundary acceptance
 
-- [ ] Service Access Token 有严格 Profile、audience 和 sender constraint。
-- [ ] client_app_id 只来自认证上下文。
-- [ ] WorkSession 使用一次性 Exchange + HttpOnly Cookie。
-- [ ] Cookie 写操作有 CSRF 防护。
-- [ ] JWT typ/aud/claims 验证互斥。
-- [ ] Delegated WorkSession 有显式 Scope、Policy 和 Audit。
+- [ ] Business/Platform 所有权无交叉事实源。
+- [ ] Provider 选择只经 Capability/Resolution/immutable Revision/Admission。
+- [ ] Sandbox 多 Slot 唯一且主 Slot 存在。
+- [ ] 稳定模型无 Pod/Namespace/Container/VM/Node/raw endpoint。
 
-## Grant
+## Reliability acceptance
 
-- [ ] Grant 单次消费，最大 TTL 300 秒。
-- [ ] JCS Digest 覆盖除 execution_grant 外的完整请求。
-- [ ] Python/Node/Go JCS Test Vector 完全一致。
-- [ ] Strict I-JSON 拒绝重复键、NaN/Infinity、Lone Surrogate 和不安全整数。
-- [ ] JWKS/Key 预注册，拒绝动态 Key URL。
-- [ ] Grant、Idempotency、WorkOrder、Workspace、Outbox 同事务。
+- [ ] Invocation 与 SandboxOperation 都有逻辑记录、append-only Attempt、fencing 和 reconciliation。
+- [ ] unknown outcome 可到达 success/failure/retry/manual review/abandoned，不存在永久悬空状态。
+- [ ] Outbox/Inbox、Event sequence、Artifact staging/finalization 和 Delivery Attempt 有数据库约束。
 
-## Workflow / Invocation
+## Production acceptance（不属于 Contract Gate）
 
-- [ ] WorkOrder 使用稳定 Temporal Workflow ID。
-- [ ] PostgreSQL/Temporal Reconciliation 定义完成。
-- [ ] Worker Versioning Profile 明确。
-- [ ] 每个 Invocation 消息带 Attempt ID 与 Fencing Token。
-- [ ] Retryable Failure 创建新 Attempt。
-- [ ] outcome_unknown 不自动重试。
-- [ ] Reconciliation 超时进入 Manual Review/Abandoned 终态。
-- [ ] 敏感和大 Payload 不进入 Temporal History。
-
-## Execution Mediation
-
-- [ ] DeerFlow 模型调用经过 Model Gateway。
-- [ ] 外部 Tool/MCP 调用经过 Tool Gateway 和 Invocation Ledger。
-- [ ] Sandbox 出站经过 Egress Gateway。
-- [ ] Execution Budget 可在运行时强制执行。
-
-## Event
-
-- [ ] SSE 使用 work_sequence。
-- [ ] Event 有 recorded_at 和 data_version。
-- [ ] Event Type Registry 固化 data Schema。
-- [ ] Cursor 过期返回 410。
-- [ ] 高频 Token Delta 不逐条持久化。
-
-## Capability / Plugin
-
-- [ ] Capability Schema 使用 URI + Digest。
-- [ ] Namespace Owner 和生命周期明确。
-- [ ] ProviderResolution 固化不可变 ProviderRevision。
-- [ ] Plugin 不自报 Trust。
-- [ ] Plugin 有 Publisher、Config Schema、Credential Requirements 和 Provenance。
-- [ ] 每种 Runtime Mode 有确定 Transport Binding。
-
-## Artifact / Delivery
-
-- [ ] ArtifactVersion 内容不可变。
-- [ ] Plugin 输出只进入 Staging。
-- [ ] 外部输入使用 Ingest/Connector，不接受任意 URL。
-- [ ] Callback 和 Delivery Target 预注册。
-- [ ] Webhook 有签名、重放窗口、幂等、重试和 DLQ。
-
-## Kubernetes / Operations
-
-- [ ] API 无状态，不依赖 Sticky Session。
-- [ ] Sandbox Provisioner 使用最小 RBAC。
-- [ ] NetworkPolicy 与 Egress Gateway 职责不混淆。
-- [ ] PDB 不被视为故障恢复方案。
-- [ ] RPO/RTO、Backpressure、Fairness、Retention、DR 已冻结。
-
-## Phase 0 完成证据
-
-- [ ] 架构依赖测试。
-- [ ] 跨租户负向测试。
-- [ ] 幂等/Grant 并发测试。
-- [ ] Event Sequence 并发测试。
-- [ ] Invocation Fencing 测试。
-- [ ] Artifact Commit 冲突测试。
-- [ ] Worker Replay/Versioning 测试骨架。
-
-## Sandbox Provider
-
-- [ ] DeerFlow Sandbox 和 sandbox-runtime 使用同一 Provider Contract。
-- [ ] SandboxSpec 不包含具体后端专用字段。
-- [ ] Capability Negotiation 无静默降级。
-- [ ] Create/Exec/Snapshot/Terminate 支持幂等、Attempt 和 Fencing。
-- [ ] Desired/Observed State 与 Generation 已定义。
-- [ ] Runtime endpoint 不直接暴露给浏览器。
-- [ ] Workspace 输出只进入 Artifact Staging。
-- [ ] Network 默认拒绝并经过 Egress Gateway。
-- [ ] Snapshot 明确 Level、Portable 和 Compatibility。
-- [ ] ProviderRevision 通过 Conformance。
-- [ ] RunManifest 使用 sandboxes[] 锁定多个 Sandbox Slot、Revision 和 Spec Digest。
-- [ ] RunManifest 必须包含 AgentRuntime、CapabilityResolution、Temporal Identity 和自摘要。
+- [ ] Phase 0A 真实链路、Temporal Replay、故障注入、安全隔离、容量/SLO、备份恢复演练和 Provider Conformance 均有运行证据。

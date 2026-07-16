@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:sandbox-operation-status:v1",
+  "title": "SandboxOperationStatus",
+  "type": "object",
+  "required": [
+    "operation_id", "attempt_id", "fencing_token", "sandbox_id", "type", "status", "observed_at"
+  ],
+  "properties": {
+    "operation_id": { "type": "string", "minLength": 1 },
+    "attempt_id": { "type": "string", "minLength": 1 },
+    "fencing_token": { "type": "integer", "minimum": 1 },
+    "sandbox_id": { "type": "string", "minLength": 1 },
+    "type": {
+      "enum": [
+        "create", "extend_lease", "exec", "cancel_exec", "snapshot", "restore",
+        "suspend", "resume", "terminate", "open_runtime_session"
+      ]
+    },
+    "status": { "enum": ["accepted", "running", "succeeded", "failed", "cancelled", "outcome_unknown"] },
+    "provider_operation_id": { "type": "string" },
+    "result_reference": { "type": "string" },
+    "error": {
+      "type": "object",
+      "required": ["code", "message", "retryable", "outcome"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{2,127}$" },
+        "message": { "type": "string" },
+        "retryable": { "type": "boolean" },
+        "outcome": { "enum": ["known_failed", "outcome_unknown"] },
+        "provider_code": { "type": "string" },
+        "details": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "observed_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "oneOf": [
+    {
+      "properties": {
+        "status": { "enum": ["accepted", "running", "cancelled"] },
+        "result_reference": {},
+        "error": {}
+      },
+      "not": { "anyOf": [{ "required": ["result_reference"] }, { "required": ["error"] }] }
+    },
+    {
+      "properties": { "status": { "const": "succeeded" }, "result_reference": {}, "error": {} },
+      "required": ["result_reference"],
+      "not": { "required": ["error"] }
+    },
+    {
+      "properties": {
+        "status": { "const": "failed" },
+        "result_reference": {},
+        "error": { "properties": { "outcome": { "const": "known_failed" } } }
+      },
+      "required": ["error"],
+      "not": { "required": ["result_reference"] }
+    },
+    {
+      "properties": {
+        "status": { "const": "outcome_unknown" },
+        "result_reference": {},
+        "error": { "properties": { "outcome": { "const": "outcome_unknown" } } }
+      },
+      "required": ["error"],
+      "not": { "required": ["result_reference"] }
+    }
+  ]
+}

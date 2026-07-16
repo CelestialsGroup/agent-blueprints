@@ -2,17 +2,16 @@
   "run_id": "run_01J00000000000000000000000",
   "work_order_id": "wrk_01J00000000000000000000000",
   "scenario": {
-    "id": "coding-agent",
+    "id": "scenario.coding",
     "version": "1.0.0",
-    "definition_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    "definition_digest": "sha256:1010101010101010101010101010101010101010101010101010101010101010"
   },
   "workflow": {
-    "id": "coding-agent-default",
-    "version": "1.0.0",
-    "build_id": "worker-2026-07-16.1",
-    "definition_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    "id": "workflow.agent-execution",
+    "version": "2.0.0",
+    "definition_build_id": "workflow-definition-2026-07-16.1",
+    "definition_digest": "sha256:2020202020202020202020202020202020202020202020202020202020202020"
   },
-  "worker_build_id": "worker-2026-07-16.1",
   "capability_resolutions": [
     {
       "resolution_id": "res_01J00000000000000000000000",
@@ -21,88 +20,109 @@
         "version": "1.0",
         "profile": "hardened"
       },
-      "selected_provider_instance_id": "spi_01J00000000000000000000000",
+      "selected_provider_instance_id": "spi_deerflow_builtin_sandbox",
       "routing_reason": "platform_default",
       "candidates_considered": [
-        "spi_01J00000000000000000000000"
+        "spi_deerflow_builtin_sandbox"
       ],
       "resolved_at": "2026-07-16T09:01:00Z",
-      "capability_definition_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "capability_definition_digest": "sha256:3030303030303030303030303030303030303030303030303030303030303030",
       "selected_provider_revision": {
         "provider_revision_id": "spr_01J00000000000000000000000",
-        "plugin_id": "sandbox-runtime",
-        "plugin_version": "0.1.0",
-        "manifest_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
-        "image_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
-        "configuration_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
-        "conformance_report_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+        "provider_revision_digest": "sha256:d10f165bca4ff63a9ef7a07ca5d4cecba7013477c26d90b2e9949edc4bf91b47",
         "provider_kind": "sandbox",
+        "plugin_id": "sandbox-provider.deerflow-built-in",
+        "plugin_version": "0.8.2",
+        "manifest_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
         "package_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-        "runtime_binding_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+        "image_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+        "runtime_binding_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "configuration_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
         "approved_permissions_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
-        "credential_binding_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
-        "certification_status": "certified"
+        "credential_binding_digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+        "conformance_report_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+        "admission_decision_id": "pad_01J00000000000000000000000",
+        "admission_decision_digest": "sha256:c4caa1fc53940a2dddd82e6e5cdfa0949da951809f867aae962fa13307bf5b27",
+        "admission_status": "certified"
       }
     }
   ],
   "agent_runtime": {
-    "provider_instance_id": "arp_01J00000000000000000000000",
-    "provider_revision_id": "arr_01J00000000000000000000000",
-    "plugin_id": "deerflow-runtime",
-    "plugin_version": "2.0.0",
-    "runtime_version": "2.0.0",
-    "package_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "runtime_binding_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-    "configuration_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
-    "approved_permissions_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
-    "credential_binding_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-    "governed_conformance_report_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
-    "image_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+    "provider_instance_id": "api_deerflow_runtime",
+    "provider_revision": {
+      "provider_revision_id": "apr_01J00000000000000000000000",
+      "provider_revision_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "provider_kind": "agent_runtime",
+      "plugin_id": "agent-runtime.deerflow",
+      "plugin_version": "0.8.2",
+      "manifest_digest": "sha256:abababababababababababababababababababababababababababababababab",
+      "package_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "runtime_binding_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "configuration_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "approved_permissions_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "credential_binding_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "conformance_report_digest": "sha256:1212121212121212121212121212121212121212121212121212121212121212",
+      "admission_decision_id": "pad_runtime_01J00000000000000000",
+      "admission_decision_digest": "sha256:1313131313131313131313131313131313131313131313131313131313131313",
+      "admission_status": "certified"
+    },
+    "runtime_version": "deerflow-2026.07",
+    "commit": "0123456789abcdef",
+    "governed_conformance_report_digest": "sha256:1212121212121212121212121212121212121212121212121212121212121212"
   },
-  "templates": [],
   "location": {
     "region_id": "ap-southeast-1",
-    "cluster_id": "agent-cluster-01",
-    "cell_id": "cell-sg-01",
-    "runtime_id": "runtime-sbx-01"
+    "cluster_id": "cluster-a",
+    "cell_id": "cell-1"
   },
-  "request_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
-  "execution_budget_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-  "policy_decision_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+  "request_digest": "sha256:4040404040404040404040404040404040404040404040404040404040404040",
+  "execution_budget_digest": "sha256:5050505050505050505050505050505050505050505050505050505050505050",
+  "policy_decision_digest": "sha256:6060606060606060606060606060606060606060606060606060606060606060",
   "event_schema_version": 2,
   "temporal": {
     "namespace": "agent-platform",
-    "workflow_id": "work-order/wrk_01J00000000000000000000000",
-    "workflow_run_id": "temporal-run-01J00000000000000000000000",
-    "workflow_type": "WorkOrderWorkflowV1",
-    "worker_deployment": "agent-orchestration",
+    "workflow_id": "wf-run-01J00000000000000000000000",
+    "workflow_run_id": "temporal-run-01J00000000000000000",
+    "workflow_type": "AgentExecutionWorkflow",
+    "worker_deployment": "agent-worker",
     "worker_build_id": "worker-2026-07-16.1",
     "versioning_behavior": "pinned"
   },
-  "run_manifest_digest": "sha256:5c3fb51f4f0325933985aa8640f65646c74d93664e3d01aef283c61d22788f34",
   "sandboxes": [
     {
-      "provider_instance_id": "spi_01J00000000000000000000000",
-      "provider_revision_id": "spr_01J00000000000000000000000",
+      "provider_instance_id": "spi_deerflow_builtin_sandbox",
+      "provider_revision": {
+        "provider_revision_id": "spr_01J00000000000000000000000",
+        "provider_revision_digest": "sha256:d10f165bca4ff63a9ef7a07ca5d4cecba7013477c26d90b2e9949edc4bf91b47",
+        "provider_kind": "sandbox",
+        "plugin_id": "sandbox-provider.deerflow-built-in",
+        "plugin_version": "0.8.2",
+        "manifest_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "package_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "image_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+        "runtime_binding_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "configuration_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "approved_permissions_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+        "credential_binding_digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+        "conformance_report_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+        "admission_decision_id": "pad_01J00000000000000000000000",
+        "admission_decision_digest": "sha256:c4caa1fc53940a2dddd82e6e5cdfa0949da951809f867aae962fa13307bf5b27",
+        "admission_status": "certified"
+      },
       "provider_api_version": "v1",
       "runtime_profile": "hardened",
-      "image_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
-      "sandbox_spec_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "sandbox_spec_digest": "sha256:7070707070707070707070707070707070707070707070707070707070707070",
       "required_capabilities": [
         {
           "id": "sandbox.exec",
           "version": "1.0",
           "profile": "hardened"
-        },
-        {
-          "id": "sandbox.terminal",
-          "version": "1.0"
         }
       ],
-      "conformance_report_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
       "sandbox_slot_key": "primary-code",
       "sandbox_id": "sbx_01J00000000000000000000000"
     }
   ],
-  "primary_sandbox_slot_key": "primary-code"
+  "primary_sandbox_slot_key": "primary-code",
+  "run_manifest_digest": "sha256:ab07120e87ecc13a7d3e1e75ddf62b6e1a1512a0afedef87c5e17e761832b6e4"
 }

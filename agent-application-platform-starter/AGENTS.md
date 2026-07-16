@@ -1,213 +1,84 @@
-# AGENTS.md
+# Agent Application Platform v0.8.2 — implementation rules
 
-本文件是 Codex 和其他编码 Agent 的最高优先级约束。
+## Authority
 
-## 1. 当前阶段
+`START_HERE.md`、本文件、`docs/40_V082_REVIEW_RESOLUTION.md` 与可执行契约是当前事实源。发生冲突时，Schema、状态机、数据库约束和 Gate 优先于叙述性文档。不得恢复 v0.8.1 以前的设计。
 
-只执行 `prompts/CODEX_PHASE0_BOOTSTRAP.md`，不得自行进入 Phase 1。
+## Frozen boundary impact check
 
-实施前必须运行：
+任何架构变更先分类：
+
+1. 文档澄清；
+2. 契约变更（Schema/OpenAPI/状态机）；
+3. 实现变更；
+4. 生产验证变更。
+
+涉及 Business/Platform 所有权、稳定内核字段、Provider 可替换性、可靠性语义或安全边界时，视为边界变更，必须更新契约、兼容性判定和审查报告。
+
+## Domain ownership
+
+- Business：User、Membership、Product、Order、Payment、Commercial Quota。
+- Agent Platform：WorkOrder、Workspace、Workflow、Invocation、Canonical Event、Artifact、Technical Usage、Delivery、Provider、Sandbox、Audit。
+- Redis 只允许 Cache、Presence、Wakeup；PostgreSQL/Temporal/Event/Artifact 元数据才是事实源。
+
+## Provider model
+
+```text
+Scenario
+ -> CapabilityDefinition
+ -> ProviderResolution
+ -> immutable ProviderRevision
+ -> ProviderAdmissionDecision
+ -> Plugin / Runtime / Sandbox Provider
+```
+
+- ProviderRevision 创建后按摘要不可变。
+- certification/revocation 是 append-only ProviderAdmissionDecision，不得回写 Revision。
+- RunManifest 固化 Revision 与当时有效 Admission Decision 的摘要快照。
+- html-anything、html-to-pptx、模型、工具、Runtime、Sandbox 均通过 Capability/Provider Port 解析，不得写死在稳定内核。
+
+## Reliability
+
+唯一承诺为 At-least-once + Idempotency + Fencing Token + Reconciliation + Transactional Outbox + Immutable Version。不得宣称全局 Exactly-once。
+
+```text
+Temporal durable history
++ PostgreSQL current state and ledgers
++ Outbox/Inbox
++ Append-only canonical event
++ Artifact staging/finalization
+```
+
+Temporal 决定编排历史；PostgreSQL 决定查询态和账本。任何双写必须经 Outbox/Inbox 或可重放协调器闭合。
+
+## Invocation and Sandbox operation
+
+逻辑 Invocation/Operation 与 Attempt 分离。每次网络尝试拥有唯一 attempt_id 和严格递增 fencing_token。响应丢失或结果未知必须进入 reconciling；超时进入 manual_review_required；最终只能 resolve success/failure、retry、cancel 或 abandon。所有人工结论必须带证据与不可变摘要。
+
+Sandbox Provider API 返回的是单次 transport status；平台的 SandboxOperation v2 才是持久化聚合状态机。
+
+## Sandbox isolation
+
+Workspace 通过 `sandboxes[]` 和唯一 `sandbox_slot_key` 支持 `primary-code`、`browser`、`desktop`、`subagent/*`、`isolated/*`。`primary_sandbox_slot_key` 必须恰好引用一个 Slot。
+
+稳定内核禁止保存 Kubernetes Pod/Namespace/Container ID、VM/Node ID 和原始 Runtime Endpoint。Runtime Session 只暴露短期、受授权、可审计的 Gateway Route。
+
+## Contract rules
+
+- JSON：Draft 2020-12、绝对 `$id`、Registry 解析、Strict I-JSON、RFC 8785 JCS。
+- 复用：SandboxSpec、ProviderRevisionSnapshot 等必须通过 `$ref` 复用，禁止复制展开。
+- 语义约束：由 `validate_semantics.py` 与反向 Fixture 执行。
+- OpenAPI：原始契约保留绝对 URN；Redocly 只 lint/bundle 由 Registry 投影生成的 `build/openapi-src`，结果必须 0 error/0 warning。
+- 兼容性：只与最新公开冻结基线比较。首个冻结基线前必须报告 N/A，不得写成 pass。
+- 供应链：Python hash lock、npm integrity、Actions full SHA、无提交 bytecode。
+
+## Admission and production claims
+
+必须运行：
 
 ```bash
 ./scripts/bootstrap_contracts.sh
 make validate-all
 ```
 
-任何契约、Bundle 或一致性检查失败，必须先修复。
-
-## 2. 系统边界
-
-Business Application 是以下数据的唯一事实源：
-
-- User / Login
-- Membership / Product
-- Order / Payment / Refund
-- Commercial Entitlement / Quota / Price
-
-Agent Platform 是以下数据的唯一事实源：
-
-- ClientApplication / InternalTenant
-- WorkOrder / Workspace
-- GrantConsumption / Idempotency
-- WorkflowRun / AgentRun / Invocation
-- CanonicalEvent / EventTypeRegistry
-- Artifact / ArtifactVersion / ArtifactStaging
-- TechnicalUsage / Delivery
-- ProviderRevision / Resolution
-- SandboxRegistry / SandboxOperation / SandboxLease
-
-严禁跨数据库查询和直接操作对方内部对象。
-
-## 3. 认证与授权
-
-- Service API 使用 OAuth2 Client Credentials。
-- 生产 Token 遵循 RFC 9068 Profile 或等价严格 Profile，并使用 audience restriction。
-- 推荐 mTLS 或 DPoP sender constraint。
-- `client_app_id` 只来自认证上下文。
-- Browser Workbench 使用一次性 Exchange + HttpOnly WorkSession Cookie。
-- 不把长期 Bearer Token 放入 URL、localStorage、sessionStorage 或 WebSocket Query。
-- 每次资源访问校验 Token Type、Scope、Tenant、WorkOrder Binding、Ownership 和 Session Revision。
-
-不同 JWT 必须使用互斥 `typ`、audience、Claims 和 Key Namespace：
-
-- `at+jwt`
-- `agent-execution-grant+jwt`
-- `agent-work-session+jwt`
-- `agent-plugin-invocation+jwt`
-
-## 4. ExecutionGrant
-
-- Compact JWS，算法白名单 EdDSA / ES256。
-- 单次消费，最大 TTL 300 秒。
-- 不信任 Token Header 中的动态 JWK/JWKS URL。
-- Request Digest 使用真正的 RFC 8785 JCS，覆盖完整 WorkOrder Request，唯一排除 `execution_grant`。
-- API 必须使用严格 I-JSON Parser，拒绝重复键、NaN/Infinity、Lone Surrogate 和不安全整数。
-- GrantConsumption、IdempotencyRecord、WorkOrder、Workspace 和 Start Outbox 同事务。
-
-## 5. Work、Workflow 与 Event
-
-- PostgreSQL 保存对外当前状态。
-- Temporal 保存 Durable Execution History。
-- WorkOrder Workflow 使用稳定 Workflow ID。
-- 对外状态变化由幂等 Domain Activity 写 PostgreSQL、Event 和 Outbox。
-- SSE 使用 WorkOrder 级 `work_sequence`，不得使用 AgentRun 局部序列。
-- Event 同时包含 `aggregate.sequence`、`occurred_at` 和 `recorded_at`。
-- Event `data` 必须由 Event Type Registry 的不可变 Schema 约束。
-- 不逐 Token 持久化模型 Delta。
-
-## 6. 外部副作用与 Invocation
-
-所有 Agent Runtime、Model、Tool、Plugin 和外部系统调用必须通过 Invocation Ledger。
-
-每个传输消息必须带：
-
-- invocation_id
-- invocation_attempt_id
-- fencing_token
-
-`outcome_unknown` 禁止盲目重试，必须 Reconcile。
-
-旧 Fencing Token 的结果不得覆盖新 Attempt。
-
-## 7. 执行治理
-
-平台管理的 SaaS Runtime 必须经过：
-
-- Model Gateway
-- Tool / MCP Gateway
-- Artifact Gateway
-- Sandbox Egress Gateway
-
-DeerFlow 或其他 Agent Runtime 不得绕过这些 Gateway 直接使用平台长期模型凭据或任意公网。
-
-## 8. Capability 与 Provider
-
-CapabilityDefinition 必须定义：
-
-- Owner Namespace
-- Immutable Schema URI + Digest
-- Request / Result / Error
-- Side Effect / Idempotency
-- Cancel / Progress / Status Query / Timeout
-- Artifact Contract
-- Lifecycle
-- Conformance Suite
-
-Plugin 只声明 `implements`。
-
-Run 锁定不可变 ProviderRevision，而不是可变 ProviderInstance。
-
-ProviderRevision 至少固定：
-
-- Plugin Version
-- Manifest / Package / Image Digest
-- Configuration Digest
-- Approved Permission Digest
-- Conformance Report Digest
-
-## 9. Plugin
-
-- Plugin 不可自行声明 Trust。
-- Plugin 不可访问平台数据库。
-- Plugin 只能写 Artifact Staging。
-- Plugin Manifest 必须声明 Publisher、Configuration Schema、Credential Requirements 和 Provenance。
-- Runtime Mode 仅允许 `service`、`job`、`sandbox_cli`、`mcp`、`remote_service`。
-- 每种 Mode 必须遵守 `docs/30_PLUGIN_MODE_BINDINGS.md`。
-
-## 10. Artifact 与 Delivery
-
-- ArtifactVersion 内容不可变。
-- 外部输入使用 Ingest Session、已有 Artifact 或预注册 Connector。
-- WorkOrder 禁止任意 Input URL、Callback URL 和 Delivery Upload URL。
-- Callback 和 Delivery Target 必须预注册。
-- Webhook 使用 mTLS 或 HTTP Message Signature，并按 delivery_id/webhook_id 幂等。
-
-## 11. Kubernetes
-
-- Agent API 无状态，不依赖 Sticky Session。
-- Redis 不是 Event 或 Session 权威存储。
-- Sandbox 生命周期独立。
-- 只有专用 Sandbox Provisioner 拥有最小 Kubernetes RBAC。
-- Sandbox/Plugin 任意出站经 Egress Gateway。
-- Migration 使用独立 Job。
-- Kubernetes RollingUpdate 不替代 Temporal Worker Versioning。
-- Provider 下线先进入 draining。
-
-## 12. Contract First
-
-Source of Truth：
-
-- OpenAPI 3.1.1
-- JSON Schema 2020-12
-- Transition Tables
-- ADR
-
-必须满足：
-
-- 4 份 OpenAPI Redocly 0 error / 0 warning
-- Schema 使用绝对 `$id`
-- 跨 Schema `$ref` 可移植
-- SchemaReference 带 URI、Digest、Dialect
-- 正向和反向 Fixtures
-- OpenAPI Bundle 成功
-- 不使用 `@latest` 或未固定工具版本
-
-## 13. 技术基线
-
-除非先创建 ADR，不得改变：
-
-- Agent API / Worker：Go
-- Web：Next.js / React
-- Workflow：Temporal
-- Current State：PostgreSQL
-- Artifact Blob：S3-compatible
-- Cache/Presence/Wakeup：Redis
-- DeerFlow：独立 Python Runtime Service
-
-## 14. Sandbox Provider Contract
-
-- SandboxRegistry、Lease、Operation、RuntimeSession 和 Usage 属于稳定内核。
-- DeerFlow Built-in Sandbox 与 `sandbox-runtime` 都必须通过 SandboxProvider Port 接入。
-- Agent Platform 不得依赖 DeerFlow、Kubernetes、CRI、containerd、VM 或 Apple Container 专用字段。
-- SandboxSpec 只能由 Agent Platform 根据 ExecutionBudget、Policy 和 Capability 生成。
-- Provider 必须支持 Capability Negotiation，不支持时明确拒绝，禁止静默降级。
-- 所有修改操作必须继承 SandboxMutationEnvelope，携带 operation_id、attempt_id、fencing_token、idempotency_key、request_digest 和 deadline_at。
-- Provider 只返回内部 Runtime Endpoint，浏览器连接必须经过 Runtime Gateway。
-- Workspace 固定语义为 `/inputs`、`/workspace`、`/outputs`、`/tmp`。
-- Sandbox 输出只能进入 Artifact Staging。
-- 默认网络 none/restricted，任意出站必须经过 Egress Gateway。
-- ProviderRevision 必须通过 Sandbox Conformance Profile。
-- RunManifest 必须锁定 Sandbox ProviderRevision、Runtime Profile、Spec Digest 和 Conformance Report Digest。
-- `sandbox-runtime` 只有在替代 Kubernetes Node Runtime 时才需要实现 CRI；普通 Provider 不需要。
-
-RunManifest 使用 `sandboxes[]` 锁定多个 Sandbox Slot，并用
-`primary_sandbox_slot_key` 标识默认工作环境。禁止重新收缩为单一 Sandbox 字段。
-
-## 15. 可复现 Run 与重试
-
-- RunManifest 必须包含 AgentRuntime、至少一个 CapabilityResolution、Temporal Identity 和至少一个 Sandbox Slot。
-- ProviderRevision 必须 certified，并包含非空 Conformance。
-- RunManifest 使用 RFC 8785 自摘要，任何不可变 Revision/Digest 缺失都必须拒绝。
-- Retryable Failure 创建新的 InvocationAttempt；禁止修改旧 Attempt。
-- Reconciliation 超时进入 Manual Review，不能永久停留在 outcome_unknown/reconciling。
-- Manual Review 只能 resolve_success、resolve_failure 或 abandon，并保存 Evidence 与 Audit。
+公共 CI 全绿前不得冻结、不得进入 Phase 1。即使 Contract Gate 全绿，也只证明契约可接纳，不证明生产可靠性。

@@ -1,0 +1,9 @@
+{
+  "base": "examples/contracts/run-manifest-v2.json",
+  "cases": [
+    { "id": "duplicate-sandbox-slot", "mutation": "duplicate_sandbox_slot" },
+    { "id": "missing-primary-slot", "mutation": "missing_primary_slot" },
+    { "id": "wrong-self-digest", "mutation": "wrong_run_manifest_digest" },
+    { "id": "conflicting-revision-snapshot", "mutation": "conflicting_revision_snapshot" }
+  ]
+}

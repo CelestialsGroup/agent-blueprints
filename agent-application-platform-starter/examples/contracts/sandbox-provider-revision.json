@@ -1,35 +1,27 @@
 {
   "provider_revision_id": "spr_01J00000000000000000000000",
-  "provider_instance_id": "spi_01J00000000000000000000000",
-  "plugin_id": "sandbox-runtime",
-  "plugin_version": "0.1.0",
+  "provider_revision_digest": "sha256:d10f165bca4ff63a9ef7a07ca5d4cecba7013477c26d90b2e9949edc4bf91b47",
+  "provider_instance_id": "spi_deerflow_builtin_sandbox",
+  "plugin_id": "sandbox-provider.deerflow-built-in",
+  "plugin_version": "0.8.2",
   "manifest_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
   "package_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
   "image_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
   "configuration_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
   "approved_permissions_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
-  "credential_binding_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+  "runtime_binding_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+  "credential_binding_digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+  "provider_kind": "sandbox",
   "conformance": [
     {
       "capability": "sandbox.exec",
       "version": "1.0",
+      "profile": "hardened",
       "suite_version": "1.0.0",
       "status": "passed",
-      "report_digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
-      "profile": "hardened"
-    },
-    {
-      "capability": "sandbox.terminal",
-      "version": "1.0",
-      "suite_version": "1.0.0",
-      "status": "passed",
-      "report_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
-      "profile": null
+      "report_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888"
     }
   ],
-  "created_at": "2026-07-16T09:00:00Z",
-  "provider_kind": "sandbox",
-  "sandbox_conformance_report_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
-  "runtime_binding_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
-  "certification_status": "certified"
+  "sandbox_conformance_report_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+  "created_at": "2026-07-16T09:00:00Z"
 }

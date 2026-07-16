@@ -1,0 +1,10 @@
+{
+  "case_id": "src_01J00000000000000000000000",
+  "operation_id": "sop_01J00000000000000000000000",
+  "attempt_id": "soa_01J00000000000000000000000",
+  "status": "manual_review",
+  "deadline_at": "2026-07-16T10:06:00Z",
+  "opened_at": "2026-07-16T10:05:00Z",
+  "updated_at": "2026-07-16T10:06:00Z",
+  "evidence_references": ["audit://sandbox/provider-query/0001"]
+}

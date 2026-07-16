@@ -1,0 +1,7 @@
+{
+  "contract_line": "agent-application-platform",
+  "status": "unfrozen",
+  "frozen_git_ref": null,
+  "policy": "Compare against the latest publicly admitted frozen baseline. Before the first frozen baseline, compatibility is N/A and must never be reported as pass.",
+  "updated_for": "v0.8.2"
+}

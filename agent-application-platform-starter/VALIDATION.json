@@ -1,30 +1,30 @@
 {
-  "baseline": "v0.8.1",
+  "baseline": "v0.8.2",
   "status": "candidate_pending_public_ci",
-  "generated_at": "2026-07-16T03:59:29.136581Z",
-  "offline_validation": {
-    "status": "passed",
-    "files": 283,
-    "portable_schemas": 104,
-    "json_files": 148,
-    "yaml_files": 26,
-    "markdown_files": 84,
-    "openapi_documents_structurally_audited": 4,
-    "valid_fixtures": 27,
+  "validated_at": "2026-07-16",
+  "local_validation": {
+    "public_bootstrap_python_3_12": "passed",
+    "portable_schemas": 111,
+    "valid_fixtures": 32,
     "invalid_schema_fixtures": 11,
-    "invalid_semantic_fixtures": 3,
-    "invalid_ijson_fixtures": 4,
-    "node_jcs_vectors": 5,
-    "go_jcs_vectors": 5,
-    "contract_manifest_resources": 111,
-    "contract_manifest_digest": "sha256:68577ac45d555ff509a7c0e73b71dfd751eabbf409908f2e9ec1f2ac3acf529f"
+    "invalid_semantic_fixtures": 5,
+    "strict_ijson_vectors_python": "5_valid_5_invalid_passed",
+    "strict_ijson_vectors_node": "5_valid_5_invalid_passed",
+    "strict_ijson_vectors_go": "not_run_toolchain_unavailable",
+    "openapi_documents": 4,
+    "openapi_errors": 0,
+    "openapi_warnings": 0,
+    "openapi_bundle_deterministic": true,
+    "contract_manifest_resources": 119,
+    "compatibility": "not_applicable_no_frozen_baseline"
   },
   "pending_public_ci": [
-    "public_pypi_bootstrap",
-    "official_python_rfc8785_vectors",
-    "npm_ci_public_registry",
-    "redocly_lint",
-    "redocly_deterministic_bundle",
-    "github_actions_python_matrix"
-  ]
+    "python_3_11_matrix",
+    "python_3_13_matrix",
+    "node_22_16",
+    "go_1_23_2_strict_ijson",
+    "gofmt_gate",
+    "deterministic_bundle_recheck"
+  ],
+  "production_ready": false
 }

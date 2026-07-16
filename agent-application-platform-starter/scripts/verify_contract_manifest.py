@@ -4,46 +4,55 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
 import rfc8785
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST_PATH = ROOT / "contracts/compatibility/v0.8.1-contract-manifest.json"
+MANIFEST = ROOT / "contracts/compatibility/v0.8.2-contract-manifest.json"
 
 
-def digest_bytes(value: bytes) -> str:
+def sha(value: bytes) -> str:
     return "sha256:" + hashlib.sha256(value).hexdigest()
 
 
-manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+def inventory() -> list[dict[str, Any]]:
+    paths = [
+        *sorted((ROOT / "contracts/schemas").glob("*.json")),
+        *sorted((ROOT / "examples/schemas").glob("*.json")),
+        *sorted((ROOT / "contracts/openapi").glob("*.yaml")),
+        *sorted((ROOT / "contracts/state-machines").glob("*.json")),
+        *sorted((ROOT / "contracts/testdata").rglob("*")),
+        ROOT / "docs/23_STATE_MACHINE_SPEC.md",
+        ROOT / "docs/26_DATA_MODEL_INVARIANTS.md",
+    ]
+    result: list[dict[str, Any]] = []
+    for path in paths:
+        if not path.is_file():
+            continue
+        relative = path.relative_to(ROOT).as_posix()
+        if path.name.endswith(".schema.json"):
+            value = json.loads(path.read_text(encoding="utf-8"))
+            result.append({"path": relative, "kind": "json-schema", "id": value["$id"], "digest": sha(rfc8785.dumps(value))})
+        else:
+            result.append({"path": relative, "kind": "governance", "id": relative, "digest": sha(path.read_bytes())})
+    return sorted(result, key=lambda item: item["path"])
+
+
+resources = inventory()
+resources_digest = sha(rfc8785.dumps(resources))
+if "--print-values" in sys.argv:
+    print(json.dumps({"resource_count": len(resources), "resources_digest": resources_digest}))
+    raise SystemExit(0)
+
+manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+if manifest["resource_count"] != len(resources) or manifest["resources_digest"] != resources_digest:
+    raise AssertionError("Contract inventory changed without manifest refresh")
 unsigned = copy.deepcopy(manifest)
-expected_manifest_digest = unsigned.pop("manifest_digest")
-actual_manifest_digest = digest_bytes(rfc8785.dumps(unsigned))
-if actual_manifest_digest != expected_manifest_digest:
-    raise AssertionError(
-        f"Contract manifest self-digest mismatch: "
-        f"{actual_manifest_digest} != {expected_manifest_digest}"
-    )
-
-for resource in manifest["resources"]:
-    path = ROOT / resource["path"]
-    if not path.exists():
-        raise AssertionError(f"Missing manifest resource: {resource['path']}")
-    if resource["kind"] == "json-schema":
-        value: Any = json.loads(path.read_text(encoding="utf-8"))
-        actual = digest_bytes(rfc8785.dumps(value))
-        if value.get("$id") != resource["id"]:
-            raise AssertionError(f"Schema ID changed: {resource['path']}")
-    else:
-        actual = digest_bytes(path.read_bytes())
-    if actual != resource["digest"]:
-        raise AssertionError(
-            f"Contract resource changed without manifest update: "
-            f"{resource['path']}: {actual} != {resource['digest']}"
-        )
-
-print(
-    f"Verified immutable contract manifest with {len(manifest['resources'])} resources."
-)
+expected = unsigned.pop("manifest_digest")
+actual = sha(rfc8785.dumps(unsigned))
+if actual != expected:
+    raise AssertionError(f"Manifest self-digest mismatch: {actual} != {expected}")
+print(f"Verified v0.8.2 contract manifest over {len(resources)} governed resources.")

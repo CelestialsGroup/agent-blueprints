@@ -1,0 +1,8 @@
+{
+  "operation_id": "sop_01J00000000000000000000000",
+  "attempts": [
+    { "attempt_id": "attempt-1", "attempt_number": 1, "fencing_token": 2 },
+    { "attempt_id": "attempt-2", "attempt_number": 2, "fencing_token": 2 }
+  ],
+  "expected_error": "fencing_token_not_monotonic"
+}

@@ -1,113 +1,26 @@
-# v0.8.1 架构基线
+# v0.8.2 Architecture Baseline Candidate
 
-## 1. 总体结构
+Agent Application Platform 为多个 Business Application 提供受治理的 Agent 执行、工作流、Sandbox、Artifact 和 Delivery 能力。Business 与 Platform 不共享领域数据库。
 
-```text
-Business Applications
-        │ Sender-constrained Service OAuth + ExecutionGrant
-        ▼
-Agent Access Gateway
-        │
-Agent Control Plane
-  WorkOrder / Workflow / Invocation / Event / Artifact / Delivery
-        │
-        ├── Execution Mediation
-        │     Model Gateway / Tool Gateway / Egress Gateway
-        │
-        ├── Execution Plane
-        │     DeerFlow / Sandbox / Plugin / Runtime Gateway
-        │
-        └── Artifact Workspace
-              Ingest / Preview / Edit / Version / Convert / Deliver
-```
+## Ownership
 
-## 2. 稳定内核
+- Business：User、Membership、Product、Order、Payment、Commercial Quota。
+- Platform：WorkOrder、Workspace、Workflow、Invocation、Event、Artifact、Technical Usage、Delivery、Provider、Sandbox、Audit。
 
-- Identity and Object Authorization
-- ExecutionGrant Consumption
-- Idempotency
-- WorkOrder/Workspace
-- Workflow State
-- Invocation Ledger
-- Event Store/Registry
-- Artifact Registry/Version/Staging
-- Technical Usage
-- Delivery/Callback Registry
-- Audit
+## Stable kernel and execution plane
 
-## 3. 可插拔边界
+稳定内核只保存可复现、可审计、与后端无关的标识和状态。DeerFlow、Sandbox 后端、模型、工具、Renderer/Converter 都是 Provider Adapter。`ProviderRevision + ProviderAdmissionDecision + RunManifest` 固化一次 Run 的可重放输入。
 
-- Agent Runtime
-- Sandbox
-- Model Provider
-- Tool/MCP Provider
-- Template
-- Renderer
-- Editor
-- Converter
-- Storage Connector
-- Channel
+## Persistence and reliability
 
-## 4. 强制治理
+Temporal 保存 Durable Workflow History；PostgreSQL 保存当前状态、Ledger、Outbox/Inbox 和元数据；S3-compatible Storage 保存 Artifact Blob；Redis 仅 Cache/Presence/Wakeup。
 
-平台管理的 SaaS 运行必须经过：
+系统承诺 At-least-once、Idempotency、Fencing、Reconciliation、Transactional Outbox 和 Immutable Version，不承诺全局 Exactly-once。
 
-```text
-Model Gateway
-Tool Gateway
-Sandbox Egress Gateway
-Artifact Gateway
-```
+## Sandbox
 
-未通过 Governed Runtime Conformance 的 Agent Runtime 不能用于公共 SaaS。
+Workspace 拥有多个 Sandbox Slot。DeerFlow Built-in Sandbox 与未来 `sandbox-runtime` 实现相同 Contract；稳定内核禁止后端基础设施标识和 raw endpoint。
 
-## 5. 可靠性
+## Status
 
-```text
-Temporal Durable Workflow
-+ PostgreSQL Current State
-+ Invocation Ledger
-+ Outbox / Inbox
-+ Append-only Event
-+ Artifact Staging
-```
-
-不承诺全局 Exactly-once。
-
-## 6. 多节点
-
-- API 无状态
-- WorkOrder Event Cursor
-- Runtime Gateway
-- 独立 Sandbox
-- Temporal Worker Versioning
-- Provider Revision Lock
-- Migration Job
-- Cell/Cluster 预留
-
-## 7. 基线边界
-
-v0.8.1 是待公共 CI 准入的 Phase 0 Contract Hardening Candidate，不等同于生产实现已通过验证。
-
-生产可靠性仍必须由：
-
-- 实现测试
-- 故障注入
-- 性能测试
-- 安全测试
-- 恢复演练
-
-证明。
-
-## 8. Sandbox 可替换边界
-
-```text
-Stable Kernel
-  SandboxRegistry / Lease / Operation / RuntimeSession / Usage
-        ↓
-Sandbox Provider Contract
-        ↓
-DeerFlow Sandbox Adapter | sandbox-runtime
-```
-
-Sandbox 后端可替换，但生命周期、授权、事件、Artifact 和前端协议保持稳定。
+v0.8.2 是 public CI admission candidate，不是已冻结基线，更不是 Production Ready。

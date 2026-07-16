@@ -1,56 +1,24 @@
-# Agent Application Platform v0.8.1
+# Agent Application Platform v0.8.2
 
-一个可被多个业务产品复用的通用 Agent 工作、Artifact 和交付平台。
+面向多个 Business Application 的通用 Agent 执行、Workflow、Sandbox、Artifact 与 Delivery 平台。
 
-## 业务与 Agent 分离
+Business 拥有 User/Membership/Product/Order/Payment/Commercial Quota；Agent Platform 拥有 WorkOrder/Workflow/Invocation/Event/Artifact/Technical Usage/Delivery/Provider/Sandbox。双方通过版本化契约解耦。
 
-Business Application 负责用户、会员、商品、订单和商业计费。
-
-Agent Platform 负责 WorkOrder、Workflow、Agent Runtime、Sandbox、Plugin、Artifact、Technical Usage 和 Delivery。
-
-## 扩展关系
+扩展模型：
 
 ```text
-Scenario
-  -> CapabilityDefinition
-  -> ProviderResolution
-  -> Immutable ProviderRevision
-  -> PluginInstallation
+Scenario -> CapabilityDefinition -> ProviderResolution
+         -> immutable ProviderRevision + ProviderAdmissionDecision
+         -> Plugin / Runtime / Sandbox Provider
 ```
 
-## 安全执行
+默认实现为 DeerFlow、Temporal、PostgreSQL、S3-compatible Storage 和 DeerFlow Built-in Sandbox；未来 `sandbox-runtime` 实现同一 Sandbox Provider Contract。html-anything、html-to-pptx 等能力是可独立安装和替换的 Provider/Plugin。
 
-公共 SaaS Agent Runtime 必须经过：
-
-- Model Gateway
-- Tool/MCP Gateway
-- Sandbox Egress Gateway
-- Artifact Gateway
-
-## 默认实现
-
-- Agent Runtime：DeerFlow
-- Durable Workflow：Temporal
-- State：PostgreSQL
-- Artifact Blob：S3-compatible Object Storage
-- HTML：html-anything Plugin
-- PPTX：html-to-pptx Job Plugin
-- Sandbox：DeerFlow built-in，后续替换 sandbox-runtime
-
-## 校验
+校验：
 
 ```bash
-python3 -m pip install -r requirements-contracts.txt
-npm ci
-./scripts/lint_contracts.sh
-npm run bundle:openapi
+./scripts/bootstrap_contracts.sh
+make validate-all
 ```
 
-本版本是 Phase 0 实施基线，不是未经实现验证即可直接上线的产品。
-
-
-## Sandbox Provider
-
-`DeerFlow Built-in Sandbox` 与未来的 `sandbox-runtime` 通过同一
-`Sandbox Provider Contract` 接入。平台核心不依赖 Kubernetes Pod、
-CRI、containerd、MicroVM 或 Apple Container 专用字段。
+当前是 **Ready for public CI admission** 的候选版本；公共 CI 通过前不冻结，也不代表 Production Ready。详情从 `START_HERE.md` 开始。

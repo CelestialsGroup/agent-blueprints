@@ -1,2 +1,4 @@
 extends:
   - recommended
+rules:
+  no-required-schema-properties-undefined: error

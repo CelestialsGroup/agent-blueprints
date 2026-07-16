@@ -8,6 +8,9 @@ on:
 permissions:
   contents: read
 
+env:
+  CONTRACT_ROOT: ${{ vars.AGENT_PLATFORM_CONTRACT_ROOT || '.' }}
+
 jobs:
   validate:
     name: Contract and JCS validation
@@ -17,39 +20,38 @@ jobs:
       matrix:
         python-version: ["3.11", "3.13"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
+          cache-dependency-path: ${{ env.CONTRACT_ROOT }}/requirements-contracts-v0.8.2.txt
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "22.16.0"
           registry-url: https://registry.npmjs.org/
           cache: npm
+          cache-dependency-path: ${{ env.CONTRACT_ROOT }}/package-lock.json
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32
         with:
           go-version: "1.23.2"
-          cache-dependency-path: scripts/jcs/go/go.mod
+          cache-dependency-path: ${{ env.CONTRACT_ROOT }}/scripts/jcs/go/go.mod
 
-      - name: Create Python environment
-        run: |
-          python -m venv .venv
-          .venv/bin/python -m pip install --upgrade pip
-          .venv/bin/python -m pip install \
-            --index-url https://pypi.org/simple \
-            -r requirements-contracts.txt
-
-      - name: Install Node tools from public registry
-        run: npm ci --registry https://registry.npmjs.org/
+      - name: Bootstrap contract toolchain
+        working-directory: ${{ env.CONTRACT_ROOT }}
+        run: ./scripts/bootstrap_contracts.sh
 
       - name: Validate all contracts
+        working-directory: ${{ env.CONTRACT_ROOT }}
         run: make validate-all
 
       - name: Verify generated bundles are deterministic
+        working-directory: ${{ env.CONTRACT_ROOT }}
         run: |
           cp -R build /tmp/build-first
           rm -rf build
@@ -57,8 +59,8 @@ jobs:
           diff -ru /tmp/build-first build
 
       - name: Upload bundled contracts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
         with:
           name: openapi-bundles-python-${{ matrix.python-version }}
-          path: build/
+          path: ${{ env.CONTRACT_ROOT }}/build/
           if-no-files-found: error

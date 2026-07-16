@@ -1,67 +1,34 @@
-# Contract Validation Report
+# Contract Validation Report — v0.8.2
 
-Baseline: **v0.8.1 Contract Hardening Candidate**  
-Generated at: 2026-07-16T03:59:29.136581Z
+Status: **local admission evidence complete except Go/public matrix; candidate is not frozen**
 
-## Offline validation: passed
+Validation date: 2026-07-16
 
-- Package files: 283
-- Portable JSON Schema resources: 104
-- JSON files parsed: 148
-- YAML files parsed: 26
-- Markdown files scanned: 84
-- OpenAPI documents structurally audited: 4
-- Positive fixtures: 27
-- Schema-negative fixtures: 11
-- Semantic-negative fixtures: 3
-- Strict I-JSON raw-negative fixtures: 4
-- Node RFC 8785 valid vectors: 5
-- Go RFC 8785 valid vectors: 5
-- Contract Manifest resources: 111
-- Contract Manifest digest:
-  `sha256:68577ac45d555ff509a7c0e73b71dfd751eabbf409908f2e9ec1f2ac3acf529f`
+## Executed in this workspace
 
-## Commands actually run
+| Check | Result |
+|---|---|
+| Public Bootstrap with CPython 3.12 and npm | pass; Python hashes and npm integrity enforced |
+| Supply-chain Gate | pass |
+| Source-only static audit | pass: 164 JSON, 21 YAML, 4 OpenAPI, 88 Markdown at execution time |
+| JSON Schema | pass: 111 portable schemas |
+| Fixtures | pass: 32 valid, 11 schema-invalid |
+| Semantic invariants | pass: 5 negative fixtures |
+| Contract Manifest | pass in Python and Node: 119 governed resources |
+| Compatibility | N/A: no publicly admitted frozen baseline; comparator self-tests pass |
+| Python JCS/Strict I-JSON | pass: 5 valid + 5 invalid |
+| Node JCS/Strict I-JSON | pass: 5 valid + 5 invalid |
+| OpenAPI | pass: 4 documents, each 0 errors / 0 warnings |
+| OpenAPI Bundle | pass: 4 bundles; second generation byte-identical |
+| Go JCS/Strict I-JSON | not executed locally: Go toolchain unavailable |
 
-```bash
-python3 scripts/check_supply_chain.py
-python3 scripts/offline_static_audit.py
-node scripts/jcs/verify_node.mjs
-cd scripts/jcs/go && go test ./...
-python3 scripts/validate_contracts.py
-node scripts/verify_contract_manifest.mjs
-python3 -m compileall -q scripts
-```
+Local runtime differed from the public matrix (CPython 3.12, Node 24.14). This is useful local evidence but does not substitute for the pinned GitHub Actions Python 3.11/3.13, Node 22.16 and Go 1.23.2 run.
 
-The local container already included:
-
-```text
-jsonschema 4.26.0
-referencing 0.37.0
-PyYAML 6.0.3
-```
-
-The official Python `rfc8785==0.1.4` wheel was not installed because the current
-container cannot access public package registries. The Python structural/digest validation
-was exercised with an equivalent local bridge to the repository's Node RFC 8785 implementation.
-This does **not** replace the required public CI run of the official Python package.
-
-## Pending public CI
-
-The following are intentionally not claimed as passed:
-
-- `./scripts/bootstrap_contracts.sh`
-- official Python rfc8785 vectors
-- public npm `npm ci`
-- Redocly lint 0 error / 0 warning for all 4 OpenAPI documents
-- deterministic Redocly bundles
-- GitHub Actions Python 3.11/3.13 Matrix
-
-## Freeze condition
+## Required public admission
 
 ```bash
 ./scripts/bootstrap_contracts.sh
 make validate-all
 ```
 
-must pass in public CI before the baseline is frozen for Codex Phase 0.
+Only a public CI run that includes Go tests/gofmt, both Python versions and deterministic bundles can support a freeze proposal. No production reliability claim is made by this report.

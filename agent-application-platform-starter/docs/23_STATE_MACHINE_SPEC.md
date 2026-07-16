@@ -1,145 +1,46 @@
-# 状态机规范
+# State Machine Specification — v0.8.2
 
-所有状态变化必须通过领域命令或已验证事件执行，禁止直接更新 `status` 字段。
+状态迁移必须以原子 PostgreSQL 更新、append-only Event 与 Transactional Outbox 同时落盘。Temporal 发起命令但不能绕过数据库 fencing/transition guard。
 
-## 1. WorkOrder
+## WorkOrder
 
-终态：
+`accepted -> queued -> running -> {waiting_input, waiting_approval, succeeded, failed, cancelled}`；waiting 状态可回到 running。终态不可回退。
 
-- completed
-- partial
-- failed
-- cancelled
+## Invocation
 
-`partial`：主交付物已经产生，但一个或多个调用方声明的 required delivery format 未完成。
+`pending -> running -> {succeeded, failed, retry_scheduled, reconciling, cancel_requested}`。结果未知必须进入 reconciling；对账可解析为 succeeded/failed、调度新 Attempt 或进入 manual review/abandoned。Attempt append-only，fencing_token 严格递增。
 
-| From | Command/Event | Guard | To |
-|---|---|---|---|
-| accepted | enqueue | admission committed | queued |
-| accepted | request_cancel | cancellable | cancelled |
-| queued | start | capacity available | running |
-| queued | request_cancel | cancellable | cancelled |
-| running | wait | external signal required | waiting |
-| running | pause | pausable | paused |
-| running | finish | all required outputs ready | completed |
-| running | finish_partial | primary ready, required derivative failed | partial |
-| running | fail | unrecoverable | failed |
-| running | request_cancel | cancellable | cancel_requested |
-| waiting | signal | valid signal | running |
-| waiting | pause | pausable | paused |
-| waiting | request_cancel | cancellable | cancel_requested |
-| paused | resume | valid | running |
-| paused | request_cancel | cancellable | cancel_requested |
-| cancel_requested | begin_cancel | execution active | cancelling |
-| cancel_requested | confirm_cancel | no active execution | cancelled |
-| cancelling | cancel_complete | resources settled | cancelled |
-| cancelling | deliver_partial | primary artifact retained | partial |
-| cancelling | fail | cleanup failed irrecoverably | failed |
+## SandboxOperation v2
 
-## 2. Invocation
+权威机器：`contracts/state-machines/sandbox-operation-v2.json`。
 
-Invocation 表示一个稳定逻辑副作用，多个 Attempt 属于同一个 Invocation。
-
-| From | Command/Event | Guard | To |
-|---|---|---|---|
-| prepared | dispatch_attempt | budget and policy allow | executing |
-| executing | attempt_succeeded | current fencing token | succeeded |
-| executing | attempt_failed_retryable | retry policy has capacity | retry_scheduled |
-| retry_scheduled | retry_due | deadline valid | executing |
-| executing | attempt_failed_terminal | known terminal failure | failed |
-| executing | attempt_outcome_unknown | result cannot be confirmed | outcome_unknown |
-| outcome_unknown | reconcile_start | reconciler available | reconciling |
-| reconciling | confirmed_success | evidence sufficient | succeeded |
-| reconciling | confirmed_failure | evidence sufficient | failed |
-| reconciling | reconciliation_timeout | deadline exceeded | manual_review |
-| outcome_unknown | reconciliation_timeout | deadline exceeded | manual_review |
-| manual_review | resolve_success | authorized operator and evidence | succeeded |
-| manual_review | resolve_failure | authorized operator and evidence | failed |
-| manual_review | abandon | explicit risk acceptance | abandoned |
-| prepared/executing/retry_scheduled | request_cancel | cancellable | cancel_requested |
-| cancel_requested | cancel_confirmed | current operation stopped | cancelled |
-| cancel_requested | result_success | operation already succeeded | succeeded |
-
-规则：
-
-- `failed_retryable` 是 Attempt 状态，不是 Invocation 终态。
-- 新 Attempt 使用同一 Invocation ID、递增 Attempt Number 和 Fencing Token。
-- `outcome_unknown` 禁止直接创建新 Attempt。
-- `abandoned` 是明确审计的终态，不能等价成 failed。
-- Manual Review 必须保存 Evidence、Operator、Decision、Reason 和 Timestamp。
-
-## 3. InvocationAttempt
-
-| From | Event | To |
+| Current | Event | Next |
 |---|---|---|
-| accepted | provider_started | running |
-| accepted/running | confirmed_success | succeeded |
-| accepted/running | retryable_failure | failed_retryable |
-| accepted/running | terminal_failure | failed_terminal |
-| accepted/running | uncertain_timeout | outcome_unknown |
-| accepted/running | request_cancel | cancel_requested |
-| cancel_requested | cancel_confirmed | cancelled |
-| accepted/running | superseded_by_new_fence | superseded |
+| pending | attempt_started | running |
+| running | attempt_succeeded | succeeded |
+| running | attempt_known_failed | failed |
+| running | retryable_failure | retry_scheduled |
+| running | outcome_unknown | reconciling |
+| retry_scheduled | retry_due | running |
+| reconciling | evidence_succeeded | succeeded |
+| reconciling | evidence_failed | failed |
+| reconciling | retry_approved | retry_scheduled |
+| reconciling | deadline_expired | manual_review_required |
+| manual_review_required | resolve_success | succeeded |
+| manual_review_required | resolve_failure | failed |
+| manual_review_required | retry_approved | retry_scheduled |
+| manual_review_required | abandon | abandoned |
+| pending/running/retry_scheduled/reconciling/manual_review_required | cancel | cancelled |
 
-Attempt 为不可变历史。任何后续重试都创建新的 Attempt 记录。
+平台持久化对象：SandboxOperationRecord（逻辑聚合）、SandboxOperationAttempt（不可变网络尝试）、SandboxReconciliationCase（证据与截止时间）、SandboxManualReviewDecision（不可变人工结论）。Provider API 返回 `SandboxOperationStatus`，不能直接覆盖平台聚合。
 
-## 4. Plugin Invocation Status Projection
+## Artifact staging
 
-合法组合：
+`staging -> uploaded -> verifying -> finalized`，任何失败进入 `quarantined|failed`。只有 finalized ArtifactVersion 可交付；同一 Artifact 的 version_number 和 current pointer 由数据库约束保护。
 
-```text
-accepted/running/cancelled
-  不携带 result/error
+## Enforcement
 
-succeeded
-  必须携带 result，禁止携带 error
-
-failed
-  必须携带 known_failed error，禁止携带 result
-
-outcome_unknown
-  必须携带 outcome_unknown error，禁止携带 result
-```
-
-该约束由 `plugin-invocation-status.schema.json` 的条件 Schema 强制。
-
-## 5. EditSession
-
-| From | Event | To |
-|---|---|---|
-| active | begin_commit | committing |
-| committing | commit_success | committed |
-| committing | version_conflict | conflicted |
-| conflicted | rebase | active |
-| active/conflicted | discard | discarded |
-| active/conflicted | expire | expired |
-
-## 6. Sandbox
-
-| From | Command/Event | Guard | To |
-|---|---|---|---|
-| requested | provision | valid Spec and capacity | provisioning |
-| provisioning | backend_ready | generation current | ready |
-| provisioning | fail | unrecoverable | failed |
-| ready | suspend | capability supported | suspending |
-| suspending | suspended | generation current | suspended |
-| suspended | resume | lease valid | resuming |
-| resuming | ready | generation current | ready |
-| ready/suspended | terminate | valid fencing | terminating |
-| terminating | backend_deleted | cleanup complete | terminated |
-| ready/suspended | lease_expired | no extension | expired |
-| * | provider_failure | unrecoverable | failed |
-
-## 7. SandboxOperation
-
-| From | Event | To |
-|---|---|---|
-| accepted | dispatch | running |
-| running | confirmed_success | succeeded |
-| running | confirmed_failure | failed |
-| running | uncertain_timeout | outcome_unknown |
-| running | request_cancel | cancel_requested |
-| cancel_requested | cancelled | cancelled |
-| cancel_requested | confirmed_success | succeeded |
-
-Sandbox desired state 与 observed state 分开；平台通过 Generation、Attempt 和 Fencing 验证 Provider 更新。
+- Schema 约束状态相关字段；
+- JSON 状态机定义允许迁移；
+- `validate_semantics.py` 验证可达性、重复迁移和 Attempt/Fencing 反例；
+- 实现必须使用 `WHERE current_state = expected AND fencing_token < incoming` 形式的条件更新。

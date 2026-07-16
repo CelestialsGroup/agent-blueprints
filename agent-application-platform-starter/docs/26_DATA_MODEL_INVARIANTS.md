@@ -1,196 +1,50 @@
-# 数据模型与事务不变量
+# Data Model Invariants — v0.8.2
 
-## 1. 目标
+以下约束必须由 PostgreSQL migration/constraint 实现，不能只由应用代码约定。
 
-这些不变量必须先于数据库迁移冻结。应用层校验不能替代数据库唯一约束和事务约束。
+## Identity and work
 
-## 2. Idempotency 与 Grant
+- `(tenant_id, external_subject)` 唯一；所有业务表显式 tenant_id。
+- `work_orders(tenant_id, idempotency_key_digest)` 唯一。
+- ExecutionGrant `jti` 单次消费，消费记录唯一；过期时间、request/scenario/idempotency digest 必须匹配。
 
-### idempotency_records
+## Invocation
 
-唯一约束：
+- `invocations(invocation_id)` 主键；`logical_invocation_key` 唯一。
+- `invocation_attempts(attempt_id)` 主键；`(invocation_id, attempt_number)` 唯一。
+- `(invocation_id, fencing_token)` 唯一且新 Attempt token 单调递增。
+- 一个 Attempt 只能绑定 Result 或 Error；succeeded 必须有 Result，failed/outcome_unknown 必须有相应 Error。
 
-```text
-UNIQUE(client_app_id, idempotency_key_digest)
-```
+## Sandbox
 
-同一唯一键只允许一个 request_digest。
+- `sandboxes(sandbox_id)` 主键；`(workspace_id, sandbox_slot_key)` 对非终态 Sandbox 唯一。
+- `primary_sandbox_slot_key` 必须通过延迟约束/事务校验引用恰好一个 Workspace Sandbox。
+- `sandbox_operations(operation_id)` 主键；`logical_operation_key` 唯一，不存 Attempt 字段。
+- `sandbox_operation_attempts(attempt_id)` 主键；`(operation_id, attempt_number)` 和 `(sandbox_id, fencing_token)` 唯一。
+- Attempt append-only；Operation current_attempt_id 只能引用自己的 Attempt。
+- `sandbox_reconciliation_cases(case_id)` 主键；每个未关闭 Operation 最多一个 open Case。
+- `sandbox_manual_review_decisions(decision_id)` 主键、decision_digest 唯一、append-only；必须引用 Case 和证据。
+- 稳定表禁止 Pod/Namespace/Container/VM/Node/raw endpoint 列；Adapter 私有表必须与稳定模型分 schema/权限。
 
-### grant_consumptions
+## Provider
 
-唯一约束：
+- `provider_revisions(provider_revision_id)` 主键、provider_revision_digest 唯一；Update/Delete 权限撤销，只允许 Insert。
+- `provider_admission_decisions(decision_id)` 主键；`(provider_revision_id, decision_sequence)` 唯一且 append-only。
+- sequence > 1 必须引用上一 decision；revoked 必须有 reason。
+- 新 Run 只能选择 latest decision=certified 的 Revision；RunManifest 保留 revision/decision digest，后续撤销不改写历史 Run。
 
-```text
-UNIQUE(issuer, grant_jti)
-```
+## Workflow and event
 
-GrantConsumption、WorkOrder、IdempotencyRecord 和 Outbox 必须在同一事务提交。
+- Temporal Workflow ID 与平台 run_id 唯一绑定；workflow_run_id append-only。
+- Canonical Event `(aggregate_type, aggregate_id, aggregate_sequence)` 唯一；event_id 全局唯一。
+- Outbox row 与业务变更同事务；Inbox `(consumer, message_id)` 唯一。
 
-## 3. WorkOrder 与 Workspace
+## Artifact and delivery
 
-```text
-UNIQUE(work_order_id)
-UNIQUE(workspace_id)
-UNIQUE(work_order_id, workspace_id)
-```
+- `(artifact_id, version_number)` 唯一；ArtifactVersion 不可变。
+- staging/finalization 使用 expected digest/size；未 finalized 不可交付。
+- DeliveryAttempt `(delivery_id, attempt_number)` 唯一；回调只能引用预注册 target，不接受任意 URL。
 
-v1 中一个 WorkOrder 恰好对应一个 Workspace。
+## Redis prohibition
 
-WorkOrder 创建后 tenant_id、client_app_id 和 principal_id 不可变。
-
-## 4. Event
-
-唯一约束：
-
-```text
-UNIQUE(work_order_id, work_sequence)
-UNIQUE(aggregate_type, aggregate_id, aggregate_sequence)
-UNIQUE(provider_instance_id, source_stream_id, source_cursor)
-```
-
-`next_work_sequence` 与 Event 插入在同一事务中更新。
-
-事件表建议按 `recorded_at` 时间分区，并保留：
-
-```text
-INDEX(tenant_id, work_order_id, work_sequence)
-INDEX(work_order_id, type, work_sequence)
-INDEX(recorded_at)
-```
-
-## 5. Invocation
-
-逻辑调用唯一约束：
-
-```text
-UNIQUE(workflow_run_id, workflow_step_id, logical_operation_key)
-```
-
-Attempt：
-
-```text
-UNIQUE(invocation_id, attempt_number)
-UNIQUE(invocation_id, fencing_token)
-```
-
-Complete 只接受当前最高有效 fencing_token。
-
-历史 Attempt 不得覆盖新 Attempt 的结果。
-
-## 6. Artifact
-
-```text
-UNIQUE(artifact_id, version_number)
-UNIQUE(artifact_id, content_digest)
-UNIQUE(edit_session_id, idempotency_key_digest)
-UNIQUE(conversion_source_version_id, target_media_type, profile, options_digest)
-```
-
-ArtifactVersion 内容不可修改。
-
-删除通过生命周期记录或独立 Tombstone 表达。
-
-## 7. Usage 与 Delivery
-
-```text
-UNIQUE(technical_usage_entry_id)
-UNIQUE(delivery_id)
-UNIQUE(callback_registration_id, delivery_id)
-```
-
-Usage 修正使用新 Entry，不更新历史记录。
-
-## 8. Tenant Isolation
-
-所有租户表必须包含 tenant_id。
-
-推荐 PostgreSQL Row-Level Security 作为纵深防御：
-
-- 应用连接设置内部 tenant context。
-- 后台维护任务使用独立高权限角色。
-- 任何绕过 RLS 的角色均需审计。
-
-## 9. Transaction Isolation
-
-- Grant 消费：`READ COMMITTED` + 唯一约束和行锁即可；不得采用先查后写的非原子流程。
-- Event Sequence：原子 `UPDATE ... RETURNING`。
-- Artifact Commit：锁定 Artifact current version 或使用 compare-and-swap。
-- Provider Resolution：解析结果持久化为不可变 ProviderRevision 快照。
-
-## 10. Sandbox
-
-### sandbox_registry
-
-```text
-PRIMARY KEY(sandbox_id)
-INDEX(work_order_id, workspace_id)
-INDEX(workspace_id, sandbox_slot_key)
-INDEX(tenant_id, observed_state)
-INDEX(lease_expires_at, observed_state)
-```
-
-允许一个 Workspace 拥有多个 Sandbox。
-
-同一逻辑 Slot 同时只能有一个非终态 Sandbox，使用 PostgreSQL Partial Unique Index：
-
-```sql
-CREATE UNIQUE INDEX uq_active_sandbox_slot
-ON sandbox_registry(workspace_id, sandbox_slot_key)
-WHERE observed_state NOT IN ('terminated', 'expired', 'failed');
-```
-
-不可变：
-
-- tenant_id
-- work_order_id
-- workspace_id
-- sandbox_slot_key
-- provider_revision_id
-
-稳定内核只保存 `provider_state_reference`。Pod、VM、Container、Namespace 和 Raw Endpoint
-存储在 Provider Adapter 私有模型中。
-
-### sandbox_operations
-
-```text
-UNIQUE(operation_id)
-UNIQUE(sandbox_id, logical_operation_key)
-UNIQUE(sandbox_id, fencing_token)
-UNIQUE(operation_id, attempt_id)
-```
-
-所有 Mutation 都必须满足统一 Envelope：
-
-- idempotency_key
-- request_digest
-- deadline_at
-- attempt_id
-- fencing_token
-
-Complete 只接受当前有效 Fencing Token。
-
-### sandbox_events
-
-```text
-UNIQUE(sandbox_id, sequence)
-UNIQUE(provider_revision_id, source_stream_id, source_cursor)
-```
-
-Provider Event 进入 Agent Platform 后重新归一为 WorkOrder CanonicalEvent。
-
-### sandbox_snapshots
-
-```text
-UNIQUE(snapshot_id)
-UNIQUE(snapshot_digest)
-INDEX(sandbox_id, created_at)
-```
-
-Process Snapshot 不能只通过 Snapshot ID 推断可移植性，必须读取 Compatibility。
-
-### Lease
-
-Lease 扩展使用 expected_generation 或 CAS。
-
-过期清理不能只依赖定时扫描；Provider Controller 与平台 Maintenance Workflow
-都必须执行幂等 Reconciliation。
+Redis 不得承载唯一状态、账本、游标真相或授权结论。清空 Redis 后系统必须能从 PostgreSQL、Temporal 和对象存储恢复正确性。

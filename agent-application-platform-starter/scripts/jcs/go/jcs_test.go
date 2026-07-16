@@ -24,8 +24,7 @@ func loadVectors(t *testing.T) vectorFile {
 	t.Helper()
 	_, current, _, _ := runtime.Caller(0)
 	path := filepath.Join(
-		filepath.Dir(current),
-		"..", "..", "..",
+		filepath.Dir(current), "..", "..", "..",
 		"contracts", "testdata", "jcs-v1", "vectors.json",
 	)
 	raw, err := os.ReadFile(path)
@@ -41,28 +40,23 @@ func loadVectors(t *testing.T) vectorFile {
 
 func TestRFC8785ValidVectors(t *testing.T) {
 	for _, vector := range loadVectors(t).Valid {
-		actual, err := canonicalize([]byte(vector.Input))
+		actual, err := strictCanonicalize([]byte(vector.Input))
 		if err != nil {
 			t.Fatalf("%s: %v", vector.ID, err)
 		}
 		if string(actual) != vector.Canonical {
 			t.Fatalf(
 				"%s: expected %q, got %q",
-				vector.ID,
-				vector.Canonical,
-				string(actual),
+				vector.ID, vector.Canonical, string(actual),
 			)
 		}
 	}
 }
 
-func TestParserLevelInvalidVectors(t *testing.T) {
+func TestStrictIJSONInvalidVectors(t *testing.T) {
 	for _, vector := range loadVectors(t).Invalid {
-		switch vector.ID {
-		case "nan", "positive-infinity", "duplicate-key", "lone-surrogate":
-			if _, err := canonicalize([]byte(vector.Input)); err == nil {
-				t.Fatalf("%s: expected failure", vector.ID)
-			}
+		if _, err := strictCanonicalize([]byte(vector.Input)); err == nil {
+			t.Fatalf("%s: expected failure", vector.ID)
 		}
 	}
 }

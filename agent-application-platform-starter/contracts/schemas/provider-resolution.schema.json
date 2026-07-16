@@ -4,144 +4,39 @@
   "title": "ProviderResolution",
   "type": "object",
   "required": [
-    "resolution_id",
-    "capability",
-    "selected_provider_instance_id",
-    "routing_reason",
-    "resolved_at",
-    "selected_provider_revision",
+    "resolution_id", "capability", "selected_provider_instance_id",
+    "routing_reason", "resolved_at", "selected_provider_revision",
     "capability_definition_digest"
   ],
   "properties": {
-    "resolution_id": {
-      "type": "string"
-    },
+    "resolution_id": { "type": "string", "minLength": 1 },
     "capability": {
       "type": "object",
-      "required": [
-        "id",
-        "version",
-        "profile"
-      ],
+      "required": ["id", "version", "profile"],
       "properties": {
-        "id": {
-          "type": "string"
-        },
-        "version": {
-          "type": "string"
-        },
-        "profile": {
-          "type": [
-            "string",
-            "null"
-          ]
-        }
+        "id": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "profile": { "type": ["string", "null"] }
       },
       "additionalProperties": false
     },
-    "selected_provider_instance_id": {
-      "type": "string"
-    },
+    "selected_provider_instance_id": { "type": "string", "minLength": 1 },
     "routing_reason": {
-      "enum": [
-        "tenant_binding",
-        "client_binding",
-        "platform_default",
-        "explicit_fallback"
-      ]
+      "enum": ["tenant_binding", "client_binding", "platform_default", "explicit_fallback"]
     },
     "candidates_considered": {
       "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "minItems": 1
+      "items": { "type": "string" },
+      "minItems": 1,
+      "uniqueItems": true
     },
-    "resolved_at": {
-      "type": "string",
-      "format": "date-time"
-    },
+    "resolved_at": { "type": "string", "format": "date-time" },
     "capability_definition_digest": {
       "type": "string",
       "pattern": "^sha256:[0-9a-f]{64}$"
     },
     "selected_provider_revision": {
-      "type": "object",
-      "required": [
-        "provider_revision_id",
-        "provider_kind",
-        "plugin_id",
-        "plugin_version",
-        "manifest_digest",
-        "package_digest",
-        "runtime_binding_digest",
-        "configuration_digest",
-        "approved_permissions_digest",
-        "credential_binding_digest",
-        "conformance_report_digest",
-        "certification_status"
-      ],
-      "properties": {
-        "provider_revision_id": {
-          "type": "string"
-        },
-        "plugin_id": {
-          "type": "string"
-        },
-        "plugin_version": {
-          "type": "string"
-        },
-        "manifest_digest": {
-          "type": "string",
-          "pattern": "^sha256:[0-9a-f]{64}$"
-        },
-        "image_digest": {
-          "type": "string",
-          "pattern": "^sha256:[0-9a-f]{64}$"
-        },
-        "configuration_digest": {
-          "type": "string",
-          "pattern": "^sha256:[0-9a-f]{64}$"
-        },
-        "conformance_report_digest": {
-          "type": "string",
-          "pattern": "^sha256:[0-9a-f]{64}$"
-        },
-        "provider_kind": {
-          "enum": [
-            "agent_runtime",
-            "sandbox",
-            "model",
-            "tool",
-            "skill",
-            "template",
-            "renderer",
-            "editor",
-            "converter",
-            "channel"
-          ]
-        },
-        "package_digest": {
-          "type": "string",
-          "pattern": "^sha256:[0-9a-f]{64}$"
-        },
-        "runtime_binding_digest": {
-          "type": "string",
-          "pattern": "^sha256:[0-9a-f]{64}$"
-        },
-        "approved_permissions_digest": {
-          "type": "string",
-          "pattern": "^sha256:[0-9a-f]{64}$"
-        },
-        "credential_binding_digest": {
-          "type": "string",
-          "pattern": "^sha256:[0-9a-f]{64}$"
-        },
-        "certification_status": {
-          "const": "certified"
-        }
-      },
-      "additionalProperties": false
+      "$ref": "urn:agent-platform:provider-revision-snapshot:v1"
     }
   },
   "additionalProperties": false

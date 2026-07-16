@@ -1,10 +1,11 @@
 {
   "name": "agent-application-platform-contracts",
   "private": true,
-  "version": "0.8.1",
+  "version": "0.8.2",
   "scripts": {
-    "lint:openapi": "redocly lint contracts/openapi/agent-access-v1.yaml && redocly lint contracts/openapi/plugin-invocation-v1.yaml && redocly lint contracts/openapi/delivery-webhook-v1.yaml && redocly lint contracts/openapi/sandbox-provider-v1.yaml",
-    "bundle:openapi": "redocly bundle contracts/openapi/agent-access-v1.yaml -o build/agent-access-v1.bundle.yaml && redocly bundle contracts/openapi/plugin-invocation-v1.yaml -o build/plugin-invocation-v1.bundle.yaml && redocly bundle contracts/openapi/delivery-webhook-v1.yaml -o build/delivery-webhook-v1.bundle.yaml && redocly bundle contracts/openapi/sandbox-provider-v1.yaml -o build/sandbox-provider-v1.bundle.yaml"
+    "prepare:openapi": "python3 scripts/prepare_openapi.py",
+    "lint:openapi": "node scripts/lint_openapi_zero.mjs",
+    "bundle:openapi": "redocly bundle build/openapi-src/openapi/agent-access-v1.yaml -o build/agent-access-v1.bundle.yaml && redocly bundle build/openapi-src/openapi/plugin-invocation-v1.yaml -o build/plugin-invocation-v1.bundle.yaml && redocly bundle build/openapi-src/openapi/delivery-webhook-v1.yaml -o build/delivery-webhook-v1.bundle.yaml && redocly bundle build/openapi-src/openapi/sandbox-provider-v1.yaml -o build/sandbox-provider-v1.bundle.yaml"
   },
   "devDependencies": {
     "@redocly/cli": "2.39.0"

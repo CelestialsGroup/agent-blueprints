@@ -1,0 +1,8 @@
+{
+  "baseline": "v0.8.2",
+  "status": "candidate",
+  "digest_profile": "sha256+rfc8785-for-json-schema;sha256-raw-for-other-governed-resources",
+  "resource_count": 119,
+  "resources_digest": "sha256:368852674460cf7ee46ed3527ff0449761901af54f9162a4e18a856c77df0961",
+  "manifest_digest": "sha256:5df52bbea7a77c23daba1122f141e27ea09651faf193571840d38e53985ee601"
+}

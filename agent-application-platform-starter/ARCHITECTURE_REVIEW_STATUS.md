@@ -1,57 +1,35 @@
 # Architecture Review Status
 
-Baseline: **v0.8.1 Contract Hardening Candidate**
+Candidate: **v0.8.2 Architecture and Contract Hardening**
 
-Current status: **Ready for public CI admission; not yet frozen**
+Current status: **Ready for public CI admission; not frozen; not production ready**
 
-## 已通过的本地离线证据
+## 本版已闭合
 
-- Supply-chain configuration scan
-- JSON/YAML parse
-- JSON Schema meta-validation
-- Portable `$id/$ref` Registry validation
-- 27 positive fixtures
-- 11 Schema-negative fixtures
-- 3 semantic-negative fixtures
-- 4 strict I-JSON raw-negative fixtures
-- Node RFC 8785 vectors
-- Go RFC 8785 vectors
-- Contract Manifest verification
-- OpenAPI structural audit
-- Kubernetes resource/policy structural audit
-- Markdown internal link audit
-- Python script compilation
+- OpenAPI URN Registry 投影，4 个文档可 lint/bundle，Gate 强制 0 error/0 warning。
+- 可执行 Gate 入口、Python 版本前置检查、monorepo Workflow 安装辅助。
+- RunManifest 摘要、Slot 唯一/主 Slot、Capability 唯一与 Provider 快照一致性反向测试。
+- SandboxOperation v2：Attempt、Retry、Reconciliation、Manual Review、Abandon 完整闭环。
+- ProviderRevision 与 append-only Admission/Revocation Decision 分离。
+- Node/Go/Python Strict I-JSON 共享全部正反向向量。
+- Schema `$ref` 复用，避免 SandboxSpec 和 ProviderRevisionSnapshot 漂移。
+- 独立 Compatibility Gate；首个冻结基线前诚实报告 N/A。
+- Python hash lock、npm integrity、Actions full SHA、bytecode 排除。
 
-## 尚待公共 CI 证明
+## Admission 规则
 
-- 从公共 PyPI 完整 Bootstrap
-- Python `rfc8785==0.1.4` vectors
-- `npm ci` from public npm Registry
-- Redocly lint for 4 OpenAPI documents
-- Redocly deterministic bundle
-- GitHub Actions Python 3.11/3.13 Matrix
-
-## 冻结规则
-
-只有公共 CI 全部通过，状态才可以改为：
-
-```text
-Approved and frozen for Codex Phase 0
+```bash
+./scripts/bootstrap_contracts.sh
+make validate-all
 ```
 
-任何 Gate 失败都必须修复契约或工具链，不能绕过。
+公共 CI 的 Python 3.11/3.13 Matrix、Node 22.16、Go 1.23.2、Redocly 2.39.0 和 deterministic bundle 全部通过后，才允许提出冻结审批。
 
-## 生产状态
+## 尚未证明
 
-Not production ready.
-
-生产批准仍需要：
-
-- Phase 0A 垂直链路
-- 并发和故障注入
-- 安全隔离测试
-- 容量测试
-- Temporal Replay
-- PostgreSQL/Object Storage/Temporal 恢复演练
-- DeerFlow Governed Runtime Conformance
-- sandbox-runtime Conformance
+- Phase 0A 运行实现；
+- 多节点并发、故障注入和恢复；
+- Kubernetes 网络/沙箱实际隔离；
+- 性能、容量、SLO；
+- Temporal Replay 与 PostgreSQL/Object Storage/Temporal 恢复演练；
+- DeerFlow 和未来 sandbox-runtime 的生产 Conformance。

@@ -1,0 +1,13 @@
+{
+  "operation_id": "sop_01J00000000000000000000000",
+  "sandbox_id": "sbx_01J00000000000000000000000",
+  "logical_operation_key": "sandbox-exec-example-0001",
+  "type": "exec",
+  "status": "manual_review_required",
+  "current_attempt_number": 1,
+  "current_attempt_id": "soa_01J00000000000000000000000",
+  "max_attempts": 3,
+  "reconciliation_case_id": "src_01J00000000000000000000000",
+  "created_at": "2026-07-16T10:00:00Z",
+  "updated_at": "2026-07-16T10:06:00Z"
+}

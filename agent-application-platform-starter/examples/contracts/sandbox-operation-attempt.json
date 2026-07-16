@@ -1,0 +1,19 @@
+{
+  "operation_id": "sop_01J00000000000000000000000",
+  "attempt_id": "soa_01J00000000000000000000000",
+  "attempt_number": 1,
+  "fencing_token": 1,
+  "status": "outcome_unknown",
+  "idempotency_key": "sandbox-exec-example-0001",
+  "request_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "deadline_at": "2026-07-16T10:05:00Z",
+  "provider_operation_id": "provider-op-0001",
+  "error": {
+    "code": "SANDBOX_RESPONSE_LOST",
+    "message": "Provider may have completed the operation but the response was lost.",
+    "retryable": false,
+    "outcome": "outcome_unknown"
+  },
+  "created_at": "2026-07-16T10:00:00Z",
+  "updated_at": "2026-07-16T10:05:00Z"
+}
