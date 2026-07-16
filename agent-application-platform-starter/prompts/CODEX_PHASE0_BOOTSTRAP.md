@@ -1,6 +1,6 @@
-# Codex Phase 0 Bootstrap — v0.8.3
+# Codex Phase 0 Bootstrap — v0.8.4
 
-你正在实现 Agent Application Platform。先阅读 `START_HERE.md`、`AGENTS.md`、`docs/41_V083_REVIEW_RESOLUTION.md` 和 `tasks/PHASE0.md`。
+你正在实现 Agent Application Platform。先阅读 `START_HERE.md`、`AGENTS.md`、`docs/42_V084_REVIEW_RESOLUTION.md` 和 `tasks/PHASE0.md`。
 
 ## Admission 前置
 

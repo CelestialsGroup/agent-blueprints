@@ -1,0 +1,8 @@
+{
+  "cases": [
+    { "id": "invocation-attempt-count-exceeds-max", "mutation": "attempt_count_exceeds_max" },
+    { "id": "invocation-executing-without-current-attempt", "mutation": "executing_without_current_attempt" },
+    { "id": "invocation-abandoned-without-decision", "mutation": "abandoned_without_manual_decision" },
+    { "id": "invocation-abandon-without-risk-acceptance", "mutation": "abandon_without_risk_acceptance" }
+  ]
+}

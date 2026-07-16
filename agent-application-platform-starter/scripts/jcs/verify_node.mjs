@@ -9,6 +9,13 @@ const root = path.resolve(here, "../..");
 const vectors = JSON.parse(fs.readFileSync(path.join(root, "contracts/testdata/jcs-v1/vectors.json"), "utf8"));
 
 for (const vector of vectors.valid) {
+  const actual = canonicalize(JSON.parse(vector.input));
+  if (actual !== vector.canonical) {
+    throw new Error(`${vector.id}: expected ${vector.canonical}, got ${actual}`);
+  }
+}
+
+for (const vector of vectors.strict_valid) {
   const actual = canonicalize(strictParse(vector.input));
   if (actual !== vector.canonical) {
     throw new Error(`${vector.id}: expected ${vector.canonical}, got ${actual}`);
@@ -25,4 +32,4 @@ for (const vector of vectors.invalid) {
   if (!failed) throw new Error(`Expected invalid vector to fail: ${vector.id}`);
 }
 
-console.log(`Node JCS + Strict I-JSON: ${vectors.valid.length} valid and ${vectors.invalid.length} invalid vectors passed.`);
+console.log(`Node JCS/Strict I-JSON: ${vectors.valid.length} canonicalization, ${vectors.strict_valid.length} strict-valid and ${vectors.invalid.length} strict-invalid vectors passed.`);

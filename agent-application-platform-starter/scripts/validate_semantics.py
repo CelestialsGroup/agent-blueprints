@@ -9,8 +9,15 @@ from typing import Any
 
 import rfc8785
 from jsonschema import Draft202012Validator, FormatChecker
+from referencing import Registry, Resource
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+SCHEMA_REGISTRY = Registry()
+for schema_path in sorted((ROOT / "contracts/schemas").glob("*.json")):
+    schema_value = json.loads(schema_path.read_text(encoding="utf-8"))
+    SCHEMA_REGISTRY = SCHEMA_REGISTRY.with_resource(schema_value["$id"], Resource.from_contents(schema_value))
 
 
 def load(relative: str) -> Any:
@@ -30,7 +37,6 @@ def validate_self_digest(value: dict[str, Any], field: str) -> None:
 
 
 def snapshot_fields(revision: dict[str, Any], decision: dict[str, Any]) -> dict[str, Any]:
-    report_field = "sandbox_conformance_report_digest" if revision["provider_kind"] == "sandbox" else "governed_conformance_report_digest"
     result = {
         "provider_revision_id": revision["provider_revision_id"],
         "provider_revision_digest": revision["provider_revision_digest"],
@@ -43,7 +49,7 @@ def snapshot_fields(revision: dict[str, Any], decision: dict[str, Any]) -> dict[
         "configuration_digest": revision["configuration_digest"],
         "approved_permissions_digest": revision["approved_permissions_digest"],
         "credential_binding_digest": revision["credential_binding_digest"],
-        "conformance_report_digest": revision[report_field],
+        "conformance_report_digest": revision["conformance_set_digest"],
         "admission_decision_id": decision["decision_id"],
         "admission_decision_digest": decision["decision_digest"],
         "admission_status": "certified",
@@ -60,6 +66,14 @@ def provider_snapshot_bindings(manifest: dict[str, Any]) -> list[tuple[dict[str,
     return bindings
 
 
+def capability_key(value: dict[str, Any], id_field: str = "id") -> tuple[str, str, str | None]:
+    return (value[id_field], value["version"], value.get("profile"))
+
+
+def revision_supports(revision: dict[str, Any], key: tuple[str, str, str | None]) -> bool:
+    return any((item["capability"], item["version"], item.get("profile")) == key and item["status"] == "passed" for item in revision["conformance"])
+
+
 def validate_run_admission(manifest: dict[str, Any], context: dict[str, Any]) -> None:
     validate_self_digest(manifest, "run_manifest_digest")
     if manifest["scenario"] != context["scenario"]:
@@ -72,9 +86,27 @@ def validate_run_admission(manifest: dict[str, Any], context: dict[str, Any]) ->
     if resolved != required:
         raise AssertionError(f"Capability resolution must exactly cover Scenario requirements: required={required}, resolved={resolved}")
 
+    definitions: dict[tuple[str, str, str | None], dict[str, Any]] = {}
+    for definition in context["capability_definitions"]:
+        key = capability_key(definition)
+        if key in definitions:
+            raise AssertionError(f"Duplicate admitted CapabilityDefinition: {key}")
+        definitions[key] = definition
+    if required - set(definitions):
+        raise AssertionError("Scenario requirements are missing admitted CapabilityDefinitions")
+    runtime_key = capability_key(context["agent_runtime_capability"])
+    if definitions.get(runtime_key) != context["agent_runtime_capability"]:
+        raise AssertionError("Agent Runtime capability must bind one admitted CapabilityDefinition")
+
     revisions: dict[str, dict[str, Any]] = {}
     for revision in context["provider_revisions"]:
         validate_self_digest(revision, "provider_revision_digest")
+        expected_conformance_digest = canonical_digest(revision["conformance"])
+        if revision["conformance_set_digest"] != expected_conformance_digest:
+            raise AssertionError("ProviderRevision conformance_set_digest mismatch")
+        for legacy in ("sandbox_conformance_report_digest", "governed_conformance_report_digest"):
+            if legacy in revision and revision[legacy] != expected_conformance_digest:
+                raise AssertionError(f"Legacy {legacy} conflicts with generic conformance_set_digest")
         revision_id = revision["provider_revision_id"]
         if revision_id in revisions:
             raise AssertionError(f"Duplicate ProviderRevision in admission context: {revision_id}")
@@ -117,6 +149,35 @@ def validate_run_admission(manifest: dict[str, Any], context: dict[str, Any]) ->
         if previous != snapshot:
             raise AssertionError(f"Conflicting snapshots for ProviderRevision {revision_id}")
 
+    for resolution in manifest["capability_resolutions"]:
+        key = capability_key(resolution["capability"])
+        definition = definitions.get(key)
+        revision = revisions[resolution["selected_provider_revision"]["provider_revision_id"]]
+        if definition is None or resolution["capability_definition_digest"] != definition["definition_digest"]:
+            raise AssertionError(f"CapabilityResolution does not bind the admitted CapabilityDefinition: {key}")
+        if revision["provider_kind"] not in definition["allowed_provider_kinds"]:
+            raise AssertionError(f"Provider kind {revision['provider_kind']} is not allowed for {key}")
+        if not revision_supports(revision, key):
+            raise AssertionError(f"ProviderRevision conformance does not cover selected capability: {key}")
+
+    runtime_revision = revisions[manifest["agent_runtime"]["provider_revision"]["provider_revision_id"]]
+    if runtime_revision["provider_kind"] != "agent_runtime" or "agent_runtime" not in context["agent_runtime_capability"]["allowed_provider_kinds"]:
+        raise AssertionError("RunManifest agent_runtime must bind an admitted Agent Runtime Provider")
+    if not revision_supports(runtime_revision, runtime_key):
+        raise AssertionError("Agent Runtime Provider conformance does not cover its governed execution capability")
+    if manifest["agent_runtime"]["governed_conformance_report_digest"] != runtime_revision["conformance_set_digest"]:
+        raise AssertionError("Agent Runtime outer conformance digest conflicts with the verified ProviderRevision")
+
+    for sandbox in manifest["sandboxes"]:
+        revision = revisions[sandbox["provider_revision"]["provider_revision_id"]]
+        if revision["provider_kind"] != "sandbox":
+            raise AssertionError("Sandbox slot must bind a Sandbox ProviderRevision")
+        for required_capability in sandbox["required_capabilities"]:
+            key = capability_key(required_capability)
+            definition = definitions.get(key)
+            if definition is None or "sandbox" not in definition["allowed_provider_kinds"] or not revision_supports(revision, key):
+                raise AssertionError(f"Sandbox ProviderRevision does not conform to required capability: {key}")
+
     slots = [sandbox["sandbox_slot_key"] for sandbox in manifest["sandboxes"]]
     if len(slots) != len(set(slots)):
         raise AssertionError("sandbox_slot_key must be unique")
@@ -153,7 +214,12 @@ def status_enum(schema_path: str) -> set[str]:
 
 
 validate_state_machine(load("contracts/state-machines/work-order-v1.json"), status_enum("contracts/schemas/work-order-state.schema.json"))
-validate_state_machine(load("contracts/state-machines/invocation-v1.json"), status_enum("contracts/schemas/invocation-record.schema.json"))
+invocation_machine = load("contracts/state-machines/invocation-v2.json")
+validate_state_machine(invocation_machine, status_enum("contracts/schemas/invocation-record.schema.json"))
+if any(item["from"] in {"executing", "outcome_unknown", "reconciling", "manual_review"} and item["to"] == "cancelled" for item in invocation_machine["transitions"]):
+    raise AssertionError("In-flight/unknown Invocation cannot transition directly to cancelled")
+if any(item["event"] == "abandon" for item in invocation_machine["transitions"]):
+    raise AssertionError("Invocation abandon must explicitly bind risk acceptance")
 sandbox_machine = load("contracts/state-machines/sandbox-operation-v2.json")
 validate_state_machine(sandbox_machine, status_enum("contracts/schemas/sandbox-operation-record.schema.json"))
 unsafe_direct_cancel = {"running", "reconciling", "manual_review_required"}
@@ -165,6 +231,8 @@ manifest = load("examples/contracts/run-manifest-v2.json")
 validate_run_admission(manifest, context)
 manual = load("examples/contracts/sandbox-manual-review-decision.json")
 validate_self_digest(manual, "decision_digest")
+invocation_manual = load("examples/contracts/invocation-manual-review-decision.json")
+validate_self_digest(invocation_manual, "decision_digest")
 
 negative = load("contracts/tests/semantic-invalid/run-manifest-cases.json")
 for case in negative["cases"]:
@@ -204,6 +272,15 @@ for case in admission_negative["cases"]:
         previous = registry["admission_decisions"][0]
         revoked = {"decision_id": "pad_revoked_later", "provider_revision_id": previous["provider_revision_id"], "provider_revision_digest": previous["provider_revision_digest"], "decision_sequence": 2, "decision": "revoked", "reason": "Test revocation", "evidence_digest": "sha256:" + "9" * 64, "decided_by": "principal:test", "decided_at": "2026-07-16T09:30:00Z", "supersedes_decision_id": previous["decision_id"], "decision_digest": "sha256:" + "0" * 64}
         revoked["decision_digest"] = canonical_digest({key: item for key, item in revoked.items() if key != "decision_digest"}); registry["admission_decisions"].append(revoked)
+    elif mutation == "forged_capability_definition_digest":
+        value["capability_resolutions"][0]["capability_definition_digest"] = "sha256:" + "a" * 64
+    elif mutation == "sandbox_unsupported_capability":
+        value["sandboxes"][0]["required_capabilities"] = [{"id": "tool.echo", "version": "1.0", "profile": "default"}]
+    elif mutation == "forged_agent_runtime_outer_conformance":
+        value["agent_runtime"]["governed_conformance_report_digest"] = "sha256:" + "b" * 64
+    elif mutation == "capability_incompatible_provider_kind":
+        value["capability_resolutions"][0]["selected_provider_revision"] = copy.deepcopy(value["agent_runtime"]["provider_revision"])
+        value["capability_resolutions"][0]["selected_provider_instance_id"] = value["agent_runtime"]["provider_instance_id"]
     else:
         raise AssertionError(f"Unknown admission mutation: {mutation}")
     value["run_manifest_digest"] = canonical_digest({key: item for key, item in value.items() if key != "run_manifest_digest"})
@@ -216,8 +293,8 @@ for case in admission_negative["cases"]:
 
 operation_schema = load("contracts/schemas/sandbox-operation-record.schema.json")
 manual_schema = load("contracts/schemas/sandbox-manual-review-decision.schema.json")
-operation_validator = Draft202012Validator(operation_schema, format_checker=FormatChecker())
-manual_validator = Draft202012Validator(manual_schema, format_checker=FormatChecker())
+operation_validator = Draft202012Validator(operation_schema, registry=SCHEMA_REGISTRY, format_checker=FormatChecker())
+manual_validator = Draft202012Validator(manual_schema, registry=SCHEMA_REGISTRY, format_checker=FormatChecker())
 operation = load("examples/contracts/sandbox-operation.json")
 if operation["current_attempt_number"] > operation["max_attempts"]:
     raise AssertionError("current_attempt_number exceeds max_attempts")
@@ -234,10 +311,43 @@ for case in sandbox_negative["cases"]:
     elif case["mutation"] == "abandon_without_risk_acceptance":
         candidate_manual["decision"] = "abandon"; candidate_manual["risk_accepted"] = False
         failed = bool(list(manual_validator.iter_errors(candidate_manual)))
+    elif case["mutation"] == "cancelled_effect_completed":
+        candidate_operation.update({
+            "status": "cancelled", "terminal_reason": "cancelled", "completed_at": "2026-07-16T10:07:00Z",
+            "cancellation_confirmation": {"confirmed_by": "provider", "evidence_reference": "evidence://provider/1", "external_effect_status": "effect_completed", "confirmed_at": "2026-07-16T10:07:00Z"},
+        })
+        failed = bool(list(operation_validator.iter_errors(candidate_operation)))
     else:
         raise AssertionError(f"Unknown Sandbox mutation: {case['mutation']}")
     if not failed:
         raise AssertionError(f"Expected Sandbox semantic fixture to fail: {case['id']}")
+
+invocation_schema = load("contracts/schemas/invocation-record.schema.json")
+invocation_manual_schema = load("contracts/schemas/invocation-manual-review-decision.schema.json")
+invocation_validator = Draft202012Validator(invocation_schema, registry=SCHEMA_REGISTRY, format_checker=FormatChecker())
+invocation_manual_validator = Draft202012Validator(invocation_manual_schema, registry=SCHEMA_REGISTRY, format_checker=FormatChecker())
+invocation = load("examples/contracts/invocation-record.json")
+invocation_negative = load("contracts/tests/semantic-invalid/invocation-cases.json")
+for case in invocation_negative["cases"]:
+    candidate = copy.deepcopy(invocation)
+    decision = copy.deepcopy(invocation_manual)
+    if case["mutation"] == "attempt_count_exceeds_max":
+        candidate["attempt_count"] = candidate["max_attempts"] + 1
+        failed = candidate["attempt_count"] > candidate["max_attempts"]
+    elif case["mutation"] == "executing_without_current_attempt":
+        candidate["status"] = "executing"; candidate.pop("current_attempt_id", None)
+        failed = bool(list(invocation_validator.iter_errors(candidate)))
+    elif case["mutation"] == "abandoned_without_manual_decision":
+        candidate.update({"status": "abandoned", "completed_at": "2026-07-16T10:45:00Z", "terminal_reason": "unknown external outcome"})
+        candidate.pop("manual_review_decision_id", None)
+        failed = bool(list(invocation_validator.iter_errors(candidate)))
+    elif case["mutation"] == "abandon_without_risk_acceptance":
+        decision["risk_accepted"] = False
+        failed = bool(list(invocation_manual_validator.iter_errors(decision)))
+    else:
+        raise AssertionError(f"Unknown Invocation mutation: {case['mutation']}")
+    if not failed:
+        raise AssertionError(f"Expected Invocation semantic fixture to fail: {case['id']}")
 
 attempt_sequence = load("contracts/tests/semantic-invalid/sandbox-attempt-sequence.json")
 attempts = attempt_sequence["attempts"]
@@ -250,4 +360,4 @@ if any(current <= previous for previous, current in zip(fencing_tokens, fencing_
 else:
     raise AssertionError("Expected Sandbox fencing-token negative fixture to fail")
 
-print("Semantic validation passed with 4 state-machine checks and 12 negative invariant fixtures.")
+print("Semantic validation passed with 6 state-machine/safety checks and 21 negative invariant fixtures.")

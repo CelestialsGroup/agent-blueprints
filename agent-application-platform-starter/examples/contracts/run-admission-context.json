@@ -9,12 +9,55 @@
       "id": "sandbox.exec",
       "version": "1.0",
       "profile": "hardened"
+    },
+    {
+      "id": "tool.echo",
+      "version": "1.0",
+      "profile": "default"
     }
   ],
+  "capability_definitions": [
+    {
+      "id": "sandbox.exec",
+      "version": "1.0",
+      "profile": "hardened",
+      "definition_digest": "sha256:3030303030303030303030303030303030303030303030303030303030303030",
+      "allowed_provider_kinds": [
+        "sandbox"
+      ]
+    },
+    {
+      "id": "tool.echo",
+      "version": "1.0",
+      "profile": "default",
+      "definition_digest": "sha256:3131313131313131313131313131313131313131313131313131313131313131",
+      "allowed_provider_kinds": [
+        "tool"
+      ]
+    },
+    {
+      "id": "agent.runtime.execute",
+      "version": "1.0",
+      "profile": "governed",
+      "definition_digest": "sha256:3232323232323232323232323232323232323232323232323232323232323232",
+      "allowed_provider_kinds": [
+        "agent_runtime"
+      ]
+    }
+  ],
+  "agent_runtime_capability": {
+    "id": "agent.runtime.execute",
+    "version": "1.0",
+    "profile": "governed",
+    "definition_digest": "sha256:3232323232323232323232323232323232323232323232323232323232323232",
+    "allowed_provider_kinds": [
+      "agent_runtime"
+    ]
+  },
   "provider_revisions": [
     {
       "provider_revision_id": "spr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:d10f165bca4ff63a9ef7a07ca5d4cecba7013477c26d90b2e9949edc4bf91b47",
+      "provider_revision_digest": "sha256:943f78935e066a7e70cffa2cf90daa61f4e24fe02cc63f89a21b6c0718314e31",
       "provider_instance_id": "spi_deerflow_builtin_sandbox",
       "plugin_id": "sandbox-provider.deerflow-built-in",
       "plugin_version": "0.8.2",
@@ -36,12 +79,13 @@
           "report_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888"
         }
       ],
-      "sandbox_conformance_report_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+      "conformance_set_digest": "sha256:9a7dee7349f74983fd26b65e8ba8fffec01539e6aa3919c34685ef1b2426a897",
+      "sandbox_conformance_report_digest": "sha256:9a7dee7349f74983fd26b65e8ba8fffec01539e6aa3919c34685ef1b2426a897",
       "created_at": "2026-07-16T09:00:00Z"
     },
     {
       "provider_revision_id": "apr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:05f8339a76a29378f4cf6a641d3d9c4e36e9ad36618594f9c54dd63859ee8a60",
+      "provider_revision_digest": "sha256:6b7d3dccef05eb830d50fab820dfdae5f0aa6ad544041d0584e8e51ef32d8483",
       "provider_instance_id": "api_deerflow_runtime",
       "plugin_id": "agent-runtime.deerflow",
       "plugin_version": "0.8.3",
@@ -62,32 +106,70 @@
           "report_digest": "sha256:1212121212121212121212121212121212121212121212121212121212121212"
         }
       ],
-      "governed_conformance_report_digest": "sha256:1212121212121212121212121212121212121212121212121212121212121212",
+      "conformance_set_digest": "sha256:b73de0fbc2dfba635575ef0ae18d094f4bcf250388c2436779943da954a29550",
+      "governed_conformance_report_digest": "sha256:b73de0fbc2dfba635575ef0ae18d094f4bcf250388c2436779943da954a29550",
       "created_at": "2026-07-16T09:00:10Z"
+    },
+    {
+      "provider_revision_id": "tpr_01J00000000000000000000000",
+      "provider_revision_digest": "sha256:12867de6b67740a8dd5f47c510f9f5b343652564c42e13357f4ca5c127195222",
+      "provider_instance_id": "tpi_echo",
+      "plugin_id": "tool-provider.echo",
+      "plugin_version": "0.8.4",
+      "manifest_digest": "sha256:2121212121212121212121212121212121212121212121212121212121212121",
+      "package_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "configuration_digest": "sha256:2323232323232323232323232323232323232323232323232323232323232323",
+      "approved_permissions_digest": "sha256:2424242424242424242424242424242424242424242424242424242424242424",
+      "runtime_binding_digest": "sha256:2525252525252525252525252525252525252525252525252525252525252525",
+      "credential_binding_digest": "sha256:2626262626262626262626262626262626262626262626262626262626262626",
+      "provider_kind": "tool",
+      "conformance": [
+        {
+          "capability": "tool.echo",
+          "version": "1.0",
+          "profile": "default",
+          "suite_version": "1.0.0",
+          "status": "passed",
+          "report_digest": "sha256:2727272727272727272727272727272727272727272727272727272727272727"
+        }
+      ],
+      "conformance_set_digest": "sha256:12caa691be50101ff13edec7c6e6072b31d0bafc2f0c9c6f192b97a3364b226e",
+      "created_at": "2026-07-16T09:00:20Z"
     }
   ],
   "admission_decisions": [
     {
       "decision_id": "pad_01J00000000000000000000000",
       "provider_revision_id": "spr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:d10f165bca4ff63a9ef7a07ca5d4cecba7013477c26d90b2e9949edc4bf91b47",
+      "provider_revision_digest": "sha256:943f78935e066a7e70cffa2cf90daa61f4e24fe02cc63f89a21b6c0718314e31",
       "decision_sequence": 1,
       "decision": "certified",
       "evidence_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
       "decided_by": "principal:platform-provider-certifier",
       "decided_at": "2026-07-16T09:00:30Z",
-      "decision_digest": "sha256:c4caa1fc53940a2dddd82e6e5cdfa0949da951809f867aae962fa13307bf5b27"
+      "decision_digest": "sha256:ca6fbaee2092ffb9100e2f2163d8f380f4242240a6faa7f31903a1fda29f062f"
     },
     {
       "decision_id": "pad_runtime_01J00000000000000000",
       "provider_revision_id": "apr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:05f8339a76a29378f4cf6a641d3d9c4e36e9ad36618594f9c54dd63859ee8a60",
+      "provider_revision_digest": "sha256:6b7d3dccef05eb830d50fab820dfdae5f0aa6ad544041d0584e8e51ef32d8483",
       "decision_sequence": 1,
       "decision": "certified",
       "evidence_digest": "sha256:1414141414141414141414141414141414141414141414141414141414141414",
       "decided_by": "principal:platform-provider-certifier",
       "decided_at": "2026-07-16T09:00:40Z",
-      "decision_digest": "sha256:99cbf2cdb331291e5c2b3276061b9f30fd2ae39651de9e798f71045defb13384"
+      "decision_digest": "sha256:ff69a934341809250e699aeddbcc88a013c0874941d806dfde52ca48f3dd38a0"
+    },
+    {
+      "decision_id": "pad_tool_01J000000000000000000",
+      "provider_revision_id": "tpr_01J00000000000000000000000",
+      "provider_revision_digest": "sha256:12867de6b67740a8dd5f47c510f9f5b343652564c42e13357f4ca5c127195222",
+      "decision_sequence": 1,
+      "decision": "certified",
+      "evidence_digest": "sha256:2828282828282828282828282828282828282828282828282828282828282828",
+      "decided_by": "principal:platform-provider-certifier",
+      "decided_at": "2026-07-16T09:00:50Z",
+      "decision_digest": "sha256:081e9ccc5960063f5099aadb776f45a496249909eb586c1fcb5afdebf1bd3b19"
     }
   ]
 }

@@ -14,6 +14,11 @@ type vectorFile struct {
 		Input     string `json:"input"`
 		Canonical string `json:"canonical"`
 	} `json:"valid"`
+	StrictValid []struct {
+		ID        string `json:"id"`
+		Input     string `json:"input"`
+		Canonical string `json:"canonical"`
+	} `json:"strict_valid"`
 	Invalid []struct {
 		ID    string `json:"id"`
 		Input string `json:"input"`
@@ -40,7 +45,7 @@ func loadVectors(t *testing.T) vectorFile {
 
 func TestRFC8785ValidVectors(t *testing.T) {
 	for _, vector := range loadVectors(t).Valid {
-		actual, err := strictCanonicalize([]byte(vector.Input))
+		actual, err := canonicalize([]byte(vector.Input))
 		if err != nil {
 			t.Fatalf("%s: %v", vector.ID, err)
 		}
@@ -49,6 +54,18 @@ func TestRFC8785ValidVectors(t *testing.T) {
 				"%s: expected %q, got %q",
 				vector.ID, vector.Canonical, string(actual),
 			)
+		}
+	}
+}
+
+func TestStrictIJSONValidVectors(t *testing.T) {
+	for _, vector := range loadVectors(t).StrictValid {
+		actual, err := strictCanonicalize([]byte(vector.Input))
+		if err != nil {
+			t.Fatalf("%s: %v", vector.ID, err)
+		}
+		if string(actual) != vector.Canonical {
+			t.Fatalf("%s: expected %q, got %q", vector.ID, vector.Canonical, string(actual))
 		}
 	}
 }

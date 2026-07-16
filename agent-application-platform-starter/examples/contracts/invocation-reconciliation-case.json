@@ -1,0 +1,10 @@
+{
+  "case_id": "irc_01J00000000000000000000000",
+  "invocation_id": "inv_01J00000000000000000000000",
+  "attempt_id": "ia_01J00000000000000000000000",
+  "status": "manual_review",
+  "deadline_at": "2026-07-16T10:30:00Z",
+  "opened_at": "2026-07-16T10:05:00Z",
+  "updated_at": "2026-07-16T10:31:00Z",
+  "evidence_references": ["evidence://provider/query/1"]
+}

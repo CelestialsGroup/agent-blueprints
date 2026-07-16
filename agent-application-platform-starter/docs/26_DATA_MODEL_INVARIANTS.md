@@ -1,4 +1,4 @@
-# Data Model Invariants — v0.8.3
+# Data Model Invariants — v0.8.4
 
 以下约束必须由 PostgreSQL migration/constraint 实现，不能只由应用代码约定。
 
@@ -14,6 +14,9 @@
 - `invocation_attempts(attempt_id)` 主键；`(invocation_id, attempt_number)` 唯一。
 - `(invocation_id, fencing_token)` 唯一且新 Attempt token 单调递增。
 - 一个 Attempt 只能绑定 Result 或 Error；succeeded 必须有 Result，failed/outcome_unknown 必须有相应 Error。
+- Invocation active 状态必须绑定 current_attempt_id；`attempt_count <= max_attempts` 必须有 CHECK/事务约束。
+- outcome_unknown/reconciling/manual_review 必须绑定 InvocationReconciliationCase；abandoned 必须绑定 `risk_accepted=true` 的 append-only InvocationManualReviewDecision。
+- Invocation 与 Sandbox 的 cancelled 只能引用 `not_started` 或 `stopped_before_effect` 证据；已完成副作用不得记为取消成功。
 
 ## Sandbox
 
@@ -30,6 +33,7 @@
 ## Provider
 
 - `provider_revisions(provider_revision_id)` 主键、provider_revision_digest 唯一；Update/Delete 权限撤销，只允许 Insert。
+- 每个 ProviderRevision（包括 Model/Tool/Skill/Renderer）都必须有 `conformance_set_digest`；CapabilityResolution 的 definition digest、允许 Provider Kind 和 conformance 覆盖必须在 Admission 时校验。
 - `provider_admission_decisions(decision_id)` 主键；`(provider_revision_id, decision_sequence)` 唯一且 append-only。
 - sequence > 1 必须引用上一 decision；revoked 必须有 reason。
 - 新 Run 只能选择 latest decision=certified 的 Revision；RunManifest 保留 revision/decision digest，后续撤销不改写历史 Run。

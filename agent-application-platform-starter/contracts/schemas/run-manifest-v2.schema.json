@@ -56,7 +56,8 @@
         "commit": { "type": "string" },
         "governed_conformance_report_digest": {
           "type": "string",
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "description": "Must equal the verified Agent Runtime ProviderRevision conformance_set_digest."
         }
       },
       "additionalProperties": false
@@ -157,6 +158,9 @@
   "additionalProperties": false,
   "x-semantic-constraints": [
     "every Scenario required capability has exactly one compatible capability_resolution",
+    "every capability_definition_digest binds the admitted CapabilityDefinition",
+    "selected Provider kind is allowed and its conformance covers the resolved capability",
+    "every Sandbox required_capabilities entry is covered by its Sandbox ProviderRevision conformance",
     "all selected ProviderRevisions have a latest certified admission decision at admission",
     "run_manifest_digest is RFC 8785 JCS SHA-256 over the manifest excluding run_manifest_digest",
     "agent_runtime and all Sandbox revisions remain immutable for the Run",

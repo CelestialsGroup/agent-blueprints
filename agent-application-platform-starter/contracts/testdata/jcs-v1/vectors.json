@@ -1,6 +1,6 @@
 {
-  "version": "1.1.0",
-  "description": "RFC 8785 / Strict I-JSON interoperability vectors used by Python, JavaScript and Go.",
+  "version": "2.0.0",
+  "description": "RFC 8785 canonicalization vectors and a distinct Strict I-JSON admission profile shared by Python, JavaScript and Go.",
   "valid": [
     {
       "id": "rfc8785-reference-numbers",
@@ -27,6 +27,11 @@
       "input": "{\"€\":\"Euro\",\"\\r\":\"CR\",\"דּ\":\"Hebrew\",\"1\":\"One\",\"😀\":\"Emoji\",\"\\u0080\":\"Control\",\"ö\":\"Latin\"}",
       "canonical": "{\"\\r\":\"CR\",\"1\":\"One\",\"\":\"Control\",\"ö\":\"Latin\",\"€\":\"Euro\",\"😀\":\"Emoji\",\"דּ\":\"Hebrew\"}"
     }
+  ],
+  "strict_valid": [
+    { "id": "safe-integer-upper-bound", "input": "{\"n\":9007199254740991}", "canonical": "{\"n\":9007199254740991}" },
+    { "id": "safe-integer-exponent-form", "input": "{\"n\":9007199254740991e0}", "canonical": "{\"n\":9007199254740991}" },
+    { "id": "non-integral-number", "input": "{\"n\":1.25}", "canonical": "{\"n\":1.25}" }
   ],
   "invalid": [
     {
@@ -58,6 +63,16 @@
       "id": "unsafe-integer-exponent-form",
       "input": "{\"n\":9007199254740992e0}",
       "reason": "An exponent token that canonicalizes to an unsafe integer is also forbidden."
+    },
+    {
+      "id": "unsafe-large-decimal-integer",
+      "input": "{\"n\":1000000000000000000000}",
+      "reason": "A large decimal integer cannot bypass the Strict I-JSON safe-integer profile."
+    },
+    {
+      "id": "unsafe-large-exponent-integer",
+      "input": "{\"n\":1e21}",
+      "reason": "An exponent-form mathematical integer outside the safe range is forbidden by the admission profile."
     },
     {
       "id": "lone-surrogate",

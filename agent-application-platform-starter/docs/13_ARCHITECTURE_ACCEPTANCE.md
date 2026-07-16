@@ -1,4 +1,4 @@
-# v0.8.3 Architecture Acceptance
+# v0.8.4 Architecture Acceptance
 
 ## Contract admission
 

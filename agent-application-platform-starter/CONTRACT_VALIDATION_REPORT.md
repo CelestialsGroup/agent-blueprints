@@ -1,4 +1,4 @@
-# Contract Validation Report — v0.8.3
+# Contract Validation Report — v0.8.4
 
 Status: **local re-hardening evidence complete except Go/public matrix; repository-root integration and public re-admission remain pending; candidate is not frozen**
 
@@ -10,16 +10,17 @@ Validation date: 2026-07-16
 |---|---|
 | Official Bootstrap from a clean ZIP with CPython 3.12 and npm | pass with the exact command; Python hashes and npm integrity enforced |
 | Supply-chain Gate after virtual-environment creation | pass; generated `.pyc` ignored, tracked bytecode/`.DS_Store` remain forbidden |
-| Source-only static audit | pass: 175 JSON, 21 YAML, 4 OpenAPI, 91 Markdown at execution time |
-| JSON Schema | pass: 112 schemas |
-| Fixtures | pass: 35 valid, 11 schema-invalid |
-| Semantic invariants | pass: 4 state-machine checks and 12 negative fixtures |
-| Contract Manifest | pass in Python and Node: 122 governed resources |
-| Compatibility self-tests | pass for reported Schema/OpenAPI/state-machine cases |
+| Source-only static audit | pass: 188 JSON, 21 YAML, 4 OpenAPI, 94 Markdown at execution time |
+| JSON Schema | pass: 116 schemas |
+| Fixtures | pass: 40 valid, 11 schema-invalid; generic Tool Provider positive path included |
+| Semantic invariants | pass: 6 state-machine/safety checks and 21 negative fixtures |
+| Contract Manifest | pass in Python and Node: 126 governed resources |
+| Compatibility self-tests | pass for `$ref`, enum/const/type, alternatives, parameter/body schema and response media narrowing plus prior cases |
+| Non-commit baseline negative test | pass: branch/tag/abbreviated ref rejected |
 | Compatibility baseline | N/A locally: no publicly admitted frozen baseline; CI fail-closed behavior separately tested |
 | CI missing-baseline negative test | pass: `CI=true` without protected exception exits non-zero |
-| Python JCS/Strict I-JSON | pass: 5 valid + 7 invalid |
-| Node JCS/Strict I-JSON | pass: 5 valid + 7 invalid |
+| Python JCS/Strict I-JSON | pass: 5 canonicalization + 3 strict-valid + 9 strict-invalid |
+| Node JCS/Strict I-JSON | pass: 5 canonicalization + 3 strict-valid + 9 strict-invalid |
 | OpenAPI | pass: 4 documents, each 0 errors / 0 warnings |
 | OpenAPI Bundle | pass: 4 bundles; second generation byte-identical |
 | Go JCS/Strict I-JSON | not executed locally: Go toolchain unavailable |

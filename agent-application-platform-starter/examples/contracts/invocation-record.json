@@ -1,0 +1,23 @@
+{
+  "invocation_id": "inv_01J00000000000000000000000",
+  "tenant_id": "tenant_demo",
+  "work_order_id": "wo_01J00000000000000000000000",
+  "workflow_run_id": "wfr_01J00000000000000000000000",
+  "workflow_step_id": "step_tool_echo",
+  "capability_id": "tool.echo",
+  "capability_version": "1.0",
+  "provider_instance_id": "tpi_echo",
+  "idempotency_key": "ik_invocation_demo",
+  "request_digest": "sha256:0101010101010101010101010101010101010101010101010101010101010101",
+  "side_effect": "non_idempotent",
+  "status": "manual_review",
+  "provider_operation_id": "provider-op-1",
+  "current_attempt_id": "ia_01J00000000000000000000000",
+  "attempt_count": 1,
+  "max_attempts": 3,
+  "reconciliation_case_id": "irc_01J00000000000000000000000",
+  "reconciliation_deadline_at": "2026-07-16T10:30:00Z",
+  "manual_review_case_id": "imr_01J00000000000000000000000",
+  "created_at": "2026-07-16T10:00:00Z",
+  "updated_at": "2026-07-16T10:31:00Z"
+}

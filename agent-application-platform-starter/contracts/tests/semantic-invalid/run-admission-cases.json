@@ -5,6 +5,10 @@
     { "id": "forged-provider-revision-digest", "mutation": "forged_provider_revision_digest" },
     { "id": "extraneous-capability-resolution", "mutation": "extraneous_capability_resolution" },
     { "id": "forged-admission-decision-digest", "mutation": "forged_admission_decision_digest" },
-    { "id": "stale-admission-decision", "mutation": "stale_admission_decision" }
+    { "id": "stale-admission-decision", "mutation": "stale_admission_decision" },
+    { "id": "forged-capability-definition-digest", "mutation": "forged_capability_definition_digest" },
+    { "id": "sandbox-unsupported-capability", "mutation": "sandbox_unsupported_capability" },
+    { "id": "forged-agent-runtime-outer-conformance", "mutation": "forged_agent_runtime_outer_conformance" },
+    { "id": "capability-bound-to-incompatible-provider-kind", "mutation": "capability_incompatible_provider_kind" }
   ]
 }

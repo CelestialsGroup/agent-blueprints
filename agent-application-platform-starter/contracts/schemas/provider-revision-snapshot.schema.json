@@ -38,7 +38,7 @@
     "configuration_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "approved_permissions_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "credential_binding_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
-    "conformance_report_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "conformance_report_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$", "description": "Snapshot of ProviderRevision.conformance_set_digest for every Provider kind." },
     "admission_decision_id": { "type": "string", "minLength": 1 },
     "admission_decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "admission_status": { "const": "certified" }

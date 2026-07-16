@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:cancellation-confirmation:v1",
+  "title": "CancellationConfirmation",
+  "type": "object",
+  "required": ["confirmed_by", "evidence_reference", "external_effect_status", "confirmed_at"],
+  "properties": {
+    "confirmed_by": { "enum": ["platform", "provider", "manual_review"] },
+    "evidence_reference": { "type": "string", "minLength": 1 },
+    "external_effect_status": {
+      "enum": ["not_started", "stopped_before_effect"],
+      "description": "A completed external effect is never cancellation success; resolve it as succeeded/partial/failed or by explicit manual outcome."
+    },
+    "confirmed_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

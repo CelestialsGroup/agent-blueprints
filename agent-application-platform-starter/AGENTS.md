@@ -1,8 +1,8 @@
-# Agent Application Platform v0.8.3 — implementation rules
+# Agent Application Platform v0.8.4 — implementation rules
 
 ## Authority
 
-`START_HERE.md`、本文件、`docs/41_V083_REVIEW_RESOLUTION.md` 与可执行契约是当前事实源。发生冲突时，Schema、状态机、数据库约束和 Gate 优先于叙述性文档。不得恢复 v0.8.2 或更早设计。
+`START_HERE.md`、本文件、`docs/42_V084_REVIEW_RESOLUTION.md` 与可执行契约是当前事实源。发生冲突时，Schema、状态机、数据库约束和 Gate 优先于叙述性文档。不得恢复 v0.8.3 或更早设计。
 
 ## Frozen boundary impact check
 

@@ -1,23 +1,24 @@
 {
-  "baseline": "v0.8.3",
-  "status": "local_rehardening_complete_repository_integration_and_public_ci_pending",
+  "baseline": "v0.8.4",
+  "status": "local_contract_closure_complete_repository_integration_and_public_ci_pending",
   "validated_at": "2026-07-16",
   "local_validation": {
-    "bootstrap_python_3_12_with_external_venv": "passed",
-    "schemas": 112,
-    "valid_fixtures": 35,
+    "schemas": 116,
+    "valid_fixtures": 40,
     "invalid_schema_fixtures": 11,
-    "semantic_state_machine_checks": 4,
-    "invalid_semantic_fixtures": 12,
-    "strict_ijson_vectors_python": "5_valid_7_invalid_passed",
-    "strict_ijson_vectors_node": "5_valid_7_invalid_passed",
+    "semantic_state_machine_and_safety_checks": 6,
+    "invalid_semantic_fixtures": 21,
+    "provider_kinds_positive_fixture": "tool_passed",
+    "strict_ijson_vectors_python": "5_canonicalization_3_strict_valid_9_strict_invalid_passed",
+    "strict_ijson_vectors_node": "5_canonicalization_3_strict_valid_9_strict_invalid_passed",
     "strict_ijson_vectors_go": "not_run_toolchain_unavailable",
     "openapi_documents": 4,
     "openapi_errors": 0,
     "openapi_warnings": 0,
     "openapi_bundle_deterministic": true,
-    "contract_manifest_resources": 122,
+    "contract_manifest_resources": 126,
     "compatibility_self_tests": "passed",
+    "compatibility_non_commit_ref_rejected": "passed",
     "compatibility_missing_baseline_ci_fail_closed": "passed",
     "compatibility_baseline": "not_applicable_no_frozen_baseline"
   },
@@ -27,14 +28,7 @@
     "configure_protected_compatibility_variables",
     "remove_tracked_ds_store_from_parent_repo"
   ],
-  "pending_public_ci": [
-    "python_3_11_matrix",
-    "python_3_13_matrix",
-    "node_22_16",
-    "go_1_23_2_strict_ijson",
-    "gofmt_gate",
-    "deterministic_bundle_recheck"
-  ],
+  "pending_public_ci": ["python_3_11_matrix", "python_3_13_matrix", "node_22_16", "go_1_23_2_strict_ijson", "gofmt_gate", "deterministic_bundle_recheck"],
   "frozen": false,
   "production_ready": false
 }

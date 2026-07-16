@@ -3,7 +3,7 @@
   "$id": "urn:agent-platform:run-admission-context:v1",
   "title": "RunAdmissionContext",
   "type": "object",
-  "required": ["scenario", "required_capabilities", "provider_revisions", "admission_decisions"],
+  "required": ["scenario", "required_capabilities", "capability_definitions", "agent_runtime_capability", "provider_revisions", "admission_decisions"],
   "properties": {
     "scenario": {
       "type": "object",
@@ -30,6 +30,13 @@
         "additionalProperties": false
       }
     },
+    "capability_definitions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "urn:agent-platform:admitted-capability-definition:v1" }
+    },
+    "agent_runtime_capability": { "$ref": "urn:agent-platform:admitted-capability-definition:v1" },
     "provider_revisions": { "type": "array", "minItems": 1, "items": { "$ref": "urn:agent-platform:provider-revision:v1" } },
     "admission_decisions": { "type": "array", "minItems": 1, "items": { "$ref": "urn:agent-platform:provider-admission-decision:v1" } }
   },

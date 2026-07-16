@@ -1,5 +1,24 @@
 const SAFE_INTEGER_MAX = 9007199254740991n;
 
+function exactIntegerValue(token) {
+  const negative = token.startsWith("-");
+  const unsigned = negative ? token.slice(1) : token;
+  const [mantissa, exponentText] = unsigned.toLowerCase().split("e");
+  const exponent = exponentText === undefined ? 0 : Number(exponentText);
+  const [whole, fraction = ""] = mantissa.split(".");
+  const coefficient = BigInt(`${whole}${fraction}`);
+  const scale = exponent - fraction.length;
+  let integer;
+  if (scale >= 0) {
+    integer = coefficient * (10n ** BigInt(scale));
+  } else {
+    const divisor = 10n ** BigInt(-scale);
+    if (coefficient % divisor !== 0n) return null;
+    integer = coefficient / divisor;
+  }
+  return negative ? -integer : integer;
+}
+
 function rejectLoneSurrogates(value) {
   for (let index = 0; index < value.length; index += 1) {
     const code = value.charCodeAt(index);
@@ -62,9 +81,8 @@ export function strictParse(raw) {
     offset += token.length;
     const number = Number(token);
     if (!Number.isFinite(number)) fail("Non-finite number");
-    const canonicalNumber = JSON.stringify(number);
-    if (/^-?\d+$/.test(canonicalNumber)) {
-      const integer = BigInt(canonicalNumber);
+    const integer = exactIntegerValue(token);
+    if (integer !== null) {
       if (integer > SAFE_INTEGER_MAX || integer < -SAFE_INTEGER_MAX) {
         fail("Integer exceeds interoperable IEEE-754 safe range");
       }

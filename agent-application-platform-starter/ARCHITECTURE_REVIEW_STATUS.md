@@ -1,6 +1,6 @@
 # Architecture Review Status
 
-Candidate: **v0.8.3 Architecture and Contract Hardening**
+Candidate: **v0.8.4 Architecture and Contract Hardening**
 
 Current package status: **Contract re-hardening complete locally; ready for public CI re-admission after repository-root integration**
 
@@ -10,10 +10,10 @@ Current repository status: **not admitted until the Git-root workflow is committ
 
 - OpenAPI URN Registry 投影，4 个文档可 lint/bundle，Gate 强制 0 error/0 warning。
 - 可执行 Gate 入口、Python 版本前置检查、monorepo Workflow 安装辅助。
-- RunManifest Admission Context：Scenario 精确能力集合、Revision/Decision 自摘要、最新认证决策、Instance/Snapshot 绑定。
-- SandboxOperation v2：Attempt、Retry、Reconciliation、Manual Review、安全取消确认、Risk-accepted Abandon 完整闭环。
+- RunManifest Admission Context：CapabilityDefinition 摘要、允许 Provider Kind、Conformance 覆盖、Scenario 精确能力集合、Revision/Decision 与 Snapshot 绑定。
+- Invocation/SandboxOperation v2：Attempt、Retry、Reconciliation、Manual Review、安全取消确认、Risk-accepted Abandon 完整闭环。
 - ProviderRevision 与 append-only Admission/Revocation Decision 分离。
-- Node/Go/Python Strict I-JSON 共享全部正反向向量，包括小数/指数形式的 unsafe integer。
+- Node/Go/Python 将 RFC 8785 canonicalization 与 Strict I-JSON Admission 分层，并精确拒绝所有超范围数学整数词法。
 - Schema `$ref` 复用，避免 SandboxSpec 和 ProviderRevisionSnapshot 漂移。
 - 扩展 Compatibility Gate；CI 基线来自受保护变量，缺失时 fail-closed，首个冻结例外也必须显式授权。
 - Python hash lock、npm integrity、Actions full SHA；供应链卫生只检查 Git 跟踪文件并拒绝 `.DS_Store`/bytecode。

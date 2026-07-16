@@ -13,8 +13,8 @@ Temporal Activity 可能重复调度，网络调用可能超时，外部 Provide
 - InvocationAttempt：一次真实提交
 - InvocationResult：已确认结果
 - ExternalOperation：Provider Operation ID
-- ReconciliationCase：Outcome Unknown 对账
-- ManualReviewCase：无法自动确认时的人工裁决
+- InvocationReconciliationCase：Outcome Unknown 对账
+- InvocationManualReviewDecision：无法自动确认时的 append-only 人工裁决
 
 ## 3. 稳定标识
 
@@ -126,6 +126,8 @@ Reconciliation 必须定义：
 
 - resolve_success
 - resolve_failure
+- resolve_cancelled
+- retry
 - abandon
 
 必须记录：
@@ -137,7 +139,9 @@ Reconciliation 必须定义：
 - risk acceptance
 - occurred_at
 
-`abandoned` 是独立终态，后续若发现真实结果，只能追加 Correction Event，不修改历史决定。
+`abandon` 必须显式 `risk_accepted=true` 并由 InvocationRecord 引用 decision_id。`abandoned` 是独立终态，后续若发现真实结果，只能追加 Correction Event，不修改历史决定。
+
+取消请求只表示 intent。执行中先进入 `cancel_requested`；Provider/人工证据证明外部副作用 `not_started` 或 `stopped_before_effect` 后进入 `cancellation_confirmed`，持久化终态后才进入 `cancelled`。已完成的外部副作用不能记录为取消成功。
 
 ## 10. Side-effect Class
 

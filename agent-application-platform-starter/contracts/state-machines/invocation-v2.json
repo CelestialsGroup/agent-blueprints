@@ -1,11 +1,11 @@
 {
   "machine_id": "invocation-record",
-  "version": 1,
+  "version": 2,
   "initial_state": "prepared",
   "terminal_states": ["succeeded", "failed", "cancelled", "abandoned"],
   "transitions": [
     { "from": "prepared", "event": "dispatch", "to": "executing" },
-    { "from": "prepared", "event": "cancel_before_dispatch", "to": "cancelled" },
+    { "from": "prepared", "event": "cancel_before_dispatch_with_platform_confirmation", "to": "cancelled" },
     { "from": "executing", "event": "succeeded", "to": "succeeded" },
     { "from": "executing", "event": "known_failed", "to": "failed" },
     { "from": "executing", "event": "retryable_failure", "to": "retry_scheduled" },
@@ -14,17 +14,20 @@
     { "from": "retry_scheduled", "event": "retry_due", "to": "executing" },
     { "from": "retry_scheduled", "event": "cancel_without_inflight_attempt", "to": "cancelled" },
     { "from": "outcome_unknown", "event": "reconcile_start", "to": "reconciling" },
-    { "from": "cancel_requested", "event": "cancel_confirmed", "to": "cancelled" },
+    { "from": "cancel_requested", "event": "cancel_confirmed", "to": "cancellation_confirmed" },
     { "from": "cancel_requested", "event": "provider_reports_success", "to": "succeeded" },
     { "from": "cancel_requested", "event": "provider_reports_failure", "to": "failed" },
     { "from": "cancel_requested", "event": "cancel_outcome_unknown", "to": "outcome_unknown" },
     { "from": "reconciling", "event": "confirmed_success", "to": "succeeded" },
     { "from": "reconciling", "event": "confirmed_failure", "to": "failed" },
+    { "from": "reconciling", "event": "confirmed_cancelled", "to": "cancellation_confirmed" },
     { "from": "reconciling", "event": "retry_approved", "to": "retry_scheduled" },
     { "from": "reconciling", "event": "deadline_exceeded", "to": "manual_review" },
     { "from": "manual_review", "event": "resolve_success", "to": "succeeded" },
     { "from": "manual_review", "event": "resolve_failure", "to": "failed" },
+    { "from": "manual_review", "event": "resolve_cancelled", "to": "cancellation_confirmed" },
     { "from": "manual_review", "event": "retry_approved", "to": "retry_scheduled" },
-    { "from": "manual_review", "event": "abandon", "to": "abandoned" }
+    { "from": "manual_review", "event": "abandon_with_risk_acceptance", "to": "abandoned" },
+    { "from": "cancellation_confirmed", "event": "terminal_record_committed", "to": "cancelled" }
   ]
 }

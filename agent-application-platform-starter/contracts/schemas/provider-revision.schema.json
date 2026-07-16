@@ -8,7 +8,7 @@
     "provider_revision_id", "provider_revision_digest", "provider_instance_id",
     "plugin_id", "plugin_version", "manifest_digest", "package_digest",
     "configuration_digest", "approved_permissions_digest", "runtime_binding_digest",
-    "credential_binding_digest", "conformance", "provider_kind", "created_at"
+    "credential_binding_digest", "conformance", "conformance_set_digest", "provider_kind", "created_at"
   ],
   "properties": {
     "provider_revision_id": { "type": "string", "minLength": 1 },
@@ -44,23 +44,20 @@
         "additionalProperties": false
       }
     },
+    "conformance_set_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "RFC 8785 digest of the complete ordered conformance array; required for every Provider kind."
+    },
     "sandbox_conformance_report_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "governed_conformance_report_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "supersedes_revision_id": { "type": "string", "minLength": 1 },
     "created_at": { "type": "string", "format": "date-time" }
   },
   "additionalProperties": false,
-  "allOf": [
-    {
-      "if": { "properties": { "provider_kind": { "const": "agent_runtime" } }, "required": ["provider_kind"] },
-      "then": { "required": ["governed_conformance_report_digest"] }
-    },
-    {
-      "if": { "properties": { "provider_kind": { "const": "sandbox" } }, "required": ["provider_kind"] },
-      "then": { "required": ["sandbox_conformance_report_digest"] }
-    }
-  ],
   "x-semantic-constraints": [
+    "conformance_set_digest equals RFC 8785 JCS SHA-256 of conformance",
+    "legacy kind-specific conformance digests, when present, equal conformance_set_digest",
     "provider_revision_digest equals RFC 8785 JCS SHA-256 of this object with provider_revision_digest omitted",
     "ProviderRevision is immutable after creation; certification and revocation are ProviderAdmissionDecision records"
   ]

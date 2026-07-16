@@ -1,4 +1,4 @@
-# Contract CI and Provenance — v0.8.3
+# Contract CI and Provenance — v0.8.4
 
 ## Reproducible toolchain
 
@@ -14,7 +14,7 @@
 
 GitHub 只加载 Git 根 `.github/workflows`。独立仓库直接使用当前文件；monorepo 运行 `scripts/install_github_workflow.sh`，提交 Git 根 Workflow，并设置 `AGENT_PLATFORM_CONTRACT_ROOT`。脚本只完成复制，未提交就不算激活。
 
-Compatibility 基线来自受保护仓库变量 `AGENT_PLATFORM_FROZEN_CONTRACT_REF`。CI 缺失时 fail-closed；首个冻结基线前只能由受保护的 `AGENT_PLATFORM_ALLOW_NO_FROZEN_BASELINE=true` 显式允许 N/A，PR 修改仓库文件不能关闭该 Gate。
+Compatibility 基线来自受保护仓库变量 `AGENT_PLATFORM_FROZEN_CONTRACT_REF`，必须是已 fetch 的完整小写 Commit SHA，不能是 branch/tag/缩写。CI 缺失时 fail-closed；首个冻结基线前只能由受保护的 `AGENT_PLATFORM_ALLOW_NO_FROZEN_BASELINE=true` 显式允许 N/A，PR 修改仓库文件不能关闭该 Gate。
 
 ## Required Gates
 

@@ -5,6 +5,7 @@ import copy
 import hashlib
 import json
 import math
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -43,9 +44,6 @@ def strict_values(value: Any, path: str = "$") -> None:
     if isinstance(value, float):
         if not math.isfinite(value):
             raise ValueError(f"Non-finite number at {path}")
-        canonical = rfc8785.dumps(value).decode("utf-8")
-        if "e" not in canonical and "." not in canonical and abs(int(canonical)) > SAFE_INTEGER_MAX:
-            raise ValueError(f"Number canonicalizes to an unsafe integer at {path}")
         return
     if isinstance(value, list):
         for index, item in enumerate(value):
@@ -60,8 +58,22 @@ def strict_values(value: Any, path: str = "$") -> None:
 
 
 def strict_loads(raw: str) -> Any:
+    def strict_int(token: str) -> int:
+        value = int(token)
+        if abs(value) > SAFE_INTEGER_MAX:
+            raise ValueError("Unsafe integer")
+        return value
+
+    def strict_float(token: str) -> float:
+        exact = Decimal(token)
+        if exact == exact.to_integral_value() and abs(exact) > SAFE_INTEGER_MAX:
+            raise ValueError("Unsafe mathematical integer")
+        return float(token)
+
     value = json.loads(
         raw,
+        parse_int=strict_int,
+        parse_float=strict_float,
         parse_constant=lambda token: (_ for _ in ()).throw(ValueError(token)),
         object_pairs_hook=duplicate_guard,
     )
@@ -157,13 +169,18 @@ valid_cases = [
     ("sandbox-conformance-report.schema.json", "examples/contracts/sandbox-conformance-report.json"),
     ("provider-revision.schema.json", "examples/contracts/sandbox-provider-revision.json"),
     ("provider-revision.schema.json", "examples/contracts/agent-runtime-provider-revision.json"),
+    ("provider-revision.schema.json", "examples/contracts/tool-provider-revision.json"),
     ("provider-admission-decision.schema.json", "examples/contracts/provider-admission-decision.json"),
     ("provider-admission-decision.schema.json", "examples/contracts/agent-runtime-admission-decision.json"),
+    ("provider-admission-decision.schema.json", "examples/contracts/tool-provider-admission-decision.json"),
     ("run-admission-context.schema.json", "examples/contracts/run-admission-context.json"),
     ("sandbox-operation-record.schema.json", "examples/contracts/sandbox-operation.json"),
     ("sandbox-operation-attempt.schema.json", "examples/contracts/sandbox-operation-attempt.json"),
     ("sandbox-reconciliation-case.schema.json", "examples/contracts/sandbox-reconciliation-case.json"),
     ("sandbox-manual-review-decision.schema.json", "examples/contracts/sandbox-manual-review-decision.json"),
+    ("invocation-record.schema.json", "examples/contracts/invocation-record.json"),
+    ("invocation-reconciliation-case.schema.json", "examples/contracts/invocation-reconciliation-case.json"),
+    ("invocation-manual-review-decision.schema.json", "examples/contracts/invocation-manual-review-decision.json"),
     ("run-manifest-v2.schema.json", "examples/contracts/run-manifest-v2.json"),
 ]
 invalid_cases = [
@@ -196,7 +213,10 @@ for relative, field in [
     ("examples/contracts/provider-admission-decision.json", "decision_digest"),
     ("examples/contracts/agent-runtime-provider-revision.json", "provider_revision_digest"),
     ("examples/contracts/agent-runtime-admission-decision.json", "decision_digest"),
+    ("examples/contracts/tool-provider-revision.json", "provider_revision_digest"),
+    ("examples/contracts/tool-provider-admission-decision.json", "decision_digest"),
     ("examples/contracts/sandbox-manual-review-decision.json", "decision_digest"),
+    ("examples/contracts/invocation-manual-review-decision.json", "decision_digest"),
     ("examples/contracts/run-manifest-v2.json", "run_manifest_digest"),
 ]:
     value = load(ROOT / relative)

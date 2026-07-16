@@ -24,6 +24,8 @@ def schema_breaks(old: Any, new: Any, path: str = "$") -> list[str]:
     breaks: list[str] = []
     if not isinstance(old, dict) or not isinstance(new, dict):
         return breaks
+    if old.get("$ref") != new.get("$ref") and ("$ref" in old or "$ref" in new):
+        breaks.append(f"{path}: $ref target changed")
     old_required, new_required = set(old.get("required", [])), set(new.get("required", []))
     for name in sorted(new_required - old_required):
         breaks.append(f"{path}: newly required property {name!r}")
@@ -34,17 +36,23 @@ def schema_breaks(old: Any, new: Any, path: str = "$") -> list[str]:
         for name in sorted(set(old_properties) & set(new_properties)):
             breaks.extend(schema_breaks(old_properties[name], new_properties[name], f"{path}.{name}"))
     old_types, new_types = old.get("type"), new.get("type")
-    if old_types is not None and new_types is not None:
+    if old_types is None and new_types is not None:
+        breaks.append(f"{path}: type constraint added")
+    elif old_types is not None and new_types is not None:
         old_set = {old_types} if isinstance(old_types, str) else set(old_types)
         new_set = {new_types} if isinstance(new_types, str) else set(new_types)
         if not old_set.issubset(new_set):
             breaks.append(f"{path}: type narrowed from {sorted(old_set)} to {sorted(new_set)}")
-    if "enum" in old and "enum" in new:
+    if "enum" not in old and "enum" in new:
+        breaks.append(f"{path}: enum constraint added")
+    elif "enum" in old and "enum" in new:
         old_enum = {json.dumps(item, sort_keys=True) for item in old["enum"]}
         new_enum = {json.dumps(item, sort_keys=True) for item in new["enum"]}
         if not old_enum.issubset(new_enum):
             breaks.append(f"{path}: enum values removed")
-    if "const" in old and old.get("const") != new.get("const"):
+    if "const" not in old and "const" in new:
+        breaks.append(f"{path}: const constraint added")
+    elif "const" in old and old.get("const") != new.get("const"):
         breaks.append(f"{path}: const changed")
     for keyword in MINIMUM_KEYWORDS:
         old_value, new_value = old.get(keyword), new.get(keyword)
@@ -74,6 +82,8 @@ def schema_breaks(old: Any, new: Any, path: str = "$") -> list[str]:
         if isinstance(old_items, list) and isinstance(new_items, list):
             if keyword == "allOf" and len(new_items) > len(old_items):
                 breaks.append(f"{path}: allOf constraints added")
+            if keyword in {"anyOf", "oneOf"} and len(new_items) < len(old_items):
+                breaks.append(f"{path}: {keyword} alternatives removed")
             for index in range(min(len(old_items), len(new_items))):
                 breaks.extend(schema_breaks(old_items[index], new_items[index], f"{path}.{keyword}[{index}]"))
     return breaks
@@ -105,11 +115,26 @@ def openapi_breaks(old: dict[str, Any], new: dict[str, Any], path: str) -> list[
                 previous = old_params.get(key)
                 if parameter.get("required") is True and (previous is None or previous.get("required") is not True):
                     breaks.append(f"{path}: {label} newly requires parameter {key}")
+                if previous is not None:
+                    breaks.extend(schema_breaks(previous.get("schema", {}), parameter.get("schema", {}), f"{path}: {label} parameter {key}"))
             old_responses, new_responses = old_op.get("responses", {}), new_op.get("responses", {})
             for status in sorted(set(old_responses) - set(new_responses)):
                 breaks.append(f"{path}: {label} removed response {status}")
+            for status in sorted(set(old_responses) & set(new_responses)):
+                old_content = old_responses[status].get("content", {})
+                new_content = new_responses[status].get("content", {})
+                for media_type in sorted(set(old_content) - set(new_content)):
+                    breaks.append(f"{path}: {label} response {status} removed media type {media_type}")
+                for media_type in sorted(set(old_content) & set(new_content)):
+                    breaks.extend(schema_breaks(old_content[media_type].get("schema", {}), new_content[media_type].get("schema", {}), f"{path}: {label} response {status} {media_type}"))
             if new_op.get("requestBody", {}).get("required") is True and old_op.get("requestBody", {}).get("required") is not True:
                 breaks.append(f"{path}: {label} request body became required")
+            old_request_content = old_op.get("requestBody", {}).get("content", {})
+            new_request_content = new_op.get("requestBody", {}).get("content", {})
+            for media_type in sorted(set(old_request_content) - set(new_request_content)):
+                breaks.append(f"{path}: {label} request removed media type {media_type}")
+            for media_type in sorted(set(old_request_content) & set(new_request_content)):
+                breaks.extend(schema_breaks(old_request_content[media_type].get("schema", {}), new_request_content[media_type].get("schema", {}), f"{path}: {label} request {media_type}"))
             if not old_op.get("security") and new_op.get("security"):
                 breaks.append(f"{path}: {label} added a security requirement")
     return breaks
@@ -127,13 +152,19 @@ def self_test() -> None:
         ({"type": "object"}, {"type": "object", "additionalProperties": False}),
         ({"type": "object", "properties": {"x": {"type": ["string", "null"]}}},
          {"type": "object", "required": ["x"], "properties": {"x": {"type": "string"}}}),
+        ({"$ref": "urn:old"}, {"$ref": "urn:new"}),
+        ({"type": "string"}, {"type": "string", "enum": ["x"]}),
+        ({"anyOf": [{"type": "string"}, {"type": "number"}]}, {"anyOf": [{"type": "string"}]}),
     ]:
         assert schema_breaks(old, new)
-    old_api = {"paths": {"/v1/x": {"get": {"parameters": [], "responses": {"200": {}, "404": {}}}}}}
-    new_api = {"paths": {"/v1/x": {"get": {"parameters": [{"in": "query", "name": "q", "required": True}], "responses": {"200": {}}}}}}
+    old_api = {"paths": {"/v1/x": {"get": {"parameters": [{"in": "query", "name": "p", "schema": {"type": "string"}}], "requestBody": {"content": {"application/json": {"schema": {"type": "string"}}}}, "responses": {"200": {"content": {"application/json": {}, "text/plain": {}}}, "404": {}}}}}}
+    new_api = {"paths": {"/v1/x": {"get": {"parameters": [{"in": "query", "name": "q", "required": True}, {"in": "query", "name": "p", "schema": {"type": "string", "minLength": 1}}], "requestBody": {"content": {"application/json": {"schema": {"type": "string", "minLength": 1}}}}, "responses": {"200": {"content": {"application/json": {}}}}}}}}
     findings = openapi_breaks(old_api, new_api, "api.yaml")
     assert any("requires parameter" in item for item in findings)
     assert any("removed response 404" in item for item in findings)
+    assert any("removed media type text/plain" in item for item in findings)
+    assert any("parameter" in item and "minLength" in item for item in findings)
+    assert any("request application/json" in item and "minLength" in item for item in findings)
     assert transition_breaks({"transitions": [{"from": "a", "event": "go", "to": "b"}]}, {"transitions": []}, "machine.json")
 
 
@@ -172,7 +203,7 @@ def compare(ref: str) -> list[str]:
     schema_paths = [*(ROOT / "contracts/schemas").glob("*.json"), *(ROOT / "examples/schemas").glob("*.json")]
     current_schemas = {json.loads(item.read_text())["$id"]: item for item in schema_paths}
     old_manifest_text = None
-    for version in ("v0.8.3", "v0.8.2", "v0.8.1"):
+    for version in ("v0.8.4", "v0.8.3", "v0.8.2", "v0.8.1"):
         old_manifest_text = git_text(ref, f"contracts/compatibility/{version}-contract-manifest.json", prefix)
         if old_manifest_text:
             break
@@ -216,6 +247,10 @@ if not ref:
     reason = "protected first-baseline exception is active" if in_ci else "local run has no explicit CONTRACT_FROZEN_BASE_REF"
     print(f"Contract compatibility: N/A — {reason}; comparator self-tests passed.")
     raise SystemExit(0)
+if not __import__("re").fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", ref):
+    raise SystemExit("CONTRACT_FROZEN_BASE_REF must be a full lowercase Git commit SHA, not a branch, tag, or abbreviated ref")
+if subprocess.run(["git", "cat-file", "-e", f"{ref}^{{commit}}"], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
+    raise SystemExit("CONTRACT_FROZEN_BASE_REF does not resolve to a fetched commit")
 breaking = compare(ref)
 if breaking:
     raise SystemExit("Breaking contract changes detected:\n- " + "\n- ".join(breaking))

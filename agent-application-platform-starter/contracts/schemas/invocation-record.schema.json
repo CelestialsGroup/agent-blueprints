@@ -1,121 +1,53 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:agent-platform:invocation-record:v1",
-  "title": "InvocationRecord",
+  "$id": "urn:agent-platform:invocation-record:v2",
+  "title": "InvocationRecordV2",
   "type": "object",
-  "required": [
-    "invocation_id",
-    "tenant_id",
-    "work_order_id",
-    "workflow_run_id",
-    "workflow_step_id",
-    "capability_id",
-    "capability_version",
-    "provider_instance_id",
-    "idempotency_key",
-    "request_digest",
-    "side_effect",
-    "status",
-    "created_at",
-    "updated_at",
-    "attempt_count",
-    "max_attempts"
-  ],
+  "required": ["invocation_id", "tenant_id", "work_order_id", "workflow_run_id", "workflow_step_id", "capability_id", "capability_version", "provider_instance_id", "idempotency_key", "request_digest", "side_effect", "status", "created_at", "updated_at", "attempt_count", "max_attempts"],
   "properties": {
-    "invocation_id": {
-      "type": "string"
-    },
-    "tenant_id": {
-      "type": "string"
-    },
-    "work_order_id": {
-      "type": "string"
-    },
-    "workflow_run_id": {
-      "type": "string"
-    },
-    "workflow_step_id": {
-      "type": "string"
-    },
-    "capability_id": {
-      "type": "string"
-    },
-    "capability_version": {
-      "type": "string"
-    },
-    "provider_instance_id": {
-      "type": "string"
-    },
-    "idempotency_key": {
-      "type": "string"
-    },
-    "request_digest": {
-      "type": "string",
-      "pattern": "^sha256:[0-9a-f]{64}$"
-    },
-    "side_effect": {
-      "enum": [
-        "pure",
-        "idempotent",
-        "externally_idempotent",
-        "non_idempotent"
-      ]
-    },
-    "status": {
-      "enum": [
-        "prepared",
-        "executing",
-        "retry_scheduled",
-        "outcome_unknown",
-        "reconciling",
-        "manual_review",
-        "succeeded",
-        "failed",
-        "cancel_requested",
-        "cancelled",
-        "abandoned"
-      ]
-    },
-    "provider_operation_id": {
-      "type": "string"
-    },
-    "result_reference": {
-      "type": "string"
-    },
-    "created_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "updated_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "completed_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "attempt_count": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "max_attempts": {
-      "type": "integer",
-      "minimum": 1
-    },
-    "next_retry_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "reconciliation_deadline_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "manual_review_case_id": {
-      "type": "string"
-    },
-    "terminal_reason": {
-      "type": "string"
-    }
+    "invocation_id": { "type": "string", "minLength": 1 },
+    "tenant_id": { "type": "string", "minLength": 1 },
+    "work_order_id": { "type": "string", "minLength": 1 },
+    "workflow_run_id": { "type": "string", "minLength": 1 },
+    "workflow_step_id": { "type": "string", "minLength": 1 },
+    "capability_id": { "type": "string", "minLength": 1 },
+    "capability_version": { "type": "string", "minLength": 1 },
+    "provider_instance_id": { "type": "string", "minLength": 1 },
+    "idempotency_key": { "type": "string", "minLength": 1 },
+    "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "side_effect": { "enum": ["pure", "idempotent", "externally_idempotent", "non_idempotent"] },
+    "status": { "enum": ["prepared", "executing", "retry_scheduled", "outcome_unknown", "reconciling", "manual_review", "cancel_requested", "cancellation_confirmed", "succeeded", "failed", "cancelled", "abandoned"] },
+    "provider_operation_id": { "type": "string", "minLength": 1 },
+    "current_attempt_id": { "type": "string", "minLength": 1 },
+    "result_reference": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "completed_at": { "type": "string", "format": "date-time" },
+    "attempt_count": { "type": "integer", "minimum": 0 },
+    "max_attempts": { "type": "integer", "minimum": 1 },
+    "next_retry_at": { "type": "string", "format": "date-time" },
+    "reconciliation_deadline_at": { "type": "string", "format": "date-time" },
+    "reconciliation_case_id": { "type": "string", "minLength": 1 },
+    "manual_review_case_id": { "type": "string", "minLength": 1 },
+    "manual_review_decision_id": { "type": "string", "minLength": 1 },
+    "cancellation_requested_at": { "type": "string", "format": "date-time" },
+    "cancellation_intent": { "type": "boolean" },
+    "cancellation_confirmation": { "$ref": "urn:agent-platform:cancellation-confirmation:v1" },
+    "terminal_reason": { "type": "string", "minLength": 1 }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    { "if": { "properties": { "status": { "const": "prepared" } }, "required": ["status"] }, "then": { "properties": { "attempt_count": { "const": 0 } }, "not": { "required": ["current_attempt_id"] } } },
+    { "if": { "properties": { "status": { "enum": ["executing", "retry_scheduled", "outcome_unknown", "reconciling", "manual_review", "cancel_requested", "cancellation_confirmed"] } }, "required": ["status"] }, "then": { "required": ["current_attempt_id"], "properties": { "attempt_count": { "minimum": 1 } } } },
+    { "if": { "properties": { "status": { "const": "retry_scheduled" } }, "required": ["status"] }, "then": { "required": ["next_retry_at"] } },
+    { "if": { "properties": { "status": { "enum": ["outcome_unknown", "reconciling", "manual_review"] } }, "required": ["status"] }, "then": { "required": ["reconciliation_case_id", "reconciliation_deadline_at"] } },
+    { "if": { "properties": { "status": { "const": "manual_review" } }, "required": ["status"] }, "then": { "required": ["manual_review_case_id"] } },
+    { "if": { "properties": { "status": { "const": "cancel_requested" } }, "required": ["status"] }, "then": { "required": ["cancellation_requested_at", "cancellation_intent"], "properties": { "cancellation_intent": { "const": true } } } },
+    { "if": { "properties": { "status": { "const": "cancellation_confirmed" } }, "required": ["status"] }, "then": { "required": ["cancellation_confirmation"] } },
+    { "if": { "properties": { "status": { "const": "succeeded" } }, "required": ["status"] }, "then": { "required": ["result_reference", "completed_at"] } },
+    { "if": { "properties": { "status": { "const": "failed" } }, "required": ["status"] }, "then": { "required": ["terminal_reason", "completed_at"] } },
+    { "if": { "properties": { "status": { "const": "cancelled" } }, "required": ["status"] }, "then": { "required": ["terminal_reason", "completed_at", "cancellation_confirmation"] } },
+    { "if": { "properties": { "status": { "const": "abandoned" } }, "required": ["status"] }, "then": { "required": ["terminal_reason", "completed_at", "manual_review_case_id", "manual_review_decision_id"] } }
+  ],
+  "x-semantic-constraints": ["attempt_count must not exceed max_attempts", "non-idempotent retry requires reconciliation/manual approval and a new fencing token"]
 }

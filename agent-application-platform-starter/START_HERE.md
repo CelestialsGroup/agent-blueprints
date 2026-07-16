@@ -1,8 +1,8 @@
 # START HERE
 
-这是 Agent Application Platform **v0.8.3 Architecture and Contract Hardening Candidate**。
+这是 Agent Application Platform **v0.8.4 Architecture and Contract Hardening Candidate**。
 
-v0.3–v0.8.2 均不得作为当前实施基线；旧版本只保留为历史审查证据。
+v0.3–v0.8.3 均不得作为当前实施基线；旧版本只保留为历史审查证据。
 
 ## 唯一 Admission 入口
 
@@ -17,8 +17,8 @@ make validate-all
 
 1. `AGENTS.md`
 2. `ARCHITECTURE_REVIEW_STATUS.md`
-3. `V083_CONTRACT_REHARDENING_AUDIT_REPORT.md`
-4. `docs/41_V083_REVIEW_RESOLUTION.md`
+3. `V084_CONTRACT_CLOSURE_AUDIT_REPORT.md`
+4. `docs/42_V084_REVIEW_RESOLUTION.md`
 5. `docs/00_ARCHITECTURE_BASELINE.md`
 6. `docs/01_SYSTEM_BOUNDARIES.md`
 7. `docs/17_IDENTITY_AND_AUTHORIZATION.md`

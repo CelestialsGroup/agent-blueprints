@@ -1,4 +1,4 @@
-# State Machine Specification — v0.8.3
+# State Machine Specification — v0.8.4
 
 JSON 状态机是状态名称与迁移的权威事实源；Schema 定义允许状态集合，`validate_semantics.py` 强制两者一致、终态无出边且终态可达。
 
@@ -10,9 +10,9 @@ JSON 状态机是状态名称与迁移的权威事实源；Schema 定义允许�
 
 ## Invocation
 
-权威文件：`contracts/state-machines/invocation-v1.json`。状态集合与 `invocation-record.schema.json` 一致：prepared、executing、retry_scheduled、outcome_unknown、reconciling、manual_review、succeeded、failed、cancel_requested、cancelled、abandoned。
+权威文件：`contracts/state-machines/invocation-v2.json`。状态集合与 `invocation-record.schema.json` 一致：prepared、executing、retry_scheduled、outcome_unknown、reconciling、manual_review、cancel_requested、cancellation_confirmed、succeeded、failed、cancelled、abandoned。
 
-取消请求不是取消证明。执行中的 Invocation 必须等待 Provider 确认；未知结果进入 outcome_unknown/reconciling。
+取消请求不是取消证明。执行中的 Invocation 必须等待 Provider 确认；未知结果进入 outcome_unknown/reconciling。InvocationRecord、Attempt、InvocationReconciliationCase 和 InvocationManualReviewDecision 均持久化；abandon 只能由 `risk_accepted=true` 的 append-only 决策触发。
 
 ## SandboxOperation
 

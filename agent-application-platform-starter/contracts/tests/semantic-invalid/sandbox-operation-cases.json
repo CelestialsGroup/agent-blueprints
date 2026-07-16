@@ -4,6 +4,7 @@
   "cases": [
     { "id": "attempt-number-exceeds-max", "mutation": "attempt_number_exceeds_max" },
     { "id": "running-without-current-attempt", "mutation": "running_without_current_attempt" },
-    { "id": "abandon-without-risk-acceptance", "mutation": "abandon_without_risk_acceptance" }
+    { "id": "abandon-without-risk-acceptance", "mutation": "abandon_without_risk_acceptance" },
+    { "id": "cancelled-after-external-effect-completed", "mutation": "cancelled_effect_completed" }
   ]
 }

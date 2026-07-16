@@ -14,6 +14,15 @@ PY
 mkdir -p "$GIT_ROOT/.github/workflows"
 cp "$PACKAGE_ROOT/.github/workflows/contracts.yml" "$GIT_ROOT/.github/workflows/contracts.yml"
 
+if git -C "$GIT_ROOT" ls-files --error-unmatch .DS_Store >/dev/null 2>&1; then
+  cat >&2 <<'EOF'
+Repository integration is still blocked because .DS_Store is tracked at the Git root.
+Review it, then run: git rm --cached -- .DS_Store
+Commit that removal together with .github/workflows/contracts.yml.
+EOF
+  exit 3
+fi
+
 cat <<EOF
 Installed the contracts workflow at the Git repository root.
 Set the GitHub repository variable AGENT_PLATFORM_CONTRACT_ROOT to:
