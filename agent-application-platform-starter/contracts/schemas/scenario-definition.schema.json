@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:scenario-definition:v1",
+  "title": "ScenarioDefinition",
+  "type": "object",
+  "required": [
+    "api_version",
+    "id",
+    "version",
+    "name",
+    "input_schema",
+    "workflow",
+    "capabilities",
+    "outputs",
+    "definition_digest"
+  ],
+  "properties": {
+    "api_version": {
+      "const": "agent-platform/scenario/v1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9.-]{2,127}$"
+    },
+    "version": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "input_schema": {
+      "type": "object",
+      "required": [
+        "uri",
+        "digest",
+        "dialect"
+      ],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "uri"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "dialect": {
+          "const": "https://json-schema.org/draft/2020-12/schema"
+        }
+      },
+      "additionalProperties": false
+    },
+    "workflow": {
+      "type": "object",
+      "required": [
+        "id",
+        "version",
+        "definition_digest"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "definition_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "capabilities": {
+      "type": "object",
+      "required": [
+        "required",
+        "optional"
+      ],
+      "properties": {
+        "required": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "version_range"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "version_range": {
+                "type": "string"
+              },
+              "required_profiles": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "optional": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "version_range"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "version_range": {
+                "type": "string"
+              },
+              "required_profiles": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "outputs": {
+      "type": "object",
+      "required": [
+        "primary_media_type"
+      ],
+      "properties": {
+        "primary_media_type": {
+          "type": "string"
+        },
+        "optional_media_types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "resource_class": {
+      "enum": [
+        "standard",
+        "browser",
+        "office",
+        "video",
+        "gpu"
+      ]
+    },
+    "ui": {
+      "type": "object"
+    },
+    "definition_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  },
+  "additionalProperties": false
+}

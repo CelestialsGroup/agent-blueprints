@@ -1,0 +1,242 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:plugin-invocation-status:v1",
+  "title": "PluginInvocationStatus",
+  "type": "object",
+  "required": [
+    "invocation_id",
+    "status",
+    "observed_at",
+    "invocation_attempt_id",
+    "fencing_token"
+  ],
+  "properties": {
+    "invocation_id": {
+      "type": "string"
+    },
+    "provider_operation_id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "accepted",
+        "running",
+        "succeeded",
+        "failed",
+        "cancelled",
+        "unknown"
+      ]
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "result": {
+      "type": "object",
+      "required": [
+        "invocation_id",
+        "provider_operation_id",
+        "output",
+        "staged_artifacts",
+        "usage",
+        "completed_at",
+        "invocation_attempt_id",
+        "fencing_token"
+      ],
+      "properties": {
+        "invocation_id": {
+          "type": "string"
+        },
+        "provider_operation_id": {
+          "type": "string"
+        },
+        "output": {
+          "type": "object"
+        },
+        "staged_artifacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "staging_id",
+              "name",
+              "media_type",
+              "role",
+              "digest",
+              "size_bytes",
+              "staging_session_id",
+              "invocation_id",
+              "invocation_attempt_id"
+            ],
+            "properties": {
+              "staging_id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "media_type": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "size_bytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "manifest": {
+                "type": "object"
+              },
+              "staging_session_id": {
+                "type": "string"
+              },
+              "invocation_id": {
+                "type": "string"
+              },
+              "invocation_attempt_id": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "usage": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "entry_id",
+              "meter",
+              "quantity",
+              "unit",
+              "occurred_at",
+              "meter_source"
+            ],
+            "properties": {
+              "entry_id": {
+                "type": "string"
+              },
+              "meter": {
+                "type": "string"
+              },
+              "quantity": {
+                "type": "integer",
+                "description": "Signed integer in the meter's registered base unit; corrections may be negative."
+              },
+              "unit": {
+                "type": "string"
+              },
+              "occurred_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "provider_operation_id": {
+                "type": "string"
+              },
+              "meter_source": {
+                "enum": [
+                  "platform_metered",
+                  "provider_reported",
+                  "reconciled"
+                ]
+              },
+              "evidence_reference": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "completed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "invocation_attempt_id": {
+          "type": "string"
+        },
+        "fencing_token": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "error": {
+      "type": "object",
+      "required": [
+        "invocation_id",
+        "error",
+        "occurred_at",
+        "invocation_attempt_id",
+        "fencing_token"
+      ],
+      "properties": {
+        "invocation_id": {
+          "type": "string"
+        },
+        "provider_operation_id": {
+          "type": "string"
+        },
+        "error": {
+          "type": "object",
+          "required": [
+            "code",
+            "message",
+            "retryable",
+            "outcome"
+          ],
+          "properties": {
+            "code": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]{2,127}$"
+            },
+            "message": {
+              "type": "string"
+            },
+            "retryable": {
+              "type": "boolean"
+            },
+            "outcome": {
+              "enum": [
+                "known_failed",
+                "outcome_unknown"
+              ]
+            },
+            "provider_code": {
+              "type": "string"
+            },
+            "details": {
+              "type": "object"
+            }
+          },
+          "additionalProperties": false
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "invocation_attempt_id": {
+          "type": "string"
+        },
+        "fencing_token": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "invocation_attempt_id": {
+      "type": "string"
+    },
+    "fencing_token": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "additionalProperties": false
+}

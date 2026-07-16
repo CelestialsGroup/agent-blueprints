@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:delivery-target:v1",
+  "title": "DeliveryTarget",
+  "type": "object",
+  "required": [
+    "delivery_target_id",
+    "client_app_id",
+    "type",
+    "status",
+    "configuration_digest"
+  ],
+  "properties": {
+    "delivery_target_id": {
+      "type": "string"
+    },
+    "client_app_id": {
+      "type": "string"
+    },
+    "type": {
+      "enum": [
+        "agent_managed",
+        "storage_connector",
+        "enterprise_private_storage"
+      ]
+    },
+    "connector_id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "active",
+        "disabled",
+        "unhealthy"
+      ]
+    },
+    "configuration_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  },
+  "additionalProperties": false
+}

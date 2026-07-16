@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:execution-grant-claims:v1",
+  "title": "ExecutionGrantClaims",
+  "type": "object",
+  "required": [
+    "jti",
+    "iss",
+    "aud",
+    "sub",
+    "iat",
+    "nbf",
+    "exp",
+    "client_app_id",
+    "external_tenant_id",
+    "external_principal_id",
+    "scenario_id",
+    "scenario_version",
+    "request_digest",
+    "idempotency_key_digest",
+    "usage",
+    "nonce",
+    "capabilities",
+    "limits",
+    "policies",
+    "scenario_definition_digest"
+  ],
+  "properties": {
+    "jti": {
+      "type": "string",
+      "minLength": 1
+    },
+    "iss": {
+      "type": "string",
+      "minLength": 1
+    },
+    "aud": {
+      "const": "agent-platform"
+    },
+    "sub": {
+      "type": "string",
+      "minLength": 1
+    },
+    "iat": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "nbf": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "exp": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "client_app_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "external_tenant_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "external_principal_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scenario_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "request_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "idempotency_key_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "usage": {
+      "const": "single"
+    },
+    "nonce": {
+      "type": "string",
+      "minLength": 16
+    },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "limits": {
+      "type": "object",
+      "properties": {
+        "max_input_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_output_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_sandbox_seconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_storage_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_artifact_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_conversion_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "policies": {
+      "type": "object",
+      "required": [
+        "network_access",
+        "external_communication",
+        "data_classification"
+      ],
+      "properties": {
+        "network_access": {
+          "enum": [
+            "none",
+            "restricted",
+            "full"
+          ]
+        },
+        "external_communication": {
+          "type": "boolean"
+        },
+        "require_approval_for": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "data_classification": {
+          "enum": [
+            "public",
+            "internal",
+            "confidential",
+            "restricted"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "scenario_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?$"
+    },
+    "scenario_definition_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "nbf <= iat + 30",
+    "iat < exp",
+    "exp - iat <= 300"
+  ]
+}

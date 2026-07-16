@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:authenticated-client-context:v1",
+  "title": "AuthenticatedClientContext",
+  "type": "object",
+  "required": [
+    "client_app_id",
+    "service_principal_id",
+    "scopes",
+    "authenticated_at"
+  ],
+  "properties": {
+    "client_app_id": {
+      "type": "string"
+    },
+    "service_principal_id": {
+      "type": "string"
+    },
+    "scopes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "authenticated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "certificate_thumbprint": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

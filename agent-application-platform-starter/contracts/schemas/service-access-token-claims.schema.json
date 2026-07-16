@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:service-access-token-claims:v1",
+  "title": "ServiceAccessTokenClaims",
+  "type": "object",
+  "required": [
+    "iss",
+    "sub",
+    "aud",
+    "exp",
+    "iat",
+    "jti",
+    "client_id",
+    "scope"
+  ],
+  "properties": {
+    "iss": {
+      "type": "string",
+      "format": "uri"
+    },
+    "sub": {
+      "type": "string"
+    },
+    "aud": {
+      "oneOf": [
+        {
+          "const": "https://agent-api.agent-platform.internal"
+        },
+        {
+          "type": "array",
+          "contains": {
+            "const": "https://agent-api.agent-platform.internal"
+          }
+        }
+      ]
+    },
+    "exp": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "iat": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "jti": {
+      "type": "string"
+    },
+    "client_id": {
+      "type": "string"
+    },
+    "scope": {
+      "type": "string"
+    },
+    "cnf": {
+      "type": "object",
+      "properties": {
+        "x5t#S256": {
+          "type": "string"
+        },
+        "jkt": {
+          "type": "string"
+        }
+      },
+      "minProperties": 1,
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true,
+  "x-profile": "RFC 9068 with RFC 8705 or RFC 9449 sender constraint in production"
+}

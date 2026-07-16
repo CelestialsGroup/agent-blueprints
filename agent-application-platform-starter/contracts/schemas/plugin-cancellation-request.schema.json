@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:plugin-cancellation-request:v1",
+  "title": "PluginCancellationRequest",
+  "type": "object",
+  "required": [
+    "invocation_id",
+    "fencing_token",
+    "reason",
+    "invocation_attempt_id"
+  ],
+  "properties": {
+    "invocation_id": {
+      "type": "string"
+    },
+    "provider_operation_id": {
+      "type": "string"
+    },
+    "fencing_token": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "reason": {
+      "type": "string"
+    },
+    "invocation_attempt_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

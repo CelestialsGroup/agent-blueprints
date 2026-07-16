@@ -1,0 +1,78 @@
+{
+  "sandbox_id": "sbx_01J00000000000000000000000",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "workspace_id": "wsp_01J00000000000000000000000",
+  "provider_revision_id": "spr_01J00000000000000000000000",
+  "image": {
+    "reference": "registry.example.com/agent/base",
+    "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "architecture": "arm64"
+  },
+  "runtime_profile": "hardened",
+  "resources": {
+    "cpu_millis": 2000,
+    "memory_bytes": 4294967296,
+    "ephemeral_storage_bytes": 10737418240,
+    "workspace_bytes": 10737418240,
+    "gpu_count": 0,
+    "pids_limit": 512
+  },
+  "required_capabilities": [
+    {
+      "id": "sandbox.exec",
+      "version": "1.0"
+    },
+    {
+      "id": "sandbox.terminal",
+      "version": "1.0"
+    },
+    {
+      "id": "sandbox.workspace.persistent",
+      "version": "1.0"
+    },
+    {
+      "id": "sandbox.network-policy",
+      "version": "1.0"
+    }
+  ],
+  "optional_capabilities": [
+    {
+      "id": "sandbox.browser",
+      "version": "1.0"
+    },
+    {
+      "id": "sandbox.snapshot.workspace",
+      "version": "1.0"
+    }
+  ],
+  "network": {
+    "mode": "restricted",
+    "policy_reference": "netpol_01J00000000000000000000000",
+    "egress_gateway_required": true
+  },
+  "workspace": {
+    "mode": "persistent",
+    "mount_path": "/workspace"
+  },
+  "lease": {
+    "expires_at": "2026-07-16T12:00:00Z",
+    "max_extension_seconds": 3600
+  },
+  "placement_constraints": {
+    "region_id": "ap-southeast-1",
+    "resource_class": "standard",
+    "architecture": "arm64"
+  },
+  "security": {
+    "privilege_level": "unprivileged",
+    "root_filesystem": "writable_overlay",
+    "service_account_mode": "none",
+    "allow_privilege_escalation": false,
+    "host_namespace_access": false,
+    "seccomp_profile": "runtime-default"
+  },
+  "labels": {
+    "scenario": "coding"
+  }
+}

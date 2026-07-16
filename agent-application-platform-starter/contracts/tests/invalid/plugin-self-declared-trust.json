@@ -1,0 +1,72 @@
+{
+  "api_version": "agent-platform/plugin/v2",
+  "metadata": {
+    "id": "html-anything",
+    "name": "HTML Anything",
+    "version": "0.1.0",
+    "description": "HTML generation and editing provider.",
+    "license": "Apache-2.0",
+    "publisher": {
+      "id": "nexu-io",
+      "name": "Nexu IO"
+    },
+    "trust": "official"
+  },
+  "runtime": {
+    "mode": "service",
+    "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "protocol": "http",
+    "container_port": 8080,
+    "health": {
+      "readiness_path": "/health/ready",
+      "liveness_path": "/health/live"
+    },
+    "resource_class": "standard"
+  },
+  "implements": [
+    {
+      "capability": "html.generate",
+      "version_range": ">=1.0.0 <2.0.0",
+      "profiles": [
+        "standard",
+        "responsive"
+      ]
+    },
+    {
+      "capability": "html.edit",
+      "version_range": ">=1.0.0 <2.0.0"
+    }
+  ],
+  "requested_permissions": {
+    "network": {
+      "outbound": []
+    },
+    "artifacts": {
+      "read_roles": [
+        "source",
+        "attachment"
+      ],
+      "write_staging": true
+    },
+    "sandbox": {
+      "terminal": false,
+      "browser": false,
+      "filesystem_write": false
+    }
+  },
+  "compatibility": {
+    "platform_version_range": ">=0.6.0 <1.0.0",
+    "invocation_protocol": "v1"
+  },
+  "configuration_schema": {
+    "uri": "urn:agent-platform:plugin-config:html-anything:v1",
+    "digest": "sha256:c66c694fac3e5c56d74d6589a1ce963a102dd141010dcc8829e93b78c137b304",
+    "dialect": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "credential_requirements": [],
+  "provenance": {
+    "package_digest": "sha256:d36649c68d390fee2f060eddb43ab7984754da3a136903c2daf42236d1084b78",
+    "signature_format": "sigstore-bundle-v0.3",
+    "sbom_format": "spdx-2.3"
+  }
+}

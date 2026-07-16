@@ -1,0 +1,267 @@
+openapi: 3.1.1
+
+info:
+  title: Plugin Invocation Protocol
+  version: 1.1.0
+  description: |
+    Uniform service and remote-service invocation protocol. Job, sandbox_cli and
+    MCP adapters preserve the same attempt, fencing, result, error and cancellation semantics.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+
+servers:
+  - url: https://plugin.example.internal
+    description: Registered Plugin endpoint
+
+tags:
+  - name: Invocations
+    description: Invoke, inspect and cancel Plugin operations.
+
+security:
+  - PluginMutualTLS: []
+    InvocationBearer: []
+
+paths:
+  /v1/invocations:
+    post:
+      tags: [Invocations]
+      operationId: createPluginInvocation
+      summary: Submit one InvocationAttempt
+      description: |
+        A stale or duplicate attempt must not supersede a higher fencing token.
+        Repeated requests with the same invocation_attempt_id and request digest are idempotent.
+      parameters:
+        - $ref: '#/components/parameters/Traceparent'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/plugin-invocation-request.schema.json
+      responses:
+        '202':
+          description: InvocationAttempt accepted
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/plugin-invocation-accepted.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /v1/invocations/{invocation_id}:
+    parameters:
+      - $ref: '#/components/parameters/InvocationId'
+      - $ref: '#/components/parameters/Traceparent'
+    get:
+      tags: [Invocations]
+      operationId: getPluginInvocation
+      summary: Query the current confirmed Plugin operation state
+      responses:
+        '200':
+          description: Current status for the requested logical Invocation
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/plugin-invocation-status.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /v1/invocations/{invocation_id}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/InvocationId'
+      - $ref: '#/components/parameters/Traceparent'
+    post:
+      tags: [Invocations]
+      operationId: cancelPluginInvocation
+      summary: Request idempotent cancellation of a specific attempt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/plugin-cancellation-request.schema.json
+      responses:
+        '202':
+          description: Cancellation request accepted
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/plugin-invocation-status.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /v1/invocations/{invocation_id}/events:
+    parameters:
+      - $ref: '#/components/parameters/InvocationId'
+      - $ref: '#/components/parameters/Traceparent'
+    get:
+      tags: [Invocations]
+      operationId: streamPluginInvocationEvents
+      summary: Stream attempt-scoped Plugin progress
+      parameters:
+        - name: invocation_attempt_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: after_sequence
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        '200':
+          description: Attempt-local progress stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              example: |
+                id: 4
+                event: invocation.progress
+                data: {"invocation_id":"inv_01","invocation_attempt_id":"att_01","fencing_token":2,"sequence":4,"percent":50}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          $ref: '#/components/responses/Gone'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+components:
+  securitySchemes:
+    PluginMutualTLS:
+      type: mutualTLS
+      description: Workload identity for the Agent Platform caller.
+    InvocationBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Short-lived token with typ `agent-plugin-invocation+jwt`, bound to one
+        invocation_attempt_id, staging session, audience and approved permissions.
+
+  parameters:
+    InvocationId:
+      name: invocation_id
+      in: path
+      required: true
+      schema:
+        type: string
+    Traceparent:
+      name: traceparent
+      in: header
+      required: false
+      schema:
+        type: string
+
+  responses:
+    BadRequest:
+      description: Malformed request.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Unauthorized:
+      description: Missing or invalid workload identity or Invocation token.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Forbidden:
+      description: Token is not authorized for this Plugin, capability or staging grant.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    NotFound:
+      description: Invocation or attempt does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Conflict:
+      description: Stale fencing token, request digest mismatch or invalid state transition.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Unprocessable:
+      description: Request violates Capability semantics.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    TooManyRequests:
+      description: Plugin concurrency or rate limit exceeded.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Gone:
+      description: Progress history for the attempt is no longer retained.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    InternalError:
+      description: Unexpected Plugin error.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Unavailable:
+      description: Plugin is draining or temporarily unavailable.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json

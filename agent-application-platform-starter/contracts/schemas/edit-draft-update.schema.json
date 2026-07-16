@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:edit-draft-update:v1",
+  "title": "EditDraftUpdate",
+  "type": "object",
+  "required": [
+    "base_draft_revision",
+    "draft_staging_id",
+    "draft_digest"
+  ],
+  "properties": {
+    "base_draft_revision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "draft_staging_id": {
+      "type": "string"
+    },
+    "draft_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "editor_state": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:execution-budget:v1",
+  "title": "ExecutionBudget",
+  "type": "object",
+  "required": [
+    "budget_id",
+    "work_order_id",
+    "limits",
+    "policies",
+    "expires_at"
+  ],
+  "properties": {
+    "budget_id": {
+      "type": "string"
+    },
+    "work_order_id": {
+      "type": "string"
+    },
+    "limits": {
+      "type": "object",
+      "properties": {
+        "max_input_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_output_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_model_requests": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_sandbox_seconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_network_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_storage_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_artifact_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_conversion_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "policies": {
+      "type": "object",
+      "required": [
+        "model_gateway_required",
+        "tool_gateway_required",
+        "egress_gateway_required"
+      ],
+      "properties": {
+        "model_gateway_required": {
+          "type": "boolean"
+        },
+        "tool_gateway_required": {
+          "type": "boolean"
+        },
+        "egress_gateway_required": {
+          "type": "boolean"
+        },
+        "external_communication": {
+          "type": "boolean"
+        },
+        "require_approval_for": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "data_classification": {
+          "enum": [
+            "public",
+            "internal",
+            "confidential",
+            "restricted"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

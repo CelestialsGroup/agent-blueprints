@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:edit-commit-request:v1",
+  "title": "EditCommitRequest",
+  "type": "object",
+  "required": [
+    "base_version_id",
+    "draft_digest"
+  ],
+  "properties": {
+    "base_version_id": {
+      "type": "string"
+    },
+    "draft_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "message": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:grant-consumption:v1",
+  "title": "GrantConsumption",
+  "type": "object",
+  "required": [
+    "grant_id",
+    "client_app_id",
+    "request_digest",
+    "idempotency_key_digest",
+    "work_order_id",
+    "consumed_at"
+  ],
+  "properties": {
+    "grant_id": {
+      "type": "string"
+    },
+    "client_app_id": {
+      "type": "string"
+    },
+    "request_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "idempotency_key_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "work_order_id": {
+      "type": "string"
+    },
+    "consumed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,38 @@
+api_version: agent-platform/scenario/v1
+id: html-generation
+version: 1.0.0
+name: HTML 页面生成
+input_schema:
+  uri: urn:agent-platform:scenario-schema:html-generation-input:v1
+  digest: sha256:325f423c584036aff646ce7270441d30a2f29e08189b42358ed629f044c2582f
+  dialect: https://json-schema.org/draft/2020-12/schema
+workflow:
+  id: html-generation-default
+  version: 1.0.0
+  definition_digest: sha256:c19ef95a998011dc1ed9e260e952fb361b03a734d468f8fc94765f268b55c8ed
+capabilities:
+  required:
+  - id: agent.general
+    version_range: '>=1.0.0 <2.0.0'
+  - id: html.generate
+    version_range: '>=1.0.0 <2.0.0'
+    required_profiles:
+    - responsive
+  - id: artifact.preview.html
+    version_range: '>=1.0.0 <2.0.0'
+  optional:
+  - id: html.edit
+    version_range: '>=1.0.0 <2.0.0'
+  - id: converter.html-to-pptx
+    version_range: '>=1.0.0 <2.0.0'
+outputs:
+  primary_media_type: text/html
+  optional_media_types:
+  - application/vnd.openxmlformats-officedocument.presentationml.presentation
+resource_class: standard
+ui:
+  slots:
+    scenario.input.before: template-picker
+    workspace.preview: html-preview
+    workspace.artifact-actions: capability-actions
+definition_digest: sha256:dd7b535a7cd877a389665d18edd8b2340c41e1af13c2029d33be666518dccd30

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:plugin-invocation-accepted:v1",
+  "title": "PluginInvocationAccepted",
+  "type": "object",
+  "required": [
+    "invocation_id",
+    "provider_operation_id",
+    "accepted_at",
+    "invocation_attempt_id",
+    "fencing_token"
+  ],
+  "properties": {
+    "invocation_id": {
+      "type": "string"
+    },
+    "provider_operation_id": {
+      "type": "string"
+    },
+    "accepted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "invocation_attempt_id": {
+      "type": "string"
+    },
+    "fencing_token": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "additionalProperties": false
+}

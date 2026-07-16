@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:provider-instance:v1",
+  "title": "ProviderInstance",
+  "type": "object",
+  "required": [
+    "provider_instance_id",
+    "scope",
+    "status",
+    "current_revision_id"
+  ],
+  "properties": {
+    "provider_instance_id": {
+      "type": "string"
+    },
+    "scope": {
+      "enum": [
+        "platform",
+        "client_application",
+        "tenant"
+      ]
+    },
+    "client_app_id": {
+      "type": "string"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "pending",
+        "healthy",
+        "degraded",
+        "unhealthy",
+        "draining",
+        "disabled"
+      ]
+    },
+    "current_revision_id": {
+      "type": "string"
+    },
+    "placement_policy": {
+      "type": "object",
+      "properties": {
+        "allowed_regions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "resource_classes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

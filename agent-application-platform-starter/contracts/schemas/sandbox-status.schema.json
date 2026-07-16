@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:sandbox-status:v1",
+  "title": "SandboxStatus",
+  "type": "object",
+  "required": [
+    "sandbox_id",
+    "tenant_id",
+    "work_order_id",
+    "workspace_id",
+    "provider_revision_id",
+    "desired_state",
+    "observed_state",
+    "generation",
+    "observed_generation",
+    "lease_expires_at",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "sandbox_id": {
+      "type": "string"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "work_order_id": {
+      "type": "string"
+    },
+    "workspace_id": {
+      "type": "string"
+    },
+    "provider_revision_id": {
+      "type": "string"
+    },
+    "desired_state": {
+      "enum": [
+        "ready",
+        "suspended",
+        "terminated"
+      ]
+    },
+    "observed_state": {
+      "enum": [
+        "requested",
+        "provisioning",
+        "ready",
+        "suspending",
+        "suspended",
+        "resuming",
+        "terminating",
+        "terminated",
+        "expired",
+        "failed"
+      ]
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "observed_generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "runtime_profile": {
+      "type": "string"
+    },
+    "runtime_id": {
+      "type": "string"
+    },
+    "region_id": {
+      "type": "string"
+    },
+    "cluster_id": {
+      "type": "string"
+    },
+    "cell_id": {
+      "type": "string"
+    },
+    "node_id": {
+      "type": "string"
+    },
+    "runtime_endpoint_reference": {
+      "type": "string"
+    },
+    "lease_expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "snapshot_reference": {
+      "type": "string"
+    },
+    "last_error": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "retryable",
+        "outcome"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]{2,127}$"
+        },
+        "message": {
+          "type": "string"
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "outcome": {
+          "enum": [
+            "known_failed",
+            "outcome_unknown"
+          ]
+        },
+        "provider_code": {
+          "type": "string"
+        },
+        "details": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

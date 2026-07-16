@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:schema-reference:v1",
+  "title": "SchemaReference",
+  "type": "object",
+  "required": [
+    "uri",
+    "digest",
+    "dialect"
+  ],
+  "properties": {
+    "uri": {
+      "type": "string",
+      "format": "uri"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "dialect": {
+      "const": "https://json-schema.org/draft/2020-12/schema"
+    }
+  },
+  "additionalProperties": false
+}

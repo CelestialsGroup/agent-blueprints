@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:work-order-accepted:v1",
+  "title": "WorkOrderAccepted",
+  "type": "object",
+  "required": [
+    "work_order_id",
+    "status",
+    "workspace_id",
+    "created_at"
+  ],
+  "properties": {
+    "work_order_id": {
+      "type": "string"
+    },
+    "status": {
+      "const": "accepted"
+    },
+    "workspace_id": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

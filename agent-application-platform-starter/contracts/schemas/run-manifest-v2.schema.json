@@ -1,0 +1,337 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:run-manifest:v2",
+  "title": "RunManifestV2",
+  "type": "object",
+  "required": [
+    "run_id",
+    "work_order_id",
+    "scenario",
+    "workflow",
+    "worker_build_id",
+    "capability_resolutions",
+    "sandbox",
+    "location",
+    "request_digest",
+    "execution_budget_digest",
+    "policy_decision_digest",
+    "event_schema_version"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string"
+    },
+    "work_order_id": {
+      "type": "string"
+    },
+    "scenario": {
+      "type": "object",
+      "required": [
+        "id",
+        "version",
+        "definition_digest"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "definition_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "workflow": {
+      "type": "object",
+      "required": [
+        "id",
+        "version",
+        "build_id",
+        "definition_digest"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "build_id": {
+          "type": "string"
+        },
+        "definition_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "worker_build_id": {
+      "type": "string"
+    },
+    "capability_resolutions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "resolution_id",
+          "capability",
+          "selected_provider_instance_id",
+          "routing_reason",
+          "resolved_at",
+          "selected_provider_revision",
+          "capability_definition_digest"
+        ],
+        "properties": {
+          "resolution_id": {
+            "type": "string"
+          },
+          "capability": {
+            "type": "object",
+            "required": [
+              "id",
+              "version",
+              "profile"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "profile": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "selected_provider_instance_id": {
+            "type": "string"
+          },
+          "routing_reason": {
+            "enum": [
+              "tenant_binding",
+              "client_binding",
+              "platform_default",
+              "explicit_fallback"
+            ]
+          },
+          "candidates_considered": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "resolved_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "capability_definition_digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "selected_provider_revision": {
+            "type": "object",
+            "required": [
+              "provider_revision_id",
+              "plugin_id",
+              "plugin_version",
+              "manifest_digest",
+              "configuration_digest"
+            ],
+            "properties": {
+              "provider_revision_id": {
+                "type": "string"
+              },
+              "plugin_id": {
+                "type": "string"
+              },
+              "plugin_version": {
+                "type": "string"
+              },
+              "manifest_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "image_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "configuration_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "conformance_report_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "agent_runtime": {
+      "type": "object",
+      "properties": {
+        "provider_instance_id": {
+          "type": "string"
+        },
+        "plugin_version": {
+          "type": "string"
+        },
+        "runtime_version": {
+          "type": "string"
+        },
+        "commit": {
+          "type": "string"
+        },
+        "image_digest": {
+          "type": "string"
+        },
+        "configuration_digest": {
+          "type": "string"
+        },
+        "governed_conformance_report_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "sandbox": {
+      "type": "object",
+      "required": [
+        "provider_instance_id",
+        "provider_revision_id",
+        "provider_api_version",
+        "runtime_profile",
+        "image_digest",
+        "sandbox_spec_digest",
+        "required_capabilities",
+        "conformance_report_digest"
+      ],
+      "properties": {
+        "provider_instance_id": {
+          "type": "string"
+        },
+        "provider_revision_id": {
+          "type": "string"
+        },
+        "provider_api_version": {
+          "const": "v1"
+        },
+        "runtime_profile": {
+          "type": "string"
+        },
+        "image_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "sandbox_spec_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "required_capabilities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "version"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "profile": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "conformance_report_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "templates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "version",
+          "source_digest"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "source_digest": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "location": {
+      "type": "object",
+      "required": [
+        "region_id",
+        "cluster_id",
+        "cell_id"
+      ],
+      "properties": {
+        "region_id": {
+          "type": "string"
+        },
+        "cluster_id": {
+          "type": "string"
+        },
+        "cell_id": {
+          "type": "string"
+        },
+        "runtime_id": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "request_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "execution_budget_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "policy_decision_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "event_schema_version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "additionalProperties": false
+}

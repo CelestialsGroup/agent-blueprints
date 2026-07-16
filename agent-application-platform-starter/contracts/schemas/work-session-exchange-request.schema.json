@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:work-session-exchange-request:v1",
+  "title": "WorkSessionExchangeRequest",
+  "type": "object",
+  "required": [
+    "exchange_token"
+  ],
+  "properties": {
+    "exchange_token": {
+      "type": "string",
+      "minLength": 32
+    }
+  },
+  "additionalProperties": false
+}

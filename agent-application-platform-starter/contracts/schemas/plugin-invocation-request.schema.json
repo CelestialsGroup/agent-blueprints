@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:plugin-invocation-request:v1",
+  "title": "PluginInvocationRequest",
+  "type": "object",
+  "required": [
+    "protocol_version",
+    "invocation_id",
+    "idempotency_key",
+    "fencing_token",
+    "capability",
+    "deadline_at",
+    "input",
+    "input_artifacts",
+    "output_staging",
+    "trace_context",
+    "invocation_attempt_id"
+  ],
+  "properties": {
+    "protocol_version": {
+      "const": "v1"
+    },
+    "invocation_id": {
+      "type": "string"
+    },
+    "idempotency_key": {
+      "type": "string"
+    },
+    "fencing_token": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "capability": {
+      "type": "object",
+      "required": [
+        "id",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "profile": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "deadline_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "input": {
+      "type": "object"
+    },
+    "input_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "artifact_id",
+          "version_id",
+          "read_url",
+          "expires_at"
+        ],
+        "properties": {
+          "artifact_id": {
+            "type": "string"
+          },
+          "version_id": {
+            "type": "string"
+          },
+          "read_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "output_staging": {
+      "type": "object",
+      "required": [
+        "session_id",
+        "upload_base_url",
+        "expires_at"
+      ],
+      "properties": {
+        "session_id": {
+          "type": "string"
+        },
+        "upload_base_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": false
+    },
+    "trace_context": {
+      "type": "object",
+      "required": [
+        "traceparent"
+      ],
+      "properties": {
+        "traceparent": {
+          "type": "string"
+        },
+        "tracestate": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "invocation_attempt_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

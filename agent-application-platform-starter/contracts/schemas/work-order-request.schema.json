@@ -1,0 +1,184 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:work-order-request:v1",
+  "title": "WorkOrderRequest",
+  "type": "object",
+  "required": [
+    "api_version",
+    "source",
+    "work",
+    "execution_grant",
+    "delivery"
+  ],
+  "properties": {
+    "api_version": {
+      "const": "v1"
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "business_order_id": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "work": {
+      "type": "object",
+      "required": [
+        "scenario_id",
+        "scenario_version",
+        "scenario_definition_digest",
+        "input"
+      ],
+      "properties": {
+        "scenario_id": {
+          "type": "string"
+        },
+        "input": {
+          "type": "object"
+        },
+        "input_artifacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "oneOf": [
+              {
+                "required": [
+                  "artifact_id",
+                  "version_id"
+                ],
+                "properties": {
+                  "artifact_id": {
+                    "type": "string"
+                  },
+                  "version_id": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "required": [
+                  "ingest_reference_id"
+                ],
+                "properties": {
+                  "ingest_reference_id": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "required": [
+                  "connector_id",
+                  "connector_object_id",
+                  "media_type",
+                  "digest"
+                ],
+                "properties": {
+                  "connector_id": {
+                    "type": "string"
+                  },
+                  "connector_object_id": {
+                    "type": "string"
+                  },
+                  "media_type": {
+                    "type": "string"
+                  },
+                  "digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                },
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "scenario_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?$"
+        },
+        "scenario_definition_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "execution_grant": {
+      "type": "string",
+      "minLength": 20,
+      "description": "Compact JWS"
+    },
+    "delivery": {
+      "type": "object",
+      "required": [
+        "storage_mode",
+        "required_formats",
+        "retention_days"
+      ],
+      "properties": {
+        "storage_mode": {
+          "enum": [
+            "agent_managed",
+            "business_managed",
+            "replicated"
+          ]
+        },
+        "required_formats": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "retention_days": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3650
+        },
+        "callback_registration_id": {
+          "type": "string"
+        },
+        "delivery_target_id": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "description": "References only pre-registered callback and storage targets; arbitrary URLs are forbidden."
+    },
+    "placement_constraints": {
+      "type": "object",
+      "properties": {
+        "preferred_region": {
+          "type": "string"
+        },
+        "required_region": {
+          "type": "string"
+        },
+        "resource_class": {
+          "enum": [
+            "standard",
+            "browser",
+            "office",
+            "video",
+            "gpu"
+          ]
+        },
+        "data_residency": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Behavior-affecting metadata is included in request_digest; trace transport headers are not."
+    }
+  },
+  "additionalProperties": false
+}

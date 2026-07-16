@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:runtime-session-route:v1",
+  "title": "RuntimeSessionRoute",
+  "type": "object",
+  "required": [
+    "runtime_session_id",
+    "tenant_id",
+    "work_order_id",
+    "sandbox_id",
+    "runtime_type",
+    "expires_at",
+    "client_app_id",
+    "principal_id",
+    "scopes",
+    "connection_generation"
+  ],
+  "properties": {
+    "runtime_session_id": {
+      "type": "string"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "work_order_id": {
+      "type": "string"
+    },
+    "sandbox_id": {
+      "type": "string"
+    },
+    "runtime_type": {
+      "enum": [
+        "terminal",
+        "browser",
+        "desktop",
+        "port_forward"
+      ]
+    },
+    "cluster_id": {
+      "type": "string"
+    },
+    "runtime_endpoint": {
+      "type": "string",
+      "format": "uri"
+    },
+    "scopes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "terminal:connect",
+          "browser:view",
+          "browser:control",
+          "desktop:view",
+          "desktop:control",
+          "port-forward:connect"
+        ]
+      }
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "client_app_id": {
+      "type": "string"
+    },
+    "principal_id": {
+      "type": "string"
+    },
+    "region_id": {
+      "type": "string"
+    },
+    "cell_id": {
+      "type": "string"
+    },
+    "connection_generation": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "additionalProperties": false
+}

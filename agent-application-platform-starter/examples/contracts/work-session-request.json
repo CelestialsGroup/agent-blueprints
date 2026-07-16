@@ -1,0 +1,10 @@
+{
+  "subject_mode": "owner",
+  "external_principal_id": "user-123",
+  "scopes": [
+    "work:read",
+    "event:subscribe",
+    "artifact:read"
+  ],
+  "ttl_seconds": 900
+}

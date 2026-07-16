@@ -1,0 +1,46 @@
+api_version: agent-platform/capability/v1
+id: html.generate
+version: 1.0.0
+kind: skill
+request_schema:
+  uri: urn:agent-platform:capability-schema:html-generate-request:v1
+  digest: sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+  dialect: https://json-schema.org/draft/2020-12/schema
+result_schema:
+  uri: urn:agent-platform:capability-schema:html-generate-result:v1
+  digest: sha256:e043707ba28dcdbe65dcbcd9caba4bb9c7ff58a7bd9f11ce57ff379bfe25302d
+  dialect: https://json-schema.org/draft/2020-12/schema
+error_schema:
+  uri: urn:agent-platform:capability-error:v1
+  digest: sha256:86e56c0466ea8990d635306e3bffef923a13801b468c749b854acfd19fef2e0f
+  dialect: https://json-schema.org/draft/2020-12/schema
+semantics:
+  side_effect: idempotent
+  idempotency_scope: invocation
+  supports_cancel: true
+  supports_progress: true
+  supports_status_query: true
+  timeout_class: long_running
+  default_timeout_seconds: 300
+  maximum_timeout_seconds: 1800
+artifact_contract:
+  outputs:
+  - role: primary
+    media_types:
+    - text/html
+    required: true
+    encoding: utf-8
+    entry_file_required: true
+profiles:
+- id: standard
+- id: responsive
+compatibility:
+  policy: semantic-versioning
+  consumer_unknown_fields: ignore
+  consumer_unknown_event_types: record-and-ignore
+conformance:
+  suite_id: html.generate
+  suite_version: 1.0.0
+namespace_owner: agent-platform
+lifecycle:
+  status: stable

@@ -1,0 +1,34 @@
+{
+  "report_id": "scr_01J00000000000000000000000",
+  "provider_revision_id": "spr_01J00000000000000000000000",
+  "suite_version": "1.0.0",
+  "status": "passed",
+  "profiles": [
+    "lifecycle",
+    "exec",
+    "terminal",
+    "snapshot-workspace",
+    "security-restricted",
+    "multi-node",
+    "usage"
+  ],
+  "tests": [
+    {
+      "id": "lifecycle.create-idempotent",
+      "status": "passed",
+      "evidence_reference": "artifact://reports/create"
+    },
+    {
+      "id": "security.metadata-blocked",
+      "status": "passed",
+      "evidence_reference": "artifact://reports/security"
+    },
+    {
+      "id": "multi-node.stale-fencing-rejected",
+      "status": "passed",
+      "evidence_reference": "artifact://reports/fencing"
+    }
+  ],
+  "report_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "completed_at": "2026-07-16T09:00:00Z"
+}

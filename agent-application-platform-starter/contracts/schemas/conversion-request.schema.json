@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:conversion-request:v1",
+  "title": "CreateConversionRequest",
+  "type": "object",
+  "required": [
+    "source_version_id",
+    "target_media_type"
+  ],
+  "properties": {
+    "source_version_id": {
+      "type": "string"
+    },
+    "target_media_type": {
+      "type": "string"
+    },
+    "profile": {
+      "type": "string"
+    },
+    "options": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:sandbox-snapshot-manifest:v1",
+  "title": "SandboxSnapshotManifest",
+  "type": "object",
+  "required": [
+    "snapshot_id",
+    "sandbox_id",
+    "provider_revision_id",
+    "level",
+    "portable",
+    "digest",
+    "size_bytes",
+    "created_at",
+    "content_reference"
+  ],
+  "properties": {
+    "snapshot_id": {
+      "type": "string"
+    },
+    "sandbox_id": {
+      "type": "string"
+    },
+    "provider_revision_id": {
+      "type": "string"
+    },
+    "level": {
+      "enum": [
+        "workspace",
+        "filesystem",
+        "process"
+      ]
+    },
+    "portable": {
+      "type": "boolean"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "size_bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "content_reference": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "compatibility": {
+      "type": "object",
+      "properties": {
+        "architecture": {
+          "enum": [
+            "amd64",
+            "arm64"
+          ]
+        },
+        "runtime_profile": {
+          "type": "string"
+        },
+        "runtime_version": {
+          "type": "string"
+        },
+        "kernel_version_range": {
+          "type": "string"
+        },
+        "image_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

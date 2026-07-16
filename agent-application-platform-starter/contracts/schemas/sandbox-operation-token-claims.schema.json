@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:sandbox-operation-token-claims:v1",
+  "title": "SandboxOperationTokenClaims",
+  "type": "object",
+  "required": [
+    "jti",
+    "iss",
+    "aud",
+    "iat",
+    "nbf",
+    "exp",
+    "provider_revision_id",
+    "sandbox_id",
+    "operation_id",
+    "attempt_id",
+    "fencing_token",
+    "tenant_id",
+    "work_order_id",
+    "policy_digest"
+  ],
+  "properties": {
+    "jti": {
+      "type": "string"
+    },
+    "iss": {
+      "const": "agent-platform"
+    },
+    "aud": {
+      "type": "string"
+    },
+    "iat": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "nbf": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "exp": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "provider_revision_id": {
+      "type": "string"
+    },
+    "sandbox_id": {
+      "type": "string"
+    },
+    "operation_id": {
+      "type": "string"
+    },
+    "attempt_id": {
+      "type": "string"
+    },
+    "fencing_token": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "work_order_id": {
+      "type": "string"
+    },
+    "policy_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "iat < exp",
+    "exp must not exceed operation deadline"
+  ]
+}

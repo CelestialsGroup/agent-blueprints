@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:preview-session-request:v1",
+  "title": "CreatePreviewSessionRequest",
+  "type": "object",
+  "required": [
+    "version_id"
+  ],
+  "properties": {
+    "version_id": {
+      "type": "string"
+    },
+    "renderer_capability": {
+      "type": "string"
+    },
+    "profile": {
+      "type": "string"
+    },
+    "options": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

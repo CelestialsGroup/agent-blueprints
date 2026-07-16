@@ -1,0 +1,21 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: agent-api
+  namespace: agent-platform
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: agent-api
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: runtime-gateway
+  namespace: agent-platform
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: runtime-gateway

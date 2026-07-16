@@ -1,0 +1,82 @@
+{
+  "run_id": "run_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "scenario": {
+    "id": "coding-agent",
+    "version": "1.0.0",
+    "definition_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "workflow": {
+    "id": "coding-agent-default",
+    "version": "1.0.0",
+    "build_id": "worker-2026-07-16.1",
+    "definition_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  },
+  "worker_build_id": "worker-2026-07-16.1",
+  "capability_resolutions": [
+    {
+      "resolution_id": "res_01J00000000000000000000000",
+      "capability": {
+        "id": "sandbox.exec",
+        "version": "1.0",
+        "profile": "hardened"
+      },
+      "selected_provider_instance_id": "spi_01J00000000000000000000000",
+      "routing_reason": "platform_default",
+      "candidates_considered": [
+        "spi_01J00000000000000000000000"
+      ],
+      "resolved_at": "2026-07-16T09:01:00Z",
+      "capability_definition_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "selected_provider_revision": {
+        "provider_revision_id": "spr_01J00000000000000000000000",
+        "plugin_id": "sandbox-runtime",
+        "plugin_version": "0.1.0",
+        "manifest_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "image_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+        "configuration_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "conformance_report_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999"
+      }
+    }
+  ],
+  "agent_runtime": {
+    "provider_instance_id": "arp_01J00000000000000000000000",
+    "plugin_version": "2.0.0",
+    "runtime_version": "2.0.0",
+    "commit": "0123456789abcdef",
+    "image_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "configuration_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "governed_conformance_report_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+  },
+  "sandbox": {
+    "provider_instance_id": "spi_01J00000000000000000000000",
+    "provider_revision_id": "spr_01J00000000000000000000000",
+    "provider_api_version": "v1",
+    "runtime_profile": "hardened",
+    "image_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+    "sandbox_spec_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "required_capabilities": [
+      {
+        "id": "sandbox.exec",
+        "version": "1.0",
+        "profile": "hardened"
+      },
+      {
+        "id": "sandbox.terminal",
+        "version": "1.0"
+      }
+    ],
+    "conformance_report_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999"
+  },
+  "templates": [],
+  "location": {
+    "region_id": "ap-southeast-1",
+    "cluster_id": "agent-cluster-01",
+    "cell_id": "cell-sg-01",
+    "runtime_id": "runtime-sbx-01"
+  },
+  "request_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "execution_budget_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+  "policy_decision_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+  "event_schema_version": 2
+}

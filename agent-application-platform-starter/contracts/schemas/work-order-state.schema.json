@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:work-order-state:v1",
+  "title": "WorkOrderState",
+  "type": "object",
+  "required": [
+    "work_order_id",
+    "tenant_id",
+    "workspace_id",
+    "scenario",
+    "status",
+    "created_at",
+    "updated_at",
+    "last_work_sequence"
+  ],
+  "properties": {
+    "work_order_id": {
+      "type": "string"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "workspace_id": {
+      "type": "string"
+    },
+    "scenario": {
+      "type": "object",
+      "required": [
+        "id",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "status": {
+      "enum": [
+        "accepted",
+        "queued",
+        "running",
+        "waiting",
+        "paused",
+        "cancel_requested",
+        "cancelling",
+        "completed",
+        "partial",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "workflow_run_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "primary_agent_run_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "last_work_sequence": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "terminal_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

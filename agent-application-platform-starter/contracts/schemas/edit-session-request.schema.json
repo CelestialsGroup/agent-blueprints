@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:create-edit-session:v1",
+  "title": "CreateEditSessionRequest",
+  "type": "object",
+  "required": [
+    "base_version_id",
+    "mode"
+  ],
+  "properties": {
+    "base_version_id": {
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "native",
+        "source",
+        "structural",
+        "annotation",
+        "metadata"
+      ]
+    },
+    "editor_capability": {
+      "type": "string"
+    },
+    "options": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

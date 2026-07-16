@@ -1,0 +1,16 @@
+{
+  "type": "artifact.version.created",
+  "data_version": 1,
+  "data_schema": {
+    "uri": "urn:agent-platform:event-data:artifact-version-created:v1",
+    "digest": "sha256:7258066b03c0791ee7b3064b08ba38604bcb87ed3b639740a5935f808ad67e3a",
+    "dialect": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "classification": "internal",
+  "retention_class": "operational",
+  "contains_user_content": false,
+  "projection_consumers": [
+    "artifact-projection",
+    "timeline-projection"
+  ]
+}

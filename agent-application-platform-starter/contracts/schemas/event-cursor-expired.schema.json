@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:event-cursor-expired:v1",
+  "title": "EventCursorExpired",
+  "type": "object",
+  "required": [
+    "work_order_id",
+    "requested_after",
+    "earliest_available",
+    "latest_available"
+  ],
+  "properties": {
+    "work_order_id": {
+      "type": "string"
+    },
+    "requested_after": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "earliest_available": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "latest_available": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false
+}

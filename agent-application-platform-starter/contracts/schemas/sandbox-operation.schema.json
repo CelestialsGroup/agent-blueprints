@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:sandbox-operation:v1",
+  "title": "SandboxOperation",
+  "type": "object",
+  "required": [
+    "operation_id",
+    "attempt_id",
+    "fencing_token",
+    "sandbox_id",
+    "type",
+    "status",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "operation_id": {
+      "type": "string"
+    },
+    "attempt_id": {
+      "type": "string"
+    },
+    "fencing_token": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "sandbox_id": {
+      "type": "string"
+    },
+    "type": {
+      "enum": [
+        "create",
+        "extend_lease",
+        "exec",
+        "cancel_exec",
+        "snapshot",
+        "restore",
+        "suspend",
+        "resume",
+        "terminate"
+      ]
+    },
+    "status": {
+      "enum": [
+        "accepted",
+        "running",
+        "succeeded",
+        "failed",
+        "cancel_requested",
+        "cancelled",
+        "outcome_unknown"
+      ]
+    },
+    "provider_operation_id": {
+      "type": "string"
+    },
+    "result_reference": {
+      "type": "string"
+    },
+    "error": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "retryable",
+        "outcome"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]{2,127}$"
+        },
+        "message": {
+          "type": "string"
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "outcome": {
+          "enum": [
+            "known_failed",
+            "outcome_unknown"
+          ]
+        },
+        "provider_code": {
+          "type": "string"
+        },
+        "details": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

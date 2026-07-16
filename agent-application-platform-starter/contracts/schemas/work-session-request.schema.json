@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:work-session-request:v1",
+  "title": "CreateWorkSessionRequest",
+  "type": "object",
+  "required": [
+    "subject_mode",
+    "external_principal_id",
+    "scopes",
+    "ttl_seconds"
+  ],
+  "properties": {
+    "external_principal_id": {
+      "type": "string"
+    },
+    "scopes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "work:read",
+          "work:cancel",
+          "event:subscribe",
+          "artifact:read",
+          "artifact:edit",
+          "artifact:export",
+          "work:control",
+          "approval:read",
+          "approval:decide",
+          "runtime:view",
+          "runtime:control"
+        ]
+      }
+    },
+    "ttl_seconds": {
+      "type": "integer",
+      "minimum": 60,
+      "maximum": 3600
+    },
+    "subject_mode": {
+      "enum": [
+        "owner",
+        "delegated"
+      ]
+    },
+    "delegation_reason": {
+      "type": "string",
+      "maxLength": 512
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "subject_mode": {
+            "const": "delegated"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "delegation_reason": {
+            "type": "string",
+            "maxLength": 512
+          }
+        },
+        "required": [
+          "delegation_reason"
+        ]
+      }
+    }
+  ],
+  "x-semantic-constraints": [
+    "owner external_principal_id must equal the WorkOrder principal",
+    "delegated mode requires ServiceOAuth scope session:delegate and WorkOrder collaboration policy"
+  ]
+}

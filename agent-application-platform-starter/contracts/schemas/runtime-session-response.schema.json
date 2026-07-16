@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:runtime-session-response:v1",
+  "title": "RuntimeSessionResponse",
+  "type": "object",
+  "required": [
+    "runtime_session_id",
+    "runtime_type",
+    "connect_url",
+    "expires_at",
+    "scopes"
+  ],
+  "properties": {
+    "runtime_session_id": {
+      "type": "string"
+    },
+    "runtime_type": {
+      "enum": [
+        "terminal",
+        "browser",
+        "desktop",
+        "port_forward"
+      ]
+    },
+    "connect_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "scopes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "websocket_subprotocols": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

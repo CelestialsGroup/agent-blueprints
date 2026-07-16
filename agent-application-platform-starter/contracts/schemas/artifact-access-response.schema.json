@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:artifact-access-response:v1",
+  "title": "ArtifactAccessResponse",
+  "type": "object",
+  "required": [
+    "access_id",
+    "access_url",
+    "expires_at",
+    "media_type",
+    "digest"
+  ],
+  "properties": {
+    "access_id": {
+      "type": "string"
+    },
+    "access_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "media_type": {
+      "type": "string"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "required_headers": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

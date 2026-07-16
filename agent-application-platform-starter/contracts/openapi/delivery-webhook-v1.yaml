@@ -1,0 +1,131 @@
+openapi: 3.1.1
+
+info:
+  title: Agent Delivery Webhook
+  version: 1.0.0
+  description: |
+    Receiver contract implemented by a registered Business Application callback.
+    Requests are delivered at least once and must be idempotent by webhook_id and delivery_id.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+
+servers:
+  - url: https://business-callback.example.internal
+    description: Pre-registered Business Application callback
+
+tags:
+  - name: Delivery
+    description: Receive completed or terminal Agent deliveries.
+
+security:
+  - CallbackMutualTLS: []
+  - CallbackMessageSignature: []
+
+paths:
+  /v1/agent-deliveries:
+    post:
+      tags: [Delivery]
+      operationId: receiveAgentDelivery
+      summary: Receive a signed DeliveryPackage notification
+      parameters:
+        - name: Content-Digest
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: Signature-Input
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: Signature
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: traceparent
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/delivery-webhook-envelope.schema.json
+      responses:
+        '204':
+          description: Delivery accepted idempotently
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+components:
+  securitySchemes:
+    CallbackMutualTLS:
+      type: mutualTLS
+      description: Pre-registered mutual TLS callback profile.
+    CallbackMessageSignature:
+      type: apiKey
+      in: header
+      name: Signature
+      description: RFC 9421 HTTP Message Signature with a pre-registered key.
+
+  responses:
+    BadRequest:
+      description: Malformed body or invalid digest.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Unauthorized:
+      description: Invalid mTLS identity, signature, timestamp or replay window.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Conflict:
+      description: The same webhook_id was previously accepted with a different digest.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    TooManyRequests:
+      description: Receiver is applying backpressure.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    InternalError:
+      description: Receiver internal failure.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Unavailable:
+      description: Receiver temporarily unavailable.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:preview-session:v1",
+  "title": "PreviewSession",
+  "type": "object",
+  "required": [
+    "preview_session_id",
+    "artifact_id",
+    "version_id",
+    "status",
+    "preview_url",
+    "expires_at"
+  ],
+  "properties": {
+    "preview_session_id": {
+      "type": "string"
+    },
+    "artifact_id": {
+      "type": "string"
+    },
+    "version_id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "preparing",
+        "ready",
+        "failed",
+        "expired"
+      ]
+    },
+    "preview_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "error": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

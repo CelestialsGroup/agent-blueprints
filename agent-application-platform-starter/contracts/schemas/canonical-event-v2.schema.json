@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:canonical-event:v2",
+  "title": "CanonicalEventV2",
+  "type": "object",
+  "required": [
+    "event_id",
+    "schema_version",
+    "tenant_id",
+    "work_order_id",
+    "work_sequence",
+    "aggregate",
+    "type",
+    "occurred_at",
+    "actor",
+    "data",
+    "metadata",
+    "data_version",
+    "recorded_at"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 2
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "work_order_id": {
+      "type": "string"
+    },
+    "workspace_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "work_sequence": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "aggregate": {
+      "type": "object",
+      "required": [
+        "type",
+        "id",
+        "sequence"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "work_order",
+            "workflow_run",
+            "agent_run",
+            "invocation",
+            "artifact",
+            "edit_session",
+            "conversion_job",
+            "approval",
+            "delivery"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Aggregate-local sequence."
+        }
+      },
+      "additionalProperties": false
+    },
+    "references": {
+      "type": "object",
+      "properties": {
+        "workflow_run_id": {
+          "type": "string"
+        },
+        "agent_run_id": {
+          "type": "string"
+        },
+        "invocation_id": {
+          "type": "string"
+        },
+        "artifact_id": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "type": {
+      "type": "string"
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Source occurrence time; may be out of order or affected by clock skew."
+    },
+    "actor": {
+      "type": "object",
+      "required": [
+        "type",
+        "id"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "principal",
+            "agent",
+            "system",
+            "plugin"
+          ]
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "data": {
+      "type": "object"
+    },
+    "metadata": {
+      "type": "object",
+      "required": [
+        "trace_id",
+        "correlation_id"
+      ],
+      "properties": {
+        "trace_id": {
+          "type": "string"
+        },
+        "correlation_id": {
+          "type": "string"
+        },
+        "causation_id": {
+          "type": "string"
+        },
+        "provider_instance_id": {
+          "type": "string"
+        },
+        "runtime_id": {
+          "type": "string"
+        },
+        "source_cursor": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "data_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Agent Platform durable ingest time."
+    }
+  },
+  "additionalProperties": false
+}

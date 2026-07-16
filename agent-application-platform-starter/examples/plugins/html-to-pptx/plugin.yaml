@@ -1,0 +1,49 @@
+api_version: agent-platform/plugin/v2
+metadata:
+  id: html-to-pptx
+  name: HTML to PPTX
+  version: 0.1.0
+  description: Converts HTML Artifacts to PPTX.
+  license: LicenseRef-Proprietary
+  publisher:
+    id: agent-platform
+    name: Agent Platform
+runtime:
+  mode: job
+  image_digest: sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+  entrypoint:
+  - /app/html-to-pptx
+  - --invocation
+  - /input/invocation.json
+  result_protocol: staging-manifest-v1
+  resource_class: office
+implements:
+- capability: converter.html-to-pptx
+  version_range: '>=1.0.0 <2.0.0'
+  profiles:
+  - fast
+  - balanced
+  - editable
+requested_permissions:
+  network:
+    outbound: []
+  artifacts:
+    read_roles:
+    - source
+    write_staging: true
+  sandbox:
+    terminal: false
+    browser: true
+    filesystem_write: true
+compatibility:
+  platform_version_range: '>=0.6.0 <1.0.0'
+  invocation_protocol: v1
+configuration_schema:
+  uri: urn:agent-platform:plugin-config:html-to-pptx:v1
+  digest: sha256:8bf253c239c8d67637b0e02e2bba36906bb0212a349f01eb65314307c542c8ea
+  dialect: https://json-schema.org/draft/2020-12/schema
+credential_requirements: []
+provenance:
+  package_digest: sha256:a6f457567f9f8f4b83e26e49c9bbddbdeafb35d323b8a55a876a8f3ab9b96e02
+  signature_format: sigstore-bundle-v0.3
+  sbom_format: spdx-2.3

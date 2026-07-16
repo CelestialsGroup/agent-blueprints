@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:artifact-access-request:v1",
+  "title": "CreateArtifactAccessRequest",
+  "type": "object",
+  "required": [
+    "purpose"
+  ],
+  "properties": {
+    "purpose": {
+      "enum": [
+        "download",
+        "editor-read",
+        "external-open"
+      ]
+    },
+    "filename": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:edit-session:v1",
+  "title": "EditSession",
+  "type": "object",
+  "required": [
+    "edit_session_id",
+    "artifact_id",
+    "base_version_id",
+    "status",
+    "mode",
+    "created_at",
+    "expires_at",
+    "draft_revision"
+  ],
+  "properties": {
+    "edit_session_id": {
+      "type": "string"
+    },
+    "artifact_id": {
+      "type": "string"
+    },
+    "base_version_id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "active",
+        "committing",
+        "committed",
+        "conflicted",
+        "discarded",
+        "expired"
+      ]
+    },
+    "mode": {
+      "enum": [
+        "native",
+        "source",
+        "structural",
+        "annotation",
+        "metadata"
+      ]
+    },
+    "editor_provider_instance_id": {
+      "type": "string"
+    },
+    "draft_reference": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "draft_revision": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,36 @@
+{
+  "invocation_id": "inv_01J00000000000000000000000",
+  "provider_operation_id": "job-123",
+  "output": {
+    "slide_count": 8
+  },
+  "staged_artifacts": [
+    {
+      "staging_id": "stgfile_01J000000000000000000000",
+      "name": "presentation.pptx",
+      "media_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "role": "primary",
+      "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "size_bytes": 409600,
+      "manifest": {
+        "profile": "fast"
+      },
+      "staging_session_id": "stg_01J00000000000000000000000",
+      "invocation_id": "inv_01J00000000000000000000000",
+      "invocation_attempt_id": "att_01J00000000000000000000000"
+    }
+  ],
+  "usage": [
+    {
+      "entry_id": "use_01J00000000000000000000000",
+      "meter": "artifact.convert.pptx",
+      "quantity": 1,
+      "unit": "conversion",
+      "occurred_at": "2026-07-15T10:05:00Z",
+      "provider_operation_id": "job-123",
+      "meter_source": "provider_reported"
+    }
+  ],
+  "completed_at": "2026-07-15T10:05:00Z",
+  "invocation_attempt_id": "att_01J00000000000000000000000"
+}

@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:event-type-definition:v1",
+  "title": "EventTypeDefinition",
+  "type": "object",
+  "required": [
+    "type",
+    "data_version",
+    "data_schema",
+    "classification",
+    "retention_class"
+  ],
+  "properties": {
+    "type": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.-]{2,191}$"
+    },
+    "data_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "data_schema": {
+      "type": "object",
+      "required": [
+        "uri",
+        "digest",
+        "dialect"
+      ],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "uri"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "dialect": {
+          "const": "https://json-schema.org/draft/2020-12/schema"
+        }
+      },
+      "additionalProperties": false
+    },
+    "classification": {
+      "enum": [
+        "public",
+        "internal",
+        "confidential",
+        "restricted"
+      ]
+    },
+    "retention_class": {
+      "enum": [
+        "operational",
+        "audit",
+        "ephemeral"
+      ]
+    },
+    "contains_user_content": {
+      "type": "boolean"
+    },
+    "projection_consumers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

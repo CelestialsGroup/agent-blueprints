@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:plugin-invocation-error:v1",
+  "title": "PluginInvocationError",
+  "type": "object",
+  "required": [
+    "invocation_id",
+    "error",
+    "occurred_at",
+    "invocation_attempt_id",
+    "fencing_token"
+  ],
+  "properties": {
+    "invocation_id": {
+      "type": "string"
+    },
+    "provider_operation_id": {
+      "type": "string"
+    },
+    "error": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "retryable",
+        "outcome"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]{2,127}$"
+        },
+        "message": {
+          "type": "string"
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "outcome": {
+          "enum": [
+            "known_failed",
+            "outcome_unknown"
+          ]
+        },
+        "provider_code": {
+          "type": "string"
+        },
+        "details": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "invocation_attempt_id": {
+      "type": "string"
+    },
+    "fencing_token": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "additionalProperties": false
+}

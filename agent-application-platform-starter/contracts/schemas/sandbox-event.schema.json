@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:sandbox-event:v1",
+  "title": "SandboxEvent",
+  "type": "object",
+  "required": [
+    "event_id",
+    "sandbox_id",
+    "sequence",
+    "type",
+    "occurred_at",
+    "recorded_at",
+    "data"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "sandbox_id": {
+      "type": "string"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "type": {
+      "enum": [
+        "sandbox.provisioning",
+        "sandbox.ready",
+        "sandbox.suspended",
+        "sandbox.resumed",
+        "sandbox.expiring",
+        "sandbox.expired",
+        "sandbox.terminating",
+        "sandbox.terminated",
+        "sandbox.failed",
+        "sandbox.exec.started",
+        "sandbox.exec.progress",
+        "sandbox.exec.completed",
+        "sandbox.exec.failed",
+        "sandbox.snapshot.completed",
+        "sandbox.snapshot.failed",
+        "sandbox.usage.reported"
+      ]
+    },
+    "operation_id": {
+      "type": "string"
+    },
+    "attempt_id": {
+      "type": "string"
+    },
+    "fencing_token": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "data": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

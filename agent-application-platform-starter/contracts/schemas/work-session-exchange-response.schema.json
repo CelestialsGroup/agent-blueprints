@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:work-session-exchange-response:v1",
+  "title": "WorkSessionExchangeResponse",
+  "type": "object",
+  "required": [
+    "session_id",
+    "expires_at",
+    "scopes"
+  ],
+  "properties": {
+    "session_id": {
+      "type": "string"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "scopes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:artifact-version:v1",
+  "title": "ArtifactVersion",
+  "type": "object",
+  "required": [
+    "version_id",
+    "artifact_id",
+    "version_number",
+    "media_type",
+    "digest",
+    "size_bytes",
+    "blob_reference",
+    "created_at",
+    "lifecycle_status"
+  ],
+  "properties": {
+    "version_id": {
+      "type": "string"
+    },
+    "artifact_id": {
+      "type": "string"
+    },
+    "version_number": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "media_type": {
+      "type": "string"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "size_bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "blob_reference": {
+      "type": "string"
+    },
+    "source_invocation_id": {
+      "type": "string"
+    },
+    "created_by_principal_id": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "lifecycle_status": {
+      "enum": [
+        "ready",
+        "quarantined",
+        "deleted",
+        "retained_for_legal_hold"
+      ]
+    },
+    "relation_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

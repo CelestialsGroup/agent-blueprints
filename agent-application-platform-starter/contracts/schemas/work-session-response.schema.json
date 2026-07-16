@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:work-session-response:v1",
+  "title": "WorkSessionResponse",
+  "type": "object",
+  "required": [
+    "session_id",
+    "exchange_token",
+    "exchange_expires_at",
+    "workbench_url",
+    "scopes"
+  ],
+  "properties": {
+    "session_id": {
+      "type": "string"
+    },
+    "exchange_token": {
+      "type": "string",
+      "minLength": 32
+    },
+    "exchange_expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "workbench_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "scopes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

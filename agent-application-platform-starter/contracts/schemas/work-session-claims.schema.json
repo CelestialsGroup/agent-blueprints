@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:work-session-claims:v1",
+  "title": "WorkSessionClaims",
+  "type": "object",
+  "required": [
+    "jti",
+    "iss",
+    "aud",
+    "iat",
+    "exp",
+    "session_id",
+    "client_app_id",
+    "tenant_id",
+    "principal_id",
+    "work_order_id",
+    "scopes",
+    "session_version"
+  ],
+  "properties": {
+    "jti": {
+      "type": "string"
+    },
+    "iss": {
+      "const": "agent-platform"
+    },
+    "aud": {
+      "const": "agent-workbench"
+    },
+    "iat": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "exp": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "client_app_id": {
+      "type": "string"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "principal_id": {
+      "type": "string"
+    },
+    "work_order_id": {
+      "type": "string"
+    },
+    "scopes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "work:read",
+          "work:cancel",
+          "event:subscribe",
+          "artifact:read",
+          "artifact:edit",
+          "artifact:export",
+          "work:control",
+          "approval:read",
+          "approval:decide",
+          "runtime:view",
+          "runtime:control"
+        ]
+      }
+    },
+    "session_version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "iat < exp",
+    "exp - iat <= 3600",
+    "validation profile is mutually exclusive from ExecutionGrant and OAuth access tokens"
+  ]
+}

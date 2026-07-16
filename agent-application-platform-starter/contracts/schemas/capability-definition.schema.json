@@ -1,0 +1,314 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:capability-definition:v1",
+  "title": "CapabilityDefinition",
+  "type": "object",
+  "required": [
+    "api_version",
+    "id",
+    "version",
+    "kind",
+    "request_schema",
+    "result_schema",
+    "error_schema",
+    "semantics",
+    "compatibility",
+    "conformance",
+    "namespace_owner",
+    "lifecycle"
+  ],
+  "properties": {
+    "api_version": {
+      "const": "agent-platform/capability/v1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9.-]{2,127}$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?$"
+    },
+    "kind": {
+      "enum": [
+        "agent_runtime",
+        "sandbox",
+        "model",
+        "tool",
+        "skill",
+        "template",
+        "renderer",
+        "editor",
+        "converter",
+        "channel"
+      ]
+    },
+    "request_schema": {
+      "type": "object",
+      "required": [
+        "uri",
+        "digest",
+        "dialect"
+      ],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "uri"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "dialect": {
+          "const": "https://json-schema.org/draft/2020-12/schema"
+        }
+      },
+      "additionalProperties": false
+    },
+    "result_schema": {
+      "type": "object",
+      "required": [
+        "uri",
+        "digest",
+        "dialect"
+      ],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "uri"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "dialect": {
+          "const": "https://json-schema.org/draft/2020-12/schema"
+        }
+      },
+      "additionalProperties": false
+    },
+    "error_schema": {
+      "type": "object",
+      "required": [
+        "uri",
+        "digest",
+        "dialect"
+      ],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "uri"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "dialect": {
+          "const": "https://json-schema.org/draft/2020-12/schema"
+        }
+      },
+      "additionalProperties": false
+    },
+    "semantics": {
+      "type": "object",
+      "required": [
+        "side_effect",
+        "idempotency_scope",
+        "supports_cancel",
+        "supports_progress",
+        "supports_status_query",
+        "timeout_class"
+      ],
+      "properties": {
+        "side_effect": {
+          "enum": [
+            "pure",
+            "idempotent",
+            "externally_idempotent",
+            "non_idempotent"
+          ]
+        },
+        "idempotency_scope": {
+          "enum": [
+            "none",
+            "invocation",
+            "provider_operation",
+            "business_key"
+          ]
+        },
+        "supports_cancel": {
+          "type": "boolean"
+        },
+        "supports_progress": {
+          "type": "boolean"
+        },
+        "supports_status_query": {
+          "type": "boolean"
+        },
+        "timeout_class": {
+          "enum": [
+            "interactive",
+            "short",
+            "long_running",
+            "unbounded_with_signal"
+          ]
+        },
+        "default_timeout_seconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximum_timeout_seconds": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "artifact_contract": {
+      "type": "object",
+      "properties": {
+        "inputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "role",
+              "media_types"
+            ],
+            "properties": {
+              "role": {
+                "type": "string"
+              },
+              "media_types": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "required": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "role",
+              "media_types"
+            ],
+            "properties": {
+              "role": {
+                "type": "string"
+              },
+              "media_types": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "required": {
+                "type": "boolean"
+              },
+              "encoding": {
+                "type": "string"
+              },
+              "entry_file_required": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "profiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "required": [
+        "policy"
+      ],
+      "properties": {
+        "policy": {
+          "const": "semantic-versioning"
+        },
+        "consumer_unknown_fields": {
+          "const": "ignore"
+        },
+        "consumer_unknown_event_types": {
+          "const": "record-and-ignore"
+        }
+      },
+      "additionalProperties": false
+    },
+    "conformance": {
+      "type": "object",
+      "required": [
+        "suite_id",
+        "suite_version"
+      ],
+      "properties": {
+        "suite_id": {
+          "type": "string"
+        },
+        "suite_version": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "namespace_owner": {
+      "type": "string"
+    },
+    "lifecycle": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "experimental",
+            "stable",
+            "deprecated",
+            "retired"
+          ]
+        },
+        "deprecated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "sunset_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "replacement": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

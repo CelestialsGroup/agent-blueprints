@@ -1,0 +1,47 @@
+# 术语
+
+- Business Application：拥有用户、会员、商品和交易的业务产品。
+- ClientApplication：被 Agent Platform 认证的业务后端客户端。
+- ServicePrincipal：OAuth2 Client Credentials 调用身份。
+- ExecutionGrant：业务系统签发的短期、单次、请求绑定授权。
+- GrantConsumption：ExecutionGrant 的原子消费记录。
+- WorkSession：绑定单个 WorkOrder 的短期浏览器或 SDK 会话。
+- WorkSession Exchange：一次性 Token 换取 HttpOnly Cookie 的流程。
+- InternalTenant：Agent Platform 内部租户标识。
+- WorkOrder：业务系统提交的异步工作请求和总状态。
+- Workspace：一个 WorkOrder 内的文件、Sandbox 和 Artifact 工作空间。
+- WorkflowRun：Temporal Durable Workflow 实例。
+- AgentRun：一次 Agent Runtime 调用。
+- ExecutionBudget：从 Grant、平台安全上限、场景和 Provider 限制计算出的有效运行预算。
+- Invocation：一次逻辑外部能力调用。
+- InvocationAttempt：Invocation 的一次真实提交，带 Fencing Token。
+- Reconciliation：确认 outcome_unknown 外部操作结果的流程。
+- Scenario：面向业务的工作场景。
+- CapabilityDefinition：能力的完整、版本化、可验证语义契约。
+- SchemaReference：Schema 的绝对 URI、SHA-256 Digest 和 Dialect。
+- PluginManifest：Plugin 自声明的分发、运行、权限和实现信息，不包含 Trust。
+- PluginRegistryRecord：平台验证的 Trust、Signature、SBOM、Scan 和批准权限记录。
+- ProviderInstance：逻辑 Provider 配置容器。
+- ProviderRevision：一次不可变的 Plugin、配置、权限和 Conformance 快照。
+- ProviderResolution：为 Run 选择并锁定 ProviderRevision 的结果。
+- CanonicalEvent：WorkOrder 范围严格有序的执行事实。
+- EventTypeDefinition：事件 data 的 Schema、分类和保留规则。
+- Artifact：逻辑产物。
+- ArtifactVersion：不可变产物内容版本。
+- ArtifactStaging：Plugin 输出进入正式 Artifact 前的临时区。
+- ArtifactIngestSession：外部输入文件上传和验证会话。
+- DeliveryTarget：预注册的 Artifact 交付位置。
+- CallbackRegistration：预注册的业务回调配置。
+- Model Gateway：强制模型路由、预算、凭据和 Usage 的中介层。
+- Tool Gateway：强制 Tool/MCP Policy、Approval 和 Invocation 的中介层。
+- Egress Gateway：控制 Sandbox/Plugin 出站网络的中介层。
+- Governed Runtime：通过模型、工具、网络、预算治理 Conformance 的 Agent Runtime。
+
+
+- SandboxRegistry：Agent Platform 保存 Sandbox 身份、租户归属、Desired State 和 Lease 的稳定内核对象。
+- SandboxProvider：实现 Sandbox 创建、Exec、RuntimeSession、Snapshot 和终止的可替换基础设施 Provider。
+- SandboxSpec：平台解析 Budget、Policy、Capability 后生成的后端无关期望规范。
+- SandboxStatus：Provider 返回的 Observed State、Generation 和 Runtime location。
+- SandboxOperation：创建、Exec、Snapshot、Terminate 等异步逻辑操作。
+- SandboxSnapshot：Workspace、Filesystem 或 Process 状态的不可变快照 Manifest。
+- RuntimeProfile：container、hardened-container、microvm、VM 等隔离执行配置。

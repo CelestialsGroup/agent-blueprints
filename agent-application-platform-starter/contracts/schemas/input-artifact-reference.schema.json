@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:input-artifact-reference:v1",
+  "title": "InputArtifactReference",
+  "type": "object",
+  "oneOf": [
+    {
+      "required": [
+        "artifact_id",
+        "version_id"
+      ],
+      "properties": {
+        "artifact_id": {
+          "type": "string"
+        },
+        "version_id": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "required": [
+        "ingest_reference_id"
+      ],
+      "properties": {
+        "ingest_reference_id": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "required": [
+        "connector_id",
+        "connector_object_id",
+        "media_type",
+        "digest"
+      ],
+      "properties": {
+        "connector_id": {
+          "type": "string"
+        },
+        "connector_object_id": {
+          "type": "string"
+        },
+        "media_type": {
+          "type": "string"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": false
+    }
+  ]
+}

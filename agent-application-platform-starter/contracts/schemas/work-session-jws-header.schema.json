@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:work-session-jws-header:v1",
+  "title": "WorkSessionJwsHeader",
+  "type": "object",
+  "required": [
+    "alg",
+    "kid",
+    "typ"
+  ],
+  "properties": {
+    "alg": {
+      "enum": [
+        "EdDSA",
+        "ES256"
+      ]
+    },
+    "kid": {
+      "type": "string",
+      "minLength": 1
+    },
+    "typ": {
+      "const": "agent-work-session+jwt"
+    }
+  },
+  "additionalProperties": false
+}

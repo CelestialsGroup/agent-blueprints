@@ -1,0 +1,16 @@
+{
+  "baseline": "v0.8",
+  "status": "approved_for_phase0",
+  "files": 238,
+  "portable_schemas": 102,
+  "valid_fixtures": 19,
+  "invalid_schema_fixtures": 8,
+  "invalid_semantic_fixtures": 2,
+  "openapi_documents": 4,
+  "openapi_errors": 0,
+  "openapi_warnings": 0,
+  "openapi_bundles": 4,
+  "npm_vulnerabilities": 0,
+  "markdown_missing_links": 0,
+  "kustomize_missing_resources": 0
+}

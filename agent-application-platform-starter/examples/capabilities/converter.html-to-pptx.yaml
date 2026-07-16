@@ -1,0 +1,50 @@
+api_version: agent-platform/capability/v1
+id: converter.html-to-pptx
+version: 1.0.0
+kind: converter
+request_schema:
+  uri: urn:agent-platform:capability-schema:html-to-pptx-request:v1
+  digest: sha256:f20c2a3e3024fab6775bfb5e954934b93f69fab234413fa8103028ef249acabf
+  dialect: https://json-schema.org/draft/2020-12/schema
+result_schema:
+  uri: urn:agent-platform:capability-schema:html-to-pptx-result:v1
+  digest: sha256:46d6fa17b4a8b06e6da4a016d776385952a12d2e59e51066fcd5173248258d8e
+  dialect: https://json-schema.org/draft/2020-12/schema
+error_schema:
+  uri: urn:agent-platform:capability-error:v1
+  digest: sha256:86e56c0466ea8990d635306e3bffef923a13801b468c749b854acfd19fef2e0f
+  dialect: https://json-schema.org/draft/2020-12/schema
+semantics:
+  side_effect: idempotent
+  idempotency_scope: invocation
+  supports_cancel: true
+  supports_progress: true
+  supports_status_query: true
+  timeout_class: long_running
+  default_timeout_seconds: 300
+  maximum_timeout_seconds: 1800
+artifact_contract:
+  inputs:
+  - role: source
+    media_types:
+    - text/html
+    required: true
+  outputs:
+  - role: primary
+    media_types:
+    - application/vnd.openxmlformats-officedocument.presentationml.presentation
+    required: true
+profiles:
+- id: fast
+- id: balanced
+- id: editable
+compatibility:
+  policy: semantic-versioning
+  consumer_unknown_fields: ignore
+  consumer_unknown_event_types: record-and-ignore
+conformance:
+  suite_id: converter.html-to-pptx
+  suite_version: 1.0.0
+namespace_owner: agent-platform
+lifecycle:
+  status: stable

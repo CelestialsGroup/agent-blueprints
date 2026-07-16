@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:provider-resolution:v1",
+  "title": "ProviderResolution",
+  "type": "object",
+  "required": [
+    "resolution_id",
+    "capability",
+    "selected_provider_instance_id",
+    "routing_reason",
+    "resolved_at",
+    "selected_provider_revision",
+    "capability_definition_digest"
+  ],
+  "properties": {
+    "resolution_id": {
+      "type": "string"
+    },
+    "capability": {
+      "type": "object",
+      "required": [
+        "id",
+        "version",
+        "profile"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "profile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "selected_provider_instance_id": {
+      "type": "string"
+    },
+    "routing_reason": {
+      "enum": [
+        "tenant_binding",
+        "client_binding",
+        "platform_default",
+        "explicit_fallback"
+      ]
+    },
+    "candidates_considered": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "capability_definition_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "selected_provider_revision": {
+      "type": "object",
+      "required": [
+        "provider_revision_id",
+        "plugin_id",
+        "plugin_version",
+        "manifest_digest",
+        "configuration_digest"
+      ],
+      "properties": {
+        "provider_revision_id": {
+          "type": "string"
+        },
+        "plugin_id": {
+          "type": "string"
+        },
+        "plugin_version": {
+          "type": "string"
+        },
+        "manifest_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "image_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "configuration_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "conformance_report_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,36 @@
+{
+  "event_id": "evt_01J00000000000000000000000",
+  "schema_version": 2,
+  "tenant_id": "ten_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "workspace_id": "wsp_01J00000000000000000000000",
+  "work_sequence": 152,
+  "aggregate": {
+    "type": "artifact",
+    "id": "art_01J00000000000000000000000",
+    "sequence": 4
+  },
+  "references": {
+    "workflow_run_id": "wfr_01J00000000000000000000000",
+    "artifact_id": "art_01J00000000000000000000000"
+  },
+  "type": "artifact.version.created",
+  "occurred_at": "2026-07-15T10:00:00Z",
+  "actor": {
+    "type": "system",
+    "id": "artifact-service"
+  },
+  "data": {
+    "artifact_id": "art_01J00000000000000000000000",
+    "version_id": "ver_01J00000000000000000000000",
+    "media_type": "text/html",
+    "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+  },
+  "metadata": {
+    "trace_id": "trace-001",
+    "correlation_id": "wrk_01J00000000000000000000000",
+    "causation_id": "inv_01J00000000000000000000000"
+  },
+  "data_version": 1,
+  "recorded_at": "2026-07-15T10:00:00.100Z"
+}

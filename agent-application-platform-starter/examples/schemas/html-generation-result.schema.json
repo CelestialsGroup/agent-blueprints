@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:capability-schema:html-generate-result:v1",
+  "title": "HtmlGenerateResult",
+  "type": "object",
+  "required": [
+    "entry_file",
+    "title"
+  ],
+  "properties": {
+    "entry_file": {
+      "type": "string",
+      "pattern": "^[^/].*\\.html$"
+    },
+    "title": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,35 @@
+{
+  "api_version": "v1",
+  "source": {
+    "project_id": "project-001",
+    "business_order_id": "order-001"
+  },
+  "work": {
+    "scenario_id": "html-generation",
+    "input": {
+      "brief": "\u751f\u6210\u4e00\u4e2a SaaS \u4ea7\u54c1\u4ecb\u7ecd\u9875\u9762",
+      "template_id": "landing-saas-dark"
+    },
+    "scenario_version": "1.0.0",
+    "scenario_definition_digest": "sha256:dd7b535a7cd877a389665d18edd8b2340c41e1af13c2029d33be666518dccd30"
+  },
+  "execution_grant": "eyJhbGciOiJFZERTQSIsImtpZCI6ImtleS0xIiwidHlwIjoiYWdlbnQtZXhlY3V0aW9uLWdyYW50K2p3dCJ9.payload.signature",
+  "delivery": {
+    "storage_mode": "agent_managed",
+    "required_formats": [
+      "text/html"
+    ],
+    "retention_days": 30,
+    "callback_registration_id": "callback-html-product-primary",
+    "delivery_target_id": "agent-managed-default",
+    "callback_url": "http://169.254.169.254/latest/meta-data"
+  },
+  "placement_constraints": {
+    "preferred_region": "ap-southeast-1",
+    "resource_class": "standard",
+    "data_residency": "sg"
+  },
+  "metadata": {
+    "locale": "zh-CN"
+  }
+}

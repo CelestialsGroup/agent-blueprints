@@ -1,0 +1,1119 @@
+openapi: 3.1.1
+
+info:
+  title: Agent Access API
+  version: 1.1.0
+  description: |
+    Trusted business backends submit asynchronous WorkOrders. Browser users access
+    a standalone Agent Workbench through a short-lived, one-time WorkSession exchange.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+
+servers:
+  - url: https://agent-api.agent-platform.internal
+    description: Production
+
+tags:
+  - name: WorkOrders
+    description: Submit and control asynchronous work.
+  - name: WorkSessions
+    description: Create and exchange short-lived browser sessions.
+  - name: Artifacts
+    description: Ingest, read, edit and convert Artifacts.
+
+security:
+  - ServiceOAuth:
+      - work:read
+
+paths:
+  /v1/artifact-ingest-sessions:
+    post:
+      tags: [Artifacts]
+      operationId: createArtifactIngestSession
+      summary: Create a constrained input Artifact upload session
+      security:
+        - ServiceOAuth:
+            - artifact:write
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/Traceparent'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/artifact-ingest-request.schema.json
+      responses:
+        '201':
+          description: Upload session created
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/artifact-ingest-response.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /v1/work-orders:
+    post:
+      tags: [WorkOrders]
+      operationId: createWorkOrder
+      summary: Submit an asynchronous WorkOrder
+      description: |
+        client_app_id is derived from the sender-constrained Service Access Token.
+        The single-use ExecutionGrant is consumed atomically with WorkOrder creation.
+        The request digest covers the complete JSON request except execution_grant.
+      security:
+        - ServiceOAuth:
+            - work:create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/Traceparent'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/work-order-request.schema.json
+      responses:
+        '202':
+          description: WorkOrder accepted
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/work-order-accepted.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /v1/work-orders/{work_order_id}:
+    parameters:
+      - $ref: '#/components/parameters/WorkOrderId'
+      - $ref: '#/components/parameters/Traceparent'
+    get:
+      tags: [WorkOrders]
+      operationId: getWorkOrder
+      summary: Get current WorkOrder state
+      x-required-work-session-scopes: [work:read]
+      security:
+        - ServiceOAuth:
+            - work:read
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      responses:
+        '200':
+          description: Current WorkOrder state
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/work-order-state.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /v1/work-orders/{work_order_id}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/WorkOrderId'
+      - $ref: '#/components/parameters/Traceparent'
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      tags: [WorkOrders]
+      operationId: cancelWorkOrder
+      summary: Request idempotent WorkOrder cancellation
+      x-required-work-session-scopes: [work:cancel]
+      x-cookie-csrf-required: true
+      security:
+        - ServiceOAuth:
+            - work:cancel
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      responses:
+        '202':
+          description: Cancellation accepted
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/cancellation-result.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /v1/work-orders/{work_order_id}/events:
+    parameters:
+      - $ref: '#/components/parameters/WorkOrderId'
+      - $ref: '#/components/parameters/Traceparent'
+    get:
+      tags: [WorkOrders]
+      operationId: streamWorkOrderEvents
+      summary: Stream durable WorkOrder events
+      description: |
+        The SSE frame ID is work_sequence. Clients resume with Last-Event-ID or
+        after_work_sequence. The server sends heartbeat comments at least every
+        15 seconds. A cursor older than retained history returns 410.
+      x-required-work-session-scopes: [event:subscribe]
+      security:
+        - ServiceOAuth:
+            - work:read
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      parameters:
+        - name: after_work_sequence
+          in: query
+          required: false
+          description: Resume strictly after this WorkOrder sequence.
+          schema:
+            type: integer
+            minimum: 0
+        - name: Last-Event-ID
+          in: header
+          required: false
+          description: SSE cursor; ignored when after_work_sequence is present.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Durable event stream
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: Always `no-store`.
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              example: |
+                : heartbeat
+
+                id: 152
+                event: artifact.version.created
+                data: {"schema_version":2,"work_sequence":152}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          description: Requested cursor is older than retained event history
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/event-cursor-expired.schema.json
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /v1/work-orders/{work_order_id}/sessions:
+    parameters:
+      - $ref: '#/components/parameters/WorkOrderId'
+      - $ref: '#/components/parameters/Traceparent'
+    post:
+      tags: [WorkSessions]
+      operationId: createWorkSession
+      summary: Create a one-time WorkSession exchange token
+      security:
+        - ServiceOAuth:
+            - session:create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/work-session-request.schema.json
+      responses:
+        '201':
+          description: One-time exchange material created
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: Always `no-store`.
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/work-session-response.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /v1/work-sessions/exchange:
+    post:
+      tags: [WorkSessions]
+      operationId: exchangeWorkSession
+      summary: Exchange a one-time token for an HttpOnly Workbench session cookie
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Traceparent'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/work-session-exchange-request.schema.json
+      responses:
+        '200':
+          description: Browser session established
+          headers:
+            Set-Cookie:
+              description: |
+                `__Host-agent_session` HttpOnly Secure SameSite cookie. The exact
+                SameSite policy is selected by the deployment profile.
+              schema:
+                type: string
+            Cache-Control:
+              schema:
+                type: string
+              description: Always `no-store`.
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/work-session-exchange-response.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+
+  /v1/work-orders/{work_order_id}/pause:
+    parameters:
+      - $ref: '#/components/parameters/WorkOrderId'
+      - $ref: '#/components/parameters/Traceparent'
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      tags: [WorkOrders]
+      operationId: pauseWorkOrder
+      summary: Request a pausable WorkOrder to pause
+      x-required-work-session-scopes: [work:control]
+      x-cookie-csrf-required: true
+      security:
+        - ServiceOAuth:
+            - work:control
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      responses:
+        '202':
+          description: Pause request accepted
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/work-order-state.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /v1/work-orders/{work_order_id}/resume:
+    parameters:
+      - $ref: '#/components/parameters/WorkOrderId'
+      - $ref: '#/components/parameters/Traceparent'
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      tags: [WorkOrders]
+      operationId: resumeWorkOrder
+      summary: Resume a paused or waiting WorkOrder
+      x-required-work-session-scopes: [work:control]
+      x-cookie-csrf-required: true
+      security:
+        - ServiceOAuth:
+            - work:control
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      responses:
+        '202':
+          description: Resume request accepted
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/work-order-state.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /v1/work-orders/{work_order_id}/approvals:
+    parameters:
+      - $ref: '#/components/parameters/WorkOrderId'
+      - $ref: '#/components/parameters/Traceparent'
+    get:
+      tags: [WorkOrders]
+      operationId: listWorkOrderApprovals
+      summary: List approvals visible to the current principal
+      x-required-work-session-scopes: [approval:read]
+      security:
+        - ServiceOAuth:
+            - work:read
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      responses:
+        '200':
+          description: Approval list
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/approval-list.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /v1/approvals/{approval_id}/decision:
+    parameters:
+      - $ref: '#/components/parameters/ApprovalId'
+      - $ref: '#/components/parameters/Traceparent'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      tags: [WorkOrders]
+      operationId: decideApproval
+      summary: Approve or reject a pending action
+      x-required-work-session-scopes: [approval:decide]
+      x-cookie-csrf-required: true
+      security:
+        - ServiceOAuth:
+            - work:control
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/approval-decision.schema.json
+      responses:
+        '200':
+          description: Updated Approval
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/approval-request.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /v1/work-orders/{work_order_id}/runtime-sessions:
+    parameters:
+      - $ref: '#/components/parameters/WorkOrderId'
+      - $ref: '#/components/parameters/Traceparent'
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      tags: [WorkSessions]
+      operationId: createRuntimeSession
+      summary: Create a short-lived Runtime Gateway session
+      x-required-work-session-scopes: [runtime:view]
+      x-cookie-csrf-required: true
+      security:
+        - ServiceOAuth:
+            - work:control
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/runtime-session-request.schema.json
+      responses:
+        '201':
+          description: Runtime Session created
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/runtime-session-response.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /v1/artifacts/{artifact_id}:
+    parameters:
+      - $ref: '#/components/parameters/ArtifactId'
+      - $ref: '#/components/parameters/Traceparent'
+    get:
+      tags: [Artifacts]
+      operationId: getArtifact
+      summary: Read Artifact metadata
+      x-required-work-session-scopes: [artifact:read]
+      security:
+        - ServiceOAuth:
+            - artifact:read
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      responses:
+        '200':
+          description: Artifact metadata
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/artifact-metadata.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /v1/artifacts/{artifact_id}/versions/{version_id}:
+    parameters:
+      - $ref: '#/components/parameters/ArtifactId'
+      - $ref: '#/components/parameters/VersionId'
+      - $ref: '#/components/parameters/Traceparent'
+    get:
+      tags: [Artifacts]
+      operationId: getArtifactVersion
+      summary: Read immutable ArtifactVersion metadata
+      x-required-work-session-scopes: [artifact:read]
+      security:
+        - ServiceOAuth:
+            - artifact:read
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      responses:
+        '200':
+          description: ArtifactVersion metadata
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/artifact-version.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+
+
+  /v1/artifacts/{artifact_id}/versions/{version_id}/access:
+    parameters:
+      - $ref: '#/components/parameters/ArtifactId'
+      - $ref: '#/components/parameters/VersionId'
+      - $ref: '#/components/parameters/Traceparent'
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      tags: [Artifacts]
+      operationId: createArtifactAccess
+      summary: Create short-lived access to immutable Artifact content
+      x-required-work-session-scopes: [artifact:read]
+      x-cookie-csrf-required: true
+      security:
+        - ServiceOAuth:
+            - artifact:read
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/artifact-access-request.schema.json
+      responses:
+        '201':
+          description: Short-lived Artifact access created
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/artifact-access-response.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /v1/artifacts/{artifact_id}/preview-sessions:
+    parameters:
+      - $ref: '#/components/parameters/ArtifactId'
+      - $ref: '#/components/parameters/Traceparent'
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      tags: [Artifacts]
+      operationId: createArtifactPreviewSession
+      summary: Create a short-lived isolated Artifact preview
+      x-required-work-session-scopes: [artifact:read]
+      x-cookie-csrf-required: true
+      security:
+        - ServiceOAuth:
+            - artifact:read
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/preview-session-request.schema.json
+      responses:
+        '201':
+          description: Preview Session created
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/preview-session.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /v1/artifacts/{artifact_id}/edit-sessions:
+    parameters:
+      - $ref: '#/components/parameters/ArtifactId'
+      - $ref: '#/components/parameters/Traceparent'
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      tags: [Artifacts]
+      operationId: createArtifactEditSession
+      summary: Create an Artifact EditSession
+      x-required-work-session-scopes: [artifact:edit]
+      x-cookie-csrf-required: true
+      security:
+        - ServiceOAuth:
+            - artifact:write
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/edit-session-request.schema.json
+      responses:
+        '201':
+          description: EditSession created
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/edit-session.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+
+  /v1/edit-sessions/{edit_session_id}/draft:
+    parameters:
+      - $ref: '#/components/parameters/EditSessionId'
+      - $ref: '#/components/parameters/Traceparent'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/CsrfToken'
+    put:
+      tags: [Artifacts]
+      operationId: saveArtifactEditDraft
+      summary: Save a new optimistic Draft revision
+      x-required-work-session-scopes: [artifact:edit]
+      x-cookie-csrf-required: true
+      security:
+        - ServiceOAuth:
+            - artifact:write
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/edit-draft-update.schema.json
+      responses:
+        '200':
+          description: Updated EditSession and Draft revision
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/edit-session.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /v1/edit-sessions/{edit_session_id}:
+    parameters:
+      - $ref: '#/components/parameters/EditSessionId'
+      - $ref: '#/components/parameters/Traceparent'
+      - $ref: '#/components/parameters/CsrfToken'
+    delete:
+      tags: [Artifacts]
+      operationId: discardArtifactEditSession
+      summary: Discard an active or conflicted EditSession
+      x-required-work-session-scopes: [artifact:edit]
+      x-cookie-csrf-required: true
+      security:
+        - ServiceOAuth:
+            - artifact:write
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      responses:
+        '204':
+          description: EditSession discarded idempotently
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /v1/edit-sessions/{edit_session_id}/commit:
+    parameters:
+      - $ref: '#/components/parameters/EditSessionId'
+      - $ref: '#/components/parameters/Traceparent'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      tags: [Artifacts]
+      operationId: commitArtifactEditSession
+      summary: Commit an EditSession as a new ArtifactVersion
+      x-required-work-session-scopes: [artifact:edit]
+      x-cookie-csrf-required: true
+      security:
+        - ServiceOAuth:
+            - artifact:write
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/edit-commit-request.schema.json
+      responses:
+        '201':
+          description: New immutable ArtifactVersion
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/artifact-version.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /v1/artifacts/{artifact_id}/conversions:
+    parameters:
+      - $ref: '#/components/parameters/ArtifactId'
+      - $ref: '#/components/parameters/Traceparent'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      tags: [Artifacts]
+      operationId: createArtifactConversion
+      summary: Create an asynchronous Artifact conversion
+      x-required-work-session-scopes: [artifact:export]
+      x-cookie-csrf-required: true
+      security:
+        - ServiceOAuth:
+            - artifact:write
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/conversion-request.schema.json
+      responses:
+        '202':
+          description: Conversion job accepted
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/conversion-job.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /v1/conversions/{conversion_job_id}:
+    parameters:
+      - $ref: '#/components/parameters/ConversionJobId'
+      - $ref: '#/components/parameters/Traceparent'
+    get:
+      tags: [Artifacts]
+      operationId: getArtifactConversion
+      summary: Read an Artifact conversion job
+      x-required-work-session-scopes: [artifact:read]
+      security:
+        - ServiceOAuth:
+            - artifact:read
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      responses:
+        '200':
+          description: Conversion job state
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/conversion-job.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    ServiceOAuth:
+      type: oauth2
+      description: |
+        OAuth2 Client Credentials. Production access tokens follow RFC 9068,
+        are audience-restricted, and use an approved sender-constraining profile
+        such as mTLS or DPoP.
+      flows:
+        clientCredentials:
+          tokenUrl: https://identity.agent-platform.internal/oauth2/token
+          scopes:
+            work:create: Submit WorkOrders.
+            work:read: Read WorkOrders and events.
+            work:cancel: Cancel WorkOrders.
+            work:control: Pause, resume, approve and open Runtime sessions.
+            session:create: Create browser WorkSessions.
+            artifact:read: Read Artifacts.
+            artifact:write: Ingest, edit and convert Artifacts.
+            provider:admin: Administer Plugins and Providers.
+    WorkSessionCookie:
+      type: apiKey
+      in: cookie
+      name: __Host-agent_session
+      description: HttpOnly Secure browser session cookie bound to one WorkOrder.
+    WorkSessionBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: In-memory token profile for trusted headless SDKs; never persist in browser storage.
+
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Stable key scoped to the authenticated client or WorkSession.
+      schema:
+        type: string
+        minLength: 16
+        maxLength: 200
+    Traceparent:
+      name: traceparent
+      in: header
+      required: false
+      description: W3C trace context.
+      schema:
+        type: string
+    CsrfToken:
+      name: X-CSRF-Token
+      in: header
+      required: false
+      description: Required when authenticating through WorkSessionCookie; ignored for sender-constrained ServiceOAuth.
+      schema:
+        type: string
+        minLength: 16
+    WorkOrderId:
+      name: work_order_id
+      in: path
+      required: true
+      description: Platform WorkOrder identifier.
+      schema:
+        type: string
+    ApprovalId:
+      name: approval_id
+      in: path
+      required: true
+      description: Approval identifier.
+      schema:
+        type: string
+    ArtifactId:
+      name: artifact_id
+      in: path
+      required: true
+      description: Artifact identifier.
+      schema:
+        type: string
+    VersionId:
+      name: version_id
+      in: path
+      required: true
+      description: Immutable ArtifactVersion identifier.
+      schema:
+        type: string
+    EditSessionId:
+      name: edit_session_id
+      in: path
+      required: true
+      description: EditSession identifier.
+      schema:
+        type: string
+    ConversionJobId:
+      name: conversion_job_id
+      in: path
+      required: true
+      description: Conversion job identifier.
+      schema:
+        type: string
+
+  headers:
+    Location:
+      description: Canonical URL of the created resource.
+      schema:
+        type: string
+        format: uri
+
+  responses:
+    BadRequest:
+      description: Malformed request.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Unauthorized:
+      description: Missing, invalid, expired or wrongly typed credentials.
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Forbidden:
+      description: Authenticated principal lacks scope, tenant access or object ownership.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    NotFound:
+      description: Resource does not exist or is intentionally concealed.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Conflict:
+      description: Idempotency, Grant consumption, state transition or version conflict.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Unprocessable:
+      description: Schema-valid request violates domain semantics.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    PayloadTooLarge:
+      description: Requested upload exceeds configured size policy.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    TooManyRequests:
+      description: Rate, concurrency or fairness limit exceeded.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    InternalError:
+      description: Unexpected internal error.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Unavailable:
+      description: Platform capacity or a required dependency is temporarily unavailable.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json

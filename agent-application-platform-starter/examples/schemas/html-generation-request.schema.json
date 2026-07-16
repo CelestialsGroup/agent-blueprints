@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:capability-schema:html-generate-request:v1",
+  "title": "HtmlGenerateRequest",
+  "type": "object",
+  "required": [
+    "brief",
+    "template"
+  ],
+  "properties": {
+    "brief": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 20000
+    },
+    "template": {
+      "type": "object",
+      "required": [
+        "id",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "source_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "brand": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "tone": {
+          "type": "string"
+        },
+        "primary_color": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "viewport": {
+      "enum": [
+        "responsive",
+        "desktop",
+        "mobile",
+        "16:9",
+        "A4"
+      ]
+    },
+    "locale": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

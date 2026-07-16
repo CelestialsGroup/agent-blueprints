@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:provider-revision:v1",
+  "title": "ProviderRevision",
+  "type": "object",
+  "required": [
+    "provider_revision_id",
+    "provider_instance_id",
+    "plugin_id",
+    "plugin_version",
+    "manifest_digest",
+    "configuration_digest",
+    "approved_permissions_digest",
+    "conformance",
+    "created_at",
+    "provider_kind"
+  ],
+  "properties": {
+    "provider_revision_id": {
+      "type": "string"
+    },
+    "provider_instance_id": {
+      "type": "string"
+    },
+    "plugin_id": {
+      "type": "string"
+    },
+    "plugin_version": {
+      "type": "string"
+    },
+    "manifest_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "package_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "image_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "configuration_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "approved_permissions_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "credential_binding_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "conformance": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "capability",
+          "version",
+          "suite_version",
+          "status",
+          "report_digest"
+        ],
+        "properties": {
+          "capability": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "suite_version": {
+            "type": "string"
+          },
+          "status": {
+            "const": "passed"
+          },
+          "report_digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "supersedes_revision_id": {
+      "type": "string"
+    },
+    "provider_kind": {
+      "enum": [
+        "agent_runtime",
+        "sandbox",
+        "model",
+        "tool",
+        "skill",
+        "template",
+        "renderer",
+        "editor",
+        "converter",
+        "channel"
+      ]
+    },
+    "sandbox_conformance_report_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  },
+  "additionalProperties": false
+}

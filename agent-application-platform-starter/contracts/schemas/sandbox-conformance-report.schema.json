@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:sandbox-conformance-report:v1",
+  "title": "SandboxConformanceReport",
+  "type": "object",
+  "required": [
+    "report_id",
+    "provider_revision_id",
+    "suite_version",
+    "status",
+    "profiles",
+    "tests",
+    "report_digest",
+    "completed_at"
+  ],
+  "properties": {
+    "report_id": {
+      "type": "string"
+    },
+    "provider_revision_id": {
+      "type": "string"
+    },
+    "suite_version": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "passed",
+        "failed"
+      ]
+    },
+    "profiles": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "lifecycle",
+          "exec",
+          "terminal",
+          "browser",
+          "snapshot-workspace",
+          "snapshot-filesystem",
+          "snapshot-process",
+          "security-restricted",
+          "multi-node",
+          "usage"
+        ]
+      }
+    },
+    "tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "passed",
+              "failed",
+              "skipped"
+            ]
+          },
+          "evidence_reference": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "report_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

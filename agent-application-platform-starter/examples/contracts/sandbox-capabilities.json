@@ -1,0 +1,68 @@
+{
+  "provider_revision_id": "spr_01J00000000000000000000000",
+  "api_version": "v1",
+  "capabilities": [
+    {
+      "id": "sandbox.exec",
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "id": "sandbox.terminal",
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "id": "sandbox.browser",
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "id": "sandbox.workspace.persistent",
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "id": "sandbox.snapshot.workspace",
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "id": "sandbox.restore",
+      "versions": [
+        "1.0"
+      ]
+    },
+    {
+      "id": "sandbox.network-policy",
+      "versions": [
+        "1.0"
+      ]
+    }
+  ],
+  "runtime_profiles": [
+    {
+      "id": "hardened",
+      "isolation_class": "hardened-container",
+      "runtime_class_name": "gvisor",
+      "architecture": [
+        "amd64",
+        "arm64"
+      ]
+    }
+  ],
+  "limits": {
+    "max_cpu_millis": 8000,
+    "max_memory_bytes": 17179869184,
+    "max_ephemeral_storage_bytes": 53687091200,
+    "max_workspace_bytes": 107374182400,
+    "max_gpu_count": 0,
+    "max_lease_seconds": 14400,
+    "max_exec_seconds": 3600
+  }
+}

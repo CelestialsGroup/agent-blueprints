@@ -1,0 +1,5 @@
+{
+  "alg": "EdDSA",
+  "kid": "business-a-2026-01",
+  "typ": "agent-execution-grant+jwt"
+}

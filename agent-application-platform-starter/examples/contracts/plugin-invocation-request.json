@@ -1,0 +1,32 @@
+{
+  "protocol_version": "v1",
+  "invocation_id": "inv_01J00000000000000000000000",
+  "idempotency_key": "invocation-key-0000000001",
+  "fencing_token": 1,
+  "capability": {
+    "id": "converter.html-to-pptx",
+    "version": "1.0.0",
+    "profile": "fast"
+  },
+  "deadline_at": "2026-07-15T10:30:00Z",
+  "input": {
+    "slide_size": "16:9"
+  },
+  "input_artifacts": [
+    {
+      "artifact_id": "art_01J00000000000000000000000",
+      "version_id": "ver_01J00000000000000000000000",
+      "read_url": "https://artifact.agent-platform.internal/read/token",
+      "expires_at": "2026-07-15T10:10:00Z"
+    }
+  ],
+  "output_staging": {
+    "session_id": "stg_01J00000000000000000000000",
+    "upload_base_url": "https://staging.agent-platform.internal/upload/token",
+    "expires_at": "2026-07-15T10:30:00Z"
+  },
+  "trace_context": {
+    "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+  },
+  "invocation_attempt_id": "att_01J00000000000000000000000"
+}

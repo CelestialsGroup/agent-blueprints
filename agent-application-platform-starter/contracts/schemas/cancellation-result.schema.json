@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:cancellation-result:v1",
+  "title": "CancellationResult",
+  "type": "object",
+  "required": [
+    "work_order_id",
+    "status",
+    "requested_at"
+  ],
+  "properties": {
+    "work_order_id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "cancel_requested",
+        "cancelled"
+      ]
+    },
+    "requested_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

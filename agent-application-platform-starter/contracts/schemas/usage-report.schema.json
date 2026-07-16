@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:usage-report:v1",
+  "title": "UsageReport",
+  "type": "object",
+  "required": [
+    "usage_report_id",
+    "work_order_id",
+    "entries",
+    "created_at"
+  ],
+  "properties": {
+    "usage_report_id": {
+      "type": "string"
+    },
+    "work_order_id": {
+      "type": "string"
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "entry_id",
+          "meter",
+          "quantity",
+          "unit",
+          "occurred_at",
+          "meter_source"
+        ],
+        "properties": {
+          "entry_id": {
+            "type": "string"
+          },
+          "meter": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "provider_operation_id": {
+            "type": "string"
+          },
+          "provider_instance_id": {
+            "type": "string"
+          },
+          "correction_of": {
+            "type": "string"
+          },
+          "meter_source": {
+            "enum": [
+              "platform_metered",
+              "provider_reported",
+              "reconciled"
+            ]
+          },
+          "evidence_reference": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:scenario-schema:html-generation-input:v1",
+  "title": "HtmlGenerationScenarioInput",
+  "type": "object",
+  "required": [
+    "brief",
+    "template_id"
+  ],
+  "properties": {
+    "brief": {
+      "type": "string",
+      "minLength": 1
+    },
+    "template_id": {
+      "type": "string"
+    },
+    "theme": {
+      "enum": [
+        "light",
+        "dark",
+        "auto"
+      ]
+    },
+    "locale": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

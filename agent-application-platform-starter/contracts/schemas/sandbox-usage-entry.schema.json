@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:sandbox-usage-entry:v1",
+  "title": "SandboxUsageEntry",
+  "type": "object",
+  "required": [
+    "entry_id",
+    "sandbox_id",
+    "meter",
+    "quantity",
+    "unit",
+    "meter_source",
+    "occurred_at"
+  ],
+  "properties": {
+    "entry_id": {
+      "type": "string"
+    },
+    "sandbox_id": {
+      "type": "string"
+    },
+    "work_order_id": {
+      "type": "string"
+    },
+    "invocation_id": {
+      "type": "string"
+    },
+    "operation_id": {
+      "type": "string"
+    },
+    "meter": {
+      "enum": [
+        "sandbox.wall_time_milliseconds",
+        "sandbox.cpu_nanoseconds",
+        "sandbox.memory_byte_milliseconds",
+        "sandbox.network_ingress_bytes",
+        "sandbox.network_egress_bytes",
+        "sandbox.storage_read_bytes",
+        "sandbox.storage_write_bytes",
+        "sandbox.workspace_peak_bytes",
+        "sandbox.exec_count",
+        "sandbox.browser_session_milliseconds"
+      ]
+    },
+    "quantity": {
+      "type": "integer"
+    },
+    "unit": {
+      "type": "string"
+    },
+    "meter_source": {
+      "enum": [
+        "platform_metered",
+        "runtime_metered",
+        "reconciled"
+      ]
+    },
+    "evidence_reference": {
+      "type": "string"
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

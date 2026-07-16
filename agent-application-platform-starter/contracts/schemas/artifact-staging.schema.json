@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:artifact-staging:v1",
+  "title": "StagedArtifact",
+  "type": "object",
+  "required": [
+    "staging_id",
+    "name",
+    "media_type",
+    "role",
+    "digest",
+    "size_bytes",
+    "staging_session_id",
+    "invocation_id",
+    "invocation_attempt_id"
+  ],
+  "properties": {
+    "staging_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "media_type": {
+      "type": "string"
+    },
+    "role": {
+      "type": "string"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "size_bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "manifest": {
+      "type": "object"
+    },
+    "staging_session_id": {
+      "type": "string"
+    },
+    "invocation_id": {
+      "type": "string"
+    },
+    "invocation_attempt_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

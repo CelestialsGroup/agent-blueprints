@@ -1,0 +1,41 @@
+{
+  "jti": "grant_01J00000000000000000000000",
+  "iss": "business-a",
+  "aud": "agent-platform",
+  "sub": "user-123",
+  "iat": 1784100000,
+  "nbf": 1784100000,
+  "exp": 1784100300,
+  "client_app_id": "html-product",
+  "external_tenant_id": "org-456",
+  "external_principal_id": "user-123",
+  "scenario_id": "html-generation",
+  "request_digest": "sha256:88ce4d187a6fe5197cecaa870c2d5a00fb7a3b089e57aa7946a239d9f8f03789",
+  "idempotency_key_digest": "sha256:6bf53ca6b162632ebe7a477b424bedb41cae0759b08b27970fe9dbc7199ff87c",
+  "usage": "single",
+  "nonce": "nonce-0123456789abcdef",
+  "capabilities": [
+    "agent.general",
+    "html.generate",
+    "artifact.preview.html",
+    "converter.html-to-pptx"
+  ],
+  "limits": {
+    "max_input_tokens": 100000,
+    "max_output_tokens": 20000,
+    "max_sandbox_seconds": 1800,
+    "max_storage_bytes": 104857600,
+    "max_artifact_count": 20,
+    "max_conversion_count": 3
+  },
+  "policies": {
+    "network_access": "restricted",
+    "external_communication": false,
+    "require_approval_for": [
+      "external_communication"
+    ],
+    "data_classification": "internal"
+  },
+  "scenario_version": "1.0.0",
+  "scenario_definition_digest": "sha256:dd7b535a7cd877a389665d18edd8b2340c41e1af13c2029d33be666518dccd30"
+}

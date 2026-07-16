@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:technical-usage-entry:v1",
+  "title": "TechnicalUsageEntry",
+  "type": "object",
+  "required": [
+    "entry_id",
+    "meter",
+    "quantity",
+    "unit",
+    "occurred_at",
+    "meter_source"
+  ],
+  "properties": {
+    "entry_id": {
+      "type": "string"
+    },
+    "meter": {
+      "type": "string"
+    },
+    "quantity": {
+      "type": "integer",
+      "description": "Signed integer in the meter's registered base unit; corrections may be negative."
+    },
+    "unit": {
+      "type": "string"
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "provider_operation_id": {
+      "type": "string"
+    },
+    "meter_source": {
+      "enum": [
+        "platform_metered",
+        "provider_reported",
+        "reconciled"
+      ]
+    },
+    "evidence_reference": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:plugin-permissions:v1",
+  "title": "PluginRequestedPermissions",
+  "type": "object",
+  "properties": {
+    "network": {
+      "type": "object",
+      "properties": {
+        "outbound": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "scheme",
+              "host"
+            ],
+            "properties": {
+              "scheme": {
+                "enum": [
+                  "https",
+                  "http",
+                  "tcp"
+                ]
+              },
+              "host": {
+                "type": "string"
+              },
+              "port": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 65535
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "artifacts": {
+      "type": "object",
+      "properties": {
+        "read_roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "write_staging": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "secrets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "purpose"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "sandbox": {
+      "type": "object",
+      "properties": {
+        "terminal": {
+          "type": "boolean"
+        },
+        "browser": {
+          "type": "boolean"
+        },
+        "filesystem_write": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

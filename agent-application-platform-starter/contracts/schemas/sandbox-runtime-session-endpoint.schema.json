@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:sandbox-runtime-session-endpoint:v1",
+  "title": "SandboxRuntimeSessionEndpoint",
+  "type": "object",
+  "required": [
+    "operation_id",
+    "attempt_id",
+    "fencing_token",
+    "sandbox_id",
+    "runtime_session_id",
+    "provider_session_id",
+    "runtime_type",
+    "protocol",
+    "internal_endpoint_reference",
+    "connection_generation",
+    "expires_at"
+  ],
+  "properties": {
+    "operation_id": {
+      "type": "string"
+    },
+    "attempt_id": {
+      "type": "string"
+    },
+    "fencing_token": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "sandbox_id": {
+      "type": "string"
+    },
+    "runtime_session_id": {
+      "type": "string"
+    },
+    "provider_session_id": {
+      "type": "string"
+    },
+    "runtime_type": {
+      "enum": [
+        "terminal",
+        "browser",
+        "desktop",
+        "port_forward"
+      ]
+    },
+    "protocol": {
+      "enum": [
+        "websocket",
+        "webrtc",
+        "tcp-proxy",
+        "http-proxy"
+      ]
+    },
+    "internal_endpoint_reference": {
+      "type": "string"
+    },
+    "provider_access_token_reference": {
+      "type": "string"
+    },
+    "connection_generation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:capability-schema:html-to-pptx-result:v1",
+  "title": "HtmlToPptxResult",
+  "type": "object",
+  "required": [
+    "slide_count",
+    "profile"
+  ],
+  "properties": {
+    "slide_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "profile": {
+      "enum": [
+        "fast",
+        "balanced",
+        "editable"
+      ]
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

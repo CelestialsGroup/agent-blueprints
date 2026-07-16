@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:sandbox-exec-result:v1",
+  "title": "SandboxExecResult",
+  "type": "object",
+  "required": [
+    "operation_id",
+    "attempt_id",
+    "fencing_token",
+    "sandbox_id",
+    "status",
+    "started_at",
+    "completed_at",
+    "usage"
+  ],
+  "properties": {
+    "operation_id": {
+      "type": "string"
+    },
+    "attempt_id": {
+      "type": "string"
+    },
+    "fencing_token": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "sandbox_id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "completed",
+        "failed",
+        "cancelled",
+        "outcome_unknown"
+      ]
+    },
+    "exit_code": {
+      "type": "integer"
+    },
+    "signal": {
+      "type": "string"
+    },
+    "stdout_reference": {
+      "type": "string"
+    },
+    "stderr_reference": {
+      "type": "string"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "usage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "entry_id",
+          "sandbox_id",
+          "meter",
+          "quantity",
+          "unit",
+          "meter_source",
+          "occurred_at"
+        ],
+        "properties": {
+          "entry_id": {
+            "type": "string"
+          },
+          "sandbox_id": {
+            "type": "string"
+          },
+          "work_order_id": {
+            "type": "string"
+          },
+          "invocation_id": {
+            "type": "string"
+          },
+          "operation_id": {
+            "type": "string"
+          },
+          "meter": {
+            "enum": [
+              "sandbox.wall_time_milliseconds",
+              "sandbox.cpu_nanoseconds",
+              "sandbox.memory_byte_milliseconds",
+              "sandbox.network_ingress_bytes",
+              "sandbox.network_egress_bytes",
+              "sandbox.storage_read_bytes",
+              "sandbox.storage_write_bytes",
+              "sandbox.workspace_peak_bytes",
+              "sandbox.exec_count",
+              "sandbox.browser_session_milliseconds"
+            ]
+          },
+          "quantity": {
+            "type": "integer"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "meter_source": {
+            "enum": [
+              "platform_metered",
+              "runtime_metered",
+              "reconciled"
+            ]
+          },
+          "evidence_reference": {
+            "type": "string"
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "error": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "retryable",
+        "outcome"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]{2,127}$"
+        },
+        "message": {
+          "type": "string"
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "outcome": {
+          "enum": [
+            "known_failed",
+            "outcome_unknown"
+          ]
+        },
+        "provider_code": {
+          "type": "string"
+        },
+        "details": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

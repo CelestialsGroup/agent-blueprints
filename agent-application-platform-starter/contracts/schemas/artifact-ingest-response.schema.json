@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:artifact-ingest-response:v1",
+  "title": "ArtifactIngestResponse",
+  "type": "object",
+  "required": [
+    "ingest_reference_id",
+    "upload_url",
+    "expires_at"
+  ],
+  "properties": {
+    "ingest_reference_id": {
+      "type": "string"
+    },
+    "upload_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "required_headers": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

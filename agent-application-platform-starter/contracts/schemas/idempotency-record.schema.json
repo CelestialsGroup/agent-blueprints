@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:idempotency-record:v1",
+  "title": "IdempotencyRecord",
+  "type": "object",
+  "required": [
+    "client_app_id",
+    "idempotency_key_digest",
+    "request_digest",
+    "status",
+    "created_at"
+  ],
+  "properties": {
+    "client_app_id": {
+      "type": "string"
+    },
+    "idempotency_key_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "request_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "status": {
+      "enum": [
+        "processing",
+        "completed",
+        "failed"
+      ]
+    },
+    "work_order_id": {
+      "type": "string"
+    },
+    "response_reference": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

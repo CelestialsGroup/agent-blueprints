@@ -1,0 +1,448 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:plugin-manifest:v2",
+  "title": "PluginManifestV2",
+  "type": "object",
+  "required": [
+    "api_version",
+    "metadata",
+    "runtime",
+    "implements",
+    "requested_permissions",
+    "compatibility",
+    "configuration_schema",
+    "credential_requirements",
+    "provenance"
+  ],
+  "properties": {
+    "api_version": {
+      "const": "agent-platform/plugin/v2"
+    },
+    "metadata": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "version",
+        "publisher"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{2,127}$"
+        },
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "license": {
+          "type": "string"
+        },
+        "publisher": {
+          "type": "object",
+          "required": [
+            "id",
+            "name"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "runtime": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "mode",
+            "image_digest",
+            "protocol",
+            "container_port",
+            "health"
+          ],
+          "properties": {
+            "mode": {
+              "const": "service"
+            },
+            "image_digest": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "protocol": {
+              "enum": [
+                "http",
+                "grpc"
+              ]
+            },
+            "container_port": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535
+            },
+            "health": {
+              "type": "object",
+              "required": [
+                "readiness_path",
+                "liveness_path"
+              ],
+              "properties": {
+                "readiness_path": {
+                  "type": "string"
+                },
+                "liveness_path": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "resource_class": {
+              "enum": [
+                "standard",
+                "browser",
+                "office",
+                "video",
+                "gpu"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "mode",
+            "image_digest",
+            "entrypoint",
+            "result_protocol",
+            "resource_class"
+          ],
+          "properties": {
+            "mode": {
+              "const": "job"
+            },
+            "image_digest": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "entrypoint": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            },
+            "result_protocol": {
+              "const": "staging-manifest-v1"
+            },
+            "resource_class": {
+              "enum": [
+                "standard",
+                "browser",
+                "office",
+                "video",
+                "gpu"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "mode",
+            "command",
+            "required_sandbox_features"
+          ],
+          "properties": {
+            "mode": {
+              "const": "sandbox_cli"
+            },
+            "command": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            },
+            "required_sandbox_features": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "mode",
+            "transport",
+            "protocol_version"
+          ],
+          "properties": {
+            "mode": {
+              "const": "mcp"
+            },
+            "transport": {
+              "enum": [
+                "stdio",
+                "streamable_http"
+              ]
+            },
+            "protocol_version": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "mode",
+            "protocol",
+            "endpoint_configuration_schema"
+          ],
+          "properties": {
+            "mode": {
+              "const": "remote_service"
+            },
+            "protocol": {
+              "enum": [
+                "http",
+                "grpc"
+              ]
+            },
+            "endpoint_configuration_schema": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "implements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "capability",
+          "version_range"
+        ],
+        "properties": {
+          "capability": {
+            "type": "string"
+          },
+          "version_range": {
+            "type": "string"
+          },
+          "profiles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "requested_permissions": {
+      "type": "object",
+      "properties": {
+        "network": {
+          "type": "object",
+          "properties": {
+            "outbound": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "scheme",
+                  "host"
+                ],
+                "properties": {
+                  "scheme": {
+                    "enum": [
+                      "https",
+                      "http",
+                      "tcp"
+                    ]
+                  },
+                  "host": {
+                    "type": "string"
+                  },
+                  "port": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 65535
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "artifacts": {
+          "type": "object",
+          "properties": {
+            "read_roles": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "write_staging": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "secrets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "purpose"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "purpose": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "sandbox": {
+          "type": "object",
+          "properties": {
+            "terminal": {
+              "type": "boolean"
+            },
+            "browser": {
+              "type": "boolean"
+            },
+            "filesystem_write": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "compatibility": {
+      "type": "object",
+      "required": [
+        "platform_version_range",
+        "invocation_protocol"
+      ],
+      "properties": {
+        "platform_version_range": {
+          "type": "string"
+        },
+        "invocation_protocol": {
+          "const": "v1"
+        }
+      },
+      "additionalProperties": false
+    },
+    "configuration_schema": {
+      "type": "object",
+      "required": [
+        "uri",
+        "digest",
+        "dialect"
+      ],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "uri"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "dialect": {
+          "const": "https://json-schema.org/draft/2020-12/schema"
+        }
+      },
+      "additionalProperties": false
+    },
+    "credential_requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "purpose",
+          "scope"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "scope": {
+            "enum": [
+              "invocation",
+              "provider_instance"
+            ]
+          },
+          "required": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "package_digest",
+        "signature_format",
+        "sbom_format"
+      ],
+      "properties": {
+        "package_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "signature_format": {
+          "enum": [
+            "sigstore-bundle-v0.3",
+            "cosign"
+          ]
+        },
+        "sbom_format": {
+          "enum": [
+            "spdx-2.3",
+            "cyclonedx-1.6"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

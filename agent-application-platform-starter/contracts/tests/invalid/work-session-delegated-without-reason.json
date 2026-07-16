@@ -1,0 +1,8 @@
+{
+  "subject_mode": "delegated",
+  "external_principal_id": "other-user",
+  "scopes": [
+    "work:read"
+  ],
+  "ttl_seconds": 900
+}
