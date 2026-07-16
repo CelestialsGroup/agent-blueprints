@@ -43,6 +43,9 @@ def strict_values(value: Any, path: str = "$") -> None:
     if isinstance(value, float):
         if not math.isfinite(value):
             raise ValueError(f"Non-finite number at {path}")
+        canonical = rfc8785.dumps(value).decode("utf-8")
+        if "e" not in canonical and "." not in canonical and abs(int(canonical)) > SAFE_INTEGER_MAX:
+            raise ValueError(f"Number canonicalizes to an unsafe integer at {path}")
         return
     if isinstance(value, list):
         for index, item in enumerate(value):
@@ -153,7 +156,10 @@ valid_cases = [
     ("sandbox-terminate-request.schema.json", "examples/contracts/sandbox-terminate-request.json"),
     ("sandbox-conformance-report.schema.json", "examples/contracts/sandbox-conformance-report.json"),
     ("provider-revision.schema.json", "examples/contracts/sandbox-provider-revision.json"),
+    ("provider-revision.schema.json", "examples/contracts/agent-runtime-provider-revision.json"),
     ("provider-admission-decision.schema.json", "examples/contracts/provider-admission-decision.json"),
+    ("provider-admission-decision.schema.json", "examples/contracts/agent-runtime-admission-decision.json"),
+    ("run-admission-context.schema.json", "examples/contracts/run-admission-context.json"),
     ("sandbox-operation-record.schema.json", "examples/contracts/sandbox-operation.json"),
     ("sandbox-operation-attempt.schema.json", "examples/contracts/sandbox-operation-attempt.json"),
     ("sandbox-reconciliation-case.schema.json", "examples/contracts/sandbox-reconciliation-case.json"),
@@ -188,6 +194,8 @@ for path in sorted((ROOT / "contracts/tests/invalid-json").glob("*.json")):
 for relative, field in [
     ("examples/contracts/sandbox-provider-revision.json", "provider_revision_digest"),
     ("examples/contracts/provider-admission-decision.json", "decision_digest"),
+    ("examples/contracts/agent-runtime-provider-revision.json", "provider_revision_digest"),
+    ("examples/contracts/agent-runtime-admission-decision.json", "decision_digest"),
     ("examples/contracts/sandbox-manual-review-decision.json", "decision_digest"),
     ("examples/contracts/run-manifest-v2.json", "run_manifest_digest"),
 ]:

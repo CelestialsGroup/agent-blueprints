@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { canonicalize } from "./jcs/canonicalize.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const manifestPath = path.join(root, "contracts/compatibility/v0.8.2-contract-manifest.json");
+const manifestPath = path.join(root, "contracts/compatibility/v0.8.3-contract-manifest.json");
 const sha = (bytes) => `sha256:${crypto.createHash("sha256").update(bytes).digest("hex")}`;
 const walk = (directory) => fs.existsSync(directory)
   ? fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -30,6 +30,12 @@ const resources = paths.map((target) => {
     const value = JSON.parse(fs.readFileSync(target, "utf8"));
     return { path: relative, kind: "json-schema", id: value.$id, digest: sha(Buffer.from(canonicalize(value), "utf8")) };
   }
+  if (relative.startsWith("contracts/openapi/")) {
+    return { path: relative, kind: "openapi", id: relative, digest: sha(fs.readFileSync(target)) };
+  }
+  if (relative.startsWith("contracts/state-machines/")) {
+    return { path: relative, kind: "state-machine", id: relative, digest: sha(fs.readFileSync(target)) };
+  }
   return { path: relative, kind: "governance", id: relative, digest: sha(fs.readFileSync(target)) };
 });
 const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
@@ -42,4 +48,4 @@ const expected = unsigned.manifest_digest;
 delete unsigned.manifest_digest;
 const actual = sha(Buffer.from(canonicalize(unsigned), "utf8"));
 if (actual !== expected) throw new Error(`Manifest self-digest mismatch: ${actual} != ${expected}`);
-console.log(`Verified v0.8.2 contract manifest over ${resources.length} governed resources.`);
+console.log(`Verified v0.8.3 contract manifest over ${resources.length} governed resources.`);

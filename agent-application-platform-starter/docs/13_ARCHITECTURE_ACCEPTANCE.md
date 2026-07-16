@@ -1,12 +1,13 @@
-# v0.8.2 Architecture Acceptance
+# v0.8.3 Architecture Acceptance
 
 ## Contract admission
 
 - [ ] `./scripts/bootstrap_contracts.sh` 在公共 Registry 和 Python 3.11/3.13 成功。
 - [ ] `make validate-all` 全绿，包括 Python/Node/Go Strict I-JSON。
+- [ ] monorepo 的 Git 根 Workflow 已提交，`AGENT_PLATFORM_CONTRACT_ROOT` 与受保护 Compatibility 变量已配置。
 - [ ] 4 个 OpenAPI 0 error/0 warning 且 Bundle deterministic。
 - [ ] Contract Manifest Python/Node 一致。
-- [ ] Compatibility 明确为 frozen baseline pass 或首冻前 N/A。
+- [ ] Compatibility 明确为受保护 frozen baseline pass，或由受保护变量显式批准首冻前 N/A；缺失配置时 CI 必须失败。
 - [ ] Supply-chain Gate 全绿。
 
 ## Boundary acceptance

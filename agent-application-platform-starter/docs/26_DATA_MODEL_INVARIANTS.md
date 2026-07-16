@@ -1,4 +1,4 @@
-# Data Model Invariants — v0.8.2
+# Data Model Invariants — v0.8.3
 
 以下约束必须由 PostgreSQL migration/constraint 实现，不能只由应用代码约定。
 
@@ -19,11 +19,12 @@
 
 - `sandboxes(sandbox_id)` 主键；`(workspace_id, sandbox_slot_key)` 对非终态 Sandbox 唯一。
 - `primary_sandbox_slot_key` 必须通过延迟约束/事务校验引用恰好一个 Workspace Sandbox。
-- `sandbox_operations(operation_id)` 主键；`logical_operation_key` 唯一，不存 Attempt 字段。
+- `sandbox_operations(operation_id)` 主键；`logical_operation_key` 唯一；只保存当前 Attempt 指针/编号聚合，不复制 Attempt 结果历史。
 - `sandbox_operation_attempts(attempt_id)` 主键；`(operation_id, attempt_number)` 和 `(sandbox_id, fencing_token)` 唯一。
-- Attempt append-only；Operation current_attempt_id 只能引用自己的 Attempt。
+- Attempt append-only；Operation current_attempt_id 只能引用自己的 Attempt；`current_attempt_number <= max_attempts` 必须有 CHECK/事务约束。
 - `sandbox_reconciliation_cases(case_id)` 主键；每个未关闭 Operation 最多一个 open Case。
 - `sandbox_manual_review_decisions(decision_id)` 主键、decision_digest 唯一、append-only；必须引用 Case 和证据。
+- `decision=abandon` 必须同时满足 `risk_accepted=true`；未知副作用不得仅凭取消请求写入 cancelled。
 - 稳定表禁止 Pod/Namespace/Container/VM/Node/raw endpoint 列；Adapter 私有表必须与稳定模型分 schema/权限。
 
 ## Provider

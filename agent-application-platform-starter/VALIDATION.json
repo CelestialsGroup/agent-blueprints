@@ -1,23 +1,32 @@
 {
-  "baseline": "v0.8.2",
-  "status": "candidate_pending_public_ci",
+  "baseline": "v0.8.3",
+  "status": "local_rehardening_complete_repository_integration_and_public_ci_pending",
   "validated_at": "2026-07-16",
   "local_validation": {
-    "public_bootstrap_python_3_12": "passed",
-    "portable_schemas": 111,
-    "valid_fixtures": 32,
+    "bootstrap_python_3_12_with_external_venv": "passed",
+    "schemas": 112,
+    "valid_fixtures": 35,
     "invalid_schema_fixtures": 11,
-    "invalid_semantic_fixtures": 5,
-    "strict_ijson_vectors_python": "5_valid_5_invalid_passed",
-    "strict_ijson_vectors_node": "5_valid_5_invalid_passed",
+    "semantic_state_machine_checks": 4,
+    "invalid_semantic_fixtures": 12,
+    "strict_ijson_vectors_python": "5_valid_7_invalid_passed",
+    "strict_ijson_vectors_node": "5_valid_7_invalid_passed",
     "strict_ijson_vectors_go": "not_run_toolchain_unavailable",
     "openapi_documents": 4,
     "openapi_errors": 0,
     "openapi_warnings": 0,
     "openapi_bundle_deterministic": true,
-    "contract_manifest_resources": 119,
-    "compatibility": "not_applicable_no_frozen_baseline"
+    "contract_manifest_resources": 122,
+    "compatibility_self_tests": "passed",
+    "compatibility_missing_baseline_ci_fail_closed": "passed",
+    "compatibility_baseline": "not_applicable_no_frozen_baseline"
   },
+  "pending_repository_integration": [
+    "commit_git_root_workflow",
+    "configure_agent_platform_contract_root",
+    "configure_protected_compatibility_variables",
+    "remove_tracked_ds_store_from_parent_repo"
+  ],
   "pending_public_ci": [
     "python_3_11_matrix",
     "python_3_13_matrix",
@@ -26,5 +35,6 @@
     "gofmt_gate",
     "deterministic_bundle_recheck"
   ],
+  "frozen": false,
   "production_ready": false
 }

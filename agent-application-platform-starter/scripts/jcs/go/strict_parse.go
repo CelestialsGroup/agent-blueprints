@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"math/big"
+	"strconv"
 	"strings"
 )
 
@@ -28,11 +29,18 @@ func validateSafeIntegers(raw []byte) error {
 		if !ok {
 			continue
 		}
-		text := string(number)
-		if strings.ContainsAny(text, ".eE") {
+		floatValue, err := strconv.ParseFloat(string(number), 64)
+		if err != nil {
+			return err
+		}
+		canonical, err := numberToJSON(floatValue)
+		if err != nil {
+			return err
+		}
+		if strings.ContainsAny(canonical, ".eE") {
 			continue
 		}
-		integer, ok := new(big.Int).SetString(text, 10)
+		integer, ok := new(big.Int).SetString(canonical, 10)
 		if !ok {
 			return errors.New("invalid integer")
 		}

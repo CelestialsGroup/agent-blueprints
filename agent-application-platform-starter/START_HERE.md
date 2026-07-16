@@ -1,8 +1,8 @@
 # START HERE
 
-这是 Agent Application Platform **v0.8.2 Architecture and Contract Hardening Candidate**。
+这是 Agent Application Platform **v0.8.3 Architecture and Contract Hardening Candidate**。
 
-v0.3–v0.8.1 均不得作为当前实施基线；v0.8.1 仅保留为历史审查证据。
+v0.3–v0.8.2 均不得作为当前实施基线；旧版本只保留为历史审查证据。
 
 ## 唯一 Admission 入口
 
@@ -17,8 +17,8 @@ make validate-all
 
 1. `AGENTS.md`
 2. `ARCHITECTURE_REVIEW_STATUS.md`
-3. `V082_ARCHITECTURE_HARDENING_AUDIT_REPORT.md`
-4. `docs/40_V082_REVIEW_RESOLUTION.md`
+3. `V083_CONTRACT_REHARDENING_AUDIT_REPORT.md`
+4. `docs/41_V083_REVIEW_RESOLUTION.md`
 5. `docs/00_ARCHITECTURE_BASELINE.md`
 6. `docs/01_SYSTEM_BOUNDARIES.md`
 7. `docs/17_IDENTITY_AND_AUTHORIZATION.md`
@@ -51,7 +51,7 @@ Business Application 拥有 User、Membership、Product、Order、Payment 和 Co
 当前状态只能表述为：
 
 ```text
-Ready for public CI admission
+Ready to enter public CI only after the Git-root workflow is committed and protected baseline variables are configured
 Not frozen until public CI passes
 Not production ready
 ```

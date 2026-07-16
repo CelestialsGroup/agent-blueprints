@@ -62,8 +62,9 @@ export function strictParse(raw) {
     offset += token.length;
     const number = Number(token);
     if (!Number.isFinite(number)) fail("Non-finite number");
-    if (!/[.eE]/.test(token)) {
-      const integer = BigInt(token);
+    const canonicalNumber = JSON.stringify(number);
+    if (/^-?\d+$/.test(canonicalNumber)) {
+      const integer = BigInt(canonicalNumber);
       if (integer > SAFE_INTEGER_MAX || integer < -SAFE_INTEGER_MAX) {
         fail("Integer exceeds interoperable IEEE-754 safe range");
       }

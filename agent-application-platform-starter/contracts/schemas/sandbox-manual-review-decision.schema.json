@@ -3,30 +3,22 @@
   "$id": "urn:agent-platform:sandbox-manual-review-decision:v1",
   "title": "SandboxManualReviewDecision",
   "type": "object",
-  "required": [
-    "decision_id", "case_id", "operation_id", "decision", "operator_principal",
-    "evidence_references", "reason", "risk_accepted", "occurred_at", "decision_digest"
-  ],
+  "required": ["decision_id", "case_id", "operation_id", "decision", "operator_principal", "evidence_references", "reason", "risk_accepted", "occurred_at", "decision_digest"],
   "properties": {
     "decision_id": { "type": "string", "minLength": 1 },
     "case_id": { "type": "string", "minLength": 1 },
     "operation_id": { "type": "string", "minLength": 1 },
-    "decision": { "enum": ["resolve_success", "resolve_failure", "abandon"] },
+    "decision": { "enum": ["resolve_success", "resolve_failure", "resolve_cancelled", "abandon"] },
     "operator_principal": { "type": "string", "minLength": 1 },
-    "evidence_references": {
-      "type": "array",
-      "items": { "type": "string", "minLength": 1 },
-      "minItems": 1,
-      "uniqueItems": true
-    },
+    "evidence_references": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1, "uniqueItems": true },
     "reason": { "type": "string", "minLength": 1 },
     "risk_accepted": { "type": "boolean" },
     "occurred_at": { "type": "string", "format": "date-time" },
     "decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
   },
   "additionalProperties": false,
-  "x-semantic-constraints": [
-    "decision_digest is RFC 8785 SHA-256 over the decision excluding decision_digest",
-    "a later discovered outcome appends a correction event and never rewrites this decision"
-  ]
+  "allOf": [
+    { "if": { "properties": { "decision": { "const": "abandon" } }, "required": ["decision"] }, "then": { "properties": { "risk_accepted": { "const": true } } } }
+  ],
+  "x-semantic-constraints": ["decision_digest is RFC 8785 SHA-256 over the decision excluding decision_digest", "decisions are append-only"]
 }

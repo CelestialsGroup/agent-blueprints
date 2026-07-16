@@ -35,7 +35,6 @@
         "plugin_version": "0.8.2",
         "manifest_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
         "package_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-        "image_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
         "runtime_binding_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
         "configuration_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
         "approved_permissions_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
@@ -43,7 +42,8 @@
         "conformance_report_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
         "admission_decision_id": "pad_01J00000000000000000000000",
         "admission_decision_digest": "sha256:c4caa1fc53940a2dddd82e6e5cdfa0949da951809f867aae962fa13307bf5b27",
-        "admission_status": "certified"
+        "admission_status": "certified",
+        "image_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
       }
     }
   ],
@@ -51,10 +51,10 @@
     "provider_instance_id": "api_deerflow_runtime",
     "provider_revision": {
       "provider_revision_id": "apr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "provider_revision_digest": "sha256:05f8339a76a29378f4cf6a641d3d9c4e36e9ad36618594f9c54dd63859ee8a60",
       "provider_kind": "agent_runtime",
       "plugin_id": "agent-runtime.deerflow",
-      "plugin_version": "0.8.2",
+      "plugin_version": "0.8.3",
       "manifest_digest": "sha256:abababababababababababababababababababababababababababababababab",
       "package_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
       "runtime_binding_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
@@ -63,7 +63,7 @@
       "credential_binding_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
       "conformance_report_digest": "sha256:1212121212121212121212121212121212121212121212121212121212121212",
       "admission_decision_id": "pad_runtime_01J00000000000000000",
-      "admission_decision_digest": "sha256:1313131313131313131313131313131313131313131313131313131313131313",
+      "admission_decision_digest": "sha256:99cbf2cdb331291e5c2b3276061b9f30fd2ae39651de9e798f71045defb13384",
       "admission_status": "certified"
     },
     "runtime_version": "deerflow-2026.07",
@@ -99,7 +99,6 @@
         "plugin_version": "0.8.2",
         "manifest_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
         "package_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-        "image_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
         "runtime_binding_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
         "configuration_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
         "approved_permissions_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
@@ -107,7 +106,8 @@
         "conformance_report_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
         "admission_decision_id": "pad_01J00000000000000000000000",
         "admission_decision_digest": "sha256:c4caa1fc53940a2dddd82e6e5cdfa0949da951809f867aae962fa13307bf5b27",
-        "admission_status": "certified"
+        "admission_status": "certified",
+        "image_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
       },
       "provider_api_version": "v1",
       "runtime_profile": "hardened",
@@ -124,5 +124,5 @@
     }
   ],
   "primary_sandbox_slot_key": "primary-code",
-  "run_manifest_digest": "sha256:ab07120e87ecc13a7d3e1e75ddf62b6e1a1512a0afedef87c5e17e761832b6e4"
+  "run_manifest_digest": "sha256:af126a187645613693704cb2a05f06c8ecc874afd1a798bf7f740d1bb5079161"
 }

@@ -1,4 +1,4 @@
-# Agent Application Platform v0.8.2
+# Agent Application Platform v0.8.3
 
 面向多个 Business Application 的通用 Agent 执行、Workflow、Sandbox、Artifact 与 Delivery 平台。
 
@@ -21,4 +21,4 @@ Scenario -> CapabilityDefinition -> ProviderResolution
 make validate-all
 ```
 
-当前是 **Ready for public CI admission** 的候选版本；公共 CI 通过前不冻结，也不代表 Production Ready。详情从 `START_HERE.md` 开始。
+当前是完成本地 re-hardening、等待 Git 根 Workflow 集成和 public CI re-admission 的候选版本；公共 CI 通过前不冻结，也不代表 Production Ready。详情从 `START_HERE.md` 开始。

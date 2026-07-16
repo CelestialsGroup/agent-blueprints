@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-"""Refresh self-digests and immutable bindings in governed examples."""
 from __future__ import annotations
 
 import copy
@@ -18,43 +17,90 @@ def read(relative: str) -> dict[str, Any]:
 
 
 def write(relative: str, value: dict[str, Any]) -> None:
-    (ROOT / relative).write_text(
-        json.dumps(value, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    (ROOT / relative).write_text(json.dumps(value, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def self_digest(value: dict[str, Any], field: str) -> str:
+def digest_without(value: dict[str, Any], field: str) -> str:
     unsigned = copy.deepcopy(value)
     unsigned.pop(field, None)
     return "sha256:" + hashlib.sha256(rfc8785.dumps(unsigned)).hexdigest()
 
 
-revision_path = "examples/contracts/sandbox-provider-revision.json"
-revision = read(revision_path)
-revision["provider_revision_digest"] = self_digest(revision, "provider_revision_digest")
-write(revision_path, revision)
+revision_paths = [
+    "examples/contracts/sandbox-provider-revision.json",
+    "examples/contracts/agent-runtime-provider-revision.json",
+]
+decision_paths = [
+    "examples/contracts/provider-admission-decision.json",
+    "examples/contracts/agent-runtime-admission-decision.json",
+]
+revisions: dict[str, dict[str, Any]] = {}
+for path in revision_paths:
+    revision = read(path)
+    revision["provider_revision_digest"] = digest_without(revision, "provider_revision_digest")
+    revisions[revision["provider_revision_id"]] = revision
+    write(path, revision)
 
-admission_path = "examples/contracts/provider-admission-decision.json"
-admission = read(admission_path)
-admission["provider_revision_digest"] = revision["provider_revision_digest"]
-admission["decision_digest"] = self_digest(admission, "decision_digest")
-write(admission_path, admission)
+decisions: dict[str, dict[str, Any]] = {}
+for path in decision_paths:
+    decision = read(path)
+    revision = revisions[decision["provider_revision_id"]]
+    decision["provider_revision_digest"] = revision["provider_revision_digest"]
+    decision["decision_digest"] = digest_without(decision, "decision_digest")
+    decisions[decision["decision_id"]] = decision
+    write(path, decision)
 
-manual_path = "examples/contracts/sandbox-manual-review-decision.json"
-manual = read(manual_path)
-manual["decision_digest"] = self_digest(manual, "decision_digest")
-write(manual_path, manual)
+
+def snapshot(revision_id: str, decision_id: str) -> dict[str, Any]:
+    revision = revisions[revision_id]
+    decision = decisions[decision_id]
+    report_field = "sandbox_conformance_report_digest" if revision["provider_kind"] == "sandbox" else "governed_conformance_report_digest"
+    result = {
+        "provider_revision_id": revision_id,
+        "provider_revision_digest": revision["provider_revision_digest"],
+        "provider_kind": revision["provider_kind"],
+        "plugin_id": revision["plugin_id"],
+        "plugin_version": revision["plugin_version"],
+        "manifest_digest": revision["manifest_digest"],
+        "package_digest": revision["package_digest"],
+        "runtime_binding_digest": revision["runtime_binding_digest"],
+        "configuration_digest": revision["configuration_digest"],
+        "approved_permissions_digest": revision["approved_permissions_digest"],
+        "credential_binding_digest": revision["credential_binding_digest"],
+        "conformance_report_digest": revision[report_field],
+        "admission_decision_id": decision_id,
+        "admission_decision_digest": decision["decision_digest"],
+        "admission_status": "certified",
+    }
+    if "image_digest" in revision:
+        result["image_digest"] = revision["image_digest"]
+    return result
+
 
 manifest_path = "examples/contracts/run-manifest-v2.json"
 manifest = read(manifest_path)
-for snapshot in [
-    *[item["selected_provider_revision"] for item in manifest["capability_resolutions"]],
-    *[item["provider_revision"] for item in manifest["sandboxes"]],
-]:
-    if snapshot["provider_revision_id"] == revision["provider_revision_id"]:
-        snapshot["provider_revision_digest"] = revision["provider_revision_digest"]
-        snapshot["admission_decision_digest"] = admission["decision_digest"]
-manifest["run_manifest_digest"] = self_digest(manifest, "run_manifest_digest")
+for resolution in manifest["capability_resolutions"]:
+    current = resolution["selected_provider_revision"]
+    resolution["selected_provider_revision"] = snapshot(current["provider_revision_id"], current["admission_decision_id"])
+    resolution["selected_provider_instance_id"] = revisions[current["provider_revision_id"]]["provider_instance_id"]
+runtime_current = manifest["agent_runtime"]["provider_revision"]
+manifest["agent_runtime"]["provider_revision"] = snapshot(runtime_current["provider_revision_id"], runtime_current["admission_decision_id"])
+manifest["agent_runtime"]["provider_instance_id"] = revisions[runtime_current["provider_revision_id"]]["provider_instance_id"]
+for sandbox in manifest["sandboxes"]:
+    current = sandbox["provider_revision"]
+    sandbox["provider_revision"] = snapshot(current["provider_revision_id"], current["admission_decision_id"])
+    sandbox["provider_instance_id"] = revisions[current["provider_revision_id"]]["provider_instance_id"]
+manifest["run_manifest_digest"] = digest_without(manifest, "run_manifest_digest")
 write(manifest_path, manifest)
 
-print("Refreshed ProviderRevision, admission, manual-review, and RunManifest digests.")
+context_path = "examples/contracts/run-admission-context.json"
+context = read(context_path)
+context["provider_revisions"] = list(revisions.values())
+context["admission_decisions"] = list(decisions.values())
+write(context_path, context)
+
+manual_path = "examples/contracts/sandbox-manual-review-decision.json"
+manual = read(manual_path)
+manual["decision_digest"] = digest_without(manual, "decision_digest")
+write(manual_path, manual)
+print("Refreshed v0.8.3 revision, admission, RunManifest and manual-review digests.")

@@ -1,8 +1,8 @@
-# Agent Application Platform v0.8.2 — implementation rules
+# Agent Application Platform v0.8.3 — implementation rules
 
 ## Authority
 
-`START_HERE.md`、本文件、`docs/40_V082_REVIEW_RESOLUTION.md` 与可执行契约是当前事实源。发生冲突时，Schema、状态机、数据库约束和 Gate 优先于叙述性文档。不得恢复 v0.8.1 以前的设计。
+`START_HERE.md`、本文件、`docs/41_V083_REVIEW_RESOLUTION.md` 与可执行契约是当前事实源。发生冲突时，Schema、状态机、数据库约束和 Gate 优先于叙述性文档。不得恢复 v0.8.2 或更早设计。
 
 ## Frozen boundary impact check
 
@@ -53,7 +53,7 @@ Temporal 决定编排历史；PostgreSQL 决定查询态和账本。任何双写
 
 ## Invocation and Sandbox operation
 
-逻辑 Invocation/Operation 与 Attempt 分离。每次网络尝试拥有唯一 attempt_id 和严格递增 fencing_token。响应丢失或结果未知必须进入 reconciling；超时进入 manual_review_required；最终只能 resolve success/failure、retry、cancel 或 abandon。所有人工结论必须带证据与不可变摘要。
+逻辑 Invocation/Operation 与 Attempt 分离。每次网络尝试拥有唯一 attempt_id 和严格递增 fencing_token。响应丢失或结果未知必须进入 reconciling；超时进入 manual_review_required；取消 intent 不等于取消证明。最终只能由证据 resolve success/failure/cancel、retry，或以 `risk_accepted=true` abandon。所有人工结论必须带证据与不可变摘要。
 
 Sandbox Provider API 返回的是单次 transport status；平台的 SandboxOperation v2 才是持久化聚合状态机。
 
@@ -69,8 +69,8 @@ Workspace 通过 `sandboxes[]` 和唯一 `sandbox_slot_key` 支持 `primary-code
 - 复用：SandboxSpec、ProviderRevisionSnapshot 等必须通过 `$ref` 复用，禁止复制展开。
 - 语义约束：由 `validate_semantics.py` 与反向 Fixture 执行。
 - OpenAPI：原始契约保留绝对 URN；Redocly 只 lint/bundle 由 Registry 投影生成的 `build/openapi-src`，结果必须 0 error/0 warning。
-- 兼容性：只与最新公开冻结基线比较。首个冻结基线前必须报告 N/A，不得写成 pass。
-- 供应链：Python hash lock、npm integrity、Actions full SHA、无提交 bytecode。
+- 兼容性：CI 只与受保护变量指定的冻结基线比较且缺失时 fail-closed；首个冻结基线前必须由受保护变量显式允许 N/A，不得写成 pass。
+- 供应链：Python hash lock、npm integrity、Actions full SHA；Git 跟踪文件不得包含 bytecode/`.DS_Store`，monorepo 必须提交 Git 根 Workflow。
 
 ## Admission and production claims
 

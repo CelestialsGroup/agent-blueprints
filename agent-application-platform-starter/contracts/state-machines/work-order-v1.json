@@ -1,0 +1,27 @@
+{
+  "machine_id": "work-order",
+  "version": 1,
+  "initial_state": "accepted",
+  "terminal_states": ["completed", "partial", "failed", "cancelled"],
+  "transitions": [
+    { "from": "accepted", "event": "enqueue", "to": "queued" },
+    { "from": "queued", "event": "start", "to": "running" },
+    { "from": "running", "event": "wait", "to": "waiting" },
+    { "from": "waiting", "event": "resume", "to": "running" },
+    { "from": "running", "event": "pause", "to": "paused" },
+    { "from": "paused", "event": "resume", "to": "running" },
+    { "from": "running", "event": "complete", "to": "completed" },
+    { "from": "running", "event": "complete_partial", "to": "partial" },
+    { "from": "running", "event": "fail", "to": "failed" },
+    { "from": "queued", "event": "cancel_requested", "to": "cancel_requested" },
+    { "from": "running", "event": "cancel_requested", "to": "cancel_requested" },
+    { "from": "waiting", "event": "cancel_requested", "to": "cancel_requested" },
+    { "from": "paused", "event": "cancel_requested", "to": "cancel_requested" },
+    { "from": "cancel_requested", "event": "cancellation_started", "to": "cancelling" },
+    { "from": "cancel_requested", "event": "completed_before_cancel", "to": "completed" },
+    { "from": "cancelling", "event": "cancel_confirmed", "to": "cancelled" },
+    { "from": "cancelling", "event": "completed_before_cancel", "to": "completed" },
+    { "from": "cancelling", "event": "partial_before_cancel", "to": "partial" },
+    { "from": "cancelling", "event": "failed_before_cancel", "to": "failed" }
+  ]
+}

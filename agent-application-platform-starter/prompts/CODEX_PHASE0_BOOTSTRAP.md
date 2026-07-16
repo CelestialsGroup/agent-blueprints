@@ -1,6 +1,6 @@
-# Codex Phase 0 Bootstrap — v0.8.2
+# Codex Phase 0 Bootstrap — v0.8.3
 
-你正在实现 Agent Application Platform。先阅读 `START_HERE.md`、`AGENTS.md`、`docs/40_V082_REVIEW_RESOLUTION.md` 和 `tasks/PHASE0.md`。
+你正在实现 Agent Application Platform。先阅读 `START_HERE.md`、`AGENTS.md`、`docs/41_V083_REVIEW_RESOLUTION.md` 和 `tasks/PHASE0.md`。
 
 ## Admission 前置
 
@@ -9,7 +9,7 @@
 make validate-all
 ```
 
-任一 Gate 失败就停止实现并修复契约/工具链。公共 CI 未通过或未批准冻结时，不得开始 Phase 0；不得开始 Phase 1。
+任一 Gate 失败就停止实现并修复契约/工具链。Git 根 Workflow 未激活、公共 CI 未通过或未批准冻结时，不得开始 Phase 0；不得开始 Phase 1。
 
 ## 实现顺序
 

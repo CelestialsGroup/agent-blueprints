@@ -9,9 +9,8 @@ from typing import Any
 import rfc8785
 
 ROOT = Path(__file__).resolve().parents[2]
-VECTORS = json.loads(
-    (ROOT / "contracts/testdata/jcs-v1/vectors.json").read_text(encoding="utf-8")
-)
+VECTORS = json.loads((ROOT / "contracts/testdata/jcs-v1/vectors.json").read_text(encoding="utf-8"))
+SAFE_INTEGER_MAX = 9_007_199_254_740_991
 
 
 def reject_constant(value: str) -> None:
@@ -31,12 +30,15 @@ def reject_unsafe_values(value: Any) -> None:
     if isinstance(value, bool) or value is None or isinstance(value, str):
         return
     if isinstance(value, int):
-        if abs(value) > 9_007_199_254_740_991:
+        if abs(value) > SAFE_INTEGER_MAX:
             raise ValueError("Integer exceeds interoperable IEEE-754 safe range")
         return
     if isinstance(value, float):
         if not math.isfinite(value):
             raise ValueError("Non-finite JSON number")
+        canonical = rfc8785.dumps(value).decode("ascii")
+        if "e" not in canonical and "." not in canonical and abs(int(canonical)) > SAFE_INTEGER_MAX:
+            raise ValueError("Number canonicalizes to an unsafe integer")
         return
     if isinstance(value, list):
         for item in value:
@@ -51,11 +53,7 @@ def reject_unsafe_values(value: Any) -> None:
 
 
 def strict_loads(raw: str) -> Any:
-    value = json.loads(
-        raw,
-        parse_constant=reject_constant,
-        object_pairs_hook=reject_duplicate_pairs,
-    )
+    value = json.loads(raw, parse_constant=reject_constant, object_pairs_hook=reject_duplicate_pairs)
     reject_unsafe_values(value)
     return value
 
@@ -63,9 +61,7 @@ def strict_loads(raw: str) -> Any:
 for vector in VECTORS["valid"]:
     value = strict_loads(vector["input"])
     actual = rfc8785.dumps(value).decode("utf-8")
-    assert actual == vector["canonical"], (
-        f"{vector['id']}: expected {vector['canonical']!r}, got {actual!r}"
-    )
+    assert actual == vector["canonical"], f"{vector['id']}: expected {vector['canonical']!r}, got {actual!r}"
 
 for vector in VECTORS["invalid"]:
     try:
@@ -75,7 +71,4 @@ for vector in VECTORS["invalid"]:
         continue
     raise AssertionError(f"Expected invalid JCS vector to fail: {vector['id']}")
 
-print(
-    f"Python JCS: {len(VECTORS['valid'])} valid and "
-    f"{len(VECTORS['invalid'])} invalid vectors passed."
-)
+print(f"Python JCS: {len(VECTORS['valid'])} valid and {len(VECTORS['invalid'])} invalid vectors passed.")

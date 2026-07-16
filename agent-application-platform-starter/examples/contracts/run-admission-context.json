@@ -1,0 +1,93 @@
+{
+  "scenario": {
+    "id": "scenario.coding",
+    "version": "1.0.0",
+    "definition_digest": "sha256:1010101010101010101010101010101010101010101010101010101010101010"
+  },
+  "required_capabilities": [
+    {
+      "id": "sandbox.exec",
+      "version": "1.0",
+      "profile": "hardened"
+    }
+  ],
+  "provider_revisions": [
+    {
+      "provider_revision_id": "spr_01J00000000000000000000000",
+      "provider_revision_digest": "sha256:d10f165bca4ff63a9ef7a07ca5d4cecba7013477c26d90b2e9949edc4bf91b47",
+      "provider_instance_id": "spi_deerflow_builtin_sandbox",
+      "plugin_id": "sandbox-provider.deerflow-built-in",
+      "plugin_version": "0.8.2",
+      "manifest_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "package_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "image_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "configuration_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+      "approved_permissions_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+      "runtime_binding_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+      "credential_binding_digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+      "provider_kind": "sandbox",
+      "conformance": [
+        {
+          "capability": "sandbox.exec",
+          "version": "1.0",
+          "profile": "hardened",
+          "suite_version": "1.0.0",
+          "status": "passed",
+          "report_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888"
+        }
+      ],
+      "sandbox_conformance_report_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+      "created_at": "2026-07-16T09:00:00Z"
+    },
+    {
+      "provider_revision_id": "apr_01J00000000000000000000000",
+      "provider_revision_digest": "sha256:05f8339a76a29378f4cf6a641d3d9c4e36e9ad36618594f9c54dd63859ee8a60",
+      "provider_instance_id": "api_deerflow_runtime",
+      "plugin_id": "agent-runtime.deerflow",
+      "plugin_version": "0.8.3",
+      "manifest_digest": "sha256:abababababababababababababababababababababababababababababababab",
+      "package_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "configuration_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "approved_permissions_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "runtime_binding_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "credential_binding_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "provider_kind": "agent_runtime",
+      "conformance": [
+        {
+          "capability": "agent.runtime.execute",
+          "version": "1.0",
+          "profile": "governed",
+          "suite_version": "1.0.0",
+          "status": "passed",
+          "report_digest": "sha256:1212121212121212121212121212121212121212121212121212121212121212"
+        }
+      ],
+      "governed_conformance_report_digest": "sha256:1212121212121212121212121212121212121212121212121212121212121212",
+      "created_at": "2026-07-16T09:00:10Z"
+    }
+  ],
+  "admission_decisions": [
+    {
+      "decision_id": "pad_01J00000000000000000000000",
+      "provider_revision_id": "spr_01J00000000000000000000000",
+      "provider_revision_digest": "sha256:d10f165bca4ff63a9ef7a07ca5d4cecba7013477c26d90b2e9949edc4bf91b47",
+      "decision_sequence": 1,
+      "decision": "certified",
+      "evidence_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+      "decided_by": "principal:platform-provider-certifier",
+      "decided_at": "2026-07-16T09:00:30Z",
+      "decision_digest": "sha256:c4caa1fc53940a2dddd82e6e5cdfa0949da951809f867aae962fa13307bf5b27"
+    },
+    {
+      "decision_id": "pad_runtime_01J00000000000000000",
+      "provider_revision_id": "apr_01J00000000000000000000000",
+      "provider_revision_digest": "sha256:05f8339a76a29378f4cf6a641d3d9c4e36e9ad36618594f9c54dd63859ee8a60",
+      "decision_sequence": 1,
+      "decision": "certified",
+      "evidence_digest": "sha256:1414141414141414141414141414141414141414141414141414141414141414",
+      "decided_by": "principal:platform-provider-certifier",
+      "decided_at": "2026-07-16T09:00:40Z",
+      "decision_digest": "sha256:99cbf2cdb331291e5c2b3276061b9f30fd2ae39651de9e798f71045defb13384"
+    }
+  ]
+}

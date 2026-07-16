@@ -1,0 +1,26 @@
+{
+  "provider_revision_id": "apr_01J00000000000000000000000",
+  "provider_revision_digest": "sha256:05f8339a76a29378f4cf6a641d3d9c4e36e9ad36618594f9c54dd63859ee8a60",
+  "provider_instance_id": "api_deerflow_runtime",
+  "plugin_id": "agent-runtime.deerflow",
+  "plugin_version": "0.8.3",
+  "manifest_digest": "sha256:abababababababababababababababababababababababababababababababab",
+  "package_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "configuration_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "approved_permissions_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  "runtime_binding_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "credential_binding_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "provider_kind": "agent_runtime",
+  "conformance": [
+    {
+      "capability": "agent.runtime.execute",
+      "version": "1.0",
+      "profile": "governed",
+      "suite_version": "1.0.0",
+      "status": "passed",
+      "report_digest": "sha256:1212121212121212121212121212121212121212121212121212121212121212"
+    }
+  ],
+  "governed_conformance_report_digest": "sha256:1212121212121212121212121212121212121212121212121212121212121212",
+  "created_at": "2026-07-16T09:00:10Z"
+}

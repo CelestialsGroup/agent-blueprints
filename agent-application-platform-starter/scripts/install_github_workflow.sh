@@ -19,4 +19,8 @@ Installed the contracts workflow at the Git repository root.
 Set the GitHub repository variable AGENT_PLATFORM_CONTRACT_ROOT to:
   $RELATIVE_ROOT
 Use '.' when the contract package is the repository root.
+Set protected AGENT_PLATFORM_FROZEN_CONTRACT_REF to the immutable frozen tag/commit.
+Before the first frozen baseline only, explicitly set protected
+AGENT_PLATFORM_ALLOW_NO_FROZEN_BASELINE=true.
+Commit .github/workflows/contracts.yml at the Git root; copying it locally is not activation.
 EOF

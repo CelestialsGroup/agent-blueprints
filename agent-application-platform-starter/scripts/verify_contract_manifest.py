@@ -11,7 +11,7 @@ from typing import Any
 import rfc8785
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST = ROOT / "contracts/compatibility/v0.8.2-contract-manifest.json"
+MANIFEST = ROOT / "contracts/compatibility/v0.8.3-contract-manifest.json"
 
 
 def sha(value: bytes) -> str:
@@ -36,6 +36,10 @@ def inventory() -> list[dict[str, Any]]:
         if path.name.endswith(".schema.json"):
             value = json.loads(path.read_text(encoding="utf-8"))
             result.append({"path": relative, "kind": "json-schema", "id": value["$id"], "digest": sha(rfc8785.dumps(value))})
+        elif relative.startswith("contracts/openapi/"):
+            result.append({"path": relative, "kind": "openapi", "id": relative, "digest": sha(path.read_bytes())})
+        elif relative.startswith("contracts/state-machines/"):
+            result.append({"path": relative, "kind": "state-machine", "id": relative, "digest": sha(path.read_bytes())})
         else:
             result.append({"path": relative, "kind": "governance", "id": relative, "digest": sha(path.read_bytes())})
     return sorted(result, key=lambda item: item["path"])
@@ -46,6 +50,17 @@ resources_digest = sha(rfc8785.dumps(resources))
 if "--print-values" in sys.argv:
     print(json.dumps({"resource_count": len(resources), "resources_digest": resources_digest}))
     raise SystemExit(0)
+if "--refresh" in sys.argv:
+    manifest = {
+        "baseline": "v0.8.3",
+        "status": "candidate-not-frozen",
+        "digest_profile": "RFC8785-JCS+SHA-256; Strict-I-JSON-v1.1",
+        "resource_count": len(resources),
+        "resources_digest": resources_digest,
+        "resources": resources,
+    }
+    manifest["manifest_digest"] = sha(rfc8785.dumps(manifest))
+    MANIFEST.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
 if manifest["resource_count"] != len(resources) or manifest["resources_digest"] != resources_digest:
@@ -55,4 +70,4 @@ expected = unsigned.pop("manifest_digest")
 actual = sha(rfc8785.dumps(unsigned))
 if actual != expected:
     raise AssertionError(f"Manifest self-digest mismatch: {actual} != {expected}")
-print(f"Verified v0.8.2 contract manifest over {len(resources)} governed resources.")
+print(f"Verified v0.8.3 contract manifest over {len(resources)} governed resources.")
