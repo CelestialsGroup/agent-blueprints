@@ -1,4 +1,4 @@
-# Data Model Invariants — v0.8.4
+# Data Model Invariants — v0.8.5
 
 以下约束必须由 PostgreSQL migration/constraint 实现，不能只由应用代码约定。
 
@@ -15,7 +15,7 @@
 - `(invocation_id, fencing_token)` 唯一且新 Attempt token 单调递增。
 - 一个 Attempt 只能绑定 Result 或 Error；succeeded 必须有 Result，failed/outcome_unknown 必须有相应 Error。
 - Invocation active 状态必须绑定 current_attempt_id；`attempt_count <= max_attempts` 必须有 CHECK/事务约束。
-- outcome_unknown/reconciling/manual_review 必须绑定 InvocationReconciliationCase；abandoned 必须绑定 `risk_accepted=true` 的 append-only InvocationManualReviewDecision。
+- outcome_unknown/reconciling/manual_review 必须绑定 InvocationReconciliationCase；abandoned 与 non-idempotent retry_scheduled 必须同时绑定 resolved Case 和 append-only InvocationManualReviewDecision。Decision 的 case_id/version/digest、证据与 outcome 必须匹配；abandon 还必须 `risk_accepted=true`。
 - Invocation 与 Sandbox 的 cancelled 只能引用 `not_started` 或 `stopped_before_effect` 证据；已完成副作用不得记为取消成功。
 
 ## Sandbox
@@ -27,7 +27,7 @@
 - Attempt append-only；Operation current_attempt_id 只能引用自己的 Attempt；`current_attempt_number <= max_attempts` 必须有 CHECK/事务约束。
 - `sandbox_reconciliation_cases(case_id)` 主键；每个未关闭 Operation 最多一个 open Case。
 - `sandbox_manual_review_decisions(decision_id)` 主键、decision_digest 唯一、append-only；必须引用 Case 和证据。
-- `decision=abandon` 必须同时满足 `risk_accepted=true`；未知副作用不得仅凭取消请求写入 cancelled。
+- abandoned Operation 必须引用 resolved Case 和 ManualReviewDecision；Decision 必须匹配 Case ID/version/digest/evidence/outcome，且 `decision=abandon` 必须同时满足 `risk_accepted=true`；未知副作用不得仅凭取消请求写入 cancelled。
 - 稳定表禁止 Pod/Namespace/Container/VM/Node/raw endpoint 列；Adapter 私有表必须与稳定模型分 schema/权限。
 
 ## Provider
@@ -35,7 +35,7 @@
 - `provider_revisions(provider_revision_id)` 主键、provider_revision_digest 唯一；Update/Delete 权限撤销，只允许 Insert。
 - 每个 ProviderRevision（包括 Model/Tool/Skill/Renderer）都必须有 `conformance_set_digest`；CapabilityResolution 的 definition digest、允许 Provider Kind 和 conformance 覆盖必须在 Admission 时校验。
 - `provider_admission_decisions(decision_id)` 主键；`(provider_revision_id, decision_sequence)` 唯一且 append-only。
-- sequence > 1 必须引用上一 decision；revoked 必须有 reason。
+- sequence 必须从 1 连续递增；sequence=1 不得有 supersedes，sequence>1 必须引用同 Revision 紧邻上一 decision；revoked 必须有 reason。
 - 新 Run 只能选择 latest decision=certified 的 Revision；RunManifest 保留 revision/decision digest，后续撤销不改写历史 Run。
 
 ## Workflow and event

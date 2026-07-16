@@ -1,4 +1,4 @@
-# State Machine Specification — v0.8.4
+# State Machine Specification — v0.8.5
 
 JSON 状态机是状态名称与迁移的权威事实源；Schema 定义允许状态集合，`validate_semantics.py` 强制两者一致、终态无出边且终态可达。
 
@@ -12,7 +12,7 @@ JSON 状态机是状态名称与迁移的权威事实源；Schema 定义允许�
 
 权威文件：`contracts/state-machines/invocation-v2.json`。状态集合与 `invocation-record.schema.json` 一致：prepared、executing、retry_scheduled、outcome_unknown、reconciling、manual_review、cancel_requested、cancellation_confirmed、succeeded、failed、cancelled、abandoned。
 
-取消请求不是取消证明。执行中的 Invocation 必须等待 Provider 确认；未知结果进入 outcome_unknown/reconciling。InvocationRecord、Attempt、InvocationReconciliationCase 和 InvocationManualReviewDecision 均持久化；abandon 只能由 `risk_accepted=true` 的 append-only 决策触发。
+取消请求不是取消证明。执行中的 Invocation 必须等待 Provider 确认；未知结果进入 outcome_unknown/reconciling。InvocationRecord、Attempt、InvocationReconciliationCase 和 InvocationManualReviewDecision 均持久化；Decision 通过 `case_id + case_version + case_digest` 绑定准确 Case 快照。非幂等 Invocation 只能在 resolved Case 证明可重试且 append-only Decision 明确批准后进入 retry_scheduled；abandon 只能由 `risk_accepted=true` 的决策触发。
 
 ## SandboxOperation
 
@@ -25,4 +25,4 @@ SandboxOperationRecord、Attempt、ReconciliationCase 和 ManualReviewDecision �
 - 状态更新使用数据库 expected-state/fencing 条件；
 - 迁移、Event 与 Outbox 同事务；
 - Schema 约束状态相关字段；
-- 语义 Gate 约束跨字段、状态机/Schema 一致性和取消证据。
+- 语义 Gate 约束跨对象引用闭包、状态机 `(from,event)` 确定性、状态机/Schema 一致性和取消证据。

@@ -78,6 +78,11 @@
       "id": "lone-surrogate",
       "input": "{\"s\":\"\\ud800\"}",
       "reason": "Lone Unicode surrogates are forbidden."
+    },
+    {
+      "id": "exponent-resource-exhaustion",
+      "input": "{\"n\":1e-1000000000}",
+      "reason": "A short token must not trigger unbounded exponent allocation in an admission parser."
     }
   ]
 }

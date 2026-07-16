@@ -139,7 +139,7 @@ Reconciliation 必须定义：
 - risk acceptance
 - occurred_at
 
-`abandon` 必须显式 `risk_accepted=true` 并由 InvocationRecord 引用 decision_id。`abandoned` 是独立终态，后续若发现真实结果，只能追加 Correction Event，不修改历史决定。
+`abandon` 必须显式 `risk_accepted=true` 并由 InvocationRecord 同时引用 ReconciliationCase 和 decision_id。Decision 必须绑定 Case ID、version、digest 及证据。非幂等重试也必须引用 outcome=`retry_approved` 的 resolved Case 与 decision=`retry` 的 Decision；普通自动重试事件只适用于可幂等重试。`abandoned` 是独立终态，后续若发现真实结果，只能追加 Correction Event，不修改历史决定。
 
 取消请求只表示 intent。执行中先进入 `cancel_requested`；Provider/人工证据证明外部副作用 `not_started` 或 `stopped_before_effect` 后进入 `cancellation_confirmed`，持久化终态后才进入 `cancelled`。已完成的外部副作用不能记录为取消成功。
 

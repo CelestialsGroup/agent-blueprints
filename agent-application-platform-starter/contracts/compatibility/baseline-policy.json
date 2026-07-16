@@ -5,5 +5,5 @@
   "authority": "GitHub protected repository variable AGENT_PLATFORM_FROZEN_CONTRACT_REF, mapped to CONTRACT_FROZEN_BASE_REF by CI",
   "first_baseline_exception": "GitHub protected repository variable AGENT_PLATFORM_ALLOW_NO_FROZEN_BASELINE must explicitly be true; otherwise CI fails closed",
   "policy": "This committed file is documentation only and cannot select or disable the CI baseline.",
-  "updated_for": "v0.8.4"
+  "updated_for": "v0.8.5"
 }

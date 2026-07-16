@@ -28,7 +28,6 @@
     "next_retry_at": { "type": "string", "format": "date-time" },
     "reconciliation_deadline_at": { "type": "string", "format": "date-time" },
     "reconciliation_case_id": { "type": "string", "minLength": 1 },
-    "manual_review_case_id": { "type": "string", "minLength": 1 },
     "manual_review_decision_id": { "type": "string", "minLength": 1 },
     "cancellation_requested_at": { "type": "string", "format": "date-time" },
     "cancellation_intent": { "type": "boolean" },
@@ -41,13 +40,13 @@
     { "if": { "properties": { "status": { "enum": ["executing", "retry_scheduled", "outcome_unknown", "reconciling", "manual_review", "cancel_requested", "cancellation_confirmed"] } }, "required": ["status"] }, "then": { "required": ["current_attempt_id"], "properties": { "attempt_count": { "minimum": 1 } } } },
     { "if": { "properties": { "status": { "const": "retry_scheduled" } }, "required": ["status"] }, "then": { "required": ["next_retry_at"] } },
     { "if": { "properties": { "status": { "enum": ["outcome_unknown", "reconciling", "manual_review"] } }, "required": ["status"] }, "then": { "required": ["reconciliation_case_id", "reconciliation_deadline_at"] } },
-    { "if": { "properties": { "status": { "const": "manual_review" } }, "required": ["status"] }, "then": { "required": ["manual_review_case_id"] } },
     { "if": { "properties": { "status": { "const": "cancel_requested" } }, "required": ["status"] }, "then": { "required": ["cancellation_requested_at", "cancellation_intent"], "properties": { "cancellation_intent": { "const": true } } } },
     { "if": { "properties": { "status": { "const": "cancellation_confirmed" } }, "required": ["status"] }, "then": { "required": ["cancellation_confirmation"] } },
     { "if": { "properties": { "status": { "const": "succeeded" } }, "required": ["status"] }, "then": { "required": ["result_reference", "completed_at"] } },
     { "if": { "properties": { "status": { "const": "failed" } }, "required": ["status"] }, "then": { "required": ["terminal_reason", "completed_at"] } },
     { "if": { "properties": { "status": { "const": "cancelled" } }, "required": ["status"] }, "then": { "required": ["terminal_reason", "completed_at", "cancellation_confirmation"] } },
-    { "if": { "properties": { "status": { "const": "abandoned" } }, "required": ["status"] }, "then": { "required": ["terminal_reason", "completed_at", "manual_review_case_id", "manual_review_decision_id"] } }
+    { "if": { "properties": { "status": { "const": "abandoned" } }, "required": ["status"] }, "then": { "required": ["terminal_reason", "completed_at", "reconciliation_case_id", "manual_review_decision_id"] } },
+    { "if": { "properties": { "side_effect": { "const": "non_idempotent" }, "status": { "const": "retry_scheduled" } }, "required": ["side_effect", "status"] }, "then": { "required": ["reconciliation_case_id", "manual_review_decision_id"] } }
   ],
   "x-semantic-constraints": ["attempt_count must not exceed max_attempts", "non-idempotent retry requires reconciliation/manual approval and a new fencing token"]
 }

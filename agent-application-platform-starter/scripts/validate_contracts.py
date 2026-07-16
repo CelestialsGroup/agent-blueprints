@@ -18,6 +18,16 @@ from referencing import Registry, Resource
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_DIRS = [ROOT / "contracts/schemas", ROOT / "examples/schemas"]
 SAFE_INTEGER_MAX = 9_007_199_254_740_991
+MAX_NUMBER_TOKEN_LENGTH = 1024
+MAX_ABS_DECIMAL_EXPONENT = 400
+
+
+def enforce_number_resource_limits(token: str) -> None:
+    if len(token) > MAX_NUMBER_TOKEN_LENGTH:
+        raise ValueError("JSON number token exceeds admission resource limit")
+    exponent = int(token.lower().partition("e")[2] or "0")
+    if abs(exponent) > MAX_ABS_DECIMAL_EXPONENT:
+        raise ValueError("JSON number exponent exceeds admission resource limit")
 
 
 def duplicate_guard(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -59,12 +69,14 @@ def strict_values(value: Any, path: str = "$") -> None:
 
 def strict_loads(raw: str) -> Any:
     def strict_int(token: str) -> int:
+        enforce_number_resource_limits(token)
         value = int(token)
         if abs(value) > SAFE_INTEGER_MAX:
             raise ValueError("Unsafe integer")
         return value
 
     def strict_float(token: str) -> float:
+        enforce_number_resource_limits(token)
         exact = Decimal(token)
         if exact == exact.to_integral_value() and abs(exact) > SAFE_INTEGER_MAX:
             raise ValueError("Unsafe mathematical integer")
@@ -181,6 +193,9 @@ valid_cases = [
     ("invocation-record.schema.json", "examples/contracts/invocation-record.json"),
     ("invocation-reconciliation-case.schema.json", "examples/contracts/invocation-reconciliation-case.json"),
     ("invocation-manual-review-decision.schema.json", "examples/contracts/invocation-manual-review-decision.json"),
+    ("invocation-record.schema.json", "examples/contracts/invocation-non-idempotent-retry.json"),
+    ("invocation-reconciliation-case.schema.json", "examples/contracts/invocation-retry-reconciliation-case.json"),
+    ("invocation-manual-review-decision.schema.json", "examples/contracts/invocation-retry-manual-review-decision.json"),
     ("run-manifest-v2.schema.json", "examples/contracts/run-manifest-v2.json"),
 ]
 invalid_cases = [
@@ -216,7 +231,11 @@ for relative, field in [
     ("examples/contracts/tool-provider-revision.json", "provider_revision_digest"),
     ("examples/contracts/tool-provider-admission-decision.json", "decision_digest"),
     ("examples/contracts/sandbox-manual-review-decision.json", "decision_digest"),
+    ("examples/contracts/sandbox-reconciliation-case.json", "case_digest"),
     ("examples/contracts/invocation-manual-review-decision.json", "decision_digest"),
+    ("examples/contracts/invocation-reconciliation-case.json", "case_digest"),
+    ("examples/contracts/invocation-retry-manual-review-decision.json", "decision_digest"),
+    ("examples/contracts/invocation-retry-reconciliation-case.json", "case_digest"),
     ("examples/contracts/run-manifest-v2.json", "run_manifest_digest"),
 ]:
     value = load(ROOT / relative)

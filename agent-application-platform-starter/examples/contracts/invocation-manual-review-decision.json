@@ -1,6 +1,8 @@
 {
   "decision_id": "imd_01J00000000000000000000000",
   "case_id": "irc_01J00000000000000000000000",
+  "case_version": 1,
+  "case_digest": "sha256:b8ba624b7d82b99755b58b9c6b37d4ab8ad50d91fc0739ed3b6f3db80b4c16b1",
   "invocation_id": "inv_01J00000000000000000000000",
   "decision": "abandon",
   "operator_principal": "principal:reliability-reviewer",
@@ -10,5 +12,5 @@
   "reason": "Provider cannot prove whether the non-idempotent effect committed.",
   "risk_accepted": true,
   "occurred_at": "2026-07-16T10:40:00Z",
-  "decision_digest": "sha256:6df24cc8ae19458c0058ccd5621aae3753e3b4bdd6f4669ceb16c5ee97f075e8"
+  "decision_digest": "sha256:c6ce83a3520d6968030fd8ddb5a3ea3fcbb1a141d53cd093f22a0310c0299bc8"
 }

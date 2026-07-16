@@ -1,14 +1,16 @@
 {
   "decision_id": "smr_01J00000000000000000000000",
   "case_id": "src_01J00000000000000000000000",
+  "case_version": 1,
+  "case_digest": "sha256:4f23ae3b0038975bb787429e0c2d6cc44897d2d89137799f4cca98e1276728cb",
   "operation_id": "sop_01J00000000000000000000000",
-  "decision": "resolve_success",
+  "decision": "abandon",
   "operator_principal": "principal:platform-operator",
   "evidence_references": [
     "audit://sandbox/provider-query/0001"
   ],
-  "reason": "Provider evidence confirms the operation completed successfully.",
-  "risk_accepted": false,
+  "reason": "Provider evidence cannot establish whether the operation effect committed.",
+  "risk_accepted": true,
   "occurred_at": "2026-07-16T10:07:00Z",
-  "decision_digest": "sha256:0553b19ac35a31ce81eb30b8d7373887a802a8c6a26cac7f467698e4806325da"
+  "decision_digest": "sha256:419c0d8786373cbf1da9031cf5407019c1836a38a86d58d2f967b414ba021c5d"
 }

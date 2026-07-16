@@ -1,10 +1,15 @@
 const SAFE_INTEGER_MAX = 9007199254740991n;
+const MAX_NUMBER_TOKEN_LENGTH = 1024;
+const MAX_ABS_DECIMAL_EXPONENT = 400;
 
 function exactIntegerValue(token) {
   const negative = token.startsWith("-");
   const unsigned = negative ? token.slice(1) : token;
   const [mantissa, exponentText] = unsigned.toLowerCase().split("e");
   const exponent = exponentText === undefined ? 0 : Number(exponentText);
+  if (!Number.isSafeInteger(exponent) || Math.abs(exponent) > MAX_ABS_DECIMAL_EXPONENT) {
+    throw new SyntaxError("JSON number exponent exceeds admission resource limit");
+  }
   const [whole, fraction = ""] = mantissa.split(".");
   const coefficient = BigInt(`${whole}${fraction}`);
   const scale = exponent - fraction.length;
@@ -78,6 +83,7 @@ export function strictParse(raw) {
     const match = raw.slice(offset).match(/^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/);
     if (!match) fail("Invalid number");
     const token = match[0];
+    if (token.length > MAX_NUMBER_TOKEN_LENGTH) fail("JSON number token exceeds admission resource limit");
     offset += token.length;
     const number = Number(token);
     if (!Number.isFinite(number)) fail("Non-finite number");

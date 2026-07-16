@@ -1,10 +1,16 @@
 {
   "case_id": "src_01J00000000000000000000000",
+  "case_version": 1,
+  "case_digest": "sha256:4f23ae3b0038975bb787429e0c2d6cc44897d2d89137799f4cca98e1276728cb",
   "operation_id": "sop_01J00000000000000000000000",
   "attempt_id": "soa_01J00000000000000000000000",
-  "status": "manual_review",
+  "status": "resolved",
+  "resolved_outcome": "abandoned",
   "deadline_at": "2026-07-16T10:06:00Z",
   "opened_at": "2026-07-16T10:05:00Z",
-  "updated_at": "2026-07-16T10:06:00Z",
-  "evidence_references": ["audit://sandbox/provider-query/0001"]
+  "resolved_at": "2026-07-16T10:07:00Z",
+  "updated_at": "2026-07-16T10:07:00Z",
+  "evidence_references": [
+    "audit://sandbox/provider-query/0001"
+  ]
 }

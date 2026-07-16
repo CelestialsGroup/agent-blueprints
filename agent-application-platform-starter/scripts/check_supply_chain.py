@@ -69,7 +69,7 @@ for group in ("dependencies", "devDependencies"):
         if not re.fullmatch(r"\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?", version):
             raise AssertionError(f"Unpinned npm dependency: {name}={version}")
 
-requirements = (ROOT / "requirements-contracts-v0.8.4.txt").read_text(encoding="utf-8")
+requirements = (ROOT / "requirements-contracts-v0.8.5.txt").read_text(encoding="utf-8")
 logical_lines: list[str] = []
 buffer = ""
 for raw in requirements.splitlines():
@@ -112,6 +112,9 @@ if repository is not None and repository.resolve() != ROOT.resolve():
         raise AssertionError("Monorepo contract workflow is not installed at the Git root; run scripts/install_github_workflow.sh and commit it")
     if installed.read_bytes() != workflow_path.read_bytes():
         raise AssertionError("Git-root contracts workflow differs from the governed package workflow; reinstall and commit it")
+    root_gitignore = repository / ".gitignore"
+    if not root_gitignore.exists() or ".DS_Store" not in {line.strip() for line in root_gitignore.read_text(encoding="utf-8").splitlines()}:
+        raise AssertionError("Monorepo Git root must ignore .DS_Store; run scripts/install_github_workflow.sh and commit .gitignore")
 
 npmrc = (ROOT / ".npmrc").read_text(encoding="utf-8")
 assert "registry=https://registry.npmjs.org/" in npmrc

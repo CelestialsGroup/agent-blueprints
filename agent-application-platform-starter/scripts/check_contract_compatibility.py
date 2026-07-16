@@ -67,6 +67,16 @@ def schema_breaks(old: Any, new: Any, path: str = "$") -> list[str]:
             breaks.append(f"{path}: {keyword} added or changed")
     if new.get("uniqueItems") is True and old.get("uniqueItems") is not True:
         breaks.append(f"{path}: uniqueItems changed to true")
+    if "not" not in old and "not" in new:
+        breaks.append(f"{path}: not constraint added")
+    elif "not" in old and "not" in new and old["not"] != new["not"]:
+        breaks.append(f"{path}: not constraint changed")
+    old_dependent, new_dependent = old.get("dependentRequired", {}), new.get("dependentRequired", {})
+    if isinstance(old_dependent, dict) and isinstance(new_dependent, dict):
+        for name, requirements in new_dependent.items():
+            added = set(requirements) - set(old_dependent.get(name, []))
+            if added:
+                breaks.append(f"{path}: dependentRequired for {name!r} added {sorted(added)}")
     old_additional, new_additional = old.get("additionalProperties", True), new.get("additionalProperties", True)
     if old_additional is not False and new_additional is False:
         breaks.append(f"{path}: additionalProperties changed to false")
@@ -89,10 +99,20 @@ def schema_breaks(old: Any, new: Any, path: str = "$") -> list[str]:
     return breaks
 
 
-def _parameters(path_item: dict[str, Any], operation: dict[str, Any]) -> dict[tuple[str, str], dict[str, Any]]:
+def _resolve_local_ref(document: dict[str, Any], value: Any) -> Any:
+    if not isinstance(value, dict) or not isinstance(value.get("$ref"), str) or not value["$ref"].startswith("#/"):
+        return value
+    current: Any = document
+    for token in value["$ref"][2:].split("/"):
+        current = current[token.replace("~1", "/").replace("~0", "~")]
+    return current
+
+
+def _parameters(document: dict[str, Any], path_item: dict[str, Any], operation: dict[str, Any]) -> dict[tuple[str, str], dict[str, Any]]:
     result: dict[tuple[str, str], dict[str, Any]] = {}
-    for parameter in [*path_item.get("parameters", []), *operation.get("parameters", [])]:
-        if isinstance(parameter, dict) and "$ref" not in parameter:
+    for raw_parameter in [*path_item.get("parameters", []), *operation.get("parameters", [])]:
+        parameter = _resolve_local_ref(document, raw_parameter)
+        if isinstance(parameter, dict):
             result[(str(parameter.get("in")), str(parameter.get("name")))] = parameter
     return result
 
@@ -110,7 +130,9 @@ def openapi_breaks(old: dict[str, Any], new: dict[str, Any], path: str) -> list[
         for method in sorted(old_methods & new_methods):
             label = f"{method.upper()} {endpoint}"
             old_op, new_op = old_item[method], new_item[method]
-            old_params, new_params = _parameters(old_item, old_op), _parameters(new_item, new_op)
+            old_params, new_params = _parameters(old, old_item, old_op), _parameters(new, new_item, new_op)
+            for key in sorted(set(old_params) - set(new_params)):
+                breaks.append(f"{path}: {label} removed accepted parameter {key}")
             for key, parameter in new_params.items():
                 previous = old_params.get(key)
                 if parameter.get("required") is True and (previous is None or previous.get("required") is not True):
@@ -155,6 +177,8 @@ def self_test() -> None:
         ({"$ref": "urn:old"}, {"$ref": "urn:new"}),
         ({"type": "string"}, {"type": "string", "enum": ["x"]}),
         ({"anyOf": [{"type": "string"}, {"type": "number"}]}, {"anyOf": [{"type": "string"}]}),
+        ({"type": "string"}, {"type": "string", "not": {"const": "blocked"}}),
+        ({"type": "object"}, {"type": "object", "dependentRequired": {"a": ["b"]}}),
     ]:
         assert schema_breaks(old, new)
     old_api = {"paths": {"/v1/x": {"get": {"parameters": [{"in": "query", "name": "p", "schema": {"type": "string"}}], "requestBody": {"content": {"application/json": {"schema": {"type": "string"}}}}, "responses": {"200": {"content": {"application/json": {}, "text/plain": {}}}, "404": {}}}}}}
@@ -165,6 +189,11 @@ def self_test() -> None:
     assert any("removed media type text/plain" in item for item in findings)
     assert any("parameter" in item and "minLength" in item for item in findings)
     assert any("request application/json" in item and "minLength" in item for item in findings)
+    ref_old = {"components": {"parameters": {"P": {"in": "query", "name": "p", "schema": {"type": "string"}}}}, "paths": {"/v1/x": {"get": {"parameters": [{"$ref": "#/components/parameters/P"}], "responses": {"200": {}}}}}}
+    ref_new = {"components": {"parameters": {"P": {"in": "query", "name": "p", "schema": {"type": "string", "minLength": 1}}}}, "paths": {"/v1/x": {"get": {"parameters": [{"$ref": "#/components/parameters/P"}], "responses": {"200": {}}}}}}
+    assert any("minLength" in item for item in openapi_breaks(ref_old, ref_new, "ref-api.yaml"))
+    removed_optional = copy_api = {"paths": {"/v1/x": {"get": {"parameters": [], "responses": {"200": {}}}}}}
+    assert any("removed accepted parameter" in item for item in openapi_breaks(old_api, removed_optional, "api.yaml"))
     assert transition_breaks({"transitions": [{"from": "a", "event": "go", "to": "b"}]}, {"transitions": []}, "machine.json")
 
 
@@ -203,7 +232,7 @@ def compare(ref: str) -> list[str]:
     schema_paths = [*(ROOT / "contracts/schemas").glob("*.json"), *(ROOT / "examples/schemas").glob("*.json")]
     current_schemas = {json.loads(item.read_text())["$id"]: item for item in schema_paths}
     old_manifest_text = None
-    for version in ("v0.8.4", "v0.8.3", "v0.8.2", "v0.8.1"):
+    for version in ("v0.8.5", "v0.8.4", "v0.8.3", "v0.8.2", "v0.8.1"):
         old_manifest_text = git_text(ref, f"contracts/compatibility/{version}-contract-manifest.json", prefix)
         if old_manifest_text:
             break

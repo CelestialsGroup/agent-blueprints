@@ -1,10 +1,16 @@
 {
   "case_id": "irc_01J00000000000000000000000",
+  "case_version": 1,
+  "case_digest": "sha256:b8ba624b7d82b99755b58b9c6b37d4ab8ad50d91fc0739ed3b6f3db80b4c16b1",
   "invocation_id": "inv_01J00000000000000000000000",
   "attempt_id": "ia_01J00000000000000000000000",
-  "status": "manual_review",
+  "status": "resolved",
+  "resolved_outcome": "abandoned",
   "deadline_at": "2026-07-16T10:30:00Z",
   "opened_at": "2026-07-16T10:05:00Z",
-  "updated_at": "2026-07-16T10:31:00Z",
-  "evidence_references": ["evidence://provider/query/1"]
+  "resolved_at": "2026-07-16T10:40:00Z",
+  "updated_at": "2026-07-16T10:40:00Z",
+  "evidence_references": [
+    "evidence://provider/query/1"
+  ]
 }

@@ -51,10 +51,17 @@
         "required": ["decision_sequence"]
       },
       "then": { "required": ["supersedes_decision_id"] }
+    },
+    {
+      "if": {
+        "properties": { "decision_sequence": { "const": 1 } },
+        "required": ["decision_sequence"]
+      },
+      "then": { "not": { "required": ["supersedes_decision_id"] } }
     }
   ],
   "x-semantic-constraints": [
-    "decisions are append-only and decision_sequence is strictly increasing per ProviderRevision",
+    "decisions are append-only; per ProviderRevision sequence starts at one, is contiguous, and supersedes_decision_id binds the immediately preceding decision",
     "decision_digest is RFC 8785 SHA-256 over the decision excluding decision_digest",
     "a Run may start only when the latest effective decision is certified"
   ]

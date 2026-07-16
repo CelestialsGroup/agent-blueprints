@@ -1,0 +1,16 @@
+{
+  "case_id": "irc_retry_01J0000000000000000000",
+  "case_version": 1,
+  "case_digest": "sha256:fbc533428a51ef6b874aeeb938e21960e50f0724228349bd41724f8185cbaf97",
+  "invocation_id": "inv_retry_01J00000000000000000000",
+  "attempt_id": "ia_retry_01J0000000000000000000",
+  "status": "resolved",
+  "resolved_outcome": "retry_approved",
+  "deadline_at": "2026-07-16T10:50:00Z",
+  "opened_at": "2026-07-16T10:05:00Z",
+  "resolved_at": "2026-07-16T10:45:00Z",
+  "updated_at": "2026-07-16T10:45:00Z",
+  "evidence_references": [
+    "evidence://provider/payment/query/1"
+  ]
+}

@@ -3,10 +3,12 @@
   "$id": "urn:agent-platform:invocation-manual-review-decision:v1",
   "title": "InvocationManualReviewDecision",
   "type": "object",
-  "required": ["decision_id", "case_id", "invocation_id", "decision", "operator_principal", "evidence_references", "reason", "risk_accepted", "occurred_at", "decision_digest"],
+  "required": ["decision_id", "case_id", "case_version", "case_digest", "invocation_id", "decision", "operator_principal", "evidence_references", "reason", "risk_accepted", "occurred_at", "decision_digest"],
   "properties": {
     "decision_id": { "type": "string", "minLength": 1 },
     "case_id": { "type": "string", "minLength": 1 },
+    "case_version": { "type": "integer", "minimum": 1 },
+    "case_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "invocation_id": { "type": "string", "minLength": 1 },
     "decision": { "enum": ["resolve_success", "resolve_failure", "resolve_cancelled", "retry", "abandon"] },
     "operator_principal": { "type": "string", "minLength": 1 },
@@ -23,5 +25,5 @@
       "then": { "properties": { "risk_accepted": { "const": true } } }
     }
   ],
-  "x-semantic-constraints": ["decision_digest is RFC 8785 SHA-256 over the decision excluding decision_digest", "decisions are append-only"]
+  "x-semantic-constraints": ["case_id, case_version and case_digest bind the exact reconciliation case version reviewed", "decision_digest is RFC 8785 SHA-256 over the decision excluding decision_digest", "decisions are append-only"]
 }

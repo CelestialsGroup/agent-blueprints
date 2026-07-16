@@ -132,6 +132,21 @@ def validate_run_admission(manifest: dict[str, Any], context: dict[str, Any]) ->
         if current is None or decision["decision_sequence"] > current["decision_sequence"]:
             latest[decision["provider_revision_id"]] = decision
 
+    for revision_id in revisions:
+        chain = sorted(
+            (item for item in decisions.values() if item["provider_revision_id"] == revision_id),
+            key=lambda item: item["decision_sequence"],
+        )
+        if not chain:
+            continue
+        if [item["decision_sequence"] for item in chain] != list(range(1, len(chain) + 1)):
+            raise AssertionError(f"AdmissionDecision sequence must be contiguous from one: {revision_id}")
+        if "supersedes_decision_id" in chain[0]:
+            raise AssertionError(f"First AdmissionDecision cannot supersede another decision: {revision_id}")
+        for previous, current in zip(chain, chain[1:]):
+            if current.get("supersedes_decision_id") != previous["decision_id"]:
+                raise AssertionError(f"AdmissionDecision must supersede the immediate predecessor: {revision_id}")
+
     by_revision: dict[str, dict[str, Any]] = {}
     for snapshot, provider_instance_id in provider_snapshot_bindings(manifest):
         revision_id = snapshot["provider_revision_id"]
@@ -189,6 +204,9 @@ def validate_state_machine(machine: dict[str, Any], allowed_states: set[str]) ->
     transitions = {(item["from"], item["event"], item["to"]) for item in machine["transitions"]}
     if len(transitions) != len(machine["transitions"]):
         raise AssertionError("Duplicate state transition")
+    transition_keys = {(item["from"], item["event"]) for item in machine["transitions"]}
+    if len(transition_keys) != len(machine["transitions"]):
+        raise AssertionError("State machine is non-deterministic: duplicate (from,event)")
     used = {machine["initial_state"], *machine["terminal_states"]}
     for source, _, target in transitions:
         used.update((source, target))
@@ -220,11 +238,22 @@ if any(item["from"] in {"executing", "outcome_unknown", "reconciling", "manual_r
     raise AssertionError("In-flight/unknown Invocation cannot transition directly to cancelled")
 if any(item["event"] == "abandon" for item in invocation_machine["transitions"]):
     raise AssertionError("Invocation abandon must explicitly bind risk acceptance")
+if any(item["event"] == "retryable_failure" for item in invocation_machine["transitions"]):
+    raise AssertionError("Invocation retry transition must distinguish idempotent retry from approved non-idempotent retry")
 sandbox_machine = load("contracts/state-machines/sandbox-operation-v2.json")
 validate_state_machine(sandbox_machine, status_enum("contracts/schemas/sandbox-operation-record.schema.json"))
 unsafe_direct_cancel = {"running", "reconciling", "manual_review_required"}
 if any(item["from"] in unsafe_direct_cancel and item["to"] == "cancelled" for item in sandbox_machine["transitions"]):
     raise AssertionError("In-flight/unknown Sandbox operation cannot transition directly to cancelled")
+
+nondeterministic = copy.deepcopy(invocation_machine)
+nondeterministic["transitions"].append({"from": "prepared", "event": "dispatch", "to": "failed"})
+try:
+    validate_state_machine(nondeterministic, status_enum("contracts/schemas/invocation-record.schema.json"))
+except AssertionError:
+    pass
+else:
+    raise AssertionError("Expected non-deterministic state-machine fixture to fail")
 
 context = load("examples/contracts/run-admission-context.json")
 manifest = load("examples/contracts/run-manifest-v2.json")
@@ -281,6 +310,12 @@ for case in admission_negative["cases"]:
     elif mutation == "capability_incompatible_provider_kind":
         value["capability_resolutions"][0]["selected_provider_revision"] = copy.deepcopy(value["agent_runtime"]["provider_revision"])
         value["capability_resolutions"][0]["selected_provider_instance_id"] = value["agent_runtime"]["provider_instance_id"]
+    elif mutation == "missing_admission_predecessor":
+        previous = registry["admission_decisions"][0]
+        forged = copy.deepcopy(previous)
+        forged.update({"decision_id": "pad_sequence_gap", "decision_sequence": 3, "supersedes_decision_id": "pad_missing", "decided_at": "2026-07-16T09:30:00Z"})
+        forged["decision_digest"] = canonical_digest({key: item for key, item in forged.items() if key != "decision_digest"})
+        registry["admission_decisions"].append(forged)
     else:
         raise AssertionError(f"Unknown admission mutation: {mutation}")
     value["run_manifest_digest"] = canonical_digest({key: item for key, item in value.items() if key != "run_manifest_digest"})
@@ -291,11 +326,41 @@ for case in admission_negative["cases"]:
     else:
         raise AssertionError(f"Expected admission fixture to fail: {case['id']}")
 
+def validate_case_decision_binding(
+    record: dict[str, Any], case: dict[str, Any], decision: dict[str, Any],
+    *, record_id_field: str, case_record_id_field: str, expected_decision: str,
+    expected_outcome: str,
+) -> None:
+    validate_self_digest(case, "case_digest")
+    validate_self_digest(decision, "decision_digest")
+    if record[record_id_field] != case[case_record_id_field] or record[record_id_field] != decision[case_record_id_field]:
+        raise AssertionError("Manual-review aggregate, case and decision bind different records")
+    if record.get("reconciliation_case_id") != case["case_id"] or decision["case_id"] != case["case_id"]:
+        raise AssertionError("Manual-review case_id reference is not closed")
+    if record.get("manual_review_decision_id") != decision["decision_id"]:
+        raise AssertionError("Manual-review decision_id reference is not closed")
+    if record.get("current_attempt_id") != case["attempt_id"]:
+        raise AssertionError("ReconciliationCase does not bind the aggregate's current attempt")
+    if decision["case_version"] != case["case_version"] or decision["case_digest"] != case["case_digest"]:
+        raise AssertionError("ManualReviewDecision does not bind the exact ReconciliationCase version")
+    if case["status"] != "resolved" or case.get("resolved_outcome") != expected_outcome:
+        raise AssertionError("ReconciliationCase outcome conflicts with the aggregate terminal/retry status")
+    if decision["decision"] != expected_decision:
+        raise AssertionError("ManualReviewDecision conflicts with the aggregate terminal/retry status")
+    case_evidence, decision_evidence = set(case["evidence_references"]), set(decision["evidence_references"])
+    if not case_evidence or not decision_evidence or not decision_evidence.issubset(case_evidence):
+        raise AssertionError("Manual review must cite non-empty evidence recorded on the resolved case")
+    if expected_decision == "abandon" and decision["risk_accepted"] is not True:
+        raise AssertionError("Abandon requires explicit risk acceptance")
+
+
 operation_schema = load("contracts/schemas/sandbox-operation-record.schema.json")
 manual_schema = load("contracts/schemas/sandbox-manual-review-decision.schema.json")
 operation_validator = Draft202012Validator(operation_schema, registry=SCHEMA_REGISTRY, format_checker=FormatChecker())
 manual_validator = Draft202012Validator(manual_schema, registry=SCHEMA_REGISTRY, format_checker=FormatChecker())
 operation = load("examples/contracts/sandbox-operation.json")
+reconciliation = load("examples/contracts/sandbox-reconciliation-case.json")
+validate_case_decision_binding(operation, reconciliation, manual, record_id_field="operation_id", case_record_id_field="operation_id", expected_decision="abandon", expected_outcome="abandoned")
 if operation["current_attempt_number"] > operation["max_attempts"]:
     raise AssertionError("current_attempt_number exceeds max_attempts")
 sandbox_negative = load("contracts/tests/semantic-invalid/sandbox-operation-cases.json")
@@ -317,6 +382,25 @@ for case in sandbox_negative["cases"]:
             "cancellation_confirmation": {"confirmed_by": "provider", "evidence_reference": "evidence://provider/1", "external_effect_status": "effect_completed", "confirmed_at": "2026-07-16T10:07:00Z"},
         })
         failed = bool(list(operation_validator.iter_errors(candidate_operation)))
+    elif case["mutation"] == "abandoned_without_manual_decision":
+        candidate_operation.pop("manual_review_decision_id", None)
+        failed = bool(list(operation_validator.iter_errors(candidate_operation)))
+    elif case["mutation"] in {"forged_case_reference", "case_digest_mismatch", "empty_resolved_evidence"}:
+        candidate_case = copy.deepcopy(reconciliation)
+        if case["mutation"] == "forged_case_reference":
+            candidate_operation["reconciliation_case_id"] = "src_forged"
+        elif case["mutation"] == "case_digest_mismatch":
+            candidate_manual["case_digest"] = "sha256:" + "f" * 64
+            candidate_manual["decision_digest"] = canonical_digest({key: item for key, item in candidate_manual.items() if key != "decision_digest"})
+        else:
+            candidate_case["evidence_references"] = []
+            candidate_case["case_digest"] = canonical_digest({key: item for key, item in candidate_case.items() if key != "case_digest"})
+        try:
+            validate_case_decision_binding(candidate_operation, candidate_case, candidate_manual, record_id_field="operation_id", case_record_id_field="operation_id", expected_decision="abandon", expected_outcome="abandoned")
+        except AssertionError:
+            failed = True
+        else:
+            failed = False
     else:
         raise AssertionError(f"Unknown Sandbox mutation: {case['mutation']}")
     if not failed:
@@ -327,6 +411,12 @@ invocation_manual_schema = load("contracts/schemas/invocation-manual-review-deci
 invocation_validator = Draft202012Validator(invocation_schema, registry=SCHEMA_REGISTRY, format_checker=FormatChecker())
 invocation_manual_validator = Draft202012Validator(invocation_manual_schema, registry=SCHEMA_REGISTRY, format_checker=FormatChecker())
 invocation = load("examples/contracts/invocation-record.json")
+invocation_reconciliation = load("examples/contracts/invocation-reconciliation-case.json")
+validate_case_decision_binding(invocation, invocation_reconciliation, invocation_manual, record_id_field="invocation_id", case_record_id_field="invocation_id", expected_decision="abandon", expected_outcome="abandoned")
+retry_invocation = load("examples/contracts/invocation-non-idempotent-retry.json")
+retry_case = load("examples/contracts/invocation-retry-reconciliation-case.json")
+retry_decision = load("examples/contracts/invocation-retry-manual-review-decision.json")
+validate_case_decision_binding(retry_invocation, retry_case, retry_decision, record_id_field="invocation_id", case_record_id_field="invocation_id", expected_decision="retry", expected_outcome="retry_approved")
 invocation_negative = load("contracts/tests/semantic-invalid/invocation-cases.json")
 for case in invocation_negative["cases"]:
     candidate = copy.deepcopy(invocation)
@@ -344,6 +434,32 @@ for case in invocation_negative["cases"]:
     elif case["mutation"] == "abandon_without_risk_acceptance":
         decision["risk_accepted"] = False
         failed = bool(list(invocation_manual_validator.iter_errors(decision)))
+    elif case["mutation"] in {"forged_case_reference", "forged_decision_reference", "case_digest_mismatch", "outcome_mismatch", "empty_resolved_evidence"}:
+        candidate_case = copy.deepcopy(invocation_reconciliation)
+        if case["mutation"] == "forged_case_reference":
+            candidate["reconciliation_case_id"] = "irc_forged"
+        elif case["mutation"] == "forged_decision_reference":
+            candidate["manual_review_decision_id"] = "imd_forged"
+        elif case["mutation"] == "case_digest_mismatch":
+            decision["case_digest"] = "sha256:" + "e" * 64
+            decision["decision_digest"] = canonical_digest({key: item for key, item in decision.items() if key != "decision_digest"})
+        elif case["mutation"] == "outcome_mismatch":
+            candidate_case["resolved_outcome"] = "failed"
+            candidate_case["case_digest"] = canonical_digest({key: item for key, item in candidate_case.items() if key != "case_digest"})
+        else:
+            candidate_case["evidence_references"] = []
+            candidate_case["case_digest"] = canonical_digest({key: item for key, item in candidate_case.items() if key != "case_digest"})
+        try:
+            validate_case_decision_binding(candidate, candidate_case, decision, record_id_field="invocation_id", case_record_id_field="invocation_id", expected_decision="abandon", expected_outcome="abandoned")
+        except AssertionError:
+            failed = True
+        else:
+            failed = False
+    elif case["mutation"] == "non_idempotent_retry_without_approval":
+        candidate = copy.deepcopy(retry_invocation)
+        candidate.pop("reconciliation_case_id", None)
+        candidate.pop("manual_review_decision_id", None)
+        failed = bool(list(invocation_validator.iter_errors(candidate)))
     else:
         raise AssertionError(f"Unknown Invocation mutation: {case['mutation']}")
     if not failed:
@@ -360,4 +476,4 @@ if any(current <= previous for previous, current in zip(fencing_tokens, fencing_
 else:
     raise AssertionError("Expected Sandbox fencing-token negative fixture to fail")
 
-print("Semantic validation passed with 6 state-machine/safety checks and 21 negative invariant fixtures.")
+print("Semantic validation passed with deterministic state-machine/safety checks and 33 negative invariant fixtures.")

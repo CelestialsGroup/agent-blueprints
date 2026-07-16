@@ -8,7 +8,7 @@
     { "from": "prepared", "event": "cancel_before_dispatch_with_platform_confirmation", "to": "cancelled" },
     { "from": "executing", "event": "succeeded", "to": "succeeded" },
     { "from": "executing", "event": "known_failed", "to": "failed" },
-    { "from": "executing", "event": "retryable_failure", "to": "retry_scheduled" },
+    { "from": "executing", "event": "idempotent_retryable_failure", "to": "retry_scheduled" },
     { "from": "executing", "event": "outcome_unknown", "to": "outcome_unknown" },
     { "from": "executing", "event": "cancel_requested", "to": "cancel_requested" },
     { "from": "retry_scheduled", "event": "retry_due", "to": "executing" },

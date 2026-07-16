@@ -1,8 +1,8 @@
-# Agent Application Platform v0.8.4 — implementation rules
+# Agent Application Platform v0.8.5 — implementation rules
 
 ## Authority
 
-`START_HERE.md`、本文件、`docs/42_V084_REVIEW_RESOLUTION.md` 与可执行契约是当前事实源。发生冲突时，Schema、状态机、数据库约束和 Gate 优先于叙述性文档。不得恢复 v0.8.3 或更早设计。
+`START_HERE.md`、本文件、`docs/43_V085_REVIEW_RESOLUTION.md` 与可执行契约是当前事实源。发生冲突时，Schema、状态机、数据库约束和 Gate 优先于叙述性文档。不得恢复 v0.8.4 或更早设计。
 
 ## Frozen boundary impact check
 
@@ -53,7 +53,7 @@ Temporal 决定编排历史；PostgreSQL 决定查询态和账本。任何双写
 
 ## Invocation and Sandbox operation
 
-逻辑 Invocation/Operation 与 Attempt 分离。每次网络尝试拥有唯一 attempt_id 和严格递增 fencing_token。响应丢失或结果未知必须进入 reconciling；超时进入 manual_review_required；取消 intent 不等于取消证明。最终只能由证据 resolve success/failure/cancel、retry，或以 `risk_accepted=true` abandon。所有人工结论必须带证据与不可变摘要。
+逻辑 Invocation/Operation 与 Attempt 分离。每次网络尝试拥有唯一 attempt_id 和严格递增 fencing_token。响应丢失或结果未知必须进入 reconciling；超时进入 manual_review_required；取消 intent 不等于取消证明。最终只能由证据 resolve success/failure/cancel、retry，或以 `risk_accepted=true` abandon。聚合记录必须引用 ReconciliationCase 和 ManualReviewDecision；Decision 必须绑定 Case 的 ID、版本和摘要。非幂等重试不得走自动重试事件。
 
 Sandbox Provider API 返回的是单次 transport status；平台的 SandboxOperation v2 才是持久化聚合状态机。
 

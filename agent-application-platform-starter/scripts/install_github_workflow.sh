@@ -14,11 +14,16 @@ PY
 mkdir -p "$GIT_ROOT/.github/workflows"
 cp "$PACKAGE_ROOT/.github/workflows/contracts.yml" "$GIT_ROOT/.github/workflows/contracts.yml"
 
+touch "$GIT_ROOT/.gitignore"
+if ! grep -qxF '.DS_Store' "$GIT_ROOT/.gitignore"; then
+  printf '\n.DS_Store\n' >> "$GIT_ROOT/.gitignore"
+fi
+
 if git -C "$GIT_ROOT" ls-files --error-unmatch .DS_Store >/dev/null 2>&1; then
   cat >&2 <<'EOF'
 Repository integration is still blocked because .DS_Store is tracked at the Git root.
 Review it, then run: git rm --cached -- .DS_Store
-Commit that removal together with .github/workflows/contracts.yml.
+Commit that removal together with .github/workflows/contracts.yml and .gitignore.
 EOF
   exit 3
 fi
@@ -31,5 +36,6 @@ Use '.' when the contract package is the repository root.
 Set protected AGENT_PLATFORM_FROZEN_CONTRACT_REF to the immutable frozen tag/commit.
 Before the first frozen baseline only, explicitly set protected
 AGENT_PLATFORM_ALLOW_NO_FROZEN_BASELINE=true.
-Commit .github/workflows/contracts.yml at the Git root; copying it locally is not activation.
+Run git rm --cached -- .DS_Store if it was tracked, then commit the Git-root
+.github/workflows/contracts.yml and .gitignore; copying them locally is not activation.
 EOF

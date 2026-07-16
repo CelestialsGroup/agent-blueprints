@@ -3,6 +3,12 @@
     { "id": "invocation-attempt-count-exceeds-max", "mutation": "attempt_count_exceeds_max" },
     { "id": "invocation-executing-without-current-attempt", "mutation": "executing_without_current_attempt" },
     { "id": "invocation-abandoned-without-decision", "mutation": "abandoned_without_manual_decision" },
-    { "id": "invocation-abandon-without-risk-acceptance", "mutation": "abandon_without_risk_acceptance" }
+    { "id": "invocation-abandon-without-risk-acceptance", "mutation": "abandon_without_risk_acceptance" },
+    { "id": "invocation-forged-case-reference", "mutation": "forged_case_reference" },
+    { "id": "invocation-forged-decision-reference", "mutation": "forged_decision_reference" },
+    { "id": "invocation-case-digest-mismatch", "mutation": "case_digest_mismatch" },
+    { "id": "invocation-outcome-mismatch", "mutation": "outcome_mismatch" },
+    { "id": "invocation-empty-resolved-evidence", "mutation": "empty_resolved_evidence" },
+    { "id": "non-idempotent-retry-without-approval", "mutation": "non_idempotent_retry_without_approval" }
   ]
 }

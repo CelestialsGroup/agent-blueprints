@@ -4,11 +4,13 @@
   "title": "SandboxReconciliationCase",
   "type": "object",
   "required": [
-    "case_id", "operation_id", "attempt_id", "status", "deadline_at",
+    "case_id", "case_version", "case_digest", "operation_id", "attempt_id", "status", "deadline_at",
     "opened_at", "updated_at", "evidence_references"
   ],
   "properties": {
     "case_id": { "type": "string", "minLength": 1 },
+    "case_version": { "type": "integer", "minimum": 1 },
+    "case_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "operation_id": { "type": "string", "minLength": 1 },
     "attempt_id": { "type": "string", "minLength": 1 },
     "status": { "enum": ["open", "querying", "manual_review", "resolved"] },
@@ -25,9 +27,11 @@
   },
   "additionalProperties": false,
   "allOf": [
+    { "if": { "properties": { "status": { "enum": ["manual_review", "resolved"] } }, "required": ["status"] }, "then": { "properties": { "evidence_references": { "minItems": 1 } } } },
     {
       "if": { "properties": { "status": { "const": "resolved" } }, "required": ["status"] },
       "then": { "required": ["resolved_outcome", "resolved_at"] }
     }
-  ]
+  ],
+  "x-semantic-constraints": ["case_digest is RFC 8785 SHA-256 over this case version excluding case_digest"]
 }

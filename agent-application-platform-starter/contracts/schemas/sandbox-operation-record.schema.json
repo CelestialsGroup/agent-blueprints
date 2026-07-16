@@ -34,7 +34,8 @@
     { "if": { "properties": { "status": { "enum": ["reconciling", "manual_review_required"] } }, "required": ["status"] }, "then": { "required": ["reconciliation_case_id"] } },
     { "if": { "properties": { "status": { "const": "cancellation_confirmed" } }, "required": ["status"] }, "then": { "required": ["cancellation_confirmation"] } },
     { "if": { "properties": { "status": { "const": "succeeded" } }, "required": ["status"] }, "then": { "required": ["result_reference", "completed_at"] } },
-    { "if": { "properties": { "status": { "enum": ["failed", "abandoned"] } }, "required": ["status"] }, "then": { "required": ["terminal_reason", "completed_at"] } },
+    { "if": { "properties": { "status": { "const": "failed" } }, "required": ["status"] }, "then": { "required": ["terminal_reason", "completed_at"] } },
+    { "if": { "properties": { "status": { "const": "abandoned" } }, "required": ["status"] }, "then": { "required": ["terminal_reason", "completed_at", "reconciliation_case_id", "manual_review_decision_id"] } },
     { "if": { "properties": { "status": { "const": "cancelled" } }, "required": ["status"] }, "then": { "required": ["terminal_reason", "completed_at", "cancellation_confirmation"] } }
   ],
   "x-semantic-constraints": ["current_attempt_number must not exceed max_attempts"]

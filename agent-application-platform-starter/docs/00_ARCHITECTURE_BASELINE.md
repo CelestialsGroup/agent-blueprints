@@ -1,4 +1,4 @@
-# v0.8.4 Architecture Baseline Candidate
+# v0.8.5 Architecture Baseline Candidate
 
 Agent Application Platform 为多个 Business Application 提供受治理的 Agent 执行、工作流、Sandbox、Artifact 和 Delivery 能力。Business 与 Platform 不共享领域数据库。
 
@@ -23,4 +23,4 @@ Workspace 拥有多个 Sandbox Slot。DeerFlow Built-in Sandbox 与未来 `sandb
 
 ## Status
 
-v0.8.4 是已完成本地 re-hardening、等待 Git 根 Workflow 集成和 public CI re-admission 的候选版本，不是已冻结基线，更不是 Production Ready。
+v0.8.5 是已完成本地 contract closure、等待本机 Git 根 Workflow/.gitignore 集成和 public CI re-admission 的候选版本，不是已冻结基线，更不是 Production Ready。

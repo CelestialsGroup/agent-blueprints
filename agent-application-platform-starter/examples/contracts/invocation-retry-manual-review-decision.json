@@ -1,0 +1,16 @@
+{
+  "decision_id": "imd_retry_01J0000000000000000000",
+  "case_id": "irc_retry_01J0000000000000000000",
+  "case_version": 1,
+  "case_digest": "sha256:fbc533428a51ef6b874aeeb938e21960e50f0724228349bd41724f8185cbaf97",
+  "invocation_id": "inv_retry_01J00000000000000000000",
+  "decision": "retry",
+  "operator_principal": "principal:reliability-reviewer",
+  "evidence_references": [
+    "evidence://provider/payment/query/1"
+  ],
+  "reason": "Provider evidence proves the first attempt did not commit an external effect.",
+  "risk_accepted": false,
+  "occurred_at": "2026-07-16T10:45:00Z",
+  "decision_digest": "sha256:119c06ab7ea0a58cd52e7c67ed9d0d4cb505c58a4277b0082c4ed04cd3997bdd"
+}

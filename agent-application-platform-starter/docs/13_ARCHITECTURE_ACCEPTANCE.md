@@ -1,10 +1,10 @@
-# v0.8.4 Architecture Acceptance
+# v0.8.5 Architecture Acceptance
 
 ## Contract admission
 
 - [ ] `./scripts/bootstrap_contracts.sh` 在公共 Registry 和 Python 3.11/3.13 成功。
 - [ ] `make validate-all` 全绿，包括 Python/Node/Go Strict I-JSON。
-- [ ] monorepo 的 Git 根 Workflow 已提交，`AGENT_PLATFORM_CONTRACT_ROOT` 与受保护 Compatibility 变量已配置。
+- [ ] monorepo 的 Git 根 Workflow 与 `.gitignore` 已提交，根 `.DS_Store` 未被跟踪，`AGENT_PLATFORM_CONTRACT_ROOT` 与受保护 Compatibility 变量已配置。
 - [ ] 4 个 OpenAPI 0 error/0 warning 且 Bundle deterministic。
 - [ ] Contract Manifest Python/Node 一致。
 - [ ] Compatibility 明确为受保护 frozen baseline pass，或由受保护变量显式批准首冻前 N/A；缺失配置时 CI 必须失败。
@@ -20,6 +20,7 @@
 ## Reliability acceptance
 
 - [ ] Invocation 与 SandboxOperation 都有逻辑记录、append-only Attempt、fencing 和 reconciliation。
+- [ ] 聚合、ReconciliationCase 和 ManualReviewDecision 的 ID/version/digest/evidence/outcome 形成可执行引用闭环；非幂等 retry/abandon 无绕过路径。
 - [ ] unknown outcome 可到达 success/failure/retry/manual review/abandoned，不存在永久悬空状态。
 - [ ] Outbox/Inbox、Event sequence、Artifact staging/finalization 和 Delivery Attempt 有数据库约束。
 

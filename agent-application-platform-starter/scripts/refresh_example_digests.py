@@ -106,12 +106,19 @@ context["provider_revisions"] = list(revisions.values())
 context["admission_decisions"] = list(decisions.values())
 write(context_path, context)
 
-manual_path = "examples/contracts/sandbox-manual-review-decision.json"
-manual = read(manual_path)
-manual["decision_digest"] = digest_without(manual, "decision_digest")
-write(manual_path, manual)
-invocation_manual_path = "examples/contracts/invocation-manual-review-decision.json"
-invocation_manual = read(invocation_manual_path)
-invocation_manual["decision_digest"] = digest_without(invocation_manual, "decision_digest")
-write(invocation_manual_path, invocation_manual)
-print("Refreshed v0.8.4 generic Provider, admission, RunManifest and manual-review digests.")
+case_decision_pairs = [
+    ("examples/contracts/sandbox-reconciliation-case.json", "examples/contracts/sandbox-manual-review-decision.json"),
+    ("examples/contracts/invocation-reconciliation-case.json", "examples/contracts/invocation-manual-review-decision.json"),
+    ("examples/contracts/invocation-retry-reconciliation-case.json", "examples/contracts/invocation-retry-manual-review-decision.json"),
+]
+for case_path, manual_path in case_decision_pairs:
+    case = read(case_path)
+    case["case_digest"] = digest_without(case, "case_digest")
+    write(case_path, case)
+    manual = read(manual_path)
+    manual["case_id"] = case["case_id"]
+    manual["case_version"] = case["case_version"]
+    manual["case_digest"] = case["case_digest"]
+    manual["decision_digest"] = digest_without(manual, "decision_digest")
+    write(manual_path, manual)
+print("Refreshed v0.8.5 Provider, admission, RunManifest, reconciliation-case and manual-review digests.")

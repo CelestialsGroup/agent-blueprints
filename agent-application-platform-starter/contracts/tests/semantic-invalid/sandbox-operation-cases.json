@@ -5,6 +5,10 @@
     { "id": "attempt-number-exceeds-max", "mutation": "attempt_number_exceeds_max" },
     { "id": "running-without-current-attempt", "mutation": "running_without_current_attempt" },
     { "id": "abandon-without-risk-acceptance", "mutation": "abandon_without_risk_acceptance" },
-    { "id": "cancelled-after-external-effect-completed", "mutation": "cancelled_effect_completed" }
+    { "id": "cancelled-after-external-effect-completed", "mutation": "cancelled_effect_completed" },
+    { "id": "sandbox-abandoned-without-decision", "mutation": "abandoned_without_manual_decision" },
+    { "id": "sandbox-forged-case-reference", "mutation": "forged_case_reference" },
+    { "id": "sandbox-case-digest-mismatch", "mutation": "case_digest_mismatch" },
+    { "id": "sandbox-empty-resolved-evidence", "mutation": "empty_resolved_evidence" }
   ]
 }

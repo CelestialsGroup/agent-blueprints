@@ -11,8 +11,13 @@ import (
 )
 
 var safeIntegerLimit = big.NewInt(9007199254740991)
+const maxNumberTokenLength = 1024
+const maxAbsDecimalExponent = 400
 
 func exactIntegerToken(raw string) (*big.Int, bool, error) {
+	if len(raw) > maxNumberTokenLength {
+		return nil, false, errors.New("JSON number token exceeds admission resource limit")
+	}
 	negative := strings.HasPrefix(raw, "-")
 	if negative {
 		raw = raw[1:]
@@ -24,6 +29,9 @@ func exactIntegerToken(raw string) (*big.Int, bool, error) {
 			return nil, false, err
 		}
 		exponent = parsed
+		if exponent > maxAbsDecimalExponent || exponent < -maxAbsDecimalExponent {
+			return nil, false, errors.New("JSON number exponent exceeds admission resource limit")
+		}
 		raw = raw[:index]
 	}
 	fractionDigits := 0

@@ -62,10 +62,10 @@
       "capability_definition_digest": "sha256:3131313131313131313131313131313131313131313131313131313131313131",
       "selected_provider_revision": {
         "provider_revision_id": "tpr_01J00000000000000000000000",
-        "provider_revision_digest": "sha256:12867de6b67740a8dd5f47c510f9f5b343652564c42e13357f4ca5c127195222",
+        "provider_revision_digest": "sha256:ee7080f3990b403f5f3dc286ac8cc7990ed3064c79c61447fad69f798950342c",
         "provider_kind": "tool",
         "plugin_id": "tool-provider.echo",
-        "plugin_version": "0.8.4",
+        "plugin_version": "0.8.5",
         "manifest_digest": "sha256:2121212121212121212121212121212121212121212121212121212121212121",
         "package_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
         "runtime_binding_digest": "sha256:2525252525252525252525252525252525252525252525252525252525252525",
@@ -74,7 +74,7 @@
         "credential_binding_digest": "sha256:2626262626262626262626262626262626262626262626262626262626262626",
         "conformance_report_digest": "sha256:12caa691be50101ff13edec7c6e6072b31d0bafc2f0c9c6f192b97a3364b226e",
         "admission_decision_id": "pad_tool_01J000000000000000000",
-        "admission_decision_digest": "sha256:081e9ccc5960063f5099aadb776f45a496249909eb586c1fcb5afdebf1bd3b19",
+        "admission_decision_digest": "sha256:ad5b21498a2650cfd56bbde4c349cfcc098b513ed71a918c585a09d48e0f2e5b",
         "admission_status": "certified"
       }
     }
@@ -156,5 +156,5 @@
     }
   ],
   "primary_sandbox_slot_key": "primary-code",
-  "run_manifest_digest": "sha256:1abaf990fba953a3155633f77f7cb6696330103425e8107051d8452bb0b5a728"
+  "run_manifest_digest": "sha256:45a00ef0f19df8de1b4a942f5c20aa8dab8aac37feede7e2250fc4c25d50d47f"
 }

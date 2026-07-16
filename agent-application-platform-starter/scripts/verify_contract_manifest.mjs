@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { canonicalize } from "./jcs/canonicalize.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const manifestPath = path.join(root, "contracts/compatibility/v0.8.4-contract-manifest.json");
+const manifestPath = path.join(root, "contracts/compatibility/v0.8.5-contract-manifest.json");
 const sha = (bytes) => `sha256:${crypto.createHash("sha256").update(bytes).digest("hex")}`;
 const walk = (directory) => fs.existsSync(directory)
   ? fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -48,4 +48,4 @@ const expected = unsigned.manifest_digest;
 delete unsigned.manifest_digest;
 const actual = sha(Buffer.from(canonicalize(unsigned), "utf8"));
 if (actual !== expected) throw new Error(`Manifest self-digest mismatch: ${actual} != ${expected}`);
-console.log(`Verified v0.8.4 contract manifest over ${resources.length} governed resources.`);
+console.log(`Verified v0.8.5 contract manifest over ${resources.length} governed resources.`);

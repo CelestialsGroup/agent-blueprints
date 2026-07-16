@@ -1,7 +1,7 @@
 {
   "name": "agent-application-platform-contracts",
   "private": true,
-  "version": "0.8.4",
+  "version": "0.8.5",
   "scripts": {
     "prepare:openapi": "python3 scripts/prepare_openapi.py",
     "lint:openapi": "node scripts/lint_openapi_zero.mjs",

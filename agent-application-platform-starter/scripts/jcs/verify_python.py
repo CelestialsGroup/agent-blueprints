@@ -12,6 +12,16 @@ import rfc8785
 ROOT = Path(__file__).resolve().parents[2]
 VECTORS = json.loads((ROOT / "contracts/testdata/jcs-v1/vectors.json").read_text(encoding="utf-8"))
 SAFE_INTEGER_MAX = 9_007_199_254_740_991
+MAX_NUMBER_TOKEN_LENGTH = 1024
+MAX_ABS_DECIMAL_EXPONENT = 400
+
+
+def enforce_number_resource_limits(token: str) -> None:
+    if len(token) > MAX_NUMBER_TOKEN_LENGTH:
+        raise ValueError("JSON number token exceeds admission resource limit")
+    exponent = int(token.lower().partition("e")[2] or "0")
+    if abs(exponent) > MAX_ABS_DECIMAL_EXPONENT:
+        raise ValueError("JSON number exponent exceeds admission resource limit")
 
 
 def reject_constant(value: str) -> None:
@@ -52,12 +62,14 @@ def reject_unsafe_values(value: Any) -> None:
 
 def strict_loads(raw: str) -> Any:
     def strict_int(token: str) -> int:
+        enforce_number_resource_limits(token)
         value = int(token)
         if abs(value) > SAFE_INTEGER_MAX:
             raise ValueError("Integer exceeds interoperable IEEE-754 safe range")
         return value
 
     def strict_float(token: str) -> float:
+        enforce_number_resource_limits(token)
         exact = Decimal(token)
         if exact == exact.to_integral_value() and abs(exact) > SAFE_INTEGER_MAX:
             raise ValueError("Mathematical integer exceeds interoperable IEEE-754 safe range")
