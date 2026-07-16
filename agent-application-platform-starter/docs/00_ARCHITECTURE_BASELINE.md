@@ -1,4 +1,4 @@
-# v0.8 架构基线
+# v0.8.1 架构基线
 
 ## 1. 总体结构
 
@@ -87,7 +87,7 @@ Temporal Durable Workflow
 
 ## 7. 基线边界
 
-v0.8 是 Phase 0 的架构与契约冻结基线，不等同于生产实现已通过验证。
+v0.8.1 是待公共 CI 准入的 Phase 0 Contract Hardening Candidate，不等同于生产实现已通过验证。
 
 生产可靠性仍必须由：
 

@@ -123,9 +123,20 @@ Usage 修正使用新 Entry，不更新历史记录。
 
 ```text
 PRIMARY KEY(sandbox_id)
-UNIQUE(work_order_id, workspace_id)
+INDEX(work_order_id, workspace_id)
+INDEX(workspace_id, sandbox_slot_key)
 INDEX(tenant_id, observed_state)
 INDEX(lease_expires_at, observed_state)
+```
+
+允许一个 Workspace 拥有多个 Sandbox。
+
+同一逻辑 Slot 同时只能有一个非终态 Sandbox，使用 PostgreSQL Partial Unique Index：
+
+```sql
+CREATE UNIQUE INDEX uq_active_sandbox_slot
+ON sandbox_registry(workspace_id, sandbox_slot_key)
+WHERE observed_state NOT IN ('terminated', 'expired', 'failed');
 ```
 
 不可变：
@@ -133,7 +144,11 @@ INDEX(lease_expires_at, observed_state)
 - tenant_id
 - work_order_id
 - workspace_id
+- sandbox_slot_key
 - provider_revision_id
+
+稳定内核只保存 `provider_state_reference`。Pod、VM、Container、Namespace 和 Raw Endpoint
+存储在 Provider Adapter 私有模型中。
 
 ### sandbox_operations
 
@@ -144,7 +159,15 @@ UNIQUE(sandbox_id, fencing_token)
 UNIQUE(operation_id, attempt_id)
 ```
 
-Complete 只接受当前有效 fencing_token。
+所有 Mutation 都必须满足统一 Envelope：
+
+- idempotency_key
+- request_digest
+- deadline_at
+- attempt_id
+- fencing_token
+
+Complete 只接受当前有效 Fencing Token。
 
 ### sandbox_events
 
@@ -163,10 +186,11 @@ UNIQUE(snapshot_digest)
 INDEX(sandbox_id, created_at)
 ```
 
-Process Snapshot 不能只通过 snapshot_id 推断可移植性，必须读取 Compatibility。
+Process Snapshot 不能只通过 Snapshot ID 推断可移植性，必须读取 Compatibility。
 
 ### Lease
 
 Lease 扩展使用 expected_generation 或 CAS。
 
-过期清理任务不能只依赖定时扫描，Provider Controller 和平台 Maintenance Workflow 都需要幂等补偿。
+过期清理不能只依赖定时扫描；Provider Controller 与平台 Maintenance Workflow
+都必须执行幂等 Reconciliation。

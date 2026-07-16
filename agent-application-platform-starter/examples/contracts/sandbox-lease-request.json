@@ -1,0 +1,10 @@
+{
+  "operation_id": "sop_lease_01",
+  "attempt_id": "sat_lease_01",
+  "fencing_token": 6,
+  "idempotency_key": "sop_lease_01-idempotency-0001",
+  "request_digest": "sha256:93f9a82894b9bb2d98d5daa424938cbcd01b0eaab6506c3387b622f5d23911bc",
+  "deadline_at": "2026-07-16T10:30:00Z",
+  "expected_generation": 4,
+  "extend_seconds": 1800
+}

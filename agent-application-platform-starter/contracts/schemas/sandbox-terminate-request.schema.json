@@ -2,41 +2,30 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:agent-platform:sandbox-terminate-request:v1",
   "title": "TerminateSandboxRequest",
-  "type": "object",
-  "required": [
-    "operation_id",
-    "attempt_id",
-    "fencing_token",
-    "idempotency_key",
-    "expected_generation",
-    "reason",
-    "preserve_workspace_snapshot"
-  ],
-  "properties": {
-    "operation_id": {
-      "type": "string"
+  "allOf": [
+    {
+      "$ref": "urn:agent-platform:sandbox-mutation-envelope:v1"
     },
-    "attempt_id": {
-      "type": "string"
-    },
-    "fencing_token": {
-      "type": "integer",
-      "minimum": 1
-    },
-    "idempotency_key": {
-      "type": "string",
-      "minLength": 16
-    },
-    "expected_generation": {
-      "type": "integer",
-      "minimum": 1
-    },
-    "reason": {
-      "type": "string"
-    },
-    "preserve_workspace_snapshot": {
-      "type": "boolean"
+    {
+      "type": "object",
+      "required": [
+        "expected_generation",
+        "reason",
+        "preserve_workspace_snapshot"
+      ],
+      "properties": {
+        "expected_generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "reason": {
+          "type": "string"
+        },
+        "preserve_workspace_snapshot": {
+          "type": "boolean"
+        }
+      }
     }
-  },
-  "additionalProperties": false
+  ],
+  "unevaluatedProperties": false
 }

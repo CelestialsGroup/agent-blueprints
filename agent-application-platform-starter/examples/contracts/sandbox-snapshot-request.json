@@ -1,0 +1,14 @@
+{
+  "operation_id": "sop_snapshot_01",
+  "attempt_id": "sat_snapshot_01",
+  "fencing_token": 10,
+  "idempotency_key": "sop_snapshot_01-idempotency-0001",
+  "request_digest": "sha256:d0b06fc50e625869381811562559a88fabdc6214efdde11c07876a150d2d1ba1",
+  "deadline_at": "2026-07-16T10:30:00Z",
+  "expected_generation": 4,
+  "level": "workspace",
+  "consistency": "application_quiesced",
+  "include_paths": [
+    "/workspace"
+  ]
+}

@@ -35,38 +35,29 @@
         "manifest_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
         "image_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
         "configuration_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
-        "conformance_report_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999"
+        "conformance_report_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+        "provider_kind": "sandbox",
+        "package_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "runtime_binding_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+        "approved_permissions_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+        "credential_binding_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "certification_status": "certified"
       }
     }
   ],
   "agent_runtime": {
     "provider_instance_id": "arp_01J00000000000000000000000",
+    "provider_revision_id": "arr_01J00000000000000000000000",
+    "plugin_id": "deerflow-runtime",
     "plugin_version": "2.0.0",
     "runtime_version": "2.0.0",
-    "commit": "0123456789abcdef",
-    "image_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
-    "configuration_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-    "governed_conformance_report_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
-  },
-  "sandbox": {
-    "provider_instance_id": "spi_01J00000000000000000000000",
-    "provider_revision_id": "spr_01J00000000000000000000000",
-    "provider_api_version": "v1",
-    "runtime_profile": "hardened",
-    "image_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
-    "sandbox_spec_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-    "required_capabilities": [
-      {
-        "id": "sandbox.exec",
-        "version": "1.0",
-        "profile": "hardened"
-      },
-      {
-        "id": "sandbox.terminal",
-        "version": "1.0"
-      }
-    ],
-    "conformance_report_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999"
+    "package_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "runtime_binding_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "configuration_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "approved_permissions_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "credential_binding_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "governed_conformance_report_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "image_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
   },
   "templates": [],
   "location": {
@@ -78,5 +69,40 @@
   "request_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
   "execution_budget_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
   "policy_decision_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
-  "event_schema_version": 2
+  "event_schema_version": 2,
+  "temporal": {
+    "namespace": "agent-platform",
+    "workflow_id": "work-order/wrk_01J00000000000000000000000",
+    "workflow_run_id": "temporal-run-01J00000000000000000000000",
+    "workflow_type": "WorkOrderWorkflowV1",
+    "worker_deployment": "agent-orchestration",
+    "worker_build_id": "worker-2026-07-16.1",
+    "versioning_behavior": "pinned"
+  },
+  "run_manifest_digest": "sha256:5c3fb51f4f0325933985aa8640f65646c74d93664e3d01aef283c61d22788f34",
+  "sandboxes": [
+    {
+      "provider_instance_id": "spi_01J00000000000000000000000",
+      "provider_revision_id": "spr_01J00000000000000000000000",
+      "provider_api_version": "v1",
+      "runtime_profile": "hardened",
+      "image_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "sandbox_spec_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "required_capabilities": [
+        {
+          "id": "sandbox.exec",
+          "version": "1.0",
+          "profile": "hardened"
+        },
+        {
+          "id": "sandbox.terminal",
+          "version": "1.0"
+        }
+      ],
+      "conformance_report_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+      "sandbox_slot_key": "primary-code",
+      "sandbox_id": "sbx_01J00000000000000000000000"
+    }
+  ],
+  "primary_sandbox_slot_key": "primary-code"
 }

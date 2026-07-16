@@ -1,0 +1,19 @@
+{
+  "invocation_id": "inv",
+  "invocation_attempt_id": "att",
+  "fencing_token": 1,
+  "status": "succeeded",
+  "observed_at": "2026-07-16T00:00:00Z",
+  "error": {
+    "invocation_id": "inv",
+    "invocation_attempt_id": "att",
+    "fencing_token": 1,
+    "occurred_at": "2026-07-16T00:00:00Z",
+    "error": {
+      "code": "PROVIDER_FAILED",
+      "message": "failed",
+      "retryable": false,
+      "outcome": "known_failed"
+    }
+  }
+}

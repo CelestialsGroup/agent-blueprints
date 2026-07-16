@@ -10,12 +10,16 @@
     "workflow",
     "worker_build_id",
     "capability_resolutions",
-    "sandbox",
+    "sandboxes",
     "location",
     "request_digest",
     "execution_budget_digest",
     "policy_decision_digest",
-    "event_schema_version"
+    "event_schema_version",
+    "agent_runtime",
+    "run_manifest_digest",
+    "temporal",
+    "primary_sandbox_slot_key"
   ],
   "properties": {
     "run_id": {
@@ -128,7 +132,8 @@
             "type": "array",
             "items": {
               "type": "string"
-            }
+            },
+            "minItems": 1
           },
           "resolved_at": {
             "type": "string",
@@ -142,10 +147,17 @@
             "type": "object",
             "required": [
               "provider_revision_id",
+              "provider_kind",
               "plugin_id",
               "plugin_version",
               "manifest_digest",
-              "configuration_digest"
+              "package_digest",
+              "runtime_binding_digest",
+              "configuration_digest",
+              "approved_permissions_digest",
+              "credential_binding_digest",
+              "conformance_report_digest",
+              "certification_status"
             ],
             "properties": {
               "provider_revision_id": {
@@ -172,13 +184,48 @@
               "conformance_report_digest": {
                 "type": "string",
                 "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "provider_kind": {
+                "enum": [
+                  "agent_runtime",
+                  "sandbox",
+                  "model",
+                  "tool",
+                  "skill",
+                  "template",
+                  "renderer",
+                  "editor",
+                  "converter",
+                  "channel"
+                ]
+              },
+              "package_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "runtime_binding_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "approved_permissions_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "credential_binding_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "certification_status": {
+                "const": "certified"
               }
             },
             "additionalProperties": false
           }
         },
         "additionalProperties": false
-      }
+      },
+      "minItems": 1,
+      "uniqueItems": true
     },
     "agent_runtime": {
       "type": "object",
@@ -196,79 +243,54 @@
           "type": "string"
         },
         "image_digest": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
         },
         "configuration_digest": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
         },
         "governed_conformance_report_digest": {
           "type": "string",
           "pattern": "^sha256:[0-9a-f]{64}$"
-        }
-      },
-      "additionalProperties": false
-    },
-    "sandbox": {
-      "type": "object",
-      "required": [
-        "provider_instance_id",
-        "provider_revision_id",
-        "provider_api_version",
-        "runtime_profile",
-        "image_digest",
-        "sandbox_spec_digest",
-        "required_capabilities",
-        "conformance_report_digest"
-      ],
-      "properties": {
-        "provider_instance_id": {
-          "type": "string"
         },
         "provider_revision_id": {
           "type": "string"
         },
-        "provider_api_version": {
-          "const": "v1"
-        },
-        "runtime_profile": {
+        "plugin_id": {
           "type": "string"
         },
-        "image_digest": {
+        "package_digest": {
           "type": "string",
           "pattern": "^sha256:[0-9a-f]{64}$"
         },
-        "sandbox_spec_digest": {
+        "runtime_binding_digest": {
           "type": "string",
           "pattern": "^sha256:[0-9a-f]{64}$"
         },
-        "required_capabilities": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "required": [
-              "id",
-              "version"
-            ],
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "version": {
-                "type": "string"
-              },
-              "profile": {
-                "type": "string"
-              }
-            },
-            "additionalProperties": false
-          }
+        "approved_permissions_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
         },
-        "conformance_report_digest": {
+        "credential_binding_digest": {
           "type": "string",
           "pattern": "^sha256:[0-9a-f]{64}$"
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "required": [
+        "provider_instance_id",
+        "provider_revision_id",
+        "plugin_id",
+        "plugin_version",
+        "runtime_version",
+        "package_digest",
+        "runtime_binding_digest",
+        "configuration_digest",
+        "approved_permissions_digest",
+        "credential_binding_digest",
+        "governed_conformance_report_digest"
+      ]
     },
     "templates": {
       "type": "array",
@@ -331,7 +353,142 @@
     "event_schema_version": {
       "type": "integer",
       "minimum": 1
+    },
+    "run_manifest_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "temporal": {
+      "type": "object",
+      "required": [
+        "namespace",
+        "workflow_id",
+        "workflow_run_id",
+        "workflow_type",
+        "worker_deployment",
+        "worker_build_id",
+        "versioning_behavior"
+      ],
+      "properties": {
+        "namespace": {
+          "type": "string"
+        },
+        "workflow_id": {
+          "type": "string"
+        },
+        "workflow_run_id": {
+          "type": "string"
+        },
+        "workflow_type": {
+          "type": "string"
+        },
+        "worker_deployment": {
+          "type": "string"
+        },
+        "worker_build_id": {
+          "type": "string"
+        },
+        "versioning_behavior": {
+          "enum": [
+            "pinned",
+            "auto_upgrade"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "sandboxes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": [
+          "provider_instance_id",
+          "provider_revision_id",
+          "provider_api_version",
+          "runtime_profile",
+          "image_digest",
+          "sandbox_spec_digest",
+          "required_capabilities",
+          "conformance_report_digest",
+          "sandbox_slot_key",
+          "sandbox_id"
+        ],
+        "properties": {
+          "provider_instance_id": {
+            "type": "string"
+          },
+          "provider_revision_id": {
+            "type": "string"
+          },
+          "provider_api_version": {
+            "const": "v1"
+          },
+          "runtime_profile": {
+            "type": "string"
+          },
+          "image_digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "sandbox_spec_digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "required_capabilities": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "version"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                },
+                "profile": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "conformance_report_digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "sandbox_slot_key": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9/_-]{0,127}$",
+            "description": "Logical Sandbox purpose inside a Workspace, e.g. primary-code or subagent/research-01."
+          },
+          "sandbox_id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "primary_sandbox_slot_key": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9/_-]{0,127}$",
+      "description": "Logical Sandbox purpose inside a Workspace, e.g. primary-code or subagent/research-01."
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "every Scenario required capability has exactly one compatible capability_resolution",
+    "all selected ProviderRevisions are certified and not revoked at admission",
+    "run_manifest_digest is RFC 8785 JCS SHA-256 over the manifest excluding run_manifest_digest",
+    "agent_runtime and all Sandbox revisions remain immutable for the Run",
+    "sandbox_slot_key is unique within the sandboxes array",
+    "primary_sandbox_slot_key references exactly one sandboxes item"
+  ]
 }

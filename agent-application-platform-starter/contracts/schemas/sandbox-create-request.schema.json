@@ -2,346 +2,338 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:agent-platform:sandbox-create-request:v1",
   "title": "CreateSandboxRequest",
-  "type": "object",
-  "required": [
-    "protocol_version",
-    "operation_id",
-    "attempt_id",
-    "fencing_token",
-    "idempotency_key",
-    "request_digest",
-    "deadline_at",
-    "spec",
-    "trace_context"
-  ],
-  "properties": {
-    "protocol_version": {
-      "const": "v1"
+  "allOf": [
+    {
+      "$ref": "urn:agent-platform:sandbox-mutation-envelope:v1"
     },
-    "operation_id": {
-      "type": "string"
-    },
-    "attempt_id": {
-      "type": "string"
-    },
-    "fencing_token": {
-      "type": "integer",
-      "minimum": 1
-    },
-    "idempotency_key": {
-      "type": "string",
-      "minLength": 16
-    },
-    "request_digest": {
-      "type": "string",
-      "pattern": "^sha256:[0-9a-f]{64}$"
-    },
-    "deadline_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "spec": {
+    {
       "type": "object",
       "required": [
-        "sandbox_id",
-        "tenant_id",
-        "work_order_id",
-        "workspace_id",
-        "provider_revision_id",
-        "image",
-        "runtime_profile",
-        "resources",
-        "required_capabilities",
-        "network",
-        "workspace",
-        "lease",
-        "security"
+        "protocol_version",
+        "spec",
+        "trace_context"
       ],
       "properties": {
-        "sandbox_id": {
-          "type": "string"
+        "protocol_version": {
+          "const": "v1"
         },
-        "tenant_id": {
-          "type": "string"
-        },
-        "work_order_id": {
-          "type": "string"
-        },
-        "workspace_id": {
-          "type": "string"
-        },
-        "provider_revision_id": {
-          "type": "string"
-        },
-        "image": {
+        "spec": {
           "type": "object",
           "required": [
-            "reference",
-            "digest"
+            "sandbox_id",
+            "tenant_id",
+            "work_order_id",
+            "workspace_id",
+            "provider_revision_id",
+            "image",
+            "runtime_profile",
+            "resources",
+            "required_capabilities",
+            "network",
+            "workspace",
+            "lease",
+            "security",
+            "sandbox_slot_key"
           ],
           "properties": {
-            "reference": {
+            "sandbox_id": {
               "type": "string"
             },
-            "digest": {
-              "type": "string",
-              "pattern": "^sha256:[0-9a-f]{64}$"
+            "tenant_id": {
+              "type": "string"
             },
-            "architecture": {
-              "enum": [
-                "amd64",
-                "arm64"
-              ]
-            }
-          },
-          "additionalProperties": false
-        },
-        "runtime_profile": {
-          "type": "string"
-        },
-        "resources": {
-          "type": "object",
-          "required": [
-            "cpu_millis",
-            "memory_bytes",
-            "ephemeral_storage_bytes",
-            "pids_limit"
-          ],
-          "properties": {
-            "cpu_millis": {
-              "type": "integer",
-              "minimum": 1
+            "work_order_id": {
+              "type": "string"
             },
-            "memory_bytes": {
-              "type": "integer",
-              "minimum": 1
+            "workspace_id": {
+              "type": "string"
             },
-            "ephemeral_storage_bytes": {
-              "type": "integer",
-              "minimum": 1
+            "provider_revision_id": {
+              "type": "string"
             },
-            "workspace_bytes": {
-              "type": "integer",
-              "minimum": 1
-            },
-            "gpu_count": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "pids_limit": {
-              "type": "integer",
-              "minimum": 1
-            }
-          },
-          "additionalProperties": false
-        },
-        "required_capabilities": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": {
-            "type": "object",
-            "required": [
-              "id",
-              "version"
-            ],
-            "properties": {
-              "id": {
-                "type": "string"
+            "image": {
+              "type": "object",
+              "required": [
+                "reference",
+                "digest"
+              ],
+              "properties": {
+                "reference": {
+                  "type": "string"
+                },
+                "digest": {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                },
+                "architecture": {
+                  "enum": [
+                    "amd64",
+                    "arm64"
+                  ]
+                }
               },
-              "version": {
-                "type": "string"
+              "additionalProperties": false
+            },
+            "runtime_profile": {
+              "type": "string"
+            },
+            "resources": {
+              "type": "object",
+              "required": [
+                "cpu_millis",
+                "memory_bytes",
+                "ephemeral_storage_bytes",
+                "pids_limit"
+              ],
+              "properties": {
+                "cpu_millis": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "memory_bytes": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "ephemeral_storage_bytes": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "workspace_bytes": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "gpu_count": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "pids_limit": {
+                  "type": "integer",
+                  "minimum": 1
+                }
               },
-              "profile": {
+              "additionalProperties": false
+            },
+            "required_capabilities": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "version"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "string"
+                  },
+                  "profile": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "optional_capabilities": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "version"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "string"
+                  },
+                  "profile": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "network": {
+              "type": "object",
+              "required": [
+                "mode"
+              ],
+              "properties": {
+                "mode": {
+                  "enum": [
+                    "none",
+                    "restricted",
+                    "full"
+                  ]
+                },
+                "policy_reference": {
+                  "type": "string"
+                },
+                "egress_gateway_required": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            "workspace": {
+              "type": "object",
+              "required": [
+                "mode"
+              ],
+              "properties": {
+                "mode": {
+                  "enum": [
+                    "ephemeral",
+                    "persistent"
+                  ]
+                },
+                "snapshot_reference": {
+                  "type": "string"
+                },
+                "mount_path": {
+                  "const": "/workspace"
+                }
+              },
+              "additionalProperties": false
+            },
+            "lease": {
+              "type": "object",
+              "required": [
+                "expires_at",
+                "max_extension_seconds"
+              ],
+              "properties": {
+                "expires_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "max_extension_seconds": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false
+            },
+            "placement_constraints": {
+              "type": "object",
+              "properties": {
+                "region_id": {
+                  "type": "string"
+                },
+                "cluster_id": {
+                  "type": "string"
+                },
+                "cell_id": {
+                  "type": "string"
+                },
+                "resource_class": {
+                  "enum": [
+                    "standard",
+                    "browser",
+                    "office",
+                    "video",
+                    "gpu"
+                  ]
+                },
+                "architecture": {
+                  "enum": [
+                    "amd64",
+                    "arm64"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            },
+            "security": {
+              "type": "object",
+              "required": [
+                "privilege_level",
+                "root_filesystem",
+                "service_account_mode",
+                "allow_privilege_escalation",
+                "host_namespace_access"
+              ],
+              "properties": {
+                "privilege_level": {
+                  "const": "unprivileged"
+                },
+                "root_filesystem": {
+                  "enum": [
+                    "read_only",
+                    "writable_overlay"
+                  ]
+                },
+                "service_account_mode": {
+                  "enum": [
+                    "none",
+                    "restricted"
+                  ]
+                },
+                "allow_privilege_escalation": {
+                  "const": false
+                },
+                "host_namespace_access": {
+                  "const": false
+                },
+                "seccomp_profile": {
+                  "enum": [
+                    "runtime-default",
+                    "localhost-profile"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            },
+            "labels": {
+              "type": "object",
+              "additionalProperties": {
                 "type": "string"
               }
             },
-            "additionalProperties": false
-          }
-        },
-        "optional_capabilities": {
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "object",
-            "required": [
-              "id",
-              "version"
-            ],
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "version": {
-                "type": "string"
-              },
-              "profile": {
-                "type": "string"
-              }
-            },
-            "additionalProperties": false
-          }
-        },
-        "network": {
-          "type": "object",
-          "required": [
-            "mode"
-          ],
-          "properties": {
-            "mode": {
-              "enum": [
-                "none",
-                "restricted",
-                "full"
-              ]
-            },
-            "policy_reference": {
-              "type": "string"
-            },
-            "egress_gateway_required": {
-              "type": "boolean"
-            }
-          },
-          "additionalProperties": false
-        },
-        "workspace": {
-          "type": "object",
-          "required": [
-            "mode"
-          ],
-          "properties": {
-            "mode": {
-              "enum": [
-                "ephemeral",
-                "persistent"
-              ]
-            },
-            "snapshot_reference": {
-              "type": "string"
-            },
-            "mount_path": {
-              "const": "/workspace"
-            }
-          },
-          "additionalProperties": false
-        },
-        "lease": {
-          "type": "object",
-          "required": [
-            "expires_at",
-            "max_extension_seconds"
-          ],
-          "properties": {
-            "expires_at": {
+            "sandbox_slot_key": {
               "type": "string",
-              "format": "date-time"
+              "pattern": "^[a-z0-9][a-z0-9/_-]{0,127}$",
+              "description": "Logical Sandbox purpose inside a Workspace, e.g. primary-code or subagent/research-01."
             },
-            "max_extension_seconds": {
-              "type": "integer",
-              "minimum": 0
+            "agent_run_id": {
+              "type": "string"
             }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "x-semantic-constraints": [
+            "restricted network requires policy_reference and egress_gateway_required=true",
+            "full network requires explicit platform policy approval",
+            "resources and lease must not exceed provider capabilities or ExecutionBudget"
+          ]
         },
-        "placement_constraints": {
-          "type": "object",
-          "properties": {
-            "region_id": {
-              "type": "string"
-            },
-            "cluster_id": {
-              "type": "string"
-            },
-            "cell_id": {
-              "type": "string"
-            },
-            "resource_class": {
-              "enum": [
-                "standard",
-                "browser",
-                "office",
-                "video",
-                "gpu"
-              ]
-            },
-            "architecture": {
-              "enum": [
-                "amd64",
-                "arm64"
-              ]
-            }
-          },
-          "additionalProperties": false
-        },
-        "security": {
+        "trace_context": {
           "type": "object",
           "required": [
-            "privilege_level",
-            "root_filesystem",
-            "service_account_mode",
-            "allow_privilege_escalation",
-            "host_namespace_access"
+            "traceparent"
           ],
           "properties": {
-            "privilege_level": {
-              "const": "unprivileged"
+            "traceparent": {
+              "type": "string"
             },
-            "root_filesystem": {
-              "enum": [
-                "read_only",
-                "writable_overlay"
-              ]
-            },
-            "service_account_mode": {
-              "enum": [
-                "none",
-                "restricted"
-              ]
-            },
-            "allow_privilege_escalation": {
-              "const": false
-            },
-            "host_namespace_access": {
-              "const": false
-            },
-            "seccomp_profile": {
-              "enum": [
-                "runtime-default",
-                "localhost-profile"
-              ]
+            "tracestate": {
+              "type": "string"
             }
           },
           "additionalProperties": false
-        },
-        "labels": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
         }
-      },
-      "additionalProperties": false,
-      "x-semantic-constraints": [
-        "restricted network requires policy_reference and egress_gateway_required=true",
-        "full network requires explicit platform policy approval",
-        "resources and lease must not exceed provider capabilities or ExecutionBudget"
-      ]
-    },
-    "trace_context": {
-      "type": "object",
-      "required": [
-        "traceparent"
-      ],
-      "properties": {
-        "traceparent": {
-          "type": "string"
-        },
-        "tracestate": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
+      }
     }
-  },
-  "additionalProperties": false
+  ],
+  "unevaluatedProperties": false,
+  "x-semantic-constraints": [
+    "request_digest is RFC 8785 SHA-256 over the full request excluding envelope identifiers",
+    "same idempotency_key with a different request_digest returns conflict"
+  ]
 }

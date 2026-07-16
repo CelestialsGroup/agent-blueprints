@@ -4,17 +4,19 @@
 
 Temporal Activity 可能重复调度，网络调用可能超时，外部 Provider 可能已经成功但响应丢失。
 
-所有 Agent Runtime、Plugin、Model、Tool 和外部系统调用必须经过 Invocation Ledger，除非明确属于受控 Runtime 内部的纯计算事件。
+所有 Agent Runtime、Plugin、Model、Tool 和外部系统调用必须经过 Invocation Ledger，
+除非明确属于受控 Runtime 内部的纯计算事件。
 
 ## 2. 对象
 
-- Invocation：一次逻辑操作
+- Invocation：一次稳定逻辑操作
 - InvocationAttempt：一次真实提交
 - InvocationResult：已确认结果
 - ExternalOperation：Provider Operation ID
 - ReconciliationCase：Outcome Unknown 对账
+- ManualReviewCase：无法自动确认时的人工裁决
 
-## 3. 标识
+## 3. 稳定标识
 
 Invocation：
 
@@ -29,19 +31,21 @@ Attempt：
 - invocation_attempt_id
 - attempt_number
 - fencing_token
+- request_digest
 
-所有 Accepted、Progress、Result、Error、Status、Cancel 都必须携带 Attempt ID 和 Fencing Token。
+同一个逻辑操作的重试复用 Invocation ID，但创建新的 Attempt。
 
-## 4. Prepare
+## 4. Prepare Attempt
 
 数据库事务：
 
-- Upsert Invocation
-- 比较 Request Digest
-- 创建 Attempt
-- 原子增加 Fencing Token
-- 写 `invocation.prepared` Event
-- Commit
+1. 锁定 Invocation。
+2. 比较 Request Digest。
+3. 检查 Retry Policy、Deadline、Budget 和 Cancellation。
+4. 创建递增 Attempt。
+5. 原子增加 Fencing Token。
+6. 写 `invocation.attempt.prepared` Event。
+7. Commit。
 
 ## 5. External Call
 
@@ -49,6 +53,7 @@ Attempt：
 
 - invocation_id
 - invocation_attempt_id
+- attempt_number
 - idempotency_key
 - fencing_token
 - deadline
@@ -59,45 +64,98 @@ Attempt：
 
 数据库事务：
 
-- 验证 Attempt
-- 拒绝旧 Fencing Token
-- 保存 Result/Error
-- 验证并导入 Artifact Staging
-- 写 Technical Usage
-- 写 Canonical Event
-- 写 Outbox
-- 更新 Invocation
-- Commit
+1. 验证 Attempt。
+2. 拒绝旧 Fencing Token。
+3. 保存 Result/Error。
+4. 验证并导入 Artifact Staging。
+5. 写 Technical Usage。
+6. 写 Canonical Event。
+7. 写 Outbox。
+8. 更新 Invocation。
+9. Commit。
 
-## 7. Outcome Unknown
+## 7. Retry
 
-无法确认结果时：
+Retryable Failure：
 
 ```text
-executing -> outcome_unknown -> reconciling
+Attempt -> failed_retryable
+Invocation -> retry_scheduled
 ```
 
-禁止创建新的逻辑 Invocation 盲目重试。
+到达 Retry 时间后：
 
-## 8. Provider 约束
+```text
+创建新 Attempt
+递增 attempt_number
+递增 fencing_token
+Invocation -> executing
+```
 
-Fencing Token 只能防止平台接受旧结果；它不能自动撤销已经发生的外部副作用。
+禁止：
 
-因此：
+- 修改旧 Attempt 为 running
+- 使用随机新 Invocation ID
+- 在 Outcome Unknown 状态直接重试
+- 超过 Invocation Deadline 后继续自动重试
 
-- idempotent 使用稳定 Provider Key
-- externally_idempotent 使用业务唯一键
-- non_idempotent 默认不自动重试
-- 支持 Status Query 的 Provider 优先
+## 8. Outcome Unknown 与 Reconciliation
 
-## 9. Sandbox Operation Ledger
+```text
+executing
+ -> outcome_unknown
+ -> reconciling
+ -> succeeded | failed | manual_review
+```
 
-Sandbox Operation 与通用 Invocation 使用相同原则：
+Reconciliation 必须定义：
 
-- 稳定逻辑 Operation
-- Attempt
-- Fencing
-- Outcome Unknown
-- Reconciliation
+- Deadline
+- Query Strategy
+- Evidence
+- Backoff
+- Maximum Attempts
+- Ownership
+- Alert
 
-但 Sandbox 生命周期使用专用 SandboxOperation Contract，避免把 Desired/Observed State、Lease、Snapshot 和 RuntimeSession 压缩成通用 Plugin Result。
+超过 Deadline 进入 `manual_review`，不能永久停留在 reconciling。
+
+## 9. Manual Review
+
+允许的决策：
+
+- resolve_success
+- resolve_failure
+- abandon
+
+必须记录：
+
+- operator principal
+- evidence references
+- decision
+- reason
+- risk acceptance
+- occurred_at
+
+`abandoned` 是独立终态，后续若发现真实结果，只能追加 Correction Event，不修改历史决定。
+
+## 10. Side-effect Class
+
+- pure：允许自动重试
+- idempotent：稳定 Idempotency Key
+- externally_idempotent：Provider 业务唯一键
+- non_idempotent：默认不自动重试
+
+Fencing Token 只能防止平台接受旧结果，不能撤销已经发生的外部副作用。
+
+## 11. Sandbox Operation Ledger
+
+Sandbox Operation 使用同样的 Attempt/Fencing/Outcome Unknown 原则，但保留专用：
+
+- Desired/Observed State
+- Lease
+- Snapshot
+- RuntimeSession
+- Generation
+
+不能把完整 Sandbox 生命周期压缩成普通 Plugin Result。

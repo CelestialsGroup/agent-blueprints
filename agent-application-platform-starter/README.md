@@ -1,4 +1,4 @@
-# Agent Application Platform v0.8
+# Agent Application Platform v0.8.1
 
 一个可被多个业务产品复用的通用 Agent 工作、Artifact 和交付平台。
 

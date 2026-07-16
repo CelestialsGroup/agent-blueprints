@@ -2,38 +2,27 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:agent-platform:sandbox-lease-request:v1",
   "title": "ExtendSandboxLeaseRequest",
-  "type": "object",
-  "required": [
-    "operation_id",
-    "attempt_id",
-    "fencing_token",
-    "idempotency_key",
-    "expected_generation",
-    "extend_seconds"
-  ],
-  "properties": {
-    "operation_id": {
-      "type": "string"
+  "allOf": [
+    {
+      "$ref": "urn:agent-platform:sandbox-mutation-envelope:v1"
     },
-    "attempt_id": {
-      "type": "string"
-    },
-    "fencing_token": {
-      "type": "integer",
-      "minimum": 1
-    },
-    "idempotency_key": {
-      "type": "string",
-      "minLength": 16
-    },
-    "expected_generation": {
-      "type": "integer",
-      "minimum": 1
-    },
-    "extend_seconds": {
-      "type": "integer",
-      "minimum": 1
+    {
+      "type": "object",
+      "required": [
+        "expected_generation",
+        "extend_seconds"
+      ],
+      "properties": {
+        "expected_generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "extend_seconds": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
     }
-  },
-  "additionalProperties": false
+  ],
+  "unevaluatedProperties": false
 }

@@ -15,7 +15,8 @@
     "observed_generation",
     "lease_expires_at",
     "created_at",
-    "updated_at"
+    "updated_at",
+    "sandbox_slot_key"
   ],
   "properties": {
     "sandbox_id": {
@@ -81,7 +82,8 @@
       "type": "string"
     },
     "runtime_endpoint_reference": {
-      "type": "string"
+      "type": "string",
+      "description": "Opaque internal reference resolved only by Runtime Gateway through the Provider Adapter."
     },
     "lease_expires_at": {
       "type": "string",
@@ -131,6 +133,18 @@
     "updated_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "sandbox_slot_key": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9/_-]{0,127}$",
+      "description": "Logical Sandbox purpose inside a Workspace, e.g. primary-code or subagent/research-01."
+    },
+    "agent_run_id": {
+      "type": "string"
+    },
+    "provider_state_reference": {
+      "type": "string",
+      "description": "Opaque reference into the Provider Adapter private state store."
     }
   },
   "additionalProperties": false

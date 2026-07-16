@@ -2,50 +2,44 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:agent-platform:sandbox-snapshot-request:v1",
   "title": "CreateSandboxSnapshotRequest",
-  "type": "object",
-  "required": [
-    "operation_id",
-    "attempt_id",
-    "fencing_token",
-    "idempotency_key",
-    "level",
-    "consistency"
-  ],
-  "properties": {
-    "operation_id": {
-      "type": "string"
+  "allOf": [
+    {
+      "$ref": "urn:agent-platform:sandbox-mutation-envelope:v1"
     },
-    "attempt_id": {
-      "type": "string"
-    },
-    "fencing_token": {
-      "type": "integer",
-      "minimum": 1
-    },
-    "idempotency_key": {
-      "type": "string",
-      "minLength": 16
-    },
-    "level": {
-      "enum": [
-        "workspace",
-        "filesystem",
-        "process"
-      ]
-    },
-    "consistency": {
-      "enum": [
-        "crash_consistent",
-        "application_quiesced"
-      ]
-    },
-    "include_paths": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "pattern": "^/workspace(?:/.*)?$"
+    {
+      "type": "object",
+      "required": [
+        "expected_generation",
+        "level",
+        "consistency"
+      ],
+      "properties": {
+        "expected_generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "level": {
+          "enum": [
+            "workspace",
+            "filesystem",
+            "process"
+          ]
+        },
+        "consistency": {
+          "enum": [
+            "crash_consistent",
+            "application_quiesced"
+          ]
+        },
+        "include_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^/workspace(?:/.*)?$"
+          }
+        }
       }
     }
-  },
-  "additionalProperties": false
+  ],
+  "unevaluatedProperties": false
 }

@@ -157,50 +157,85 @@ RETURNING next_event_sequence;
 
 ## 7. Runtime Session Routing
 
-Terminal、Browser、Desktop 等双向连接通过 Runtime Gateway 路由：
+Terminal、Browser、Desktop、Port-forward 等双向连接通过 Runtime Gateway：
 
 ```text
 runtime_session_id
  -> tenant_id
+ -> work_order_id
  -> sandbox_id
- -> runtime_endpoint
+ -> sandbox_connection_generation
+ -> provider_route_reference
  -> expires_at
 ```
 
-不依赖 Ingress Sticky Session。
+`provider_route_reference` 是内部不透明引用，不是 Pod IP、Node IP 或 VM 地址。
 
-Gateway 校验短期 Runtime Session Token 后代理连接到对应 Sandbox。
+Runtime Gateway 通过 Sandbox Provider Adapter 解析内部 Endpoint，并且：
 
-## 8. Sandbox 生命周期
+- 不依赖 Ingress Sticky Session
+- 不把 Backend Endpoint 返回浏览器
+- Token 到期、Session 撤销或 Generation 变化时断开
+- Sandbox 重建后重新解析 Route
 
-Sandbox 不能绑定到创建它的 API 或 Worker Pod。
+## 8. Sandbox 生命周期与后端隔离
 
-SandboxRegistry 保存：
+Sandbox 不绑定创建它的 API、Worker 或 Controller Pod。
+
+稳定内核的 SandboxRegistry 只保存：
 
 - sandbox_id
 - tenant_id
 - work_order_id
-- agent_run_id
-- cluster_id
-- namespace
-- pod_name
-- runtime_endpoint
+- workspace_id
+- sandbox_slot_key
+- optional agent_run_id
+- provider_instance_id
+- provider_revision_id
+- desired_state
+- observed_state
+- generation / observed_generation
+- runtime_profile
 - resource_profile
-- status
-- created_at
-- expires_at
-- snapshot_ref
+- region_id / cluster_id / cell_id
+- provider_state_reference（不透明）
+- lease_expires_at
+- snapshot_reference
+- created_at / updated_at
+
+以下字段属于 Provider Adapter 私有模型，禁止进入稳定内核和公共 Contract：
+
+- Kubernetes namespace
+- pod_name / pod_uid
+- container_id
+- node_name
+- VM ID
+- Firecracker ID
+- Apple Container ID
+- raw runtime endpoint
+- backend credentials
+
+一个 WorkOrder/Workspace 可以拥有多个 Sandbox，例如：
+
+```text
+primary-code
+browser
+desktop
+subagent/research-01
+subagent/research-02
+isolated/untrusted-tool
+```
 
 要求：
 
 - 独立 ServiceAccount
 - CPU/Memory/Ephemeral Storage limit
-- ActiveDeadlineSeconds
-- NetworkPolicy
-- 禁止云元数据访问
+- Lease/TTL
+- NetworkPolicy + Egress Gateway
+- 禁止云元数据和 Kubernetes API
 - 禁止跨租户访问
-- 自动 TTL 清理
-- 结束前上传 Snapshot 和 Artifact
+- 幂等清理和 Orphan Reconciliation
+- 结束前按 Policy 生成 Workspace Snapshot
 
 ## 9. DeerFlow 多副本
 

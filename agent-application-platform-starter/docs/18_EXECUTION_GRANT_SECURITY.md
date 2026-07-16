@@ -63,6 +63,8 @@ clock_skew = 30 seconds
 
 使用 RFC 8785 JCS。
 
+不能使用 `json.dumps(sort_keys=True)`、普通 Map 排序或语言默认序列化代替。
+
 摘要覆盖完整 WorkOrder JSON，唯一排除字段：
 
 ```text
@@ -85,7 +87,9 @@ execution_grant
 - 不允许重复 Object Key
 - 不允许 NaN/Infinity
 - 超出安全整数范围的业务整数使用字符串
-- 多语言实现使用同一 JCS Test Vector
+- 多语言实现使用 `contracts/testdata/jcs-v1/vectors.json`
+- Python、Node 和 Go 必须产生完全相同的 canonical bytes
+- 详细规则见 `37_JCS_AND_IJSON_PROFILE.md`
 
 ## 4. 原子消费
 

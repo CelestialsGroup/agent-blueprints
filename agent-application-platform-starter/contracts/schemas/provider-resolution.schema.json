@@ -54,7 +54,8 @@
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "minItems": 1
     },
     "resolved_at": {
       "type": "string",
@@ -68,10 +69,17 @@
       "type": "object",
       "required": [
         "provider_revision_id",
+        "provider_kind",
         "plugin_id",
         "plugin_version",
         "manifest_digest",
-        "configuration_digest"
+        "package_digest",
+        "runtime_binding_digest",
+        "configuration_digest",
+        "approved_permissions_digest",
+        "credential_binding_digest",
+        "conformance_report_digest",
+        "certification_status"
       ],
       "properties": {
         "provider_revision_id": {
@@ -98,6 +106,39 @@
         "conformance_report_digest": {
           "type": "string",
           "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "provider_kind": {
+          "enum": [
+            "agent_runtime",
+            "sandbox",
+            "model",
+            "tool",
+            "skill",
+            "template",
+            "renderer",
+            "editor",
+            "converter",
+            "channel"
+          ]
+        },
+        "package_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "runtime_binding_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "approved_permissions_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "credential_binding_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "certification_status": {
+          "const": "certified"
         }
       },
       "additionalProperties": false

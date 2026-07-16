@@ -1,0 +1,36 @@
+{
+  "run_id": "run_bad",
+  "work_order_id": "work_bad",
+  "scenario": {
+    "id": "scenario",
+    "version": "1.0.0",
+    "definition_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "workflow": {
+    "id": "workflow",
+    "version": "1.0.0",
+    "build_id": "build",
+    "definition_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+  },
+  "worker_build_id": "build",
+  "capability_resolutions": [],
+  "sandbox": {
+    "provider_instance_id": "pi",
+    "provider_revision_id": "pr",
+    "provider_api_version": "v1",
+    "runtime_profile": "hardened",
+    "image_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+    "sandbox_spec_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+    "required_capabilities": [],
+    "conformance_report_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+  },
+  "location": {
+    "region_id": "r",
+    "cluster_id": "c",
+    "cell_id": "cell"
+  },
+  "request_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+  "execution_budget_digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+  "policy_decision_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+  "event_schema_version": 2
+}

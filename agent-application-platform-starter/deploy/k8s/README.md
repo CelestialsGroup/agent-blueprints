@@ -1,45 +1,34 @@
-# Kubernetes Starter
+# Kubernetes Deployment Profiles
 
-这些 Manifest 只是 Phase 0 架构骨架，不是完整生产配置。
+`base/` is a policy-bearing, renderable architecture base. It is not a standalone production installation.
 
-## 目录
+It deliberately requires an environment Overlay to supply:
+
+- public Gateway namespace labelled `agent-platform.io/public-gateway=true`
+- dependency namespace labelled `agent-platform.io/control-plane-dependency=true`
+- Egress Gateway namespace labelled `agent-platform.io/egress-gateway=true`
+- concrete PostgreSQL, Redis, Temporal and Object Storage endpoints
+- TLS, Secrets, StorageClass, RuntimeClass and image digests
+- CNI implementation that enforces NetworkPolicy
+- HPA/KEDA, topology and regional policy
+
+Security boundaries in the base:
+
+- separate `agent-platform` and `agent-runtime` namespaces
+- default-deny ingress and egress in both namespaces
+- explicit DNS rules
+- public ingress restricted by namespace label
+- Sandbox Provisioner RBAC limited to `agent-runtime`
+- Runtime Gateway uses Restricted-compatible SecurityContext
+- Sandbox egress only through an Egress Gateway
+
+A production deployment is accepted only after the selected Overlay passes:
 
 ```text
-base/
-  namespace.yaml
-  agent-api.yaml
-  agent-worker.yaml
-  runtime-gateway.yaml
-  migration-job.yaml
-  network-policy.yaml
-  pdb.yaml
-  kustomization.yaml
+kubectl kustomize
+server-side dry-run
+policy tests
+network reachability tests
+Pod Security admission tests
+failure injection
 ```
-
-生产环境必须补充：
-
-- 镜像 Digest
-- Secret 管理
-- PostgreSQL/Temporal/Object Storage 连接
-- HPA/KEDA
-- Ingress/Gateway
-- TLS
-- 完整 NetworkPolicy
-- topologySpreadConstraints
-- 监控与告警
-
-
-## 重要边界
-
-Base Manifest 是架构与安全边界骨架，不是可直接上线的生产 Overlay。
-
-生产 Overlay 必须明确：
-
-- CNI 是否执行 NetworkPolicy
-- DNS 与 Egress Gateway
-- 托管 PostgreSQL/Temporal/Object Storage Endpoint
-- Sandbox Runtime Namespace
-- External Secrets
-- Topology/AZ
-- HPA/KEDA
-- Ingress/Gateway TLS

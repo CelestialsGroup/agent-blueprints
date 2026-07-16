@@ -1,4 +1,4 @@
-# v0.8 架构验收
+# v0.8.1 架构验收
 
 ## Contract Tooling
 
@@ -6,7 +6,7 @@
 - [ ] 跨 Schema `$ref` 可在标准 Registry 中解析。
 - [ ] SchemaReference Digest 与发布内容一致。
 - [ ] 固定工具版本。
-- [ ] 3 份 OpenAPI 0 error / 0 warning。
+- [ ] 4 份 OpenAPI 0 error / 0 warning。
 - [ ] OpenAPI Bundle 成功。
 
 ## Identity / Session
@@ -22,6 +22,8 @@
 
 - [ ] Grant 单次消费，最大 TTL 300 秒。
 - [ ] JCS Digest 覆盖除 execution_grant 外的完整请求。
+- [ ] Python/Node/Go JCS Test Vector 完全一致。
+- [ ] Strict I-JSON 拒绝重复键、NaN/Infinity、Lone Surrogate 和不安全整数。
 - [ ] JWKS/Key 预注册，拒绝动态 Key URL。
 - [ ] Grant、Idempotency、WorkOrder、Workspace、Outbox 同事务。
 
@@ -31,7 +33,9 @@
 - [ ] PostgreSQL/Temporal Reconciliation 定义完成。
 - [ ] Worker Versioning Profile 明确。
 - [ ] 每个 Invocation 消息带 Attempt ID 与 Fencing Token。
+- [ ] Retryable Failure 创建新 Attempt。
 - [ ] outcome_unknown 不自动重试。
+- [ ] Reconciliation 超时进入 Manual Review/Abandoned 终态。
 - [ ] 敏感和大 Payload 不进入 Temporal History。
 
 ## Execution Mediation
@@ -96,4 +100,5 @@
 - [ ] Network 默认拒绝并经过 Egress Gateway。
 - [ ] Snapshot 明确 Level、Portable 和 Compatibility。
 - [ ] ProviderRevision 通过 Conformance。
-- [ ] RunManifest 锁定 Sandbox Revision 和 Spec Digest。
+- [ ] RunManifest 使用 sandboxes[] 锁定多个 Sandbox Slot、Revision 和 Spec Digest。
+- [ ] RunManifest 必须包含 AgentRuntime、CapabilityResolution、Temporal Identity 和自摘要。

@@ -2,82 +2,70 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:agent-platform:sandbox-exec-request:v1",
   "title": "SandboxExecRequest",
-  "type": "object",
-  "required": [
-    "operation_id",
-    "attempt_id",
-    "fencing_token",
-    "idempotency_key",
-    "request_digest",
-    "command",
-    "working_directory",
-    "deadline_at"
-  ],
-  "properties": {
-    "operation_id": {
-      "type": "string"
+  "allOf": [
+    {
+      "$ref": "urn:agent-platform:sandbox-mutation-envelope:v1"
     },
-    "attempt_id": {
-      "type": "string"
-    },
-    "fencing_token": {
-      "type": "integer",
-      "minimum": 1
-    },
-    "idempotency_key": {
-      "type": "string",
-      "minLength": 16
-    },
-    "request_digest": {
-      "type": "string",
-      "pattern": "^sha256:[0-9a-f]{64}$"
-    },
-    "command": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "type": "string"
-      }
-    },
-    "working_directory": {
-      "type": "string",
-      "pattern": "^/workspace(?:/.*)?$"
-    },
-    "environment": {
+    {
       "type": "object",
-      "additionalProperties": {
-        "type": "string"
-      }
-    },
-    "secret_reference_ids": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "stdin_reference": {
-      "type": "string"
-    },
-    "deadline_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "capture": {
-      "type": "object",
+      "required": [
+        "expected_generation",
+        "command",
+        "working_directory"
+      ],
       "properties": {
-        "stdout": {
-          "type": "boolean"
-        },
-        "stderr": {
-          "type": "boolean"
-        },
-        "max_bytes": {
+        "expected_generation": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 1
+        },
+        "command": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "working_directory": {
+          "type": "string",
+          "pattern": "^/workspace(?:/.*)?$"
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "secret_reference_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "stdin_reference": {
+          "type": "string"
+        },
+        "capture": {
+          "type": "object",
+          "properties": {
+            "stdout": {
+              "type": "boolean"
+            },
+            "stderr": {
+              "type": "boolean"
+            },
+            "max_bytes": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
         }
-      },
-      "additionalProperties": false
+      }
     }
-  },
-  "additionalProperties": false
+  ],
+  "unevaluatedProperties": false,
+  "x-semantic-constraints": [
+    "plain-text secret values are forbidden",
+    "command executes inside the selected Sandbox generation"
+  ]
 }

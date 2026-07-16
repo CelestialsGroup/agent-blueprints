@@ -1,16 +1,14 @@
 # START HERE
 
-这是 Agent Application Platform **v0.8 Sandbox-ready Architecture Baseline**。
+这是 Agent Application Platform **v0.8.1 Contract Hardening Baseline**。
 
-v0.3–v0.7 均已废弃，不得作为实施依据。
+v0.3–v0.8 均已废弃，不得作为实施依据。
 
 ## 先安装固定校验工具
 
 ```bash
-python3 -m pip install -r requirements-contracts.txt
-npm ci
-./scripts/lint_contracts.sh
-npm run bundle:openapi
+./scripts/bootstrap_contracts.sh
+make validate-all
 ```
 
 ## 阅读顺序
@@ -37,9 +35,10 @@ npm run bundle:openapi
 20. `docs/14_KUBERNETES_DISTRIBUTED_RUNTIME.md`
 21. `docs/24_PRODUCTION_GOVERNANCE.md`
 22. `docs/22_CONTRACT_GOVERNANCE.md`
-23. `docs/32_V06_AUDIT_AND_V07_RESOLUTION.md`
 24. `docs/13_ARCHITECTURE_ACCEPTANCE.md`
-25. `prompts/CODEX_PHASE0_BOOTSTRAP.md`
+25. `docs/37_JCS_AND_IJSON_PROFILE.md`
+26. `docs/38_CONTRACT_CI_AND_PROVENANCE.md`
+27. `prompts/CODEX_PHASE0_BOOTSTRAP.md`
 
 ## 冻结边界
 
@@ -57,7 +56,7 @@ Governed Execution Plane
 
 ## 诚实的成熟度定义
 
-v0.8 可以作为 Codex Phase 0 的架构与契约基线。
+v0.8.1 只有在公共 CI Gate 通过后才可以作为 Codex Phase 0 的架构与契约基线。
 
 它不代表生产可靠性已经得到证明。生产就绪仍需：
 
@@ -70,9 +69,9 @@ v0.8 可以作为 Codex Phase 0 的架构与契约基线。
 
 ## Sandbox Provider 必读
 
-26. `docs/33_SANDBOX_PROVIDER_CONTRACT.md`
-27. `docs/34_SANDBOX_SECURITY_AND_ISOLATION.md`
-28. `docs/35_SANDBOX_LIFECYCLE_AND_SNAPSHOT.md`
-29. `docs/36_SANDBOX_CONFORMANCE_AND_MIGRATION.md`
+28. `docs/33_SANDBOX_PROVIDER_CONTRACT.md`
+29. `docs/34_SANDBOX_SECURITY_AND_ISOLATION.md`
+30. `docs/35_SANDBOX_LIFECYCLE_AND_SNAPSHOT.md`
+31. `docs/36_SANDBOX_CONFORMANCE_AND_MIGRATION.md`
 
 前期 DeerFlow Built-in Sandbox 与后期 `sandbox-runtime` 必须实现同一 Sandbox Provider Contract。

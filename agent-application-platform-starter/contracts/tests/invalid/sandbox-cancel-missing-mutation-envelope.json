@@ -1,0 +1,9 @@
+{
+  "operation_id": "cancel_op",
+  "attempt_id": "cancel_att",
+  "fencing_token": 2,
+  "expected_generation": 3,
+  "target_operation_id": "exec_op",
+  "target_attempt_id": "exec_att",
+  "reason": "user requested"
+}

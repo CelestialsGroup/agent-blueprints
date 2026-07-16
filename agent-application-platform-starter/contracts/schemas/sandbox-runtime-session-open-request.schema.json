@@ -2,59 +2,53 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:agent-platform:sandbox-runtime-session-open-request:v1",
   "title": "OpenSandboxRuntimeSessionRequest",
-  "type": "object",
-  "required": [
-    "operation_id",
-    "attempt_id",
-    "fencing_token",
-    "idempotency_key",
-    "runtime_session_id",
-    "runtime_type",
-    "scopes",
-    "expires_at"
-  ],
-  "properties": {
-    "operation_id": {
-      "type": "string"
+  "allOf": [
+    {
+      "$ref": "urn:agent-platform:sandbox-mutation-envelope:v1"
     },
-    "attempt_id": {
-      "type": "string"
-    },
-    "fencing_token": {
-      "type": "integer",
-      "minimum": 1
-    },
-    "idempotency_key": {
-      "type": "string",
-      "minLength": 16
-    },
-    "runtime_session_id": {
-      "type": "string"
-    },
-    "runtime_type": {
-      "enum": [
-        "terminal",
-        "browser",
-        "desktop",
-        "port_forward"
-      ]
-    },
-    "scopes": {
-      "type": "array",
-      "uniqueItems": true,
-      "items": {
-        "type": "string"
+    {
+      "type": "object",
+      "required": [
+        "expected_generation",
+        "runtime_session_id",
+        "runtime_type",
+        "scopes",
+        "expires_at"
+      ],
+      "properties": {
+        "expected_generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "runtime_session_id": {
+          "type": "string"
+        },
+        "runtime_type": {
+          "enum": [
+            "terminal",
+            "browser",
+            "desktop",
+            "port_forward"
+          ]
+        },
+        "scopes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "target_port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        }
       }
-    },
-    "target_port": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 65535
-    },
-    "expires_at": {
-      "type": "string",
-      "format": "date-time"
     }
-  },
-  "additionalProperties": false
+  ],
+  "unevaluatedProperties": false
 }

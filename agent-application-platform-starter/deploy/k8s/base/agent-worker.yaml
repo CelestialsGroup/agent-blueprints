@@ -18,27 +18,40 @@ spec:
       serviceAccountName: agent-worker
       terminationGracePeriodSeconds: 60
       containers:
-        - name: worker
-          image: example.invalid/agent-worker@sha256:replace-me
-          args: ["--task-queue=orchestration"]
-          readinessProbe:
-            httpGet:
-              path: /health/ready
-              port: 9090
-          livenessProbe:
-            httpGet:
-              path: /health/live
-              port: 9090
-          resources:
-            requests:
-              cpu: 200m
-              memory: 256Mi
-            limits:
-              cpu: "2"
-              memory: 2Gi
-          securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            runAsNonRoot: true
-            capabilities:
-              drop: ["ALL"]
+      - name: worker
+        image: example.invalid/agent-worker@sha256:replace-me
+        args:
+        - --task-queue=orchestration
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 9090
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 9090
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: '2'
+            memory: 2Gi
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          capabilities:
+            drop:
+            - ALL
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app: agent-worker

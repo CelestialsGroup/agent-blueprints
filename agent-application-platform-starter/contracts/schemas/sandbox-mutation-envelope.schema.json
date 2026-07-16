@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:sandbox-mutation-envelope:v1",
+  "title": "SandboxMutationEnvelope",
+  "type": "object",
+  "required": [
+    "operation_id",
+    "attempt_id",
+    "fencing_token",
+    "idempotency_key",
+    "request_digest",
+    "deadline_at"
+  ],
+  "properties": {
+    "operation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "attempt_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "fencing_token": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "idempotency_key": {
+      "type": "string",
+      "minLength": 16,
+      "maxLength": 200
+    },
+    "request_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "deadline_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

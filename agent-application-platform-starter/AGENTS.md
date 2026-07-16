@@ -9,9 +9,8 @@
 实施前必须运行：
 
 ```bash
-python3 -m pip install -r requirements-contracts.txt
-npm ci
-./scripts/lint_contracts.sh
+./scripts/bootstrap_contracts.sh
+make validate-all
 ```
 
 任何契约、Bundle 或一致性检查失败，必须先修复。
@@ -61,7 +60,8 @@ Agent Platform 是以下数据的唯一事实源：
 - Compact JWS，算法白名单 EdDSA / ES256。
 - 单次消费，最大 TTL 300 秒。
 - 不信任 Token Header 中的动态 JWK/JWKS URL。
-- Request Digest 使用 RFC 8785 JCS，覆盖完整 WorkOrder Request，唯一排除 `execution_grant`。
+- Request Digest 使用真正的 RFC 8785 JCS，覆盖完整 WorkOrder Request，唯一排除 `execution_grant`。
+- API 必须使用严格 I-JSON Parser，拒绝重复键、NaN/Infinity、Lone Surrogate 和不安全整数。
 - GrantConsumption、IdempotencyRecord、WorkOrder、Workspace 和 Start Outbox 同事务。
 
 ## 5. Work、Workflow 与 Event
@@ -164,7 +164,7 @@ Source of Truth：
 
 必须满足：
 
-- Redocly 0 error / 0 warning
+- 4 份 OpenAPI Redocly 0 error / 0 warning
 - Schema 使用绝对 `$id`
 - 跨 Schema `$ref` 可移植
 - SchemaReference 带 URI、Digest、Dialect
@@ -191,7 +191,7 @@ Source of Truth：
 - Agent Platform 不得依赖 DeerFlow、Kubernetes、CRI、containerd、VM 或 Apple Container 专用字段。
 - SandboxSpec 只能由 Agent Platform 根据 ExecutionBudget、Policy 和 Capability 生成。
 - Provider 必须支持 Capability Negotiation，不支持时明确拒绝，禁止静默降级。
-- 所有修改操作必须携带 operation_id、attempt_id、fencing_token 和 idempotency_key。
+- 所有修改操作必须继承 SandboxMutationEnvelope，携带 operation_id、attempt_id、fencing_token、idempotency_key、request_digest 和 deadline_at。
 - Provider 只返回内部 Runtime Endpoint，浏览器连接必须经过 Runtime Gateway。
 - Workspace 固定语义为 `/inputs`、`/workspace`、`/outputs`、`/tmp`。
 - Sandbox 输出只能进入 Artifact Staging。
@@ -199,3 +199,15 @@ Source of Truth：
 - ProviderRevision 必须通过 Sandbox Conformance Profile。
 - RunManifest 必须锁定 Sandbox ProviderRevision、Runtime Profile、Spec Digest 和 Conformance Report Digest。
 - `sandbox-runtime` 只有在替代 Kubernetes Node Runtime 时才需要实现 CRI；普通 Provider 不需要。
+
+RunManifest 使用 `sandboxes[]` 锁定多个 Sandbox Slot，并用
+`primary_sandbox_slot_key` 标识默认工作环境。禁止重新收缩为单一 Sandbox 字段。
+
+## 15. 可复现 Run 与重试
+
+- RunManifest 必须包含 AgentRuntime、至少一个 CapabilityResolution、Temporal Identity 和至少一个 Sandbox Slot。
+- ProviderRevision 必须 certified，并包含非空 Conformance。
+- RunManifest 使用 RFC 8785 自摘要，任何不可变 Revision/Digest 缺失都必须拒绝。
+- Retryable Failure 创建新的 InvocationAttempt；禁止修改旧 Attempt。
+- Reconciliation 超时进入 Manual Review，不能永久停留在 outcome_unknown/reconciling。
+- Manual Review 只能 resolve_success、resolve_failure 或 abandon，并保存 Evidence 与 Audit。

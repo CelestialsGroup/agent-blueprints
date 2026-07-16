@@ -1,0 +1,64 @@
+name: contracts
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Contract and JCS validation
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.16.0"
+          registry-url: https://registry.npmjs.org/
+          cache: npm
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.2"
+          cache-dependency-path: scripts/jcs/go/go.mod
+
+      - name: Create Python environment
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install --upgrade pip
+          .venv/bin/python -m pip install \
+            --index-url https://pypi.org/simple \
+            -r requirements-contracts.txt
+
+      - name: Install Node tools from public registry
+        run: npm ci --registry https://registry.npmjs.org/
+
+      - name: Validate all contracts
+        run: make validate-all
+
+      - name: Verify generated bundles are deterministic
+        run: |
+          cp -R build /tmp/build-first
+          rm -rf build
+          make bundle-openapi
+          diff -ru /tmp/build-first build
+
+      - name: Upload bundled contracts
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-bundles-python-${{ matrix.python-version }}
+          path: build/
+          if-no-files-found: error

@@ -1,0 +1,673 @@
+{
+  "baseline": "v0.8.1",
+  "digest_profile": "sha256+rfc8785-for-json;sha256-raw-for-yaml-and-markdown",
+  "resources": [
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:approval-decision:v1",
+      "path": "contracts/schemas/approval-decision.schema.json",
+      "digest": "sha256:63d26e2e45888710bc1e62379cf1df6ac5b3aff3a99fbc5aac186e38dbf216ac"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:approval-list:v1",
+      "path": "contracts/schemas/approval-list.schema.json",
+      "digest": "sha256:6da2fb584a66fabb74edfb4443941126903e05784f925134f58c2a68add17ce6"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:approval-request:v1",
+      "path": "contracts/schemas/approval-request.schema.json",
+      "digest": "sha256:eb8ec8c509ef42f2994e997007be909bc7f23594c1c190c610b2ee37919525cc"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:artifact-access-request:v1",
+      "path": "contracts/schemas/artifact-access-request.schema.json",
+      "digest": "sha256:be4e33c499af8272923992ba062a5c89c9d9b6ff06836a0e3cbe9d3ae3828169"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:artifact-access-response:v1",
+      "path": "contracts/schemas/artifact-access-response.schema.json",
+      "digest": "sha256:4ab7c388b826135700cc44b9c0efd61595cff0a9e9ed753e6e883dc6e34d9830"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:artifact-ingest-request:v1",
+      "path": "contracts/schemas/artifact-ingest-request.schema.json",
+      "digest": "sha256:c2d8d7426ba4555b1dad017ce902c387879a3b16186ed4218a9bd077e07bdb23"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:artifact-ingest-response:v1",
+      "path": "contracts/schemas/artifact-ingest-response.schema.json",
+      "digest": "sha256:497e6a2d01c88482fad988c152e931e6b317b6325fccfcb9b8a01e8be7bd518c"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:artifact-metadata:v1",
+      "path": "contracts/schemas/artifact-metadata.schema.json",
+      "digest": "sha256:7b98dde8ca0bbafdb87af6d7a1df0d5c726ba378b50de1f60c8afc9f08909912"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:artifact-reference:v1",
+      "path": "contracts/schemas/artifact-reference.schema.json",
+      "digest": "sha256:1447e1125e2b48fc774e7c677f9b3eca2deec095af331755a31e614379e9294f"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:artifact-staging:v1",
+      "path": "contracts/schemas/artifact-staging.schema.json",
+      "digest": "sha256:cc85ede0b4a5225d061e5d370ece09df14e6e07f576717bdb5f9951b6275d7ab"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:artifact-version:v1",
+      "path": "contracts/schemas/artifact-version.schema.json",
+      "digest": "sha256:e59eb13beb319404ff901297f10e039b9e648f00c2dfd00e32f984bd352da39f"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:authenticated-client-context:v1",
+      "path": "contracts/schemas/authenticated-client-context.schema.json",
+      "digest": "sha256:f21e1790e2c9b79aba2f97e5df60e0d752aa724eada431e3465851061417c20d"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:callback-registration:v1",
+      "path": "contracts/schemas/callback-registration.schema.json",
+      "digest": "sha256:dc78500474248ec0e5e7564285c4dd2774876f9413f4eecc0925659cff145855"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:cancellation-result:v1",
+      "path": "contracts/schemas/cancellation-result.schema.json",
+      "digest": "sha256:65b6e99eb189b467c698b27fc9b5854b31f06254fd73b9628f46dab655e13e9c"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:canonical-event:v2",
+      "path": "contracts/schemas/canonical-event-v2.schema.json",
+      "digest": "sha256:2d90784325af1915f2f15a549f8714b757411f8ff4c595bd7732f51cc8ca35bf"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:capability-definition:v1",
+      "path": "contracts/schemas/capability-definition.schema.json",
+      "digest": "sha256:d99b8777896bf2937ec1ea9e99dd03a29c8d1018920c368f654611417fbc2813"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:capability-error:v1",
+      "path": "contracts/schemas/capability-error.schema.json",
+      "digest": "sha256:86e56c0466ea8990d635306e3bffef923a13801b468c749b854acfd19fef2e0f"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:conversion-job:v1",
+      "path": "contracts/schemas/conversion-job.schema.json",
+      "digest": "sha256:236e6cd14752848d0e0d36a044ab3403d9e1e41ae2bd5cd9d03809438a926529"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:conversion-request:v1",
+      "path": "contracts/schemas/conversion-request.schema.json",
+      "digest": "sha256:534e429c9a6de6baa2db16a8e8e080dd54283ed79a46be09328c57a2a654fb05"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:delivery-package:v1",
+      "path": "contracts/schemas/delivery-package.schema.json",
+      "digest": "sha256:9a28330162de2a128d96120dce1476c37e60fb00596fb47cf40f0f2a72e7ff59"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:delivery-target:v1",
+      "path": "contracts/schemas/delivery-target.schema.json",
+      "digest": "sha256:c3a06d37b716705677e94540fc6221c06737741598215b6e9c3424d8528f1ac5"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:delivery-webhook-envelope:v1",
+      "path": "contracts/schemas/delivery-webhook-envelope.schema.json",
+      "digest": "sha256:9061d85d76d078fdaeee88498371eec50b31883e1c3da4a3a80d7ba23745feb8"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:edit-commit-request:v1",
+      "path": "contracts/schemas/edit-commit-request.schema.json",
+      "digest": "sha256:6c0bd8967924c689db8a290213a75db8fa84407eced3c1e2af742aa67a88404c"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:edit-draft-update:v1",
+      "path": "contracts/schemas/edit-draft-update.schema.json",
+      "digest": "sha256:5b25c017b5d2d2ef90f57aa76b4e96c4d7ccd0d9825742545aa03f9278dbec52"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:create-edit-session:v1",
+      "path": "contracts/schemas/edit-session-request.schema.json",
+      "digest": "sha256:83ca9291f27841e037a11a2e8c8514fa03392d1f24a39c0ac946a96d267109a5"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:edit-session:v1",
+      "path": "contracts/schemas/edit-session.schema.json",
+      "digest": "sha256:2337fc23e7ac169147a703ea131418d447cf128c3c52c3b5d277e3044686354c"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:event-cursor-expired:v1",
+      "path": "contracts/schemas/event-cursor-expired.schema.json",
+      "digest": "sha256:185a68423fdac2189cb68a1e86108bef91d5ff16eb0439f0fc06984058788646"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:event-data:artifact-version-created:v1",
+      "path": "contracts/schemas/event-data-artifact-version-created.schema.json",
+      "digest": "sha256:7258066b03c0791ee7b3064b08ba38604bcb87ed3b639740a5935f808ad67e3a"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:event-page:v1",
+      "path": "contracts/schemas/event-page.schema.json",
+      "digest": "sha256:d278aeca4c8937566b427f6359da0c05462a1873a572aa6df659ac2e567eba16"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:event-type-definition:v1",
+      "path": "contracts/schemas/event-type-definition.schema.json",
+      "digest": "sha256:75598620a8e9f037c5bf0c5aa3c2c676000a8b8dec1151289bae328ebe606c3e"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:execution-budget:v1",
+      "path": "contracts/schemas/execution-budget.schema.json",
+      "digest": "sha256:c8fdff6117056aa5bdca6432aa1f5fb5f4c9553ac4a39dd91e2958161fbbfb51"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:execution-grant-claims:v1",
+      "path": "contracts/schemas/execution-grant-claims.schema.json",
+      "digest": "sha256:e8390ab23bd602d0e3dc9958fcfae74a223e9f795fe7225b84d2abcc4f5ed573"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:execution-grant-jws-header:v1",
+      "path": "contracts/schemas/execution-grant-jws-header.schema.json",
+      "digest": "sha256:cc41e2281004a5b27b0ba25ac07b8548166f73e7ee789e5c0ea9382f99022210"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:grant-consumption:v1",
+      "path": "contracts/schemas/grant-consumption.schema.json",
+      "digest": "sha256:f88d8392a6d8c9b11b49497c729b9466da02025abe882061daa7c10b24b58699"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:idempotency-record:v1",
+      "path": "contracts/schemas/idempotency-record.schema.json",
+      "digest": "sha256:752bcb04199dba1938465306d2e502fbbe914815a943c650ac2a9182776c1002"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:input-artifact-reference:v1",
+      "path": "contracts/schemas/input-artifact-reference.schema.json",
+      "digest": "sha256:2359ad050c1274721d2da5ebcf7f63881b4ddd4707b29e64be4e91a3593e18b1"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:invocation-attempt:v1",
+      "path": "contracts/schemas/invocation-attempt.schema.json",
+      "digest": "sha256:db80d640ef765f2f9d08d1256b8f18a738ed5295d43fa5607babb7d4d796c283"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:invocation-record:v1",
+      "path": "contracts/schemas/invocation-record.schema.json",
+      "digest": "sha256:ab731d571869ba2f3012c5a7dee26dd159f8c407b4174b0f213612bce56581cd"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:plugin-cancellation-request:v1",
+      "path": "contracts/schemas/plugin-cancellation-request.schema.json",
+      "digest": "sha256:a06292ec71ff81f64218109bdc29ea9132666f48ee519a3132e3a9440927a25e"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:plugin-invocation-accepted:v1",
+      "path": "contracts/schemas/plugin-invocation-accepted.schema.json",
+      "digest": "sha256:608f9d6e6edc52c1632f8e293a994d87e647d6172d6737ba5bd3789e776623c4"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:plugin-invocation-error:v1",
+      "path": "contracts/schemas/plugin-invocation-error.schema.json",
+      "digest": "sha256:8c72a8b603ee4cbc55e43f6e21fdab6132f07d90911c6aeed826651fb7092b2f"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:plugin-invocation-jws-header:v1",
+      "path": "contracts/schemas/plugin-invocation-jws-header.schema.json",
+      "digest": "sha256:b25c3b3395c1699cb0105dd3d5b058e1c29425e3bf822f53af2241322b7cb506"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:plugin-invocation-progress:v1",
+      "path": "contracts/schemas/plugin-invocation-progress.schema.json",
+      "digest": "sha256:536f4e0e60cb5dc9ee900523745bb2c307745f022e665c3909d73364d1382673"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:plugin-invocation-request:v1",
+      "path": "contracts/schemas/plugin-invocation-request.schema.json",
+      "digest": "sha256:c8d5b655cd0352a2364161649c263dc086b96fd37bd25b8401f2aba279ba88b9"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:plugin-invocation-result:v1",
+      "path": "contracts/schemas/plugin-invocation-result.schema.json",
+      "digest": "sha256:91abf2baefd6be770827fcc95279f82c7c8fe66fe125d85a188efbbcca704b03"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:plugin-invocation-status:v1",
+      "path": "contracts/schemas/plugin-invocation-status.schema.json",
+      "digest": "sha256:279de35ee7767894064f5812067f46e4829154f2ccc5a5f512c0d5773e0b96e0"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:plugin-invocation-token-claims:v1",
+      "path": "contracts/schemas/plugin-invocation-token-claims.schema.json",
+      "digest": "sha256:652677e9c44da95920da71a30449117f61953244a60841ab6e6c269b3dc7756c"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:plugin-manifest:v2",
+      "path": "contracts/schemas/plugin-manifest-v2.schema.json",
+      "digest": "sha256:c33539e6e4627e1147d9f1de4d51a7e931014934a640b5ab6c80ba4568f76af5"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:plugin-permissions:v1",
+      "path": "contracts/schemas/plugin-permissions.schema.json",
+      "digest": "sha256:e096237e3d5893bd6d9a11f17e00b22b02618785387ff8159df11aab8754afd7"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:plugin-registry-record:v1",
+      "path": "contracts/schemas/plugin-registry-record.schema.json",
+      "digest": "sha256:2ca170dc0cf4c5a4140191f00f2721bade6659d9cb75aef0fd9e727e94a4563e"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:preview-session-request:v1",
+      "path": "contracts/schemas/preview-session-request.schema.json",
+      "digest": "sha256:1c4939fefffec4217d36ea1736c440aa0216b612a278d9adebf255cf6736fd98"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:preview-session:v1",
+      "path": "contracts/schemas/preview-session.schema.json",
+      "digest": "sha256:39c2a29273929e40a91baf88cc3ce45795ed072d6bebddb3ad41f5bf8f1e1cb1"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:provider-health:v1",
+      "path": "contracts/schemas/provider-health.schema.json",
+      "digest": "sha256:0cea523339e3a5bbeed340a162b490bbe4c4ee401484039085fb47793c95bf08"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:provider-instance:v1",
+      "path": "contracts/schemas/provider-instance.schema.json",
+      "digest": "sha256:3ace81b21f7bb2454d9567eb35af9d733e702481dc80d725d795167662145746"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:provider-resolution:v1",
+      "path": "contracts/schemas/provider-resolution.schema.json",
+      "digest": "sha256:de26d16a69d259d74f4cc2bbee71e7465fcf6298cff6df28a1e1ad69b247af6e"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:provider-revision:v1",
+      "path": "contracts/schemas/provider-revision.schema.json",
+      "digest": "sha256:7aeecba3e353d69d7042aca5513203ffdd327fa8eeb5678f9d507c35a351105e"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:run-manifest:v2",
+      "path": "contracts/schemas/run-manifest-v2.schema.json",
+      "digest": "sha256:5b9c8fa823e2b02488159a5087e9de5265a6a5133e9d3ce2454bb488412048f3"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:runtime-session-request:v1",
+      "path": "contracts/schemas/runtime-session-request.schema.json",
+      "digest": "sha256:63ac974cf3fa4635b9afb463d4598aa2ec82da06b64a68c19c525b9ffe9dbed5"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:runtime-session-response:v1",
+      "path": "contracts/schemas/runtime-session-response.schema.json",
+      "digest": "sha256:d5444d6a9f89c3cd78a293343f79382e82c6501771413182e347966ad3f12631"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:runtime-session-route:v1",
+      "path": "contracts/schemas/runtime-session-route.schema.json",
+      "digest": "sha256:3a4e2dd7dd2a09e6f78ea38ea29c0ff9566739731a04a87c637e315974d6b5b2"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-cancel-exec-request:v1",
+      "path": "contracts/schemas/sandbox-cancel-exec-request.schema.json",
+      "digest": "sha256:030ac29f3e1173ebbafe852138f535fbc05315773658304a5920aa9f5c3a36e9"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-capabilities:v1",
+      "path": "contracts/schemas/sandbox-capabilities.schema.json",
+      "digest": "sha256:c99b8bfbef566a0a20fb50031d33aadd74fe89ad2109bcdbc0d614995a221e2d"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-conformance-report:v1",
+      "path": "contracts/schemas/sandbox-conformance-report.schema.json",
+      "digest": "sha256:709db5a8da957ea50fa797803b1b5be1282d683d4b716895cd40fbc151e820cd"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-create-request:v1",
+      "path": "contracts/schemas/sandbox-create-request.schema.json",
+      "digest": "sha256:68a528647cbb3008d55963d39d596cb21c71980f9d029ba8e4d56a73a600a086"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-desired-state-request:v1",
+      "path": "contracts/schemas/sandbox-desired-state-request.schema.json",
+      "digest": "sha256:d12ce03cbf6ed7e7b24efe09cdb799af19064e12ecf9b026c527251ce452b327"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-event:v1",
+      "path": "contracts/schemas/sandbox-event.schema.json",
+      "digest": "sha256:caf663c00b32882072568277924f7b5fc9ab097d73e66898dfad8872da676909"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-exec-request:v1",
+      "path": "contracts/schemas/sandbox-exec-request.schema.json",
+      "digest": "sha256:8590b0a7c3e86a939c107e1383c24d1edfd454ae896180a37dc7493ff57a1a25"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-exec-result:v1",
+      "path": "contracts/schemas/sandbox-exec-result.schema.json",
+      "digest": "sha256:efe989dcd4048b9ac9d56aec4ce8d09f9e0fcb4a9666b4e34bb3a1ceb86900d8"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-lease-request:v1",
+      "path": "contracts/schemas/sandbox-lease-request.schema.json",
+      "digest": "sha256:b09b14f670e3e7a4a5b236f82040296032a0ad91ccd264bc3a821618431e2cd6"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-mutation-envelope:v1",
+      "path": "contracts/schemas/sandbox-mutation-envelope.schema.json",
+      "digest": "sha256:7f18c17b74265713e2a323f77b70cfbc58c05edcea7890afec33691c11601124"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-operation-jws-header:v1",
+      "path": "contracts/schemas/sandbox-operation-jws-header.schema.json",
+      "digest": "sha256:2b0e13634f5a8c7dbc894e7654177fd93447ca4c9cd4423a731cdb7a3e0e6de4"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-operation-token-claims:v1",
+      "path": "contracts/schemas/sandbox-operation-token-claims.schema.json",
+      "digest": "sha256:6e78729c6ea913f6521acaa0161ae29aca17285e2c191062af22081cb4ba9534"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-operation:v1",
+      "path": "contracts/schemas/sandbox-operation.schema.json",
+      "digest": "sha256:4a168bceb8f8aa1713488684b18e416680ce6a403a0bf947e640263296fee6b5"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-restore-request:v1",
+      "path": "contracts/schemas/sandbox-restore-request.schema.json",
+      "digest": "sha256:c598723386238238b21151cd3775e3728605f9b5b3a5bcb6bb4fa48f83bdcbf8"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-runtime-session-endpoint:v1",
+      "path": "contracts/schemas/sandbox-runtime-session-endpoint.schema.json",
+      "digest": "sha256:e872b3c9bbc301223cbc160dab90526faaaa3b9bdb96345bc6e39f77a12e7cfb"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-runtime-session-open-request:v1",
+      "path": "contracts/schemas/sandbox-runtime-session-open-request.schema.json",
+      "digest": "sha256:c19a2a3f631416413437af82ee29667c3eb119461cf419bf3854394ebe1a4306"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-snapshot-manifest:v1",
+      "path": "contracts/schemas/sandbox-snapshot-manifest.schema.json",
+      "digest": "sha256:591af6e33f522f01ca950804f664dce1f5f6647b156ea2632e2f56138af7a2c5"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-snapshot-request:v1",
+      "path": "contracts/schemas/sandbox-snapshot-request.schema.json",
+      "digest": "sha256:dd5faac550313c981a4a633adb940e1d515921d107653568de963df7ac847e78"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-spec:v1",
+      "path": "contracts/schemas/sandbox-spec.schema.json",
+      "digest": "sha256:4a8b67d8086b8cc4b4d7eb07eb7deb2c312defcfc7751a3a47792687af04f4ee"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-status:v1",
+      "path": "contracts/schemas/sandbox-status.schema.json",
+      "digest": "sha256:cde25a87ef8d0a226bbce6698695f07960c5a77226b1ad57de115fe939fff920"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-terminate-request:v1",
+      "path": "contracts/schemas/sandbox-terminate-request.schema.json",
+      "digest": "sha256:3585f665ece0e7b9c430302cefa3e5180687149b734257ac55cb2c8c5b210772"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-usage-entry:v1",
+      "path": "contracts/schemas/sandbox-usage-entry.schema.json",
+      "digest": "sha256:3ca03e5f4a29304db53823639ab7a085d1d740abef52ffd13bde23e9716c3991"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:scenario-definition:v1",
+      "path": "contracts/schemas/scenario-definition.schema.json",
+      "digest": "sha256:1b6150d51150258f0a1be3a92a77861e71eae7954f1dd7496aabca64d16118be"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:schema-reference:v1",
+      "path": "contracts/schemas/schema-reference.schema.json",
+      "digest": "sha256:cf59d3620b0d433e497dc9c2277cf79712555c61eeb5581ad8bb3b101e46244b"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:service-access-token-claims:v1",
+      "path": "contracts/schemas/service-access-token-claims.schema.json",
+      "digest": "sha256:311d9dfea832f738125a41ac805fc8b63b54c4fbefa07ef3562b3e4d4e075343"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:standard-error:v1",
+      "path": "contracts/schemas/standard-error.schema.json",
+      "digest": "sha256:7a347788c9f8f6183d71b57b1673c35933baf6e9da9e711c7b0505c35c5df445"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:technical-usage-entry:v1",
+      "path": "contracts/schemas/technical-usage-entry.schema.json",
+      "digest": "sha256:2693082956277bc6156a3fda20746fa8f5367cc92489334bb61582f4ece23dfc"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:usage-report:v1",
+      "path": "contracts/schemas/usage-report.schema.json",
+      "digest": "sha256:af1fd5d9543d209fc035f46546b6cd2d7303e32f5de2130a04e4fe9002b38e78"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:work-order-accepted:v1",
+      "path": "contracts/schemas/work-order-accepted.schema.json",
+      "digest": "sha256:bc2f9cf7e799f650f212217ec1f122092c19da457c7447dc4a5631c65cea7fb3"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:work-order-request:v1",
+      "path": "contracts/schemas/work-order-request.schema.json",
+      "digest": "sha256:28973de1f8246012e68a9909d9ca9de4cb2d10ce6a58f2041cf7d62aff52241f"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:work-order-state:v1",
+      "path": "contracts/schemas/work-order-state.schema.json",
+      "digest": "sha256:ecdaa5d6c3c24a639c7feaf9cd4f3ff52e566eb57eb7a4d3ef06e1553a793f10"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:work-session-claims:v1",
+      "path": "contracts/schemas/work-session-claims.schema.json",
+      "digest": "sha256:cb6376183fb9f5fa519198f3ed4aacd7d44bbe6f8aed84550b43d2a3907c5654"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:work-session-exchange-request:v1",
+      "path": "contracts/schemas/work-session-exchange-request.schema.json",
+      "digest": "sha256:247c538fd87797fedce185eb9df93d1362e00133424ba4f75d5c06807a042f96"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:work-session-exchange-response:v1",
+      "path": "contracts/schemas/work-session-exchange-response.schema.json",
+      "digest": "sha256:c387f81b21eaee4cb030d4b8ed8558396ad75456c326dc6c21132bf9a09077c4"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:work-session-jws-header:v1",
+      "path": "contracts/schemas/work-session-jws-header.schema.json",
+      "digest": "sha256:9ac6a1d3b243e11fc33f6510fdce505e90beb19f49d7c6fedf1861a19dc67148"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:work-session-request:v1",
+      "path": "contracts/schemas/work-session-request.schema.json",
+      "digest": "sha256:b2882e30f146331c20e08fd91016455b85d782ef5b7f92bdd80279ceecc13edc"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:work-session-response:v1",
+      "path": "contracts/schemas/work-session-response.schema.json",
+      "digest": "sha256:e4936ce42a9a09b5f2ecda4b0bced35c6653cefa9c29edd6690265569163be75"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:plugin-config:html-anything:v1",
+      "path": "examples/schemas/html-anything-config.schema.json",
+      "digest": "sha256:c66c694fac3e5c56d74d6589a1ce963a102dd141010dcc8829e93b78c137b304"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:capability-schema:html-generate-request:v1",
+      "path": "examples/schemas/html-generation-request.schema.json",
+      "digest": "sha256:2e58635d5caf688835b44b649a81b4e3d019170f0d1926f65e5fc7d9c8fc9b28"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:capability-schema:html-generate-result:v1",
+      "path": "examples/schemas/html-generation-result.schema.json",
+      "digest": "sha256:e043707ba28dcdbe65dcbcd9caba4bb9c7ff58a7bd9f11ce57ff379bfe25302d"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:scenario-schema:html-generation-input:v1",
+      "path": "examples/schemas/html-generation-scenario-input.schema.json",
+      "digest": "sha256:325f423c584036aff646ce7270441d30a2f29e08189b42358ed629f044c2582f"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:plugin-config:html-to-pptx:v1",
+      "path": "examples/schemas/html-to-pptx-config.schema.json",
+      "digest": "sha256:8bf253c239c8d67637b0e02e2bba36906bb0212a349f01eb65314307c542c8ea"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:capability-schema:html-to-pptx-request:v1",
+      "path": "examples/schemas/html-to-pptx-request.schema.json",
+      "digest": "sha256:f20c2a3e3024fab6775bfb5e954934b93f69fab234413fa8103028ef249acabf"
+    },
+    {
+      "kind": "json-schema",
+      "id": "urn:agent-platform:capability-schema:html-to-pptx-result:v1",
+      "path": "examples/schemas/html-to-pptx-result.schema.json",
+      "digest": "sha256:46d6fa17b4a8b06e6da4a016d776385952a12d2e59e51066fcd5173248258d8e"
+    },
+    {
+      "kind": "openapi",
+      "id": "Agent Access API@1.1.0",
+      "path": "contracts/openapi/agent-access-v1.yaml",
+      "digest": "sha256:e3939a8855ae0cfcc6c5c0c4fd5b7d648646935cb35da627332e2f9cb30fde5b"
+    },
+    {
+      "kind": "openapi",
+      "id": "Agent Delivery Webhook@1.0.0",
+      "path": "contracts/openapi/delivery-webhook-v1.yaml",
+      "digest": "sha256:0490dc7368c0a74cd5f9e4aaf527bfbb3b08f5174633bea0f56ef12a336a966a"
+    },
+    {
+      "kind": "openapi",
+      "id": "Plugin Invocation Protocol@1.1.0",
+      "path": "contracts/openapi/plugin-invocation-v1.yaml",
+      "digest": "sha256:343f4f6aee161db54b083204d9fe45684e77e7a69dabea7ecdc69b3688e0c0b7"
+    },
+    {
+      "kind": "openapi",
+      "id": "Sandbox Provider API@1.0.0",
+      "path": "contracts/openapi/sandbox-provider-v1.yaml",
+      "digest": "sha256:fbb78477cf1002076db1d16aad27c9867d7a451f15b7543aab24805f2d39460f"
+    },
+    {
+      "kind": "governance",
+      "id": "docs/23_STATE_MACHINE_SPEC.md",
+      "path": "docs/23_STATE_MACHINE_SPEC.md",
+      "digest": "sha256:58114c80dbf88dc66956fbbc71a988b092d23b8b47de76ca4fa64f2a1b7edfa0"
+    },
+    {
+      "kind": "governance",
+      "id": "contracts/testdata/jcs-v1/vectors.json",
+      "path": "contracts/testdata/jcs-v1/vectors.json",
+      "digest": "sha256:2322731f303d2fbb4cb48973ca6791f19a9680f6df54aae80fcbec4fa1693844"
+    },
+    {
+      "kind": "governance",
+      "id": "docs/26_DATA_MODEL_INVARIANTS.md",
+      "path": "docs/26_DATA_MODEL_INVARIANTS.md",
+      "digest": "sha256:67115fcc4daf5f50febe750d6ce08b2009932e293f31b3a3754d6bad6dc059e8"
+    }
+  ],
+  "manifest_digest": "sha256:68577ac45d555ff509a7c0e73b71dfd751eabbf409908f2e9ec1f2ac3acf529f"
+}

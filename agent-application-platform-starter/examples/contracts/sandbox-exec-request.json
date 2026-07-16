@@ -1,0 +1,22 @@
+{
+  "operation_id": "sop_exec_01",
+  "attempt_id": "sat_exec_01",
+  "fencing_token": 7,
+  "idempotency_key": "sop_exec_01-idempotency-0001",
+  "request_digest": "sha256:d3404ae0bbd670d5a848dcce486b6603ed0d5e84c5e8e3295f4f0744f5633b71",
+  "deadline_at": "2026-07-16T10:30:00Z",
+  "expected_generation": 4,
+  "command": [
+    "/usr/bin/env",
+    "sh",
+    "-lc",
+    "printf hello"
+  ],
+  "working_directory": "/workspace",
+  "secret_reference_ids": [],
+  "capture": {
+    "stdout": true,
+    "stderr": true,
+    "max_bytes": 1048576
+  }
+}

@@ -230,3 +230,44 @@ Provider 对 Agent 暴露固定语义：
 - SANDBOX_TERMINATION_FAILED
 
 错误必须使用 StandardError，并为外部执行结果提供 `known_failed` 或 `outcome_unknown` 语义。
+
+## 12. 多 Sandbox 与 Slot
+
+一个 WorkOrder/Workspace 可以拥有多个 Sandbox。
+
+平台使用 `sandbox_slot_key` 表达逻辑用途，而不是把 Sandbox 与 WorkOrder 一对一绑定：
+
+```text
+primary-code
+browser
+desktop
+subagent/<agent-run-id>
+isolated/<capability>
+```
+
+Provider Resolution 可以为不同 Slot 选择不同：
+
+- ProviderRevision
+- Runtime Profile
+- Isolation Class
+- Resource Class
+- Region/Cell
+
+同一 Slot 的 Backend 重建通过 Generation 表达；不同用途使用不同 Slot。
+
+## 13. Provider 私有模型
+
+公共 SandboxStatus 只允许：
+
+```text
+provider_state_reference
+runtime_endpoint_reference
+```
+
+它们都是受权限控制的不透明引用。
+
+实际的 Pod、VM、Container 和 Endpoint 数据保存在 Adapter Private Store，
+不得进入 CanonicalEvent、RunManifest、用户 API 或稳定内核表。
+
+RunManifest 使用 `sandboxes[]` 锁定多个 Sandbox Slot，并用
+`primary_sandbox_slot_key` 标识默认工作环境。禁止重新收缩为单一 Sandbox 字段。

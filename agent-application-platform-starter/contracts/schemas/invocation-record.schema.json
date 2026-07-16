@@ -17,7 +17,9 @@
     "side_effect",
     "status",
     "created_at",
-    "updated_at"
+    "updated_at",
+    "attempt_count",
+    "max_attempts"
   ],
   "properties": {
     "invocation_id": {
@@ -63,12 +65,15 @@
       "enum": [
         "prepared",
         "executing",
-        "succeeded",
-        "failed",
+        "retry_scheduled",
         "outcome_unknown",
         "reconciling",
+        "manual_review",
+        "succeeded",
+        "failed",
         "cancel_requested",
-        "cancelled"
+        "cancelled",
+        "abandoned"
       ]
     },
     "provider_operation_id": {
@@ -88,6 +93,28 @@
     "completed_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "attempt_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "max_attempts": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "next_retry_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reconciliation_deadline_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "manual_review_case_id": {
+      "type": "string"
+    },
+    "terminal_reason": {
+      "type": "string"
     }
   },
   "additionalProperties": false

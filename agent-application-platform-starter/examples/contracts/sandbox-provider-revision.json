@@ -15,17 +15,21 @@
       "version": "1.0",
       "suite_version": "1.0.0",
       "status": "passed",
-      "report_digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777"
+      "report_digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+      "profile": "hardened"
     },
     {
       "capability": "sandbox.terminal",
       "version": "1.0",
       "suite_version": "1.0.0",
       "status": "passed",
-      "report_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888"
+      "report_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+      "profile": null
     }
   ],
   "created_at": "2026-07-16T09:00:00Z",
   "provider_kind": "sandbox",
-  "sandbox_conformance_report_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999"
+  "sandbox_conformance_report_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+  "runtime_binding_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+  "certification_status": "certified"
 }

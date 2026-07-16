@@ -1,0 +1,11 @@
+{
+  "operation_id": "sop_terminate_01",
+  "attempt_id": "sat_terminate_01",
+  "fencing_token": 11,
+  "idempotency_key": "sop_terminate_01-idempotency-0001",
+  "request_digest": "sha256:78bb7ea2ac2a7de77c34934a7a56db5b7fdcf3755ae7d43054353a3fe420b4d3",
+  "deadline_at": "2026-07-16T10:30:00Z",
+  "expected_generation": 4,
+  "reason": "work order completed",
+  "preserve_workspace_snapshot": true
+}

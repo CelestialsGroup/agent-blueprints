@@ -1,0 +1,15 @@
+{
+  "operation_id": "sop_session_01",
+  "attempt_id": "sat_session_01",
+  "fencing_token": 9,
+  "idempotency_key": "sop_session_01-idempotency-0001",
+  "request_digest": "sha256:f3eb050d9507461f7cdb3a90ba167d4f618e1d856429a4b234e2b185c22ffa7b",
+  "deadline_at": "2026-07-16T10:30:00Z",
+  "expected_generation": 4,
+  "runtime_session_id": "rts_01J00000000000000000000000",
+  "runtime_type": "terminal",
+  "scopes": [
+    "terminal:connect"
+  ],
+  "expires_at": "2026-07-16T10:20:00Z"
+}

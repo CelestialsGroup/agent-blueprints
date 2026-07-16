@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:invocation-attempt:v1",
+  "title": "InvocationAttempt",
+  "type": "object",
+  "required": [
+    "invocation_attempt_id",
+    "invocation_id",
+    "attempt_number",
+    "fencing_token",
+    "request_digest",
+    "status",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "invocation_attempt_id": {
+      "type": "string"
+    },
+    "invocation_id": {
+      "type": "string"
+    },
+    "attempt_number": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fencing_token": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "request_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "status": {
+      "enum": [
+        "accepted",
+        "running",
+        "succeeded",
+        "failed_retryable",
+        "failed_terminal",
+        "cancel_requested",
+        "cancelled",
+        "outcome_unknown",
+        "superseded"
+      ]
+    },
+    "provider_operation_id": {
+      "type": "string"
+    },
+    "error": {
+      "$ref": "urn:agent-platform:capability-error:v1"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

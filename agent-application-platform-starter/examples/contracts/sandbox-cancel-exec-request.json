@@ -1,0 +1,12 @@
+{
+  "operation_id": "sop_cancel_01",
+  "attempt_id": "sat_cancel_01",
+  "fencing_token": 8,
+  "idempotency_key": "sop_cancel_01-idempotency-0001",
+  "request_digest": "sha256:85b9819215f913a6eb2a77c5072aac40db15be407df94ac13a8c360620ec6a45",
+  "deadline_at": "2026-07-16T10:30:00Z",
+  "expected_generation": 4,
+  "target_operation_id": "sop_exec_01",
+  "target_attempt_id": "sat_exec_01",
+  "reason": "workflow cancelled"
+}

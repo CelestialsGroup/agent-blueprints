@@ -40,14 +40,17 @@ Contract CI 工具使用固定版本：
 - jsonschema
 - referencing
 - PyYAML
+- rfc8785 Python reference implementation
+- Go JCS module
+- Node Runtime
 
 禁止 `@latest`。
 
 ## 5. Gate
 
 ```text
-OpenAPI errors = 0
-OpenAPI warnings = 0
+4 OpenAPI documents: errors = 0
+4 OpenAPI documents: warnings = 0
 Schema meta validation = pass
 Positive fixtures = pass
 Negative fixtures = rejected
@@ -87,3 +90,23 @@ JSON Schema 不能表达的约束必须进入：
 - 新增必填字段
 - 修改状态语义
 - 修改 Capability Artifact Contract
+
+
+## 8. 公共可复现性
+
+默认 Bootstrap 只能使用公共 PyPI、npm Registry 和 Go Proxy/Checksum Database。
+
+`scripts/check_supply_chain.py` 必须拒绝：
+
+- 内部 Registry URL
+- 未固定版本
+- npm Lock 缺少 Integrity
+- 未登记的依赖源
+
+验证报告必须来自真实 CI 运行，不得把作者机器上的局部校验写成全量通过。
+
+## 9. Run Reproducibility
+
+ProviderRevision、ProviderResolution 和 RunManifest 的必填 Digest 由 Schema 与语义测试共同强制。
+
+`capability_resolutions`、`agent_runtime`、`sandboxes` 和 Provider Conformance 不允许为空。

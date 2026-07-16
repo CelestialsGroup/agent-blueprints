@@ -16,7 +16,8 @@
     "network",
     "workspace",
     "lease",
-    "security"
+    "security",
+    "sandbox_slot_key"
   ],
   "properties": {
     "sandbox_id": {
@@ -279,6 +280,14 @@
       "additionalProperties": {
         "type": "string"
       }
+    },
+    "sandbox_slot_key": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9/_-]{0,127}$",
+      "description": "Logical Sandbox purpose inside a Workspace, e.g. primary-code or subagent/research-01."
+    },
+    "agent_run_id": {
+      "type": "string"
     }
   },
   "additionalProperties": false,

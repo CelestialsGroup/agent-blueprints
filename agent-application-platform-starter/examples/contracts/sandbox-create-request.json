@@ -4,7 +4,7 @@
   "attempt_id": "sat_01J00000000000000000000000",
   "fencing_token": 1,
   "idempotency_key": "sandbox-create-example-0001",
-  "request_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "request_digest": "sha256:90746ff906112498392c3678b6d67f292e71da468378f57ba367d7b1570e67e3",
   "deadline_at": "2026-07-16T10:05:00Z",
   "spec": {
     "sandbox_id": "sbx_01J00000000000000000000000",
@@ -82,7 +82,8 @@
     },
     "labels": {
       "scenario": "coding"
-    }
+    },
+    "sandbox_slot_key": "primary-code"
   },
   "trace_context": {
     "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"

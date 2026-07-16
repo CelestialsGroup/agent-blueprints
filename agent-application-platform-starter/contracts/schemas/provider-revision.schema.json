@@ -13,7 +13,11 @@
     "approved_permissions_digest",
     "conformance",
     "created_at",
-    "provider_kind"
+    "provider_kind",
+    "package_digest",
+    "runtime_binding_digest",
+    "credential_binding_digest",
+    "certification_status"
   ],
   "properties": {
     "provider_revision_id": {
@@ -59,6 +63,7 @@
         "required": [
           "capability",
           "version",
+          "profile",
           "suite_version",
           "status",
           "report_digest"
@@ -79,10 +84,18 @@
           "report_digest": {
             "type": "string",
             "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "profile": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "additionalProperties": false
-      }
+      },
+      "minItems": 1,
+      "uniqueItems": true
     },
     "created_at": {
       "type": "string",
@@ -108,7 +121,77 @@
     "sandbox_conformance_report_digest": {
       "type": "string",
       "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "runtime_binding_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "certification_status": {
+      "enum": [
+        "certified",
+        "revoked"
+      ]
+    },
+    "revocation_reason": {
+      "type": "string"
+    },
+    "governed_conformance_report_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "provider_kind": {
+            "const": "agent_runtime"
+          }
+        },
+        "required": [
+          "provider_kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "governed_conformance_report_digest"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "provider_kind": {
+            "const": "sandbox"
+          }
+        },
+        "required": [
+          "provider_kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "sandbox_conformance_report_digest"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "certification_status": {
+            "const": "revoked"
+          }
+        },
+        "required": [
+          "certification_status"
+        ]
+      },
+      "then": {
+        "required": [
+          "revocation_reason"
+        ]
+      }
+    }
+  ]
 }

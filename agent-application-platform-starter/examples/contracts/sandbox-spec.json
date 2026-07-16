@@ -74,5 +74,6 @@
   },
   "labels": {
     "scenario": "coding"
-  }
+  },
+  "sandbox_slot_key": "primary-code"
 }
