@@ -2,7 +2,7 @@
 
 ## 1. Workspace
 
-v1：一个 WorkOrder 对应一个内部 Workspace。
+v1：一个 AgentConversation 对应一个内部 durable Workspace；Conversation 的多个 WorkOrder/AgentRun 共享该 Workspace 的版本化 Artifact 视图。一次性调用创建隐式 Conversation/Workspace。
 
 负责：
 
@@ -12,6 +12,7 @@ v1：一个 WorkOrder 对应一个内部 Workspace。
 - Preview/Edit
 - Conversion
 - Delivery
+- Runtime Recording chunks/playback manifests
 
 ## 2. 稳定内核
 

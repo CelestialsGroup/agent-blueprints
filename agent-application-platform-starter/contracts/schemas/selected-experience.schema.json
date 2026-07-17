@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:selected-experience:v1",
+  "title": "SelectedExperience",
+  "description": "An immutable user-visible experience selection such as a template, skill pack or design system revision.",
+  "type": "object",
+  "required": [
+    "kind",
+    "catalog_entry_id",
+    "revision_id",
+    "revision_digest",
+    "capability_id"
+  ],
+  "properties": {
+    "kind": { "enum": ["template", "skill_pack", "design_system", "editor_profile"] },
+    "catalog_entry_id": { "type": "string", "minLength": 1 },
+    "revision_id": { "type": "string", "minLength": 1 },
+    "revision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "capability_id": { "type": "string", "minLength": 1 },
+    "parameter_values": { "type": "object" }
+  },
+  "additionalProperties": false
+}

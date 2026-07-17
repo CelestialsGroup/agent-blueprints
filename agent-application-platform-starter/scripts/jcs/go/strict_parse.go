@@ -11,6 +11,7 @@ import (
 )
 
 var safeIntegerLimit = big.NewInt(9007199254740991)
+
 const maxNumberTokenLength = 1024
 const maxAbsDecimalExponent = 400
 

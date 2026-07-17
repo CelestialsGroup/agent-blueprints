@@ -1,0 +1,30 @@
+{
+  "commands": [
+    {
+      "command_id": "command_01",
+      "runtime_run_id": "runtime_01",
+      "command_sequence": 1,
+      "type": "pause",
+      "invocation_attempt_id": "attempt_01",
+      "fencing_token": 1,
+      "idempotency_key": "command-idempotency-0001",
+      "deadline_at": "2026-07-15T10:30:00Z"
+    },
+    {
+      "command_id": "command_02",
+      "runtime_run_id": "runtime_01",
+      "command_sequence": 2,
+      "type": "resume",
+      "invocation_attempt_id": "attempt_02",
+      "fencing_token": 2,
+      "idempotency_key": "command-idempotency-0002",
+      "deadline_at": "2026-07-15T10:30:00Z"
+    }
+  ],
+  "cases": [
+    { "id": "runtime-command-sequence-gap", "mutation": "sequence_gap" },
+    { "id": "runtime-command-stale-fencing", "mutation": "stale_fencing" },
+    { "id": "runtime-command-duplicate-id", "mutation": "duplicate_id" },
+    { "id": "runtime-command-cross-run", "mutation": "cross_run" }
+  ]
+}

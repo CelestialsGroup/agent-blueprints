@@ -1,36 +1,37 @@
-# Codex Phase 0 Bootstrap — v0.8.6
+# Codex Phase 0 Bootstrap — v0.9.0
 
-你正在实现 Agent Application Platform。先阅读 `START_HERE.md`、`AGENTS.md`、`docs/42_V084_REVIEW_RESOLUTION.md` 和 `tasks/PHASE0.md`。
+Read `START_HERE.md`, `AGENTS.md`, `docs/45_V090_PRODUCT_BOUNDARY_RESOLUTION.md` and `tasks/PHASE0.md`. v0.8.6 and earlier are historical evidence only.
 
-## Admission 前置
+## Admission first
 
 ```bash
 ./scripts/bootstrap_contracts.sh
 make validate-all
 ```
 
-任一 Gate 失败就停止实现并修复契约/工具链。Git 根 Workflow 未激活、公共 CI 未通过或未批准冻结时，不得开始 Phase 0；不得开始 Phase 1。
+Fix any contract failure before implementation. Do not begin Phase 1 before every Phase 0 acceptance item has runtime evidence.
 
-## 实现顺序
+## Implementation order
 
-1. 数据库 migration 与约束；
-2. ExecutionGrant、Idempotency、WorkOrder/Outbox；
-3. Temporal 最小 Workflow；
-4. ProviderResolution、immutable Revision + Admission Snapshot、RunManifest；
-5. Invocation/Sandbox Operation + append-only Attempt + fencing；
-6. DeerFlow Runtime 与 Built-in Sandbox Adapter；
-7. Event、Artifact Staging/Finalize、Delivery；
-8. UI history replay；
-9. duplicate/lost-response/replay/security tests。
+1. Conversation/Message/Turn/Workspace migrations and constraints.
+2. CommercialAuthorizationSnapshot, Grant consumption and quota reservation/settlement reference flow.
+3. WorkOrder/Outbox and Temporal Workflow.
+4. ProviderResolution, immutable Revision/Admission/Experience snapshots and RunManifest.
+5. DeerFlow AgentRuntimeProvider Adapter, command/event/checkpoint private mapping.
+6. DeerFlow Built-in Sandbox Adapter and Invocation/Sandbox ledgers.
+7. Canonical Event, Artifact staging/finalization, RuntimeRecording and Delivery.
+8. html-anything Catalog import plus one Converter Provider.
+9. multi-turn Workbench and offline historical replay.
+10. duplicate/lost-response/replay/security/backup tests.
 
-## 禁止事项
+## Prohibitions
 
-- 不得把 Business 用户、订单、支付、商业配额复制为平台事实源；
-- 不得宣称 Exactly-once；
-- 不得用 Redis 保存唯一事实；
-- 不得将 Pod/Namespace/Container/VM/Node/raw endpoint 写入稳定模型；
-- 不得回写 ProviderRevision 认证状态；
-- 不得绕过 Capability/ProviderResolution 写死 DeerFlow、html-anything 或 html-to-pptx；
-- 不得只用文档实现“必须”。
+- Do not copy Business user, membership, order, payment or balance truth into Agent Platform.
+- Do not treat WorkOrder as an unbounded Conversation or make Workspace WorkOrder-local.
+- Do not expose DeerFlow Thread/Run/Checkpoint payloads outside its Adapter.
+- Do not persist live Runtime bytes in Event, Temporal or PostgreSQL.
+- Do not identify a template only by mutable string or hard-code a nexu Plugin ID.
+- Do not load arbitrary remote JavaScript or give UI extensions host cookies/tokens/DOM access.
+- Do not claim Exactly-once or Production Ready.
 
-每个提交都要说明：影响的冻结边界、文档/契约/实现/生产验证分类、增加的强制机制、实际运行的 Gate，以及尚未证明的生产性质。
+Every commit states boundary impact, document/contract/implementation/evidence classification, enforcement added, tests run and properties not yet proven.

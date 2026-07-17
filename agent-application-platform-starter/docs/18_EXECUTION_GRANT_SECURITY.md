@@ -42,6 +42,10 @@ JWKS 或公钥只能来自管理员预注册的 ClientApplication 配置。
 - client_app_id
 - external_tenant_id
 - external_principal_id
+- conversation_id
+- turn_id
+- branch_id
+- client_message_id
 - scenario_id
 - scenario_version 与 scenario_definition_digest
 - request_digest
@@ -51,6 +55,7 @@ JWKS 或公钥只能来自管理员预注册的 ClientApplication 配置。
 - capabilities
 - limits
 - policies
+- commercial_authorization（Business 签发的 entitlement/quota/plan/settlement 快照引用）
 
 默认：
 
@@ -79,6 +84,8 @@ execution_grant
 - placement_constraints
 - metadata
 
+`work` 中的 Conversation/Turn/Message 绑定和 Experience revision 选择属于摘要覆盖范围，不能在 Grant 签发后替换模板、分支或父消息。
+
 因此 metadata 不得绕过授权改变行为。
 
 输入必须满足 I-JSON/JCS 可互操作要求：
@@ -101,9 +108,10 @@ execution_grant
 4. 校验 authenticated client 与 Grant client。
 5. 校验 idempotency digest。
 6. 唯一插入 GrantConsumption。
-7. 创建 WorkOrder 与 Workspace。
-8. 写 Workflow Start Outbox。
-9. Commit。
+7. 校验 CommercialAuthorizationSnapshot ID/digest、有效期与 quota reservation。
+8. 锁定或创建 Conversation 及其 Workspace，追加 Message，并创建 WorkOrder。
+9. 写 Workflow Start Outbox 与 Canonical Event。
+10. Commit。
 
 ## 5. 重复请求
 

@@ -1,0 +1,16 @@
+{
+  "conversation_id": "conv_01J00000000000000000000000",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "principal_id": "usr_01J00000000000000000000000",
+  "workspace_id": "wsp_01J00000000000000000000000",
+  "title": "SaaS 产品介绍页",
+  "status": "active",
+  "default_scenario": {
+    "id": "html-generation",
+    "version": "1.0.0",
+    "definition_digest": "sha256:2ef129bc2277d1927147c533a18bcc5500db43e4c36ef12313b904fe80bb709c"
+  },
+  "last_message_sequence": 1,
+  "created_at": "2026-07-15T10:00:00Z",
+  "updated_at": "2026-07-15T10:00:01Z"
+}

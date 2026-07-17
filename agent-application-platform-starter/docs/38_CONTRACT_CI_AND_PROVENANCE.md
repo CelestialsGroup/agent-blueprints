@@ -1,4 +1,4 @@
-# Contract CI and Provenance — v0.8.6
+# Contract CI and Provenance — v0.9.0
 
 ## Reproducible toolchain
 

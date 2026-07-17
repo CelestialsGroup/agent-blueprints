@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:agent-runtime-command:v1",
+  "title": "AgentRuntimeCommand",
+  "type": "object",
+  "required": [
+    "command_id",
+    "runtime_run_id",
+    "command_sequence",
+    "type",
+    "invocation_attempt_id",
+    "fencing_token",
+    "idempotency_key",
+    "deadline_at"
+  ],
+  "properties": {
+    "command_id": { "type": "string", "minLength": 1 },
+    "runtime_run_id": { "type": "string", "minLength": 1 },
+    "command_sequence": { "type": "integer", "minimum": 1 },
+    "type": { "enum": ["append_input", "interrupt", "pause", "resume", "cancel", "approval_decision", "checkpoint"] },
+    "message_id": { "type": "string", "minLength": 1 },
+    "approval_id": { "type": "string", "minLength": 1 },
+    "payload": { "type": "object" },
+    "invocation_attempt_id": { "type": "string", "minLength": 1 },
+    "fencing_token": { "type": "integer", "minimum": 1 },
+    "idempotency_key": { "type": "string", "minLength": 16 },
+    "deadline_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "type": { "const": "append_input" } }, "required": ["type"] },
+      "then": { "required": ["message_id"] }
+    },
+    {
+      "if": { "properties": { "type": { "const": "approval_decision" } }, "required": ["type"] },
+      "then": { "required": ["approval_id", "payload"] }
+    }
+  ],
+  "x-semantic-constraints": [
+    "command_sequence is contiguous per runtime_run_id",
+    "commands are append-only and repeated command_id plus digest is idempotent",
+    "a stale fencing_token cannot mutate runtime state"
+  ]
+}

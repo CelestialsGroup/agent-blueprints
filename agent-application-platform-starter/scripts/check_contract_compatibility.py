@@ -263,7 +263,7 @@ def compare(ref: str) -> list[str]:
     schema_paths = [*(ROOT / "contracts/schemas").glob("*.json"), *(ROOT / "examples/schemas").glob("*.json")]
     current_schemas = {json.loads(item.read_text())["$id"]: item for item in schema_paths}
     old_manifest_text = None
-    for version in ("v0.8.6", "v0.8.5", "v0.8.4", "v0.8.3", "v0.8.2", "v0.8.1"):
+    for version in ("v0.9.0", "v0.8.6", "v0.8.5", "v0.8.4", "v0.8.3", "v0.8.2", "v0.8.1"):
         old_manifest_text = git_text(ref, f"contracts/compatibility/{version}-contract-manifest.json", prefix)
         if old_manifest_text:
             break

@@ -2,7 +2,11 @@
   "event_id": "evt_01J00000000000000000000000",
   "schema_version": 2,
   "tenant_id": "ten_01J00000000000000000000000",
+  "conversation_id": "conv_01J00000000000000000000000",
   "work_order_id": "wrk_01J00000000000000000000000",
+  "turn_id": "turn_01J00000000000000000000000",
+  "branch_id": "main",
+  "input_message_id": "msg_01J00000000000000000000000",
   "workspace_id": "wsp_01J00000000000000000000000",
   "work_sequence": 152,
   "aggregate": {

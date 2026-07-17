@@ -28,6 +28,8 @@ work-order/<work_order_id>
 
 Workflow 启动后通过幂等 Domain Activity 将 WorkOrder 从 accepted 转为 queued/running。
 
+Conversation Turn 事务先原子追加 Message、分配 message_sequence、创建 WorkOrder 和 Workflow Start Outbox。Conversation Workflow 只协调长期实体；每个 WorkOrder Workflow 保持可终止、可回放的执行边界。
+
 ## 3. 权威状态
 
 PostgreSQL 是 API 当前状态事实源。
@@ -55,7 +57,7 @@ Temporal 不提供外部副作用 Exactly-once。
 建议：
 
 - 有界 WorkOrder Workflow：Pinned
-- 长期 Entity/Conversation Workflow：Auto-Upgrade + Patching，或在 Continue-as-New 边界升级
+- 长期 Conversation Workflow：Auto-Upgrade + Patching，或在 Continue-as-New 边界升级
 
 禁止笼统假设所有运行中 Workflow 永远固定同一版本。
 

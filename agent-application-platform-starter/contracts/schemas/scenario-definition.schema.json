@@ -11,7 +11,9 @@
     "input_schema",
     "workflow",
     "capabilities",
+    "experience_requirements",
     "outputs",
+    "lifecycle",
     "definition_digest"
   ],
   "properties": {
@@ -149,6 +151,21 @@
       },
       "additionalProperties": false
     },
+    "experience_requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "capability_id", "minimum", "maximum"],
+        "properties": {
+          "kind": { "enum": ["template", "skill_pack", "design_system", "editor_profile"] },
+          "capability_id": { "type": "string", "minLength": 1 },
+          "minimum": { "type": "integer", "minimum": 0 },
+          "maximum": { "type": "integer", "minimum": 1 },
+          "required_tags": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+        },
+        "additionalProperties": false
+      }
+    },
     "resource_class": {
       "enum": [
         "standard",
@@ -159,12 +176,45 @@
       ]
     },
     "ui": {
-      "type": "object"
+      "type": "object",
+      "required": ["schema", "slots", "option_sources"],
+      "properties": {
+        "schema": { "$ref": "urn:agent-platform:schema-reference:v1" },
+        "slots": {
+          "type": "object",
+          "propertyNames": { "pattern": "^[a-z][a-z0-9._-]{2,127}$" },
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        },
+        "option_sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["field_pointer", "source", "kind", "capability_id"],
+            "properties": {
+              "field_pointer": { "type": "string", "pattern": "^/" },
+              "source": { "const": "experience_catalog" },
+              "kind": { "enum": ["template", "skill_pack", "design_system", "editor_profile"] },
+              "capability_id": { "type": "string", "minLength": 1 },
+              "required_tags": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "lifecycle": {
+      "enum": ["experimental", "stable", "deprecated", "retired"]
     },
     "definition_digest": {
       "type": "string",
       "pattern": "^sha256:[0-9a-f]{64}$"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "UI option sources are catalog queries, never hard-coded Plugin IDs or arbitrary remote JavaScript",
+    "experience selections satisfy minimum/maximum and capability/tag requirements",
+    "definition_digest binds input, workflow, capabilities, experience requirements and UI schema"
+  ]
 }

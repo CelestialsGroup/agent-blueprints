@@ -1,0 +1,294 @@
+openapi: 3.1.1
+
+info:
+  title: Agent Runtime Provider Protocol
+  version: 1.0.0
+  description: |
+    Stable anti-corruption contract for stateful Agent Runtime providers. DeerFlow is
+    the first adapter. Thread IDs, checkpoint formats and upstream event payloads stay
+    provider-private; the platform sees versioned runs, commands, cursors and portable
+    checkpoint manifests. Every mutation is mediated by the Invocation Ledger.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+
+servers:
+  - url: https://agent-runtime-provider.agent-platform.internal
+    description: Registered Agent Runtime Provider endpoint
+
+tags:
+  - name: Capabilities
+    description: Immutable capability negotiation for one ProviderRevision.
+  - name: Runs
+    description: Stateful runtime run lifecycle and command stream.
+
+security:
+  - RuntimeMutualTLS: []
+    RuntimeInvocationBearer: []
+
+paths:
+  /v1/capabilities:
+    get:
+      tags: [Capabilities]
+      operationId: getAgentRuntimeCapabilities
+      summary: Read capabilities for the active Agent Runtime ProviderRevision
+      responses:
+        '200':
+          description: Immutable provider capabilities
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/agent-runtime-capabilities.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /v1/runs:
+    post:
+      tags: [Runs]
+      operationId: startAgentRuntimeRun
+      summary: Idempotently start or restore one governed Agent Runtime run
+      parameters:
+        - $ref: '#/components/parameters/Traceparent'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/agent-runtime-start-request.schema.json
+      responses:
+        '202':
+          description: Runtime run accepted
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/agent-runtime-run-status.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /v1/runs/{runtime_run_id}:
+    parameters:
+      - $ref: '#/components/parameters/RuntimeRunId'
+      - $ref: '#/components/parameters/Traceparent'
+    get:
+      tags: [Runs]
+      operationId: getAgentRuntimeRun
+      summary: Read the confirmed provider-local state of a runtime run
+      responses:
+        '200':
+          description: Current runtime state
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/agent-runtime-run-status.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /v1/runs/{runtime_run_id}/commands:
+    parameters:
+      - $ref: '#/components/parameters/RuntimeRunId'
+      - $ref: '#/components/parameters/Traceparent'
+    post:
+      tags: [Runs]
+      operationId: submitAgentRuntimeCommand
+      summary: Append an idempotent input, control, approval or checkpoint command
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/agent-runtime-command.schema.json
+      responses:
+        '202':
+          description: Command accepted
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/agent-runtime-run-status.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /v1/runs/{runtime_run_id}/events:
+    parameters:
+      - $ref: '#/components/parameters/RuntimeRunId'
+      - $ref: '#/components/parameters/Traceparent'
+    get:
+      tags: [Runs]
+      operationId: readAgentRuntimeEvents
+      summary: Read durable provider-local events after a runtime cursor
+      parameters:
+        - name: after_event_sequence
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+      responses:
+        '200':
+          description: Ordered runtime events
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/agent-runtime-event-page.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          $ref: '#/components/responses/Gone'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+components:
+  securitySchemes:
+    RuntimeMutualTLS:
+      type: mutualTLS
+      description: Registered workload identity for the Agent Platform caller.
+    RuntimeInvocationBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Short-lived token bound to ProviderRevision, runtime_run_id, InvocationAttempt,
+        fencing token, RunManifest digest and approved permissions.
+
+  parameters:
+    RuntimeRunId:
+      name: runtime_run_id
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+    Traceparent:
+      name: traceparent
+      in: header
+      required: false
+      schema:
+        type: string
+
+  responses:
+    BadRequest:
+      description: Malformed request.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Unauthorized:
+      description: Missing or invalid workload identity or Runtime Invocation token.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Forbidden:
+      description: Caller, ProviderRevision, Conversation or WorkOrder binding is not authorized.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    NotFound:
+      description: Runtime run does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Conflict:
+      description: Stale fencing token, command sequence conflict or request digest mismatch.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Unprocessable:
+      description: Requested command or checkpoint is unsupported by the active ProviderRevision.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    TooManyRequests:
+      description: Runtime concurrency or rate limit exceeded.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Gone:
+      description: Runtime event cursor has expired; restore from the latest compatible checkpoint and platform Canonical Event history.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    InternalError:
+      description: Unexpected Agent Runtime Provider error.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Unavailable:
+      description: Provider is draining or temporarily unavailable.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:conversation-page:v1",
+  "title": "ConversationPage",
+  "type": "object",
+  "required": ["conversations"],
+  "properties": {
+    "conversations": { "type": "array", "items": { "$ref": "urn:agent-platform:conversation:v1" } },
+    "next_cursor": { "type": ["string", "null"] }
+  },
+  "additionalProperties": false
+}

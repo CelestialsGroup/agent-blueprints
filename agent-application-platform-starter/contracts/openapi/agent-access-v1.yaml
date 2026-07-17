@@ -19,6 +19,12 @@ tags:
     description: Submit and control asynchronous work.
   - name: WorkSessions
     description: Create and exchange short-lived browser sessions.
+  - name: Conversations
+    description: Multi-turn Agent conversations, messages, branches and turns.
+  - name: Catalog
+    description: Entitlement-filtered Scenario and Experience discovery.
+  - name: Recordings
+    description: Historical RuntimeSession playback manifests.
   - name: Artifacts
     description: Ingest, read, edit and convert Artifacts.
 
@@ -936,6 +942,395 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /v1/conversations:
+    get:
+      tags: [Conversations]
+      operationId: listConversations
+      summary: List Conversations for the authenticated tenant and principal
+      security:
+        - ServiceOAuth:
+            - conversation:read
+      parameters:
+        - $ref: '#/components/parameters/Traceparent'
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Conversation page
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/conversation-page.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags: [Conversations]
+      operationId: createConversation
+      summary: Idempotently create a Conversation and durable Workspace
+      security:
+        - ServiceOAuth:
+            - conversation:create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/Traceparent'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/conversation-create-request.schema.json
+      responses:
+        '201':
+          description: Conversation created
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/conversation.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /v1/conversations/{conversation_id}:
+    parameters:
+      - $ref: '#/components/parameters/ConversationId'
+      - $ref: '#/components/parameters/Traceparent'
+    get:
+      tags: [Conversations]
+      operationId: getConversation
+      summary: Read one Conversation
+      x-required-work-session-scopes: [conversation:read]
+      security:
+        - ServiceOAuth:
+            - conversation:read
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      responses:
+        '200':
+          description: Conversation state
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/conversation.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /v1/conversations/{conversation_id}/messages:
+    parameters:
+      - $ref: '#/components/parameters/ConversationId'
+      - $ref: '#/components/parameters/Traceparent'
+    get:
+      tags: [Conversations]
+      operationId: listConversationMessages
+      summary: Read append-only Conversation messages after a sequence
+      x-required-work-session-scopes: [conversation:read]
+      security:
+        - ServiceOAuth:
+            - conversation:read
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      parameters:
+        - name: after_message_sequence
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        '200':
+          description: Ordered Conversation messages
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/conversation-message-page.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /v1/conversations/{conversation_id}/branches:
+    parameters:
+      - $ref: '#/components/parameters/ConversationId'
+      - $ref: '#/components/parameters/Traceparent'
+    get:
+      tags: [Conversations]
+      operationId: listConversationBranches
+      summary: List branch heads and branch-local active WorkOrders
+      x-required-work-session-scopes: [conversation:read]
+      security:
+        - ServiceOAuth:
+            - conversation:read
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      parameters:
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Conversation branch page
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/conversation-branch-page.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /v1/conversations/{conversation_id}/turns:
+    parameters:
+      - $ref: '#/components/parameters/ConversationId'
+      - $ref: '#/components/parameters/Traceparent'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      tags: [Conversations]
+      operationId: createConversationTurn
+      summary: Append a user message and atomically create its WorkOrder
+      description: A fresh Business-issued ExecutionGrant is required for every executable turn.
+      x-required-work-session-scopes: [conversation:write]
+      x-cookie-csrf-required: true
+      security:
+        - ServiceOAuth:
+            - work:create
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/conversation-turn-request.schema.json
+      responses:
+        '202':
+          description: Message and WorkOrder accepted atomically
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/conversation-turn-accepted.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /v1/conversations/{conversation_id}/sessions:
+    parameters:
+      - $ref: '#/components/parameters/ConversationId'
+      - $ref: '#/components/parameters/Traceparent'
+    post:
+      tags: [WorkSessions]
+      operationId: createConversationWorkSession
+      summary: Create a one-time exchange token bound to a Conversation
+      security:
+        - ServiceOAuth:
+            - session:create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/work-session-request.schema.json
+      responses:
+        '201':
+          description: One-time WorkSession exchange token created
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/work-session-response.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /v1/catalog/experiences:
+    get:
+      tags: [Catalog]
+      operationId: listExperienceCatalog
+      summary: Discover tenant-visible and entitlement-authorized Experiences
+      x-required-work-session-scopes: [catalog:read]
+      security:
+        - ServiceOAuth:
+            - catalog:read
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      parameters:
+        - $ref: '#/components/parameters/Traceparent'
+        - name: kind
+          in: query
+          required: false
+          schema:
+            enum: [template, skill_pack, design_system, editor_profile]
+        - name: capability_id
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Filtered Experience catalog
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/experience-catalog-page.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /v1/catalog/templates/{catalog_entry_id}/revisions/{revision_id}:
+    parameters:
+      - $ref: '#/components/parameters/CatalogEntryId'
+      - $ref: '#/components/parameters/RevisionId'
+      - $ref: '#/components/parameters/Traceparent'
+    get:
+      tags: [Catalog]
+      operationId: getTemplateRevision
+      summary: Read an immutable TemplateRevision
+      x-required-work-session-scopes: [catalog:read]
+      security:
+        - ServiceOAuth:
+            - catalog:read
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      responses:
+        '200':
+          description: Immutable TemplateRevision
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/template-revision.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /v1/work-orders/{work_order_id}/runtime-recordings:
+    parameters:
+      - $ref: '#/components/parameters/WorkOrderId'
+      - $ref: '#/components/parameters/Traceparent'
+    get:
+      tags: [Recordings]
+      operationId: listRuntimeRecordings
+      summary: List historical RuntimeSession recordings for a WorkOrder
+      x-required-work-session-scopes: [recording:read]
+      security:
+        - ServiceOAuth:
+            - work:read
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      responses:
+        '200':
+          description: Runtime recording page
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/runtime-recording-page.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /v1/runtime-recordings/{recording_id}/manifest:
+    parameters:
+      - $ref: '#/components/parameters/RecordingId'
+      - $ref: '#/components/parameters/Traceparent'
+    get:
+      tags: [Recordings]
+      operationId: getRuntimeRecordingManifest
+      summary: Read an immutable, timeline-aligned recording playback manifest
+      x-required-work-session-scopes: [recording:read]
+      security:
+        - ServiceOAuth:
+            - work:read
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      responses:
+        '200':
+          description: Recording playback manifest
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/runtime-recording-manifest.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          $ref: '#/components/responses/Gone'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
 components:
   securitySchemes:
     ServiceOAuth:
@@ -953,14 +1348,18 @@ components:
             work:cancel: Cancel WorkOrders.
             work:control: Pause, resume, approve and open Runtime sessions.
             session:create: Create browser WorkSessions.
+            session:delegate: Create an explicitly audited delegated WorkSession.
             artifact:read: Read Artifacts.
             artifact:write: Ingest, edit and convert Artifacts.
             provider:admin: Administer Plugins and Providers.
+            conversation:create: Create Conversations and their Workspaces.
+            conversation:read: Read Conversations and messages.
+            catalog:read: Discover tenant-visible Experiences and immutable revisions.
     WorkSessionCookie:
       type: apiKey
       in: cookie
       name: __Host-agent_session
-      description: HttpOnly Secure browser session cookie bound to one WorkOrder.
+      description: HttpOnly Secure browser session cookie bound to one Conversation and optionally narrowed to one WorkOrder.
     WorkSessionBearer:
       type: http
       scheme: bearer
@@ -984,6 +1383,34 @@ components:
       description: W3C trace context.
       schema:
         type: string
+    ConversationId:
+      name: conversation_id
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+    CatalogEntryId:
+      name: catalog_entry_id
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+    RevisionId:
+      name: revision_id
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+    RecordingId:
+      name: recording_id
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
     CsrfToken:
       name: X-CSRF-Token
       in: header
@@ -1067,6 +1494,12 @@ components:
             $ref: ../schemas/standard-error.schema.json
     NotFound:
       description: Resource does not exist or is intentionally concealed.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Gone:
+      description: Resource existed but its retained content has been deleted or expired.
       content:
         application/json:
           schema:

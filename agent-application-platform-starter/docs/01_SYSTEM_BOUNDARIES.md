@@ -9,6 +9,7 @@
 - Membership/Product
 - Order/Payment/Refund
 - Commercial Entitlement/Quota
+- Entitlement Revision/Quota Reservation/Settlement
 - Price/Invoice
 - Business Notification
 
@@ -18,6 +19,7 @@
 
 - ClientApplication
 - InternalTenant/Principal Mapping
+- AgentConversation/ConversationMessage
 - WorkOrder/Workspace
 - GrantConsumption
 - WorkflowRun/AgentRun
@@ -27,6 +29,8 @@
 - TechnicalUsage
 - Delivery
 - Provider Revision/Resolution
+- RuntimeRecording/Playback Manifest
+- Experience Catalog/Immutable Revision
 
 ## Plugin
 

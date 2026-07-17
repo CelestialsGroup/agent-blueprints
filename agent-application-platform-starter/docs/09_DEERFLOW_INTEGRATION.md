@@ -2,7 +2,7 @@
 
 ## 1. 定位
 
-DeerFlow 是默认 Agent Runtime Plugin。
+DeerFlow 是默认 Agent Runtime Provider，通过 `agent-runtime-provider-v1.yaml` 的 Anti-Corruption Adapter 接入。
 
 不拥有：
 
@@ -43,6 +43,8 @@ DeerFlow 不得直接持有平台长期模型凭据，也不得绕过网络策�
 - Error normalization
 
 所有 Agent Runtime 调用本身经过 Invocation Ledger。
+
+稳定操作是 capability negotiation、start/restore run、append-only command、status、cursor event 和 checkpoint manifest。DeerFlow Thread/Run/Checkpoint ID 与原始事件只存在于 Adapter Private Store。
 
 ## 4. 多副本
 
@@ -91,6 +93,9 @@ RunManifest 固化：
 - Usage
 - Historical replay
 - Runtime failure recovery
+- Append-input/interrupt command fencing
+- Checkpoint export/restore compatibility
+- Old ProviderRevision event golden-file normalization
 
 ## 7. Sandbox 解耦
 

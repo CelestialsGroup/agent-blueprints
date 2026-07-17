@@ -1,6 +1,6 @@
 {
   "provider_revision_id": "apr_01J00000000000000000000000",
-  "provider_revision_digest": "sha256:6b7d3dccef05eb830d50fab820dfdae5f0aa6ad544041d0584e8e51ef32d8483",
+  "provider_revision_digest": "sha256:f36191e96fc5717be6b51d730cd408522f4233ea2700b07cb383e9d9879c5599",
   "provider_instance_id": "api_deerflow_runtime",
   "plugin_id": "agent-runtime.deerflow",
   "plugin_version": "0.8.3",
@@ -19,9 +19,17 @@
       "suite_version": "1.0.0",
       "status": "passed",
       "report_digest": "sha256:1212121212121212121212121212121212121212121212121212121212121212"
+    },
+    {
+      "capability": "agent.general",
+      "version": "1.0",
+      "profile": "default",
+      "suite_version": "1.0.0",
+      "status": "passed",
+      "report_digest": "sha256:1313131313131313131313131313131313131313131313131313131313131313"
     }
   ],
-  "conformance_set_digest": "sha256:b73de0fbc2dfba635575ef0ae18d094f4bcf250388c2436779943da954a29550",
-  "governed_conformance_report_digest": "sha256:b73de0fbc2dfba635575ef0ae18d094f4bcf250388c2436779943da954a29550",
+  "conformance_set_digest": "sha256:417ef187f47cf26491f61353cd121f9415a4012b9f2241156aaf01e4fede755f",
+  "governed_conformance_report_digest": "sha256:417ef187f47cf26491f61353cd121f9415a4012b9f2241156aaf01e4fede755f",
   "created_at": "2026-07-16T09:00:10Z"
 }

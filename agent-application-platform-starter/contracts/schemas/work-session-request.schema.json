@@ -7,7 +7,8 @@
     "subject_mode",
     "external_principal_id",
     "scopes",
-    "ttl_seconds"
+    "ttl_seconds",
+    "commercial_authorization"
   ],
   "properties": {
     "external_principal_id": {
@@ -25,10 +26,14 @@
           "artifact:edit",
           "artifact:export",
           "work:control",
+          "conversation:read",
+          "conversation:write",
+          "catalog:read",
           "approval:read",
           "approval:decide",
           "runtime:view",
-          "runtime:control"
+          "runtime:control",
+          "recording:read"
         ]
       }
     },
@@ -46,6 +51,9 @@
     "delegation_reason": {
       "type": "string",
       "maxLength": 512
+    },
+    "commercial_authorization": {
+      "$ref": "urn:agent-platform:commercial-authorization-snapshot:v1"
     }
   },
   "additionalProperties": false,
@@ -73,6 +81,7 @@
   ],
   "x-semantic-constraints": [
     "owner external_principal_id must equal the WorkOrder principal",
-    "delegated mode requires ServiceOAuth scope session:delegate and WorkOrder collaboration policy"
+    "delegated mode requires ServiceOAuth scope session:delegate and Conversation collaboration policy",
+    "the session cannot outlive commercial_authorization.expires_at"
   ]
 }

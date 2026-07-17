@@ -7,7 +7,8 @@
 ```text
 Business UI
  -> Business Backend
- -> Create WorkSession
+ -> Create/Resume AgentConversation
+ -> Create Conversation WorkSession
  -> One-time Exchange
  -> Agent Workbench Cookie Session
 ```
@@ -48,6 +49,9 @@ Business UI
 - Artifact Viewer/Edit
 - History
 - Export
+- Conversation branches and follow-up Turns
+- Runtime recording playback
+- Entitlement-filtered Experience Catalog
 
 业务应用提供：
 
@@ -76,6 +80,8 @@ plugin_id == "html-to-pptx"
 第一阶段只允许：
 
 - Schema-driven UI
-- 平台签名的 Trusted Component Registry
+- 平台认证的 `UiExtensionManifest`，固定 Artifact bundle、slot、opaque-origin iframe、CSP 与 typed postMessage protocol
 
 不允许任意远程 JavaScript。
+
+html-anything、Open Design 和 motion-anything 优先拆分为 Catalog importer、Template/Skill、Converter、Renderer/Editor Provider。只有无法用平台 Workbench 表达的富交互部分才使用受隔离的 UI Extension。

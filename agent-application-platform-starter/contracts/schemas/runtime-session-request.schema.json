@@ -4,7 +4,8 @@
   "title": "CreateRuntimeSessionRequest",
   "type": "object",
   "required": [
-    "runtime_type"
+    "runtime_type",
+    "recording"
   ],
   "properties": {
     "runtime_type": {
@@ -27,11 +28,34 @@
           "file-transfer"
         ]
       }
+    },
+    "recording": {
+      "type": "object",
+      "required": ["mode"],
+      "properties": {
+        "mode": { "enum": ["disabled", "platform_managed"] },
+        "channels": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["terminal", "browser", "desktop", "file_delta"] }
+        },
+        "classification": { "enum": ["internal", "confidential", "restricted"] },
+        "retention_days": { "type": "integer", "minimum": 1, "maximum": 3650 },
+        "consent_reference": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "mode": { "const": "platform_managed" } }, "required": ["mode"] },
+          "then": { "required": ["channels", "classification", "retention_days"] }
+        }
+      ]
     }
   },
   "additionalProperties": false,
   "x-semantic-constraints": [
     "requested scopes must be a subset of the authenticated WorkSession and WorkOrder policy",
-    "control, input, clipboard, or file-transfer requires runtime:control; view-only requires runtime:view"
+    "control, input, clipboard, or file-transfer requires runtime:control; view-only requires runtime:view",
+    "platform_managed recording is created by Runtime Gateway and never delegated to the Sandbox Provider as an authorization decision"
   ]
 }

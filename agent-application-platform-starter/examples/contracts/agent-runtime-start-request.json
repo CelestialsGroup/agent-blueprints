@@ -1,0 +1,22 @@
+{
+  "protocol_version": "v1",
+  "runtime_run_id": "rtr_01J00000000000000000000000",
+  "conversation_id": "conv_01J00000000000000000000000",
+  "branch_id": "main",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "agent_run_id": "agr_01J00000000000000000000000",
+  "invocation_id": "inv_runtime_01J000000000000000000",
+  "invocation_attempt_id": "iat_runtime_01J0000000000000000",
+  "fencing_token": 1,
+  "idempotency_key": "runtime-start-key-0001",
+  "request_digest": "sha256:b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+  "deadline_at": "2026-07-15T10:30:00Z",
+  "run_manifest_digest": "sha256:7066f1ed4f6d5a9a11d102af3fbc240e047a3021243b9283f843c6171f711661",
+  "input_message_id": "msg_01J00000000000000000000000",
+  "sandbox_bindings": [
+    {
+      "sandbox_slot_key": "primary-code",
+      "sandbox_id": "sbx_01J00000000000000000000000"
+    }
+  ]
+}

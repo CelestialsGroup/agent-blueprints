@@ -1,0 +1,30 @@
+{
+  "jti": "grant_invalid",
+  "iss": "business-a",
+  "aud": "agent-platform",
+  "sub": "user-123",
+  "iat": 1784100000,
+  "nbf": 1784100000,
+  "exp": 1784100300,
+  "client_app_id": "html-product",
+  "external_tenant_id": "org-456",
+  "external_principal_id": "user-123",
+  "conversation_id": "conversation-invalid",
+  "turn_id": "turn-invalid",
+  "branch_id": "main",
+  "client_message_id": "message-invalid",
+  "scenario_id": "html-generation",
+  "scenario_version": "1.0.0",
+  "scenario_definition_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "request_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+  "idempotency_key_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+  "usage": "single",
+  "nonce": "nonce-0123456789abcdef",
+  "capabilities": ["agent.general"],
+  "limits": {},
+  "policies": {
+    "network_access": "none",
+    "external_communication": false,
+    "data_classification": "internal"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:conversation-branch:v1",
+  "title": "ConversationBranch",
+  "type": "object",
+  "required": [
+    "conversation_id",
+    "branch_id",
+    "head_message_id",
+    "head_message_sequence",
+    "active_work_order_id",
+    "branch_version",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "conversation_id": { "type": "string", "minLength": 1 },
+    "branch_id": { "type": "string", "minLength": 1 },
+    "forked_from_branch_id": { "type": "string", "minLength": 1 },
+    "forked_from_message_id": { "type": "string", "minLength": 1 },
+    "head_message_id": { "type": ["string", "null"] },
+    "head_message_sequence": { "type": "integer", "minimum": 0 },
+    "active_work_order_id": { "type": ["string", "null"] },
+    "branch_version": { "type": "integer", "minimum": 1 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "dependentRequired": {
+    "forked_from_branch_id": ["forked_from_message_id"],
+    "forked_from_message_id": ["forked_from_branch_id"]
+  },
+  "x-semantic-constraints": [
+    "head_message_id is null exactly when head_message_sequence is zero",
+    "forked_from_message_id references an immutable prior message on forked_from_branch_id",
+    "active_work_order_id is unique per conversation_id plus branch_id and changes with branch_version compare-and-swap"
+  ]
+}

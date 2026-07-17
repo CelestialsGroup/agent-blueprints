@@ -1,4 +1,4 @@
-# Sandbox Lifecycle and Snapshot — v0.8.6
+# Sandbox Lifecycle and Snapshot — v0.9.0
 
 ## Two state levels
 

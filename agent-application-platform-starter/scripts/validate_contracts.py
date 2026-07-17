@@ -182,9 +182,15 @@ valid_cases = [
     ("provider-revision.schema.json", "examples/contracts/sandbox-provider-revision.json"),
     ("provider-revision.schema.json", "examples/contracts/agent-runtime-provider-revision.json"),
     ("provider-revision.schema.json", "examples/contracts/tool-provider-revision.json"),
+    ("provider-revision.schema.json", "examples/contracts/html-skill-provider-revision.json"),
+    ("provider-revision.schema.json", "examples/contracts/renderer-provider-revision.json"),
+    ("provider-revision.schema.json", "examples/contracts/template-provider-revision.json"),
     ("provider-admission-decision.schema.json", "examples/contracts/provider-admission-decision.json"),
     ("provider-admission-decision.schema.json", "examples/contracts/agent-runtime-admission-decision.json"),
     ("provider-admission-decision.schema.json", "examples/contracts/tool-provider-admission-decision.json"),
+    ("provider-admission-decision.schema.json", "examples/contracts/html-skill-provider-admission-decision.json"),
+    ("provider-admission-decision.schema.json", "examples/contracts/renderer-provider-admission-decision.json"),
+    ("provider-admission-decision.schema.json", "examples/contracts/template-provider-admission-decision.json"),
     ("run-admission-context.schema.json", "examples/contracts/run-admission-context.json"),
     ("sandbox-operation-record.schema.json", "examples/contracts/sandbox-operation.json"),
     ("sandbox-operation-attempt.schema.json", "examples/contracts/sandbox-operation-attempt.json"),
@@ -200,6 +206,33 @@ valid_cases = [
     ("invocation-reconciliation-case.schema.json", "examples/contracts/invocation-retry-reconciliation-case.json"),
     ("invocation-manual-review-decision.schema.json", "examples/contracts/invocation-retry-manual-review-decision.json"),
     ("run-manifest-v2.schema.json", "examples/contracts/run-manifest-v2.json"),
+    ("commercial-authorization-snapshot.schema.json", "examples/contracts/commercial-authorization-snapshot.json"),
+    ("conversation.schema.json", "examples/contracts/conversation.json"),
+    ("conversation-create-request.schema.json", "examples/contracts/conversation-create-request.json"),
+    ("conversation-message.schema.json", "examples/contracts/conversation-message.json"),
+    ("conversation-message-page.schema.json", "examples/contracts/conversation-message-page.json"),
+    ("conversation-page.schema.json", "examples/contracts/conversation-page.json"),
+    ("conversation-branch.schema.json", "examples/contracts/conversation-branch.json"),
+    ("conversation-branch-page.schema.json", "examples/contracts/conversation-branch-page.json"),
+    ("conversation-turn-request.schema.json", "examples/contracts/conversation-turn-request.json"),
+    ("conversation-turn-accepted.schema.json", "examples/contracts/conversation-turn-accepted.json"),
+    ("template-revision.schema.json", "examples/contracts/template-revision.json"),
+    ("experience-catalog-entry.schema.json", "examples/contracts/experience-catalog-entry.json"),
+    ("experience-catalog-page.schema.json", "examples/contracts/experience-catalog-page.json"),
+    ("runtime-recording.schema.json", "examples/contracts/runtime-recording.json"),
+    ("runtime-recording-chunk.schema.json", "examples/contracts/runtime-recording-chunk.json"),
+    ("runtime-recording-page.schema.json", "examples/contracts/runtime-recording-page.json"),
+    ("runtime-recording-manifest.schema.json", "examples/contracts/runtime-recording-manifest.json"),
+    ("runtime-session-request.schema.json", "examples/contracts/runtime-session-request.json"),
+    ("runtime-session-response.schema.json", "examples/contracts/runtime-session-response.json"),
+    ("agent-runtime-capabilities.schema.json", "examples/contracts/agent-runtime-capabilities.json"),
+    ("agent-runtime-checkpoint-manifest.schema.json", "examples/contracts/agent-runtime-checkpoint-manifest.json"),
+    ("agent-runtime-start-request.schema.json", "examples/contracts/agent-runtime-start-request.json"),
+    ("agent-runtime-command.schema.json", "examples/contracts/agent-runtime-command.json"),
+    ("agent-runtime-run-status.schema.json", "examples/contracts/agent-runtime-run-status.json"),
+    ("agent-runtime-event.schema.json", "examples/contracts/agent-runtime-event.json"),
+    ("agent-runtime-event-page.schema.json", "examples/contracts/agent-runtime-event-page.json"),
+    ("ui-extension-manifest.schema.json", "examples/contracts/ui-extension-manifest.json"),
 ]
 invalid_cases = [
     ("plugin-manifest-v2.schema.json", "contracts/tests/invalid/plugin-self-declared-trust.json"),
@@ -213,6 +246,11 @@ invalid_cases = [
     ("run-manifest-v2.schema.json", "contracts/tests/invalid/run-manifest-empty-execution.json"),
     ("plugin-invocation-status.schema.json", "contracts/tests/invalid/plugin-status-succeeded-with-error.json"),
     ("sandbox-cancel-exec-request.schema.json", "contracts/tests/invalid/sandbox-cancel-missing-mutation-envelope.json"),
+    ("conversation-turn-request.schema.json", "contracts/tests/invalid/conversation-turn-missing-grant.json"),
+    ("runtime-recording.schema.json", "contracts/tests/invalid/runtime-recording-ready-missing-manifest.json"),
+    ("agent-runtime-command.schema.json", "contracts/tests/invalid/agent-runtime-append-input-missing-message.json"),
+    ("work-order-request.schema.json", "contracts/tests/invalid/work-order-missing-conversation-binding.json"),
+    ("execution-grant-claims.schema.json", "contracts/tests/invalid/grant-missing-commercial-authorization.json"),
 ]
 for case in valid_cases:
     validate(*case, True)
@@ -233,6 +271,15 @@ for relative, field in [
     ("examples/contracts/agent-runtime-admission-decision.json", "decision_digest"),
     ("examples/contracts/tool-provider-revision.json", "provider_revision_digest"),
     ("examples/contracts/tool-provider-admission-decision.json", "decision_digest"),
+    ("examples/contracts/html-skill-provider-revision.json", "provider_revision_digest"),
+    ("examples/contracts/html-skill-provider-admission-decision.json", "decision_digest"),
+    ("examples/contracts/renderer-provider-revision.json", "provider_revision_digest"),
+    ("examples/contracts/renderer-provider-admission-decision.json", "decision_digest"),
+    ("examples/contracts/template-provider-revision.json", "provider_revision_digest"),
+    ("examples/contracts/template-provider-admission-decision.json", "decision_digest"),
+    ("examples/contracts/template-revision.json", "revision_digest"),
+    ("examples/contracts/commercial-authorization-snapshot.json", "authorization_digest"),
+    ("examples/contracts/ui-extension-manifest.json", "manifest_digest"),
     ("examples/contracts/sandbox-manual-review-decision.json", "decision_digest"),
     ("examples/contracts/sandbox-reconciliation-case.json", "case_digest"),
     ("examples/contracts/invocation-manual-review-decision.json", "decision_digest"),
@@ -247,5 +294,29 @@ for relative, field in [
     unsigned.pop(field)
     if digest(unsigned) != expected:
         raise AssertionError(f"Self-digest mismatch: {relative}")
+
+commercial = load(ROOT / "examples/contracts/commercial-authorization-snapshot.json")
+if commercial["authorized_limits_digest"] != digest(commercial["authorized_limits"]):
+    raise AssertionError("CommercialAuthorizationSnapshot authorized_limits_digest mismatch")
+
+scenario = load(ROOT / "examples/scenarios/html-generation.yaml")
+ui_schema = load(ROOT / "examples/schemas/html-generation-ui.schema.json")
+if scenario["ui"]["schema"]["digest"] != digest(ui_schema):
+    raise AssertionError("Scenario UI schema digest does not bind html-generation-ui.schema.json")
+scenario_unsigned = copy.deepcopy(scenario)
+scenario_expected = scenario_unsigned.pop("definition_digest")
+if digest(scenario_unsigned) != scenario_expected:
+    raise AssertionError("Scenario definition_digest mismatch: examples/scenarios/html-generation.yaml")
+
+recording_manifest = load(ROOT / "examples/contracts/runtime-recording-manifest.json")
+recording_manifest_unsigned = copy.deepcopy(recording_manifest)
+recording_manifest_expected = recording_manifest_unsigned.pop("manifest_digest")
+nested_manifest_expected = recording_manifest_unsigned["recording"].pop("manifest_digest")
+if recording_manifest_expected != nested_manifest_expected or digest(recording_manifest_unsigned) != recording_manifest_expected:
+    raise AssertionError("RuntimeRecordingManifest detached digest slots are inconsistent")
+if recording_manifest["recording"] != load(ROOT / "examples/contracts/runtime-recording.json"):
+    raise AssertionError("RuntimeRecordingManifest does not embed the governed RuntimeRecording fixture")
+if recording_manifest["chunks"] != [load(ROOT / "examples/contracts/runtime-recording-chunk.json")]:
+    raise AssertionError("RuntimeRecordingManifest does not bind the governed chunk fixture")
 
 print(f"Validated {len(by_id)} schemas, {len(valid_cases)} valid, {len(invalid_cases)} invalid, and Strict I-JSON fixtures.")

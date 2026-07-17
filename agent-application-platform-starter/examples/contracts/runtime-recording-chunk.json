@@ -1,0 +1,16 @@
+{
+  "chunk_id": "recchunk_01J000000000000000000000",
+  "recording_id": "rec_01J00000000000000000000000",
+  "channel": "terminal",
+  "chunk_sequence": 1,
+  "started_at": "2026-07-15T10:00:00Z",
+  "ended_at": "2026-07-15T10:05:00Z",
+  "start_work_sequence": 10,
+  "end_work_sequence": 42,
+  "artifact_id": "art_recording_terminal_01",
+  "artifact_version_id": "ver_recording_terminal_01",
+  "digest": "sha256:a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3",
+  "media_type": "application/x-asciicast",
+  "size_bytes": 4096,
+  "redaction_profile": "terminal-default-v1"
+}

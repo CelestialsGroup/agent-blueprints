@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:conversation-create-request:v1",
+  "title": "CreateConversationRequest",
+  "type": "object",
+  "required": ["client_conversation_key"],
+  "properties": {
+    "client_conversation_key": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "title": { "type": "string", "maxLength": 512 },
+    "default_scenario": {
+      "type": "object",
+      "required": ["id", "version", "definition_digest"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "definition_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "metadata": { "type": "object" }
+  },
+  "additionalProperties": false
+}

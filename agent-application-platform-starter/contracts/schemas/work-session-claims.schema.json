@@ -13,7 +13,9 @@
     "client_app_id",
     "tenant_id",
     "principal_id",
-    "work_order_id",
+    "conversation_id",
+    "commercial_authorization_id",
+    "commercial_authorization_digest",
     "scopes",
     "session_version"
   ],
@@ -47,8 +49,19 @@
     "principal_id": {
       "type": "string"
     },
+    "conversation_id": {
+      "type": "string"
+    },
     "work_order_id": {
       "type": "string"
+    },
+    "commercial_authorization_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "commercial_authorization_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
     },
     "scopes": {
       "type": "array",
@@ -62,10 +75,14 @@
           "artifact:edit",
           "artifact:export",
           "work:control",
+          "conversation:read",
+          "conversation:write",
+          "catalog:read",
           "approval:read",
           "approval:decide",
           "runtime:view",
-          "runtime:control"
+          "runtime:control",
+          "recording:read"
         ]
       }
     },
@@ -78,6 +95,8 @@
   "x-semantic-constraints": [
     "iat < exp",
     "exp - iat <= 3600",
-    "validation profile is mutually exclusive from ExecutionGrant and OAuth access tokens"
+    "validation profile is mutually exclusive from ExecutionGrant and OAuth access tokens",
+    "conversation_id is mandatory; work_order_id is an optional narrowing binding",
+    "commercial authorization is rechecked before every new Conversation turn"
   ]
 }

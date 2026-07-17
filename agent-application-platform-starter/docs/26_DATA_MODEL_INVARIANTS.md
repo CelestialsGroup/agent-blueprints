@@ -1,4 +1,4 @@
-# Data Model Invariants — v0.8.6
+# Data Model Invariants — v0.9.0
 
 以下约束必须由 PostgreSQL migration/constraint 实现，不能只由应用代码约定。
 
@@ -7,6 +7,14 @@
 - `(tenant_id, external_subject)` 唯一；所有业务表显式 tenant_id。
 - `work_orders(tenant_id, idempotency_key_digest)` 唯一。
 - ExecutionGrant `jti` 单次消费，消费记录唯一；过期时间、request/scenario/idempotency digest 必须匹配。
+- `conversations(conversation_id)` 主键；`(tenant_id, client_app_id, client_conversation_key)` 唯一。
+- `conversation_messages(message_id)` 主键；`(conversation_id, message_sequence)` 与 `(conversation_id, client_message_id)` 唯一；Message append-only。
+- `conversation_branches(conversation_id, branch_id)` 主键；head message/sequence 与 fork point 必须引用同 Conversation 的先前 Message；branch_version 用于 compare-and-swap。
+- `parent_message_id` 只能引用同 Conversation 中 sequence 更小的 Message；每个 branch 默认最多一个 active WorkOrder，不能用 Conversation 顶层单值表达并行分支。
+- Conversation Turn 事务原子完成 Message sequence、WorkOrder、GrantConsumption、Workflow Start Outbox 和 Canonical Event。
+- WorkOrder、ExecutionGrant、RunManifest 和 CanonicalEvent 的 conversation/turn/branch/input_message binding 必须一致。
+- Conversation lifecycle 必须遵循 `conversation-v1`；archived/deleted 写入相应审计时间，deleted 不可恢复。
+- CommercialAuthorizationSnapshot ID/digest、显式 entitlement/capability/limits 和 quota reservation reference 随 WorkOrder 固化；limits digest 必须闭合，Platform 无权 Update Business entitlement/balance。
 
 ## Invocation
 
@@ -39,18 +47,27 @@
 - `provider_admission_decisions(decision_id)` 主键；`(provider_revision_id, decision_sequence)` 唯一且 append-only。
 - sequence 必须从 1 连续递增；sequence=1 不得有 supersedes，sequence>1 必须引用同 Revision 紧邻上一 decision；revoked 必须有 reason。
 - 新 Run 只能选择 latest decision=certified 的 Revision；RunManifest 保留 revision/decision digest，后续撤销不改写历史 Run。
+- Agent Runtime command `(runtime_run_id, command_sequence)`、command_id 唯一；command append-only 且 fencing token 严格递增。
+- AgentRuntimeRun lifecycle 必须遵循 `agent-runtime-run-v1`；cancel_requested 不是取消证明，outcome_unknown 必须经 Invocation Ledger 对账，终态必须有 completed_at。
+- TemplateRevision ID/digest 唯一且不可变；SelectedExperience 必须引用 admitted Catalog revision 和 certified Template ProviderRevision，并满足 Scenario required_tags 与 CommercialAuthorizationSnapshot entitlement。
+- UiExtensionManifest bundle/digest/ProviderRevision 不可变；只允许受支持 slot、opaque-origin iframe 和批准权限。
 
 ## Workflow and event
 
 - Temporal Workflow ID 与平台 run_id 唯一绑定；workflow_run_id append-only。
 - Canonical Event `(aggregate_type, aggregate_id, aggregate_sequence)` 唯一；event_id 全局唯一。
 - Outbox row 与业务变更同事务；Inbox `(consumer, message_id)` 唯一。
+- Canonical aggregate 支持 Conversation、ConversationBranch、ConversationMessage、Sandbox、RuntimeSession 和 RuntimeRecording；EventPage 必须 `$ref` CanonicalEvent，禁止复制 Schema。
+- CanonicalEvent 的 Work context 是 all-or-none 绑定；Conversation-only lifecycle event 不得伪造 work_order_id/work_sequence。
 
 ## Artifact and delivery
 
 - `(artifact_id, version_number)` 唯一；ArtifactVersion 不可变。
 - staging/finalization 使用 expected digest/size；未 finalized 不可交付。
 - DeliveryAttempt `(delivery_id, attempt_number)` 唯一；回调只能引用预注册 target，不接受任意 URL。
+- `runtime_recordings(recording_id)` 主键；`(recording_id, channel, chunk_sequence)` 与 chunk_id 唯一。
+- Recording chunk immutable ArtifactVersion 与 digest/size 一致；chunk_count、channel sequence、work_sequence/time range 和 manifest digest 必须闭合。
+- RuntimeRecording lifecycle 必须遵循 `runtime-recording-v1`；ready 只能绑定完整 Manifest，failed 必须绑定结构化错误，deleted 保留不可逆 tombstone。
 
 ## Redis prohibition
 

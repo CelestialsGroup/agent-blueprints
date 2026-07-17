@@ -9,6 +9,10 @@
   "client_app_id": "html-product",
   "external_tenant_id": "org-456",
   "external_principal_id": "user-123",
+  "conversation_id": "conv_01J00000000000000000000000",
+  "turn_id": "turn_01J00000000000000000000000",
+  "branch_id": "main",
+  "client_message_id": "client-msg-0001",
   "scenario_id": "html-generation",
   "request_digest": "sha256:88ce4d187a6fe5197cecaa870c2d5a00fb7a3b089e57aa7946a239d9f8f03789",
   "idempotency_key_digest": "sha256:6bf53ca6b162632ebe7a477b424bedb41cae0759b08b27970fe9dbc7199ff87c",
@@ -36,6 +40,37 @@
     ],
     "data_classification": "internal"
   },
+  "commercial_authorization": {
+    "authorization_id": "cauth_01J00000000000000000000000",
+    "authorization_digest": "sha256:6433ae5c1cf9444c43d9ebb4b640b9b0fd3b38854651d0510387235719105d9c",
+    "entitlement_revision_id": "entitlement-pro-2026-07",
+    "entitlement_revision_digest": "sha256:7272727272727272727272727272727272727272727272727272727272727272",
+    "quota_reservation_id": "qres_01J00000000000000000000000",
+    "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
+    "business_account_id": "account-456",
+    "plan_reference": "pro",
+    "authorized_limits_digest": "sha256:184057aaf43460475c1240194d54b0ceeb6a1d1b515df509ae4e9a19d8a7a5a7",
+    "issued_at": "2026-07-15T09:59:30Z",
+    "expires_at": "2026-07-15T10:30:00Z",
+    "settlement_target_id": "business-usage-settlement-v1",
+    "authorized_entitlements": [
+      "experience.html.premium"
+    ],
+    "authorized_capabilities": [
+      "agent.general",
+      "html.generate",
+      "artifact.preview.html",
+      "converter.html-to-pptx"
+    ],
+    "authorized_limits": {
+      "max_input_tokens": 100000,
+      "max_output_tokens": 20000,
+      "max_sandbox_seconds": 1800,
+      "max_storage_bytes": 104857600,
+      "max_artifact_count": 20,
+      "max_conversion_count": 3
+    }
+  },
   "scenario_version": "1.0.0",
-  "scenario_definition_digest": "sha256:dd7b535a7cd877a389665d18edd8b2340c41e1af13c2029d33be666518dccd30"
+  "scenario_definition_digest": "sha256:2ef129bc2277d1927147c533a18bcc5500db43e4c36ef12313b904fe80bb709c"
 }

@@ -1,0 +1,15 @@
+{
+  "recording_id": "rec_invalid",
+  "tenant_id": "tenant_invalid",
+  "conversation_id": "conversation_invalid",
+  "work_order_id": "work_invalid",
+  "sandbox_id": "sandbox_invalid",
+  "runtime_session_id": "session_invalid",
+  "status": "ready",
+  "channels": ["terminal"],
+  "recording_policy_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "classification": "internal",
+  "retention_until": "2026-08-01T00:00:00Z",
+  "created_at": "2026-07-01T00:00:00Z",
+  "updated_at": "2026-07-01T01:00:00Z"
+}

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:agent-runtime-start-request:v1",
+  "title": "StartAgentRuntimeRunRequest",
+  "type": "object",
+  "required": [
+    "protocol_version",
+    "runtime_run_id",
+    "conversation_id",
+    "branch_id",
+    "work_order_id",
+    "agent_run_id",
+    "invocation_id",
+    "invocation_attempt_id",
+    "fencing_token",
+    "idempotency_key",
+    "request_digest",
+    "deadline_at",
+    "run_manifest_digest",
+    "input_message_id",
+    "sandbox_bindings"
+  ],
+  "properties": {
+    "protocol_version": { "const": "v1" },
+    "runtime_run_id": { "type": "string", "minLength": 1 },
+    "conversation_id": { "type": "string", "minLength": 1 },
+    "branch_id": { "type": "string", "minLength": 1 },
+    "work_order_id": { "type": "string", "minLength": 1 },
+    "agent_run_id": { "type": "string", "minLength": 1 },
+    "invocation_id": { "type": "string", "minLength": 1 },
+    "invocation_attempt_id": { "type": "string", "minLength": 1 },
+    "fencing_token": { "type": "integer", "minimum": 1 },
+    "idempotency_key": { "type": "string", "minLength": 16 },
+    "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "deadline_at": { "type": "string", "format": "date-time" },
+    "run_manifest_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "input_message_id": { "type": "string", "minLength": 1 },
+    "checkpoint": { "$ref": "urn:agent-platform:agent-runtime-checkpoint-manifest:v1" },
+    "sandbox_bindings": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": ["sandbox_slot_key", "sandbox_id"],
+        "properties": {
+          "sandbox_slot_key": { "type": "string", "minLength": 1 },
+          "sandbox_id": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

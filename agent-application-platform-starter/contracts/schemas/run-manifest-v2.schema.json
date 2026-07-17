@@ -7,11 +7,23 @@
     "run_id", "work_order_id", "scenario", "workflow", "capability_resolutions",
     "sandboxes", "location", "request_digest", "execution_budget_digest",
     "policy_decision_digest", "event_schema_version", "agent_runtime",
-    "run_manifest_digest", "temporal", "primary_sandbox_slot_key"
+    "run_manifest_digest", "temporal", "primary_sandbox_slot_key",
+    "conversation", "selected_experiences", "commercial_authorization_digest"
   ],
   "properties": {
     "run_id": { "type": "string", "minLength": 1 },
     "work_order_id": { "type": "string", "minLength": 1 },
+    "conversation": {
+      "type": "object",
+      "required": ["conversation_id", "turn_id", "branch_id", "input_message_id"],
+      "properties": {
+        "conversation_id": { "type": "string", "minLength": 1 },
+        "turn_id": { "type": "string", "minLength": 1 },
+        "branch_id": { "type": "string", "minLength": 1 },
+        "input_message_id": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
     "scenario": {
       "type": "object",
       "required": ["id", "version", "definition_digest"],
@@ -62,15 +74,15 @@
       },
       "additionalProperties": false
     },
-    "templates": {
+    "selected_experiences": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "version", "source_digest"],
+        "required": ["selection", "provider_instance_id", "provider_revision"],
         "properties": {
-          "id": { "type": "string" },
-          "version": { "type": "string" },
-          "source_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+          "selection": { "$ref": "urn:agent-platform:selected-experience:v1" },
+          "provider_instance_id": { "type": "string", "minLength": 1 },
+          "provider_revision": { "$ref": "urn:agent-platform:provider-revision-snapshot:v1" }
         },
         "additionalProperties": false
       },
@@ -90,6 +102,7 @@
     "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "execution_budget_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "policy_decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "commercial_authorization_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "event_schema_version": { "type": "integer", "minimum": 1 },
     "run_manifest_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "temporal": {
@@ -166,5 +179,8 @@
     "agent_runtime and all Sandbox revisions remain immutable for the Run",
     "sandbox_slot_key is unique within the sandboxes array",
     "primary_sandbox_slot_key references exactly one sandboxes item"
+    ,"selected_experiences exactly match the admitted WorkOrder selections and immutable Catalog revisions"
+    ,"every selected experience ProviderRevision is certified and conformant for its capability"
+    ,"conversation binding matches the WorkOrder, input message and ExecutionGrant"
   ]
 }

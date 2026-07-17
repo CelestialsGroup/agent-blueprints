@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:conversation-message-page:v1",
+  "title": "ConversationMessagePage",
+  "type": "object",
+  "required": ["messages", "next_message_sequence"],
+  "properties": {
+    "messages": {
+      "type": "array",
+      "items": { "$ref": "urn:agent-platform:conversation-message:v1" }
+    },
+    "next_message_sequence": { "type": "integer", "minimum": 0 }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:ui-schema:html-generation:v1",
+  "title": "HtmlGenerationUiSchema",
+  "type": "object",
+  "required": ["layout", "controls"],
+  "properties": {
+    "layout": { "const": "agent-workbench/html-generation-v1" },
+    "controls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["field_pointer", "component"],
+        "properties": {
+          "field_pointer": { "type": "string", "pattern": "^/" },
+          "component": { "enum": ["text", "textarea", "catalog-picker", "select"] }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

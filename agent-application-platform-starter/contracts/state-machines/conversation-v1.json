@@ -1,0 +1,12 @@
+{
+  "machine_id": "conversation",
+  "version": 1,
+  "initial_state": "active",
+  "terminal_states": ["deleted"],
+  "transitions": [
+    { "from": "active", "event": "archive", "to": "archived" },
+    { "from": "active", "event": "delete_confirmed", "to": "deleted" },
+    { "from": "archived", "event": "restore", "to": "active" },
+    { "from": "archived", "event": "delete_confirmed", "to": "deleted" }
+  ]
+}

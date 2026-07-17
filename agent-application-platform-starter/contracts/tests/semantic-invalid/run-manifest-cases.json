@@ -4,6 +4,11 @@
     { "id": "duplicate-sandbox-slot", "mutation": "duplicate_sandbox_slot" },
     { "id": "missing-primary-slot", "mutation": "missing_primary_slot" },
     { "id": "wrong-self-digest", "mutation": "wrong_run_manifest_digest" },
-    { "id": "conflicting-revision-snapshot", "mutation": "conflicting_revision_snapshot" }
+    { "id": "conflicting-revision-snapshot", "mutation": "conflicting_revision_snapshot" },
+    { "id": "unadmitted-experience-revision", "mutation": "unadmitted_experience" },
+    { "id": "unauthorized-experience-entitlement", "mutation": "unauthorized_experience_entitlement" },
+    { "id": "missing-required-experience-tag", "mutation": "missing_required_experience_tag" },
+    { "id": "commercial-authorization-digest-mismatch", "mutation": "commercial_authorization_digest_mismatch" },
+    { "id": "scenario-definition-mismatch", "mutation": "scenario_definition_mismatch" }
   ]
 }

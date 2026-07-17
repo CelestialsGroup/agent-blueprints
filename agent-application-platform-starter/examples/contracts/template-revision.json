@@ -1,0 +1,57 @@
+{
+  "template_revision_id": "tmplrev_01J00000000000000000000000",
+  "template_id": "html-anything/landing-saas-dark",
+  "version": "1.0.0",
+  "revision_digest": "sha256:f3ffedb6bbba3ed14d227ba9ac7df4562efe6a246b093ac34522f63d5d615e5b",
+  "provider_revision": {
+    "provider_revision_id": "tplpr_01J0000000000000000000000",
+    "provider_revision_digest": "sha256:8761661ce1d2e7233d942d0e4945bd8502c56f86a91c84ab9e91fbb3f4bafa01",
+    "provider_kind": "template",
+    "plugin_id": "template-provider.html-anything",
+    "plugin_version": "1.0.0",
+    "manifest_digest": "sha256:8181818181818181818181818181818181818181818181818181818181818181",
+    "package_digest": "sha256:8282828282828282828282828282828282828282828282828282828282828282",
+    "runtime_binding_digest": "sha256:8585858585858585858585858585858585858585858585858585858585858585",
+    "configuration_digest": "sha256:8383838383838383838383838383838383838383838383838383838383838383",
+    "approved_permissions_digest": "sha256:8484848484848484848484848484848484848484848484848484848484848484",
+    "credential_binding_digest": "sha256:8686868686868686868686868686868686868686868686868686868686868686",
+    "conformance_report_digest": "sha256:ec3bc4229e8b502ff3d3f821f65d191d01f5aa3d9584a5e8a25c70809a81271e",
+    "admission_decision_id": "tplad_01J0000000000000000000000",
+    "admission_decision_digest": "sha256:c276cbbee22e652f0886f3548c30d6fdd6e910089143b121ef64240a69579fa7",
+    "admission_status": "certified"
+  },
+  "capability": {
+    "id": "template.html.generate",
+    "version": "1.0",
+    "profile": "landing-page"
+  },
+  "source_artifact": {
+    "artifact_id": "art_template_landing_saas_dark",
+    "version_id": "ver_template_landing_saas_dark_1",
+    "digest": "sha256:9191919191919191919191919191919191919191919191919191919191919191",
+    "media_type": "application/vnd.agent.skill+zip"
+  },
+  "preview_artifact": {
+    "artifact_id": "art_template_landing_saas_dark_preview",
+    "version_id": "ver_template_landing_saas_dark_preview_1"
+  },
+  "parameter_schema": {
+    "uri": "urn:agent-platform:template-schema:landing-saas-dark:v1",
+    "digest": "sha256:9292929292929292929292929292929292929292929292929292929292929292",
+    "dialect": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "tags": [
+    "landing",
+    "saas",
+    "dark"
+  ],
+  "locales": [
+    "en",
+    "zh-CN"
+  ],
+  "required_entitlements": [
+    "experience.html.premium"
+  ],
+  "lifecycle": "stable",
+  "created_at": "2026-07-15T09:00:00Z"
+}

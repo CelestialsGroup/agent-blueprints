@@ -1,8 +1,8 @@
-# Agent Application Platform v0.8.6 — implementation rules
+# Agent Application Platform v0.9.0 — implementation rules
 
 ## Authority
 
-`START_HERE.md`、本文件、`docs/44_V086_REVIEW_RESOLUTION.md` 与可执行契约是当前事实源。发生冲突时，Schema、状态机、数据库约束和 Gate 优先于叙述性文档。不得恢复 v0.8.5 或更早设计。
+`START_HERE.md`、本文件、`docs/45_V090_PRODUCT_BOUNDARY_RESOLUTION.md` 与可执行契约是当前事实源。发生冲突时，Schema、状态机、数据库约束和 Gate 优先于叙述性文档。不得恢复 v0.8.6 或更早设计。
 
 ## Frozen boundary impact check
 
@@ -17,8 +17,8 @@
 
 ## Domain ownership
 
-- Business：User、Membership、Product、Order、Payment、Commercial Quota。
-- Agent Platform：WorkOrder、Workspace、Workflow、Invocation、Canonical Event、Artifact、Technical Usage、Delivery、Provider、Sandbox、Audit。
+- Business：User、Membership、Product、Order、Payment、Entitlement、Commercial Quota Reservation/Settlement。
+- Agent Platform：AgentConversation、ConversationMessage、WorkOrder、Workspace、Workflow、Invocation、Canonical Event、Artifact、Technical Usage、Delivery、Provider、Sandbox、RuntimeRecording、Experience Catalog、Audit。
 - Redis 只允许 Cache、Presence、Wakeup；PostgreSQL/Temporal/Event/Artifact 元数据才是事实源。
 
 ## Provider model
@@ -36,6 +36,14 @@ Scenario
 - certification/revocation 是 append-only ProviderAdmissionDecision，不得回写 Revision。
 - RunManifest 固化 Revision 与当时有效 Admission Decision 的摘要快照。
 - html-anything、html-to-pptx、模型、工具、Runtime、Sandbox 均通过 Capability/Provider Port 解析，不得写死在稳定内核。
+- Template/Skill/Design System 等用户可见 Experience 必须绑定 immutable Catalog Revision + ProviderRevision；不得只保存 mutable template_id。
+
+## Conversation and runtime
+
+- Conversation owns one durable Workspace and append-only Message sequence; WorkOrder is one executable Turn.
+- WorkOrder、ExecutionGrant、RunManifest 与 Event 必须绑定 conversation/turn/branch/input_message。
+- DeerFlow 只通过 AgentRuntimeProvider v1 接入；DeerFlow Thread/Run/Checkpoint/Event payload 属于 Adapter 私有模型。
+- 每个可执行 follow-up 需要新的 Business ExecutionGrant；WorkSession 不能扩大商业授权。
 
 ## Reliability
 
@@ -62,6 +70,8 @@ Sandbox Provider API 返回的是单次 transport status；平台的 SandboxOper
 Workspace 通过 `sandboxes[]` 和唯一 `sandbox_slot_key` 支持 `primary-code`、`browser`、`desktop`、`subagent/*`、`isolated/*`。`primary_sandbox_slot_key` 必须恰好引用一个 Slot。
 
 稳定内核禁止保存 Kubernetes Pod/Namespace/Container ID、VM/Node ID 和原始 Runtime Endpoint。Runtime Session 只暴露短期、受授权、可审计的 Gateway Route。
+
+RuntimeRecording 与 live RuntimeSession 分离，由 Runtime Gateway 生成 immutable Artifact chunks 和 playback manifest。录制字节不得进入 PostgreSQL Event payload 或 Temporal History。
 
 ## Contract rules
 

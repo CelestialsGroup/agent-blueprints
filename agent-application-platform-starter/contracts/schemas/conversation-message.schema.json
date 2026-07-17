@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:conversation-message:v1",
+  "title": "ConversationMessage",
+  "type": "object",
+  "required": [
+    "message_id",
+    "conversation_id",
+    "branch_id",
+    "message_sequence",
+    "role",
+    "content",
+    "created_at"
+  ],
+  "properties": {
+    "message_id": { "type": "string", "minLength": 1 },
+    "conversation_id": { "type": "string", "minLength": 1 },
+    "branch_id": { "type": "string", "minLength": 1 },
+    "parent_message_id": { "type": ["string", "null"] },
+    "message_sequence": { "type": "integer", "minimum": 1 },
+    "role": { "enum": ["user", "assistant", "system", "tool"] },
+    "content": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["type", "text"],
+            "properties": {
+              "type": { "const": "text" },
+              "text": { "type": "string", "minLength": 1 }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["type", "artifact_id", "version_id"],
+            "properties": {
+              "type": { "const": "artifact" },
+              "artifact_id": { "type": "string", "minLength": 1 },
+              "version_id": { "type": "string", "minLength": 1 },
+              "role": { "type": "string", "minLength": 1 }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "work_order_id": { "type": ["string", "null"] },
+    "agent_run_id": { "type": ["string", "null"] },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

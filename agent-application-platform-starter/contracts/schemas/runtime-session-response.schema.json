@@ -8,7 +8,8 @@
     "runtime_type",
     "connect_url",
     "expires_at",
-    "scopes"
+    "scopes",
+    "recording"
   ],
   "properties": {
     "runtime_session_id": {
@@ -41,6 +42,21 @@
       "items": {
         "type": "string"
       }
+    },
+    "recording": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "enum": ["disabled", "recording"] },
+        "recording_id": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "recording" } }, "required": ["status"] },
+          "then": { "required": ["recording_id"] }
+        }
+      ]
     }
   },
   "additionalProperties": false

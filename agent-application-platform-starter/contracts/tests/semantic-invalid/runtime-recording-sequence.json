@@ -1,0 +1,44 @@
+{
+  "recording": {
+    "recording_id": "rec_01J00000000000000000000000",
+    "chunk_count": 2
+  },
+  "chunks": [
+    {
+      "chunk_id": "chunk_01",
+      "recording_id": "rec_01J00000000000000000000000",
+      "channel": "terminal",
+      "chunk_sequence": 1,
+      "started_at": "2026-07-15T10:00:00Z",
+      "ended_at": "2026-07-15T10:05:00Z",
+      "start_work_sequence": 10,
+      "end_work_sequence": 42,
+      "artifact_id": "artifact_01",
+      "artifact_version_id": "version_01",
+      "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "media_type": "application/x-asciicast",
+      "size_bytes": 100
+    },
+    {
+      "chunk_id": "chunk_02",
+      "recording_id": "rec_01J00000000000000000000000",
+      "channel": "terminal",
+      "chunk_sequence": 2,
+      "started_at": "2026-07-15T10:05:00Z",
+      "ended_at": "2026-07-15T10:10:00Z",
+      "start_work_sequence": 42,
+      "end_work_sequence": 70,
+      "artifact_id": "artifact_02",
+      "artifact_version_id": "version_02",
+      "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "media_type": "application/x-asciicast",
+      "size_bytes": 100
+    }
+  ],
+  "cases": [
+    { "id": "recording-chunk-sequence-gap", "mutation": "sequence_gap" },
+    { "id": "recording-cross-binding", "mutation": "cross_recording" },
+    { "id": "recording-work-sequence-reversal", "mutation": "work_sequence_reversal" },
+    { "id": "recording-time-reversal", "mutation": "time_reversal" }
+  ]
+}

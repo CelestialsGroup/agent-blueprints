@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:conversation-turn-accepted:v1",
+  "title": "ConversationTurnAccepted",
+  "type": "object",
+  "required": ["message", "work_order"],
+  "properties": {
+    "message": { "$ref": "urn:agent-platform:conversation-message:v1" },
+    "work_order": { "$ref": "urn:agent-platform:work-order-accepted:v1" }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,12 @@
+{
+  "runtime_session_id": "rts_01J00000000000000000000000",
+  "runtime_type": "terminal",
+  "connect_url": "https://runtime-gateway.example.test/sessions/rts_01J00000000000000000000000",
+  "expires_at": "2026-07-15T10:30:00Z",
+  "scopes": ["view", "control", "input"],
+  "websocket_subprotocols": ["agent-runtime-terminal-v1"],
+  "recording": {
+    "status": "recording",
+    "recording_id": "rec_01J00000000000000000000000"
+  }
+}

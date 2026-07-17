@@ -1,0 +1,12 @@
+{
+  "client_conversation_key": "business-conversation-0001",
+  "title": "SaaS 产品介绍页",
+  "default_scenario": {
+    "id": "html-generation",
+    "version": "1.0.0",
+    "definition_digest": "sha256:2ef129bc2277d1927147c533a18bcc5500db43e4c36ef12313b904fe80bb709c"
+  },
+  "metadata": {
+    "locale": "zh-CN"
+  }
+}

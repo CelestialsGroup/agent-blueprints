@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:experience-catalog-page:v1",
+  "title": "ExperienceCatalogPage",
+  "type": "object",
+  "required": ["items"],
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": { "$ref": "urn:agent-platform:experience-catalog-entry:v1" }
+    },
+    "next_cursor": { "type": ["string", "null"] }
+  },
+  "additionalProperties": false
+}

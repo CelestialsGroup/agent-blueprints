@@ -20,6 +20,9 @@
 
 ## Work
 
+- AgentConversation
+- ConversationMessage
+- ConversationBranch
 - WorkOrder
 - Workspace
 - WorkflowRun
@@ -47,6 +50,9 @@
 - ProviderRevision
 - ProviderResolution
 - ConformanceResult
+- ExperienceCatalogEntry
+- TemplateRevision
+- UiExtensionManifest
 
 ## Event
 
@@ -88,3 +94,15 @@
 - SandboxRuntimeSessionEndpoint
 - SandboxUsageEntry
 - SandboxConformanceReport
+
+## Runtime Experience
+
+- AgentRuntimeRun
+- AgentRuntimeCommand
+- AgentRuntimeCheckpointManifest
+- RuntimeSession
+- RuntimeRecording
+- RuntimeRecordingChunk
+- RuntimeRecordingManifest
+
+Business-owned Membership, EntitlementRevision, QuotaReservation and commercial Settlement remain outside this domain. The Platform stores only a signed CommercialAuthorizationSnapshot reference/digest with a WorkOrder.

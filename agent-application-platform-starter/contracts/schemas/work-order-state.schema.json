@@ -5,6 +5,9 @@
   "type": "object",
   "required": [
     "work_order_id",
+    "conversation_id",
+    "turn_id",
+    "branch_id",
     "tenant_id",
     "workspace_id",
     "scenario",
@@ -16,6 +19,18 @@
   "properties": {
     "work_order_id": {
       "type": "string"
+    },
+    "conversation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "turn_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "branch_id": {
+      "type": "string",
+      "minLength": 1
     },
     "tenant_id": {
       "type": "string"

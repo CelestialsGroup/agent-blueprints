@@ -12,6 +12,7 @@ const documents = [
   "plugin-invocation-v1.yaml",
   "delivery-webhook-v1.yaml",
   "sandbox-provider-v1.yaml",
+  "agent-runtime-provider-v1.yaml",
 ];
 
 if (!fs.existsSync(redocly) || !fs.existsSync(openapiDir)) {

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:experience-catalog-entry:v1",
+  "title": "ExperienceCatalogEntry",
+  "type": "object",
+  "required": [
+    "catalog_entry_id",
+    "kind",
+    "name",
+    "current_revision_id",
+    "current_revision_digest",
+    "capability_id",
+    "visibility",
+    "lifecycle"
+  ],
+  "properties": {
+    "catalog_entry_id": { "type": "string", "minLength": 1 },
+    "kind": { "enum": ["template", "skill_pack", "design_system", "editor_profile"] },
+    "name": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "current_revision_id": { "type": "string", "minLength": 1 },
+    "current_revision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "capability_id": { "type": "string", "minLength": 1 },
+    "preview_artifact_id": { "type": "string", "minLength": 1 },
+    "tags": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "visibility": { "enum": ["platform", "tenant", "client_application"] },
+    "required_entitlements": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "lifecycle": { "enum": ["experimental", "stable", "deprecated", "retired"] }
+  },
+  "additionalProperties": false
+}

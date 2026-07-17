@@ -69,7 +69,7 @@ for group in ("dependencies", "devDependencies"):
         if not re.fullmatch(r"\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?", version):
             raise AssertionError(f"Unpinned npm dependency: {name}={version}")
 
-requirements = (ROOT / "requirements-contracts-v0.8.6.txt").read_text(encoding="utf-8")
+requirements = (ROOT / "requirements-contracts-v0.9.0.txt").read_text(encoding="utf-8")
 logical_lines: list[str] = []
 buffer = ""
 for raw in requirements.splitlines():

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:runtime-recording-chunk:v1",
+  "title": "RuntimeRecordingChunk",
+  "type": "object",
+  "required": [
+    "chunk_id",
+    "recording_id",
+    "channel",
+    "chunk_sequence",
+    "started_at",
+    "ended_at",
+    "start_work_sequence",
+    "end_work_sequence",
+    "artifact_id",
+    "artifact_version_id",
+    "digest",
+    "media_type",
+    "size_bytes"
+  ],
+  "properties": {
+    "chunk_id": { "type": "string", "minLength": 1 },
+    "recording_id": { "type": "string", "minLength": 1 },
+    "channel": { "enum": ["terminal", "browser", "desktop", "file_delta"] },
+    "chunk_sequence": { "type": "integer", "minimum": 1 },
+    "started_at": { "type": "string", "format": "date-time" },
+    "ended_at": { "type": "string", "format": "date-time" },
+    "start_work_sequence": { "type": "integer", "minimum": 0 },
+    "end_work_sequence": { "type": "integer", "minimum": 0 },
+    "artifact_id": { "type": "string", "minLength": 1 },
+    "artifact_version_id": { "type": "string", "minLength": 1 },
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "media_type": { "type": "string", "minLength": 1 },
+    "size_bytes": { "type": "integer", "minimum": 0 },
+    "redaction_profile": { "type": "string", "minLength": 1 }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "chunk_sequence is contiguous per recording channel",
+    "started_at <= ended_at and start_work_sequence <= end_work_sequence",
+    "chunk ArtifactVersion is immutable, encrypted according to classification and inaccessible without recording:read"
+  ]
+}

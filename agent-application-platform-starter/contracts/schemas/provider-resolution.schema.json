@@ -22,7 +22,7 @@
     },
     "selected_provider_instance_id": { "type": "string", "minLength": 1 },
     "routing_reason": {
-      "enum": ["tenant_binding", "client_binding", "platform_default", "explicit_fallback"]
+      "enum": ["tenant_binding", "client_binding", "scenario_requirement", "platform_default", "explicit_fallback"]
     },
     "candidates_considered": {
       "type": "array",

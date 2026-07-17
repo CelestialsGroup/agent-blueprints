@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:agent-runtime-event:v1",
+  "title": "AgentRuntimeEvent",
+  "type": "object",
+  "required": [
+    "event_id",
+    "runtime_run_id",
+    "event_sequence",
+    "type",
+    "occurred_at",
+    "data_version",
+    "data"
+  ],
+  "properties": {
+    "event_id": { "type": "string", "minLength": 1 },
+    "runtime_run_id": { "type": "string", "minLength": 1 },
+    "event_sequence": { "type": "integer", "minimum": 1 },
+    "type": {
+      "enum": [
+        "runtime.run.started",
+        "runtime.message.delta",
+        "runtime.message.completed",
+        "runtime.plan.updated",
+        "runtime.tool.requested",
+        "runtime.approval.requested",
+        "runtime.artifact.staged",
+        "runtime.checkpoint.created",
+        "runtime.waiting.input",
+        "runtime.run.completed",
+        "runtime.run.failed",
+        "runtime.run.cancelled"
+      ]
+    },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "data_version": { "type": "integer", "minimum": 1 },
+    "data": { "type": "object" },
+    "source_cursor": { "type": "string", "minLength": 1 }
+  },
+  "additionalProperties": false
+}

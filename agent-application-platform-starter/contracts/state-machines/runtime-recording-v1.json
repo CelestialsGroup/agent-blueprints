@@ -1,0 +1,16 @@
+{
+  "machine_id": "runtime-recording",
+  "version": 1,
+  "initial_state": "recording",
+  "terminal_states": ["deleted"],
+  "transitions": [
+    { "from": "recording", "event": "capture_stopped", "to": "finalizing" },
+    { "from": "recording", "event": "capture_failed", "to": "failed" },
+    { "from": "recording", "event": "delete_confirmed", "to": "deleted" },
+    { "from": "finalizing", "event": "manifest_committed", "to": "ready" },
+    { "from": "finalizing", "event": "finalization_failed", "to": "failed" },
+    { "from": "finalizing", "event": "delete_confirmed", "to": "deleted" },
+    { "from": "ready", "event": "delete_confirmed", "to": "deleted" },
+    { "from": "failed", "event": "delete_confirmed", "to": "deleted" }
+  ]
+}

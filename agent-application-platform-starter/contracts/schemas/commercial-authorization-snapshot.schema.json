@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:commercial-authorization-snapshot:v1",
+  "title": "CommercialAuthorizationSnapshot",
+  "description": "Immutable Business-owned entitlement and quota reservation evidence. The Agent Platform stores and verifies this snapshot but does not own membership, plans, orders, payments or commercial balances.",
+  "type": "object",
+  "required": [
+    "authorization_id",
+    "authorization_digest",
+    "entitlement_revision_id",
+    "entitlement_revision_digest",
+    "quota_reservation_id",
+    "quota_reservation_digest",
+    "business_account_id",
+    "authorized_entitlements",
+    "authorized_capabilities",
+    "authorized_limits",
+    "authorized_limits_digest",
+    "issued_at",
+    "expires_at",
+    "settlement_target_id"
+  ],
+  "properties": {
+    "authorization_id": { "type": "string", "minLength": 1 },
+    "authorization_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "entitlement_revision_id": { "type": "string", "minLength": 1 },
+    "entitlement_revision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "quota_reservation_id": { "type": "string", "minLength": 1 },
+    "quota_reservation_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "business_account_id": { "type": "string", "minLength": 1 },
+    "plan_reference": { "type": "string", "minLength": 1 },
+    "authorized_entitlements": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "authorized_capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "authorized_limits": {
+      "type": "object",
+      "properties": {
+        "max_input_tokens": { "type": "integer", "minimum": 0 },
+        "max_output_tokens": { "type": "integer", "minimum": 0 },
+        "max_sandbox_seconds": { "type": "integer", "minimum": 0 },
+        "max_storage_bytes": { "type": "integer", "minimum": 0 },
+        "max_artifact_count": { "type": "integer", "minimum": 0 },
+        "max_conversion_count": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "authorized_limits_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "issued_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "settlement_target_id": { "type": "string", "minLength": 1 }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "authorization_digest is RFC 8785 JCS SHA-256 over the complete snapshot excluding authorization_digest",
+    "authorized_limits_digest is RFC 8785 JCS SHA-256 over authorized_limits",
+    "the ExecutionGrant limits and capabilities must not exceed the signed commercial authorization; Catalog selections require authorized_entitlements",
+    "quota reservation settle, release and reconciliation remain Business-owned idempotent operations"
+  ]
+}

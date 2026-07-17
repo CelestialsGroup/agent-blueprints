@@ -1,0 +1,25 @@
+{
+  "items": [
+    {
+      "catalog_entry_id": "html-anything/landing-saas-dark",
+      "kind": "template",
+      "name": "SaaS Dark Landing",
+      "description": "Dark SaaS landing-page template installed from html-anything.",
+      "current_revision_id": "tmplrev_01J00000000000000000000000",
+      "current_revision_digest": "sha256:f3ffedb6bbba3ed14d227ba9ac7df4562efe6a246b093ac34522f63d5d615e5b",
+      "capability_id": "template.html.generate",
+      "preview_artifact_id": "art_template_landing_saas_dark_preview",
+      "tags": [
+        "landing",
+        "saas",
+        "dark"
+      ],
+      "visibility": "platform",
+      "required_entitlements": [
+        "experience.html.premium"
+      ],
+      "lifecycle": "stable"
+    }
+  ],
+  "next_cursor": null
+}

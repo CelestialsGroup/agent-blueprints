@@ -3,7 +3,7 @@
   "$id": "urn:agent-platform:run-admission-context:v1",
   "title": "RunAdmissionContext",
   "type": "object",
-  "required": ["scenario", "required_capabilities", "capability_definitions", "agent_runtime_capability", "provider_revisions", "admission_decisions"],
+  "required": ["scenario", "scenario_definition", "required_capabilities", "experience_requirements", "capability_definitions", "agent_runtime_capability", "provider_revisions", "admission_decisions", "experience_revisions", "commercial_authorization"],
   "properties": {
     "scenario": {
       "type": "object",
@@ -15,6 +15,7 @@
       },
       "additionalProperties": false
     },
+    "scenario_definition": { "$ref": "urn:agent-platform:scenario-definition:v1" },
     "required_capabilities": {
       "type": "array",
       "minItems": 1,
@@ -30,6 +31,21 @@
         "additionalProperties": false
       }
     },
+    "experience_requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "capability_id", "minimum", "maximum"],
+        "properties": {
+          "kind": { "enum": ["template", "skill_pack", "design_system", "editor_profile"] },
+          "capability_id": { "type": "string", "minLength": 1 },
+          "minimum": { "type": "integer", "minimum": 0 },
+          "maximum": { "type": "integer", "minimum": 1 },
+          "required_tags": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+        },
+        "additionalProperties": false
+      }
+    },
     "capability_definitions": {
       "type": "array",
       "minItems": 1,
@@ -37,8 +53,14 @@
       "items": { "$ref": "urn:agent-platform:admitted-capability-definition:v1" }
     },
     "agent_runtime_capability": { "$ref": "urn:agent-platform:admitted-capability-definition:v1" },
+    "commercial_authorization": { "$ref": "urn:agent-platform:commercial-authorization-snapshot:v1" },
     "provider_revisions": { "type": "array", "minItems": 1, "items": { "$ref": "urn:agent-platform:provider-revision:v1" } },
     "admission_decisions": { "type": "array", "minItems": 1, "items": { "$ref": "urn:agent-platform:provider-admission-decision:v1" } }
+    ,"experience_revisions": {
+      "type": "array",
+      "items": { "$ref": "urn:agent-platform:template-revision:v1" },
+      "uniqueItems": true
+    }
   },
   "additionalProperties": false
 }

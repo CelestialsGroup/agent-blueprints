@@ -1,46 +1,44 @@
-# Phase 0 — Contract-admitted vertical slice
+# Phase 0 — v0.9.0 Product Vertical Slice
 
-Phase 0 只能在 v0.8.6 Git 根 Workflow 激活、公共 CI Admission 全绿并获批准后开始；Phase 1 在 Phase 0 验收前禁止启动。
+Phase 0 implements one real Manus-like Conversation path. Directory scaffolding or contract-only code is not completion. Phase 1 starts only after this acceptance plan passes.
 
-## 0A：最小完整链路（优先）
+## 0A: Business authorization and Conversation
 
-实现一条真实链路：Business 创建 WorkOrder -> 验证/消费 ExecutionGrant -> PostgreSQL/Outbox -> Temporal Workflow -> ProviderResolution/RunManifest -> DeerFlow Runtime -> DeerFlow Built-in Sandbox `primary-code` -> Invocation/Sandbox Attempt Ledger -> Canonical Event -> Artifact Staging/Finalize -> Delivery。
+Implement reference Business User/Organization/Free-Pro Membership, immutable EntitlementRevision, idempotent QuotaReservation and CommercialAuthorizationSnapshot. Create Conversation/Workspace, issue Conversation WorkSession, then submit a fresh-grant Turn that atomically appends Message + creates WorkOrder + Workflow Start Outbox.
 
-必须证明：
+Prove duplicate Conversation/Turn requests do not create a second Message, WorkOrder, reservation or consumption record.
 
-- 重复请求不产生第二个逻辑 WorkOrder/Invocation/Operation；
-- Worker 重启可 Replay，PostgreSQL 查询态可重建；
-- Provider 响应丢失进入 reconciliation，不会永久卡住；
-- fencing 拒绝旧 Attempt；
-- Artifact 未 finalize 不可见；
-- Redis 清空不损失事实；
-- UI 可回放 Chat、Plan、Timeline、Terminal、Files 与 Artifact。
+## 0B: execution path
 
-## 0B：稳定内核骨架
+Implement PostgreSQL/Outbox -> Temporal WorkOrder Workflow -> ProviderResolution/RunManifest -> DeerFlow AgentRuntimeProvider -> DeerFlow Built-in Sandbox `primary-code` -> Invocation/Sandbox Attempt Ledger -> Canonical Event -> Artifact Staging/Finalize -> Delivery/TechnicalUsage settlement.
 
-实现 Identity/AuthZ、ExecutionGrant、WorkOrder/Workspace、Workflow State、Invocation Ledger、Canonical Event、Artifact、Technical Usage、Delivery、Audit、Provider Registry/Resolution、Sandbox Registry/Lease/Operation/RuntimeSession。
+Prove:
 
-数据库 migration 必须落实 `docs/26_DATA_MODEL_INVARIANTS.md`，包括 append-only ProviderDecision、Sandbox Attempt/Reconciliation/ManualReview 和 Slot 唯一性。
+- follow-up input, interrupt, pause/resume, approval and cancel use append-only Runtime commands and fencing;
+- Worker/Adapter restart can resume from external state/checkpoint;
+- Provider response loss enters reconciliation;
+- old Attempt/Runtime command results are rejected;
+- Redis loss does not lose truth.
 
-## 0C：Provider Ports
+## 0C: Experience and nexu integration
 
-- Agent Runtime Port：首个 Adapter 为 DeerFlow；
-- Sandbox Provider Contract：首个 Adapter 为 DeerFlow Built-in，未来 `sandbox-runtime` 无需改变稳定内核；
-- Plugin/Converter Port：html-anything、html-to-pptx 作为可独立安装 Provider；
-- 所有选择通过 CapabilityDefinition -> ProviderResolution -> immutable Revision/Admission Snapshot。
+Import at least one html-anything template as ExperienceCatalogEntry + immutable TemplateRevision. Scenario UI discovers it through Catalog, WorkOrder selects its exact digest, RunManifest binds the certified Template ProviderRevision, and DeerFlow consumes it through a governed Skill/Tool path.
 
-## 0D：平台安全和部署
+Implement html-to-pptx or html-video as one Converter Provider producing a derived ArtifactVersion. No Plugin ID may be hard-coded in Scenario or Workbench logic.
 
-Kubernetes 双 Namespace、Default Deny、受控 Egress Gateway、最小 RBAC、non-root/read-only/drop ALL、短期 Runtime Session Gateway Route。稳定内核禁止后端标识字段。
+## 0D: live runtime and playback
 
-## 0E：验收证据
+Open a Terminal RuntimeSession through Runtime Gateway with platform-managed recording. Finalize at least two immutable chunks and a playback manifest aligned to `work_sequence`. The UI must replay Chat, Plan, Timeline, Terminal, Files and Artifact without a live Sandbox.
 
-- 公共 Contract CI；
-- migration/constraint tests；
-- Temporal replay tests；
-- at-least-once duplicate and lost-response tests；
-- Sandbox Conformance；
-- NetworkPolicy/RBAC/Pod Security 实际测试；
-- backup/restore drill 的最小证据。
+Browser/Desktop recording remains capability-gated until capture, consent, redaction and capacity tests pass.
 
-Phase 0 完成仍不等于 Production Ready；容量、SLO、全面故障注入和生产恢复演练另行审批。
+## 0E: security and failure evidence
+
+- ExecutionGrant/CommercialAuthorization cannot be exceeded or reused across Turns.
+- Model/Tool/Egress gateways cannot be bypassed by DeerFlow.
+- Runtime recording does not persist secrets, raw tokens or unencrypted bytes in Event/Temporal/PostgreSQL.
+- Template selection cannot reference a hidden, revoked or unadmitted revision.
+- Conversation/message/command/recording/catalog database constraints pass concurrency tests.
+- Temporal replay, duplicate/lost response, NetworkPolicy/RBAC/Pod Security and minimal backup/restore drills pass.
+
+Phase 0 completion still does not imply Production Ready; capacity, SLO, comprehensive failure injection and production recovery require separate approval.

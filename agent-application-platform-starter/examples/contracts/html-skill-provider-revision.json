@@ -1,0 +1,26 @@
+{
+  "provider_revision_id": "hpr_01J00000000000000000000000",
+  "provider_revision_digest": "sha256:7153ba233a9846693d344b97d4cd9cfffdc4f002babba320b12765afb30bfc0a",
+  "provider_instance_id": "hpi_html_anything",
+  "plugin_id": "skill-provider.html-anything",
+  "plugin_version": "1.0.0",
+  "manifest_digest": "sha256:4141414141414141414141414141414141414141414141414141414141414141",
+  "package_digest": "sha256:4242424242424242424242424242424242424242424242424242424242424242",
+  "configuration_digest": "sha256:4343434343434343434343434343434343434343434343434343434343434343",
+  "approved_permissions_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+  "runtime_binding_digest": "sha256:4545454545454545454545454545454545454545454545454545454545454545",
+  "credential_binding_digest": "sha256:4646464646464646464646464646464646464646464646464646464646464646",
+  "provider_kind": "skill",
+  "conformance": [
+    {
+      "capability": "html.generate",
+      "version": "1.0",
+      "profile": "responsive",
+      "suite_version": "1.0.0",
+      "status": "passed",
+      "report_digest": "sha256:4747474747474747474747474747474747474747474747474747474747474747"
+    }
+  ],
+  "conformance_set_digest": "sha256:2a357bf818dd59745f6e9215d57aa4af5da2f12e276089742e28a503f319f74b",
+  "created_at": "2026-07-16T09:00:21Z"
+}

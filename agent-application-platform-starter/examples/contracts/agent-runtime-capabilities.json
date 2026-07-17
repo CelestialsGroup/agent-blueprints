@@ -1,0 +1,27 @@
+{
+  "protocol_version": "v1",
+  "provider_revision_id": "apr_01J00000000000000000000000",
+  "runtime_name": "deerflow",
+  "runtime_version": "2026.07",
+  "features": [
+    "runtime.start",
+    "runtime.append-input",
+    "runtime.interrupt",
+    "runtime.pause",
+    "runtime.resume",
+    "runtime.cancel",
+    "runtime.events.cursor",
+    "runtime.checkpoint.export",
+    "runtime.checkpoint.restore",
+    "runtime.subagent",
+    "runtime.approval",
+    "runtime.artifact-staging",
+    "runtime.usage"
+  ],
+  "event_schema_versions": [1],
+  "limits": {
+    "max_input_bytes": 1048576,
+    "max_event_batch": 1000,
+    "max_checkpoint_bytes": 104857600
+  }
+}

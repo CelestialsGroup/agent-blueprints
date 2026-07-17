@@ -1,0 +1,12 @@
+{
+  "command_id": "rtcmd_01J0000000000000000000000",
+  "runtime_run_id": "rtr_01J00000000000000000000000",
+  "command_sequence": 2,
+  "type": "append_input",
+  "message_id": "msg_01J00000000000000000000001",
+  "payload": { "mode": "follow_up" },
+  "invocation_attempt_id": "iat_runtime_01J0000000000000001",
+  "fencing_token": 2,
+  "idempotency_key": "runtime-command-key-0002",
+  "deadline_at": "2026-07-15T10:30:00Z"
+}

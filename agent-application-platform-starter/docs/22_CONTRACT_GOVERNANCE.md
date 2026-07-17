@@ -1,4 +1,4 @@
-# Contract Governance — v0.8.6
+# Contract Governance — v0.9.0
 
 ## Governed surfaces
 
@@ -10,9 +10,9 @@ JSON Schema、OpenAPI、状态机、JCS/I-JSON 向量、数据不变量和 Contr
 |---|---|
 | Strict I-JSON/JCS | Python、Node、Go 共用全部正反向向量 |
 | Schema | Draft 2020-12 meta-validation、绝对 `$id`、Registry `$ref`、正反向 Fixture |
-| Semantic | RunManifest、CapabilityDefinition/Provider Kind/Conformance、Provider/Decision 摘要、Slot、Snapshot、Fencing、状态可达性 |
-| OpenAPI | Registry 投影后 Redocly lint 0 error/0 warning，4 个 deterministic bundle |
-| Integrity | v0.8.6 Contract Manifest 自摘要和全资源摘要 |
+| Semantic | Conversation/Runtime/Recording sequence、RunManifest、Experience Admission、CapabilityDefinition/Provider Kind/Conformance、Provider/Decision 摘要、Slot、Snapshot、Fencing、状态可达性 |
+| OpenAPI | Registry 投影后 Redocly lint 0 error/0 warning，5 个 deterministic bundle |
+| Integrity | v0.9.0 Contract Manifest 自摘要和全资源摘要 |
 | Compatibility | 与受保护变量指定的冻结基线比较删除/收窄；CI 缺基线 fail-closed |
 | Supply chain | hash lock、npm integrity、Action SHA、公开 Registry、Git 跟踪文件无 bytecode/`.DS_Store`、Git 根 Workflow 已激活 |
 

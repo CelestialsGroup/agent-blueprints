@@ -1,0 +1,31 @@
+{
+  "authorization_id": "cauth_01J00000000000000000000000",
+  "authorization_digest": "sha256:6433ae5c1cf9444c43d9ebb4b640b9b0fd3b38854651d0510387235719105d9c",
+  "entitlement_revision_id": "entitlement-pro-2026-07",
+  "entitlement_revision_digest": "sha256:7272727272727272727272727272727272727272727272727272727272727272",
+  "quota_reservation_id": "qres_01J00000000000000000000000",
+  "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
+  "business_account_id": "account-456",
+  "plan_reference": "pro",
+  "authorized_limits_digest": "sha256:184057aaf43460475c1240194d54b0ceeb6a1d1b515df509ae4e9a19d8a7a5a7",
+  "issued_at": "2026-07-15T09:59:30Z",
+  "expires_at": "2026-07-15T10:30:00Z",
+  "settlement_target_id": "business-usage-settlement-v1",
+  "authorized_entitlements": [
+    "experience.html.premium"
+  ],
+  "authorized_capabilities": [
+    "agent.general",
+    "html.generate",
+    "artifact.preview.html",
+    "converter.html-to-pptx"
+  ],
+  "authorized_limits": {
+    "max_input_tokens": 100000,
+    "max_output_tokens": 20000,
+    "max_sandbox_seconds": 1800,
+    "max_storage_bytes": 104857600,
+    "max_artifact_count": 20,
+    "max_conversion_count": 3
+  }
+}

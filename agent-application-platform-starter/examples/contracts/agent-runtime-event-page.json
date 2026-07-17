@@ -1,0 +1,18 @@
+{
+  "events": [
+    {
+      "event_id": "rtevt_01J0000000000000000000000",
+      "runtime_run_id": "rtr_01J00000000000000000000000",
+      "event_sequence": 42,
+      "type": "runtime.message.completed",
+      "occurred_at": "2026-07-15T10:10:00Z",
+      "data_version": 1,
+      "data": {
+        "message_id": "msg_01J00000000000000000000002",
+        "content_reference": "artifact://art_message/ver_01"
+      },
+      "source_cursor": "deerflow-event-42"
+    }
+  ],
+  "next_event_sequence": 42
+}

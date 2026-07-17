@@ -1,0 +1,10 @@
+{
+  "command_id": "command_invalid",
+  "runtime_run_id": "runtime_invalid",
+  "command_sequence": 2,
+  "type": "append_input",
+  "invocation_attempt_id": "attempt_invalid",
+  "fencing_token": 2,
+  "idempotency_key": "invalid-command-key-0001",
+  "deadline_at": "2026-07-01T01:00:00Z"
+}

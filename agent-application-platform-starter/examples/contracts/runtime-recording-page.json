@@ -1,0 +1,25 @@
+{
+  "recordings": [
+    {
+      "recording_id": "rec_01J00000000000000000000000",
+      "tenant_id": "ten_01J00000000000000000000000",
+      "conversation_id": "conv_01J00000000000000000000000",
+      "work_order_id": "wrk_01J00000000000000000000000",
+      "sandbox_id": "sbx_01J00000000000000000000000",
+      "runtime_session_id": "rts_01J00000000000000000000000",
+      "status": "ready",
+      "channels": [
+        "terminal"
+      ],
+      "recording_policy_digest": "sha256:a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "classification": "internal",
+      "retention_until": "2026-08-14T10:30:00Z",
+      "chunk_count": 1,
+      "manifest_digest": "sha256:cad6ff06b883f4eea799b1a4bc1a586125fe26a10008dee21e6dbd573e45fc7b",
+      "created_at": "2026-07-15T10:00:00Z",
+      "updated_at": "2026-07-15T10:30:00Z",
+      "completed_at": "2026-07-15T10:30:00Z"
+    }
+  ],
+  "next_cursor": null
+}

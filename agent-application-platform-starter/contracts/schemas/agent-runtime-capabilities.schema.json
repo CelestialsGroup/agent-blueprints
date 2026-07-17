@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:agent-runtime-capabilities:v1",
+  "title": "AgentRuntimeCapabilities",
+  "type": "object",
+  "required": ["protocol_version", "provider_revision_id", "runtime_name", "runtime_version", "features", "event_schema_versions"],
+  "properties": {
+    "protocol_version": { "const": "v1" },
+    "provider_revision_id": { "type": "string", "minLength": 1 },
+    "runtime_name": { "type": "string", "minLength": 1 },
+    "runtime_version": { "type": "string", "minLength": 1 },
+    "features": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "runtime.start",
+          "runtime.append-input",
+          "runtime.interrupt",
+          "runtime.pause",
+          "runtime.resume",
+          "runtime.cancel",
+          "runtime.events.cursor",
+          "runtime.checkpoint.export",
+          "runtime.checkpoint.restore",
+          "runtime.subagent",
+          "runtime.approval",
+          "runtime.artifact-staging",
+          "runtime.usage"
+        ]
+      }
+    },
+    "event_schema_versions": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 1 }, "uniqueItems": true },
+    "limits": {
+      "type": "object",
+      "properties": {
+        "max_input_bytes": { "type": "integer", "minimum": 1 },
+        "max_event_batch": { "type": "integer", "minimum": 1 },
+        "max_checkpoint_bytes": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

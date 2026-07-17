@@ -1,0 +1,15 @@
+{
+  "branches": [
+    {
+      "conversation_id": "conv_01J00000000000000000000000",
+      "branch_id": "main",
+      "head_message_id": "msg_01J00000000000000000000000",
+      "head_message_sequence": 1,
+      "active_work_order_id": "wrk_01J00000000000000000000000",
+      "branch_version": 2,
+      "created_at": "2026-07-15T10:00:00Z",
+      "updated_at": "2026-07-15T10:00:01Z"
+    }
+  ],
+  "next_cursor": null
+}

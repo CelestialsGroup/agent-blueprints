@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:runtime-recording-page:v1",
+  "title": "RuntimeRecordingPage",
+  "type": "object",
+  "required": ["recordings"],
+  "properties": {
+    "recordings": { "type": "array", "items": { "$ref": "urn:agent-platform:runtime-recording:v1" } },
+    "next_cursor": { "type": ["string", "null"] }
+  },
+  "additionalProperties": false
+}

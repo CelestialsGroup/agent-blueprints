@@ -7,8 +7,7 @@
     "event_id",
     "schema_version",
     "tenant_id",
-    "work_order_id",
-    "work_sequence",
+    "conversation_id",
     "aggregate",
     "type",
     "occurred_at",
@@ -28,8 +27,25 @@
     "tenant_id": {
       "type": "string"
     },
+    "conversation_id": {
+      "type": "string",
+      "minLength": 1
+    },
     "work_order_id": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1
+    },
+    "turn_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "branch_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "input_message_id": {
+      "type": "string",
+      "minLength": 1
     },
     "workspace_id": {
       "type": [
@@ -52,6 +68,9 @@
         "type": {
           "enum": [
             "work_order",
+            "conversation",
+            "conversation_branch",
+            "conversation_message",
             "workflow_run",
             "agent_run",
             "invocation",
@@ -59,7 +78,11 @@
             "edit_session",
             "conversion_job",
             "approval",
-            "delivery"
+            "delivery",
+            "sandbox",
+            "sandbox_operation",
+            "runtime_session",
+            "runtime_recording"
           ]
         },
         "id": {
@@ -86,6 +109,21 @@
           "type": "string"
         },
         "artifact_id": {
+          "type": "string"
+        },
+        "message_id": {
+          "type": "string"
+        },
+        "branch_id": {
+          "type": "string"
+        },
+        "sandbox_id": {
+          "type": "string"
+        },
+        "runtime_session_id": {
+          "type": "string"
+        },
+        "runtime_recording_id": {
           "type": "string"
         }
       },
@@ -161,5 +199,17 @@
       "description": "Agent Platform durable ingest time."
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "dependentRequired": {
+    "work_order_id": ["turn_id", "branch_id", "input_message_id", "work_sequence"],
+    "turn_id": ["work_order_id", "branch_id", "input_message_id", "work_sequence"],
+    "branch_id": ["work_order_id", "turn_id", "input_message_id", "work_sequence"],
+    "input_message_id": ["work_order_id", "turn_id", "branch_id", "work_sequence"],
+    "work_sequence": ["work_order_id", "turn_id", "branch_id", "input_message_id"]
+  },
+  "x-semantic-constraints": [
+    "Conversation lifecycle events omit the complete Work context group",
+    "events for an executable Turn carry work_order_id, turn_id, branch_id, input_message_id and work_sequence as an all-or-none binding",
+    "aggregate sequence and WorkOrder work_sequence are independent monotonic ledgers"
+  ]
 }

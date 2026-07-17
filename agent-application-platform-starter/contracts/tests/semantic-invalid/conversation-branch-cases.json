@@ -1,0 +1,11 @@
+{
+  "branch": "examples/contracts/conversation-branch.json",
+  "message": "examples/contracts/conversation-message.json",
+  "work_order": "examples/contracts/work-order.json",
+  "cases": [
+    { "id": "branch-zero-sequence-with-head", "mutation": "zero_sequence_with_head" },
+    { "id": "branch-positive-sequence-without-head", "mutation": "positive_sequence_without_head" },
+    { "id": "branch-head-from-another-conversation", "mutation": "cross_conversation_message" },
+    { "id": "branch-active-work-order-mismatch", "mutation": "active_work_order_branch_mismatch" }
+  ]
+}

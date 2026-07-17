@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:template-revision:v1",
+  "title": "TemplateRevision",
+  "description": "Immutable catalog resource installed by a certified Template ProviderRevision.",
+  "type": "object",
+  "required": [
+    "template_revision_id",
+    "template_id",
+    "version",
+    "revision_digest",
+    "provider_revision",
+    "capability",
+    "source_artifact",
+    "parameter_schema",
+    "lifecycle",
+    "created_at"
+  ],
+  "properties": {
+    "template_revision_id": { "type": "string", "minLength": 1 },
+    "template_id": { "type": "string", "pattern": "^[a-z][a-z0-9./_-]{2,191}$" },
+    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?$" },
+    "revision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "provider_revision": { "$ref": "urn:agent-platform:provider-revision-snapshot:v1" },
+    "capability": {
+      "type": "object",
+      "required": ["id", "version", "profile"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "profile": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "source_artifact": {
+      "type": "object",
+      "required": ["artifact_id", "version_id", "digest", "media_type"],
+      "properties": {
+        "artifact_id": { "type": "string", "minLength": 1 },
+        "version_id": { "type": "string", "minLength": 1 },
+        "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "media_type": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "preview_artifact": {
+      "type": "object",
+      "required": ["artifact_id", "version_id"],
+      "properties": {
+        "artifact_id": { "type": "string", "minLength": 1 },
+        "version_id": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "parameter_schema": { "$ref": "urn:agent-platform:schema-reference:v1" },
+    "tags": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "locales": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "required_entitlements": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "lifecycle": { "enum": ["experimental", "stable", "deprecated", "retired"] },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "revision_digest is the RFC 8785 digest of this immutable revision excluding revision_digest",
+    "provider_revision.provider_kind is template and is the latest certified decision when installed",
+    "parameter_values are validated against parameter_schema before WorkOrder admission"
+  ]
+}

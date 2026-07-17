@@ -1,0 +1,26 @@
+{
+  "provider_revision_id": "rpr_01J00000000000000000000000",
+  "provider_revision_digest": "sha256:2ce33278f0ac607ce7c2c6d70020aa3e2edc85e83a461ed696bd063dfc762f70",
+  "provider_instance_id": "rpi_html_preview",
+  "plugin_id": "renderer-provider.html-preview",
+  "plugin_version": "1.0.0",
+  "manifest_digest": "sha256:3636363636363636363636363636363636363636363636363636363636363636",
+  "package_digest": "sha256:3737373737373737373737373737373737373737373737373737373737373737",
+  "configuration_digest": "sha256:3838383838383838383838383838383838383838383838383838383838383838",
+  "approved_permissions_digest": "sha256:3939393939393939393939393939393939393939393939393939393939393939",
+  "runtime_binding_digest": "sha256:3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a",
+  "credential_binding_digest": "sha256:3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b",
+  "provider_kind": "renderer",
+  "conformance": [
+    {
+      "capability": "artifact.preview.html",
+      "version": "1.0",
+      "profile": "default",
+      "suite_version": "1.0.0",
+      "status": "passed",
+      "report_digest": "sha256:3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c"
+    }
+  ],
+  "conformance_set_digest": "sha256:0f7c1ce53cee245bda4acf3f8d95a4276cb7ae4a0f0689bc208d23f584adef20",
+  "created_at": "2026-07-16T09:00:22Z"
+}

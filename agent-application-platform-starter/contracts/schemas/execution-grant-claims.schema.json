@@ -14,6 +14,10 @@
     "client_app_id",
     "external_tenant_id",
     "external_principal_id",
+    "conversation_id",
+    "turn_id",
+    "branch_id",
+    "client_message_id",
     "scenario_id",
     "scenario_version",
     "request_digest",
@@ -23,6 +27,7 @@
     "capabilities",
     "limits",
     "policies",
+    "commercial_authorization",
     "scenario_definition_digest"
   ],
   "properties": {
@@ -62,6 +67,22 @@
       "minLength": 1
     },
     "external_principal_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "conversation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "turn_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "branch_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "client_message_id": {
       "type": "string",
       "minLength": 1
     },
@@ -157,6 +178,9 @@
       },
       "additionalProperties": false
     },
+    "commercial_authorization": {
+      "$ref": "urn:agent-platform:commercial-authorization-snapshot:v1"
+    },
     "scenario_version": {
       "type": "string",
       "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?$"
@@ -170,6 +194,8 @@
   "x-semantic-constraints": [
     "nbf <= iat + 30",
     "iat < exp",
-    "exp - iat <= 300"
+    "exp - iat <= 300",
+    "conversation, turn, branch and client_message bindings match the submitted WorkOrder or ConversationTurn",
+    "limits and capabilities do not exceed commercial_authorization"
   ]
 }

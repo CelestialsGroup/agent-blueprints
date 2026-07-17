@@ -1,22 +1,125 @@
 {
   "scenario": {
-    "id": "scenario.coding",
+    "id": "html-generation",
     "version": "1.0.0",
-    "definition_digest": "sha256:1010101010101010101010101010101010101010101010101010101010101010"
+    "definition_digest": "sha256:2ef129bc2277d1927147c533a18bcc5500db43e4c36ef12313b904fe80bb709c"
   },
   "required_capabilities": [
     {
-      "id": "sandbox.exec",
+      "id": "agent.general",
       "version": "1.0",
-      "profile": "hardened"
+      "profile": "default"
     },
     {
-      "id": "tool.echo",
+      "id": "html.generate",
+      "version": "1.0",
+      "profile": "responsive"
+    },
+    {
+      "id": "artifact.preview.html",
       "version": "1.0",
       "profile": "default"
     }
   ],
+  "experience_requirements": [
+    {
+      "kind": "template",
+      "capability_id": "template.html.generate",
+      "minimum": 1,
+      "maximum": 1,
+      "required_tags": [
+        "landing"
+      ]
+    }
+  ],
+  "experience_revisions": [
+    {
+      "template_revision_id": "tmplrev_01J00000000000000000000000",
+      "template_id": "html-anything/landing-saas-dark",
+      "version": "1.0.0",
+      "revision_digest": "sha256:f3ffedb6bbba3ed14d227ba9ac7df4562efe6a246b093ac34522f63d5d615e5b",
+      "provider_revision": {
+        "provider_revision_id": "tplpr_01J0000000000000000000000",
+        "provider_revision_digest": "sha256:8761661ce1d2e7233d942d0e4945bd8502c56f86a91c84ab9e91fbb3f4bafa01",
+        "provider_kind": "template",
+        "plugin_id": "template-provider.html-anything",
+        "plugin_version": "1.0.0",
+        "manifest_digest": "sha256:8181818181818181818181818181818181818181818181818181818181818181",
+        "package_digest": "sha256:8282828282828282828282828282828282828282828282828282828282828282",
+        "runtime_binding_digest": "sha256:8585858585858585858585858585858585858585858585858585858585858585",
+        "configuration_digest": "sha256:8383838383838383838383838383838383838383838383838383838383838383",
+        "approved_permissions_digest": "sha256:8484848484848484848484848484848484848484848484848484848484848484",
+        "credential_binding_digest": "sha256:8686868686868686868686868686868686868686868686868686868686868686",
+        "conformance_report_digest": "sha256:ec3bc4229e8b502ff3d3f821f65d191d01f5aa3d9584a5e8a25c70809a81271e",
+        "admission_decision_id": "tplad_01J0000000000000000000000",
+        "admission_decision_digest": "sha256:c276cbbee22e652f0886f3548c30d6fdd6e910089143b121ef64240a69579fa7",
+        "admission_status": "certified"
+      },
+      "capability": {
+        "id": "template.html.generate",
+        "version": "1.0",
+        "profile": "landing-page"
+      },
+      "source_artifact": {
+        "artifact_id": "art_template_landing_saas_dark",
+        "version_id": "ver_template_landing_saas_dark_1",
+        "digest": "sha256:9191919191919191919191919191919191919191919191919191919191919191",
+        "media_type": "application/vnd.agent.skill+zip"
+      },
+      "preview_artifact": {
+        "artifact_id": "art_template_landing_saas_dark_preview",
+        "version_id": "ver_template_landing_saas_dark_preview_1"
+      },
+      "parameter_schema": {
+        "uri": "urn:agent-platform:template-schema:landing-saas-dark:v1",
+        "digest": "sha256:9292929292929292929292929292929292929292929292929292929292929292",
+        "dialect": "https://json-schema.org/draft/2020-12/schema"
+      },
+      "tags": [
+        "landing",
+        "saas",
+        "dark"
+      ],
+      "locales": [
+        "en",
+        "zh-CN"
+      ],
+      "required_entitlements": [
+        "experience.html.premium"
+      ],
+      "lifecycle": "stable",
+      "created_at": "2026-07-15T09:00:00Z"
+    }
+  ],
   "capability_definitions": [
+    {
+      "id": "agent.general",
+      "version": "1.0",
+      "profile": "default",
+      "definition_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "allowed_provider_kinds": [
+        "agent_runtime"
+      ]
+    },
+    {
+      "id": "html.generate",
+      "version": "1.0",
+      "profile": "responsive",
+      "definition_digest": "sha256:3434343434343434343434343434343434343434343434343434343434343434",
+      "allowed_provider_kinds": [
+        "tool",
+        "skill"
+      ]
+    },
+    {
+      "id": "artifact.preview.html",
+      "version": "1.0",
+      "profile": "default",
+      "definition_digest": "sha256:3535353535353535353535353535353535353535353535353535353535353535",
+      "allowed_provider_kinds": [
+        "renderer"
+      ]
+    },
     {
       "id": "sandbox.exec",
       "version": "1.0",
@@ -24,15 +127,6 @@
       "definition_digest": "sha256:3030303030303030303030303030303030303030303030303030303030303030",
       "allowed_provider_kinds": [
         "sandbox"
-      ]
-    },
-    {
-      "id": "tool.echo",
-      "version": "1.0",
-      "profile": "default",
-      "definition_digest": "sha256:3131313131313131313131313131313131313131313131313131313131313131",
-      "allowed_provider_kinds": [
-        "tool"
       ]
     },
     {
@@ -85,7 +179,7 @@
     },
     {
       "provider_revision_id": "apr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:6b7d3dccef05eb830d50fab820dfdae5f0aa6ad544041d0584e8e51ef32d8483",
+      "provider_revision_digest": "sha256:f36191e96fc5717be6b51d730cd408522f4233ea2700b07cb383e9d9879c5599",
       "provider_instance_id": "api_deerflow_runtime",
       "plugin_id": "agent-runtime.deerflow",
       "plugin_version": "0.8.3",
@@ -104,10 +198,18 @@
           "suite_version": "1.0.0",
           "status": "passed",
           "report_digest": "sha256:1212121212121212121212121212121212121212121212121212121212121212"
+        },
+        {
+          "capability": "agent.general",
+          "version": "1.0",
+          "profile": "default",
+          "suite_version": "1.0.0",
+          "status": "passed",
+          "report_digest": "sha256:1313131313131313131313131313131313131313131313131313131313131313"
         }
       ],
-      "conformance_set_digest": "sha256:b73de0fbc2dfba635575ef0ae18d094f4bcf250388c2436779943da954a29550",
-      "governed_conformance_report_digest": "sha256:b73de0fbc2dfba635575ef0ae18d094f4bcf250388c2436779943da954a29550",
+      "conformance_set_digest": "sha256:417ef187f47cf26491f61353cd121f9415a4012b9f2241156aaf01e4fede755f",
+      "governed_conformance_report_digest": "sha256:417ef187f47cf26491f61353cd121f9415a4012b9f2241156aaf01e4fede755f",
       "created_at": "2026-07-16T09:00:10Z"
     },
     {
@@ -135,6 +237,84 @@
       ],
       "conformance_set_digest": "sha256:12caa691be50101ff13edec7c6e6072b31d0bafc2f0c9c6f192b97a3364b226e",
       "created_at": "2026-07-16T09:00:20Z"
+    },
+    {
+      "provider_revision_id": "hpr_01J00000000000000000000000",
+      "provider_revision_digest": "sha256:7153ba233a9846693d344b97d4cd9cfffdc4f002babba320b12765afb30bfc0a",
+      "provider_instance_id": "hpi_html_anything",
+      "plugin_id": "skill-provider.html-anything",
+      "plugin_version": "1.0.0",
+      "manifest_digest": "sha256:4141414141414141414141414141414141414141414141414141414141414141",
+      "package_digest": "sha256:4242424242424242424242424242424242424242424242424242424242424242",
+      "configuration_digest": "sha256:4343434343434343434343434343434343434343434343434343434343434343",
+      "approved_permissions_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+      "runtime_binding_digest": "sha256:4545454545454545454545454545454545454545454545454545454545454545",
+      "credential_binding_digest": "sha256:4646464646464646464646464646464646464646464646464646464646464646",
+      "provider_kind": "skill",
+      "conformance": [
+        {
+          "capability": "html.generate",
+          "version": "1.0",
+          "profile": "responsive",
+          "suite_version": "1.0.0",
+          "status": "passed",
+          "report_digest": "sha256:4747474747474747474747474747474747474747474747474747474747474747"
+        }
+      ],
+      "conformance_set_digest": "sha256:2a357bf818dd59745f6e9215d57aa4af5da2f12e276089742e28a503f319f74b",
+      "created_at": "2026-07-16T09:00:21Z"
+    },
+    {
+      "provider_revision_id": "rpr_01J00000000000000000000000",
+      "provider_revision_digest": "sha256:2ce33278f0ac607ce7c2c6d70020aa3e2edc85e83a461ed696bd063dfc762f70",
+      "provider_instance_id": "rpi_html_preview",
+      "plugin_id": "renderer-provider.html-preview",
+      "plugin_version": "1.0.0",
+      "manifest_digest": "sha256:3636363636363636363636363636363636363636363636363636363636363636",
+      "package_digest": "sha256:3737373737373737373737373737373737373737373737373737373737373737",
+      "configuration_digest": "sha256:3838383838383838383838383838383838383838383838383838383838383838",
+      "approved_permissions_digest": "sha256:3939393939393939393939393939393939393939393939393939393939393939",
+      "runtime_binding_digest": "sha256:3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a",
+      "credential_binding_digest": "sha256:3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b",
+      "provider_kind": "renderer",
+      "conformance": [
+        {
+          "capability": "artifact.preview.html",
+          "version": "1.0",
+          "profile": "default",
+          "suite_version": "1.0.0",
+          "status": "passed",
+          "report_digest": "sha256:3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c"
+        }
+      ],
+      "conformance_set_digest": "sha256:0f7c1ce53cee245bda4acf3f8d95a4276cb7ae4a0f0689bc208d23f584adef20",
+      "created_at": "2026-07-16T09:00:22Z"
+    },
+    {
+      "provider_revision_id": "tplpr_01J0000000000000000000000",
+      "provider_revision_digest": "sha256:8761661ce1d2e7233d942d0e4945bd8502c56f86a91c84ab9e91fbb3f4bafa01",
+      "provider_instance_id": "tpli_html_anything",
+      "plugin_id": "template-provider.html-anything",
+      "plugin_version": "1.0.0",
+      "manifest_digest": "sha256:8181818181818181818181818181818181818181818181818181818181818181",
+      "package_digest": "sha256:8282828282828282828282828282828282828282828282828282828282828282",
+      "configuration_digest": "sha256:8383838383838383838383838383838383838383838383838383838383838383",
+      "approved_permissions_digest": "sha256:8484848484848484848484848484848484848484848484848484848484848484",
+      "runtime_binding_digest": "sha256:8585858585858585858585858585858585858585858585858585858585858585",
+      "credential_binding_digest": "sha256:8686868686868686868686868686868686868686868686868686868686868686",
+      "provider_kind": "template",
+      "conformance": [
+        {
+          "capability": "template.html.generate",
+          "version": "1.0",
+          "profile": "landing-page",
+          "suite_version": "1.0.0",
+          "status": "passed",
+          "report_digest": "sha256:8787878787878787878787878787878787878787878787878787878787878787"
+        }
+      ],
+      "conformance_set_digest": "sha256:ec3bc4229e8b502ff3d3f821f65d191d01f5aa3d9584a5e8a25c70809a81271e",
+      "created_at": "2026-07-16T09:00:25Z"
     }
   ],
   "admission_decisions": [
@@ -152,13 +332,13 @@
     {
       "decision_id": "pad_runtime_01J00000000000000000",
       "provider_revision_id": "apr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:6b7d3dccef05eb830d50fab820dfdae5f0aa6ad544041d0584e8e51ef32d8483",
+      "provider_revision_digest": "sha256:f36191e96fc5717be6b51d730cd408522f4233ea2700b07cb383e9d9879c5599",
       "decision_sequence": 1,
       "decision": "certified",
       "evidence_digest": "sha256:1414141414141414141414141414141414141414141414141414141414141414",
       "decided_by": "principal:platform-provider-certifier",
       "decided_at": "2026-07-16T09:00:40Z",
-      "decision_digest": "sha256:ff69a934341809250e699aeddbcc88a013c0874941d806dfde52ca48f3dd38a0"
+      "decision_digest": "sha256:4fde2ba11a674f2738fc02063b9b2b625252a45997d7f1e3ec285bf000fa0839"
     },
     {
       "decision_id": "pad_tool_01J000000000000000000",
@@ -170,6 +350,155 @@
       "decided_by": "principal:platform-provider-certifier",
       "decided_at": "2026-07-16T09:00:50Z",
       "decision_digest": "sha256:18e9f790e205ceaf8c24b6d32e1e3e504ba79432246a5b2e41797bbc03d838d5"
+    },
+    {
+      "decision_id": "pad_html_skill_01J000000000000000",
+      "provider_revision_id": "hpr_01J00000000000000000000000",
+      "provider_revision_digest": "sha256:7153ba233a9846693d344b97d4cd9cfffdc4f002babba320b12765afb30bfc0a",
+      "decision_sequence": 1,
+      "decision": "certified",
+      "evidence_digest": "sha256:4848484848484848484848484848484848484848484848484848484848484848",
+      "decided_by": "principal:platform-provider-certifier",
+      "decided_at": "2026-07-16T09:00:51Z",
+      "decision_digest": "sha256:336247b9f2124cc04948429d0a38d8588cb04576dba4ca93e9233e0485c7161b"
+    },
+    {
+      "decision_id": "pad_renderer_01J0000000000000000",
+      "provider_revision_id": "rpr_01J00000000000000000000000",
+      "provider_revision_digest": "sha256:2ce33278f0ac607ce7c2c6d70020aa3e2edc85e83a461ed696bd063dfc762f70",
+      "decision_sequence": 1,
+      "decision": "certified",
+      "evidence_digest": "sha256:3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d",
+      "decided_by": "principal:platform-provider-certifier",
+      "decided_at": "2026-07-16T09:00:52Z",
+      "decision_digest": "sha256:38bdf57e24fd411b1917b2348f966b6ab764965788f4575c2a7c70d31a703529"
+    },
+    {
+      "decision_id": "tplad_01J0000000000000000000000",
+      "provider_revision_id": "tplpr_01J0000000000000000000000",
+      "provider_revision_digest": "sha256:8761661ce1d2e7233d942d0e4945bd8502c56f86a91c84ab9e91fbb3f4bafa01",
+      "decision_sequence": 1,
+      "decision": "certified",
+      "evidence_digest": "sha256:8989898989898989898989898989898989898989898989898989898989898989",
+      "decided_by": "principal:platform-provider-certifier",
+      "decided_at": "2026-07-16T09:00:55Z",
+      "decision_digest": "sha256:c276cbbee22e652f0886f3548c30d6fdd6e910089143b121ef64240a69579fa7"
     }
-  ]
+  ],
+  "commercial_authorization": {
+    "authorization_id": "cauth_01J00000000000000000000000",
+    "authorization_digest": "sha256:6433ae5c1cf9444c43d9ebb4b640b9b0fd3b38854651d0510387235719105d9c",
+    "entitlement_revision_id": "entitlement-pro-2026-07",
+    "entitlement_revision_digest": "sha256:7272727272727272727272727272727272727272727272727272727272727272",
+    "quota_reservation_id": "qres_01J00000000000000000000000",
+    "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
+    "business_account_id": "account-456",
+    "plan_reference": "pro",
+    "authorized_limits_digest": "sha256:184057aaf43460475c1240194d54b0ceeb6a1d1b515df509ae4e9a19d8a7a5a7",
+    "issued_at": "2026-07-15T09:59:30Z",
+    "expires_at": "2026-07-15T10:30:00Z",
+    "settlement_target_id": "business-usage-settlement-v1",
+    "authorized_entitlements": [
+      "experience.html.premium"
+    ],
+    "authorized_capabilities": [
+      "agent.general",
+      "html.generate",
+      "artifact.preview.html",
+      "converter.html-to-pptx"
+    ],
+    "authorized_limits": {
+      "max_input_tokens": 100000,
+      "max_output_tokens": 20000,
+      "max_sandbox_seconds": 1800,
+      "max_storage_bytes": 104857600,
+      "max_artifact_count": 20,
+      "max_conversion_count": 3
+    }
+  },
+  "scenario_definition": {
+    "api_version": "agent-platform/scenario/v1",
+    "id": "html-generation",
+    "version": "1.0.0",
+    "name": "HTML 页面生成",
+    "input_schema": {
+      "uri": "urn:agent-platform:scenario-schema:html-generation-input:v1",
+      "digest": "sha256:325f423c584036aff646ce7270441d30a2f29e08189b42358ed629f044c2582f",
+      "dialect": "https://json-schema.org/draft/2020-12/schema"
+    },
+    "workflow": {
+      "id": "html-generation-default",
+      "version": "1.0.0",
+      "definition_digest": "sha256:c19ef95a998011dc1ed9e260e952fb361b03a734d468f8fc94765f268b55c8ed"
+    },
+    "capabilities": {
+      "required": [
+        {
+          "id": "agent.general",
+          "version_range": ">=1.0.0 <2.0.0"
+        },
+        {
+          "id": "html.generate",
+          "version_range": ">=1.0.0 <2.0.0",
+          "required_profiles": [
+            "responsive"
+          ]
+        },
+        {
+          "id": "artifact.preview.html",
+          "version_range": ">=1.0.0 <2.0.0"
+        }
+      ],
+      "optional": [
+        {
+          "id": "html.edit",
+          "version_range": ">=1.0.0 <2.0.0"
+        },
+        {
+          "id": "converter.html-to-pptx",
+          "version_range": ">=1.0.0 <2.0.0"
+        }
+      ]
+    },
+    "experience_requirements": [
+      {
+        "kind": "template",
+        "capability_id": "template.html.generate",
+        "minimum": 1,
+        "maximum": 1,
+        "required_tags": [
+          "landing"
+        ]
+      }
+    ],
+    "outputs": {
+      "primary_media_type": "text/html",
+      "optional_media_types": [
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+      ]
+    },
+    "resource_class": "standard",
+    "ui": {
+      "schema": {
+        "uri": "urn:agent-platform:ui-schema:html-generation:v1",
+        "digest": "sha256:9ba190794f4da405e588ae4d9af7a4e98d056a8cf93866dfdb677785f35f95ef",
+        "dialect": "https://json-schema.org/draft/2020-12/schema"
+      },
+      "slots": {
+        "scenario.input.before": "template-picker",
+        "workspace.preview": "html-preview",
+        "workspace.artifact-actions": "capability-actions"
+      },
+      "option_sources": [
+        {
+          "field_pointer": "/template_id",
+          "source": "experience_catalog",
+          "kind": "template",
+          "capability_id": "template.html.generate"
+        }
+      ]
+    },
+    "lifecycle": "stable",
+    "definition_digest": "sha256:2ef129bc2277d1927147c533a18bcc5500db43e4c36ef12313b904fe80bb709c"
+  }
 }

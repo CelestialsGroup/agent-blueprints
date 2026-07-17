@@ -62,6 +62,7 @@
 - Usage：365 天
 - Audit：365 天
 - WorkSession：失效后记录 30 天
+- RuntimeRecording：按 Business/tenant policy，默认 30 天；Recording Audit 独立保留
 
 敏感内容避免进入日志、Event 和 Temporal History。
 

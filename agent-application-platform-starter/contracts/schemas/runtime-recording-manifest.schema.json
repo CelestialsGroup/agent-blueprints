@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:runtime-recording-manifest:v1",
+  "title": "RuntimeRecordingManifest",
+  "type": "object",
+  "required": ["recording", "chunks", "timeline_origin", "manifest_digest"],
+  "properties": {
+    "recording": { "$ref": "urn:agent-platform:runtime-recording:v1" },
+    "chunks": { "type": "array", "items": { "$ref": "urn:agent-platform:runtime-recording-chunk:v1" } },
+    "timeline_origin": { "type": "string", "format": "date-time" },
+    "manifest_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "manifest_digest is the RFC 8785 digest excluding both the root manifest_digest and recording.manifest_digest detached digest slots; both slots contain the resulting value",
+    "all chunks belong to recording and are ordered by channel plus chunk_sequence",
+    "work_sequence alignment is authoritative for synchronized Timeline playback"
+  ]
+}

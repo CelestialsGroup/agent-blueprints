@@ -33,7 +33,7 @@ fi
 "$VENV/bin/python" -m pip install \
   --index-url "$PIP_INDEX_URL" \
   --require-hashes \
-  -r requirements-contracts-v0.8.6.txt
+  -r requirements-contracts-v0.9.0.txt
 
 npm ci --registry "$NPM_CONFIG_REGISTRY"
 

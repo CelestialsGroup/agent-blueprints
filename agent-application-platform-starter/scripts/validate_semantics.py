@@ -64,6 +64,7 @@ def provider_snapshot_bindings(manifest: dict[str, Any]) -> list[tuple[dict[str,
     bindings = [(manifest["agent_runtime"]["provider_revision"], manifest["agent_runtime"]["provider_instance_id"])]
     bindings.extend((item["selected_provider_revision"], item["selected_provider_instance_id"]) for item in manifest["capability_resolutions"])
     bindings.extend((item["provider_revision"], item["provider_instance_id"]) for item in manifest["sandboxes"])
+    bindings.extend((item["provider_revision"], item["provider_instance_id"]) for item in manifest["selected_experiences"])
     return bindings
 
 
@@ -79,6 +80,30 @@ def validate_run_admission(manifest: dict[str, Any], context: dict[str, Any]) ->
     validate_self_digest(manifest, "run_manifest_digest")
     if manifest["scenario"] != context["scenario"]:
         raise AssertionError("RunManifest scenario does not bind the admitted Scenario definition")
+    scenario_definition = context["scenario_definition"]
+    validate_self_digest(scenario_definition, "definition_digest")
+    scenario_identity = {
+        "id": scenario_definition["id"],
+        "version": scenario_definition["version"],
+        "definition_digest": scenario_definition["definition_digest"],
+    }
+    if scenario_identity != context["scenario"]:
+        raise AssertionError("Run admission context does not bind its complete ScenarioDefinition")
+    scenario_requirements = {item["id"]: item for item in scenario_definition["capabilities"]["required"]}
+    if {item["id"] for item in context["required_capabilities"]} != set(scenario_requirements):
+        raise AssertionError("Run admission capabilities do not exactly cover Scenario required capabilities")
+    for item in context["required_capabilities"]:
+        required_profiles = scenario_requirements[item["id"]].get("required_profiles", [])
+        if required_profiles and item["profile"] not in required_profiles:
+            raise AssertionError("Resolved capability profile is not allowed by the Scenario")
+    if context["experience_requirements"] != scenario_definition.get("experience_requirements", []):
+        raise AssertionError("Run admission Experience requirements differ from the ScenarioDefinition")
+    commercial = context["commercial_authorization"]
+    validate_self_digest(commercial, "authorization_digest")
+    if commercial["authorized_limits_digest"] != canonical_digest(commercial["authorized_limits"]):
+        raise AssertionError("Commercial authorization does not bind its explicit limits")
+    if manifest["commercial_authorization_digest"] != commercial["authorization_digest"]:
+        raise AssertionError("RunManifest does not bind the admitted CommercialAuthorizationSnapshot")
     required_items = [(item["id"], item["version"], item["profile"]) for item in context["required_capabilities"]]
     resolved_items = [(item["capability"]["id"], item["capability"]["version"], item["capability"]["profile"]) for item in manifest["capability_resolutions"]]
     required, resolved = set(required_items), set(resolved_items)
@@ -194,6 +219,49 @@ def validate_run_admission(manifest: dict[str, Any], context: dict[str, Any]) ->
             if definition is None or "sandbox" not in definition["allowed_provider_kinds"] or not revision_supports(revision, key):
                 raise AssertionError(f"Sandbox ProviderRevision does not conform to required capability: {key}")
 
+    experience_revisions: dict[str, dict[str, Any]] = {}
+    for revision in context["experience_revisions"]:
+        validate_self_digest(revision, "revision_digest")
+        revision_id = revision["template_revision_id"]
+        if revision_id in experience_revisions:
+            raise AssertionError(f"Duplicate Experience revision: {revision_id}")
+        experience_revisions[revision_id] = revision
+
+    selected_counts: dict[tuple[str, str], int] = {}
+    selected_revisions: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    authorized_entitlements = set(commercial["authorized_entitlements"])
+    for selected in manifest["selected_experiences"]:
+        selection = selected["selection"]
+        if selection["kind"] != "template":
+            raise AssertionError("v1 Experience admission only accepts governed TemplateRevision resources")
+        revision = experience_revisions.get(selection["revision_id"])
+        if revision is None or revision["revision_digest"] != selection["revision_digest"]:
+            raise AssertionError("Selected Experience does not bind an admitted immutable revision")
+        if revision["template_id"] != selection["catalog_entry_id"] or revision["capability"]["id"] != selection["capability_id"]:
+            raise AssertionError("Selected Experience identity/capability conflicts with its TemplateRevision")
+        if revision["provider_revision"] != selected["provider_revision"]:
+            raise AssertionError("Selected Experience ProviderRevision snapshot conflicts with Catalog admission")
+        provider = revisions[selected["provider_revision"]["provider_revision_id"]]
+        capability = capability_key(revision["capability"])
+        if provider["provider_kind"] != "template" or not revision_supports(provider, capability):
+            raise AssertionError("Selected Template ProviderRevision is not conformant")
+        if not set(revision.get("required_entitlements", [])) <= authorized_entitlements:
+            raise AssertionError("Selected Experience requires an unauthorized commercial entitlement")
+        count_key = (selection["kind"], selection["capability_id"])
+        selected_counts[count_key] = selected_counts.get(count_key, 0) + 1
+        selected_revisions.setdefault(count_key, []).append(revision)
+
+    for requirement in context["experience_requirements"]:
+        count = selected_counts.get((requirement["kind"], requirement["capability_id"]), 0)
+        if not requirement["minimum"] <= count <= requirement["maximum"]:
+            raise AssertionError("Selected Experience cardinality conflicts with Scenario requirements")
+        required_tags = set(requirement.get("required_tags", []))
+        if any(not required_tags <= set(revision.get("tags", [])) for revision in selected_revisions.get((requirement["kind"], requirement["capability_id"]), [])):
+            raise AssertionError("Selected Experience does not satisfy Scenario required_tags")
+    required_keys = {(item["kind"], item["capability_id"]) for item in context["experience_requirements"]}
+    if set(selected_counts) - required_keys:
+        raise AssertionError("RunManifest contains an Experience not requested by the Scenario")
+
     slots = [sandbox["sandbox_slot_key"] for sandbox in manifest["sandboxes"]]
     if len(slots) != len(set(slots)):
         raise AssertionError("sandbox_slot_key must be unique")
@@ -233,6 +301,9 @@ def status_enum(schema_path: str) -> set[str]:
 
 
 validate_state_machine(load("contracts/state-machines/work-order-v1.json"), status_enum("contracts/schemas/work-order-state.schema.json"))
+validate_state_machine(load("contracts/state-machines/conversation-v1.json"), status_enum("contracts/schemas/conversation.schema.json"))
+validate_state_machine(load("contracts/state-machines/agent-runtime-run-v1.json"), status_enum("contracts/schemas/agent-runtime-run-status.schema.json"))
+validate_state_machine(load("contracts/state-machines/runtime-recording-v1.json"), status_enum("contracts/schemas/runtime-recording.schema.json"))
 invocation_machine = load("contracts/state-machines/invocation-v2.json")
 validate_state_machine(invocation_machine, status_enum("contracts/schemas/invocation-record.schema.json"))
 if any(item["from"] in {"executing", "outcome_unknown", "reconciling", "manual_review"} and item["to"] == "cancelled" for item in invocation_machine["transitions"]):
@@ -267,6 +338,15 @@ else:
 context = load("examples/contracts/run-admission-context.json")
 manifest = load("examples/contracts/run-manifest-v2.json")
 validate_run_admission(manifest, context)
+grant = load("examples/contracts/execution-grant-claims.json")
+commercial = grant["commercial_authorization"]
+validate_self_digest(commercial, "authorization_digest")
+if commercial != context["commercial_authorization"]:
+    raise AssertionError("ExecutionGrant and Run admission bind different CommercialAuthorizationSnapshots")
+if not set(grant["capabilities"]) <= set(commercial["authorized_capabilities"]):
+    raise AssertionError("ExecutionGrant capabilities exceed commercial authorization")
+if any(name not in commercial["authorized_limits"] or value > commercial["authorized_limits"][name] for name, value in grant["limits"].items()):
+    raise AssertionError("ExecutionGrant limits exceed commercial authorization")
 manual = load("examples/contracts/sandbox-manual-review-decision.json")
 validate_self_digest(manual, "decision_digest")
 invocation_manual = load("examples/contracts/invocation-manual-review-decision.json")
@@ -275,6 +355,7 @@ validate_self_digest(invocation_manual, "decision_digest")
 negative = load("contracts/tests/semantic-invalid/run-manifest-cases.json")
 for case in negative["cases"]:
     value = copy.deepcopy(manifest)
+    registry = copy.deepcopy(context)
     mutation = case["mutation"]
     if mutation == "duplicate_sandbox_slot":
         duplicate = copy.deepcopy(value["sandboxes"][0]); duplicate["sandbox_id"] = "sbx_duplicate"; value["sandboxes"].append(duplicate)
@@ -284,12 +365,35 @@ for case in negative["cases"]:
         value["run_manifest_digest"] = "sha256:" + "0" * 64
     elif mutation == "conflicting_revision_snapshot":
         value["sandboxes"][0]["provider_revision"]["configuration_digest"] = "sha256:" + "f" * 64
+    elif mutation == "unadmitted_experience":
+        value["selected_experiences"] = [{
+            "selection": {
+                "kind": "template",
+                "catalog_entry_id": "unadmitted/template",
+                "revision_id": "unadmitted-revision",
+                "revision_digest": "sha256:" + "9" * 64,
+                "capability_id": "template.html.generate",
+            },
+            "provider_instance_id": value["agent_runtime"]["provider_instance_id"],
+            "provider_revision": copy.deepcopy(value["agent_runtime"]["provider_revision"]),
+        }]
+    elif mutation == "unauthorized_experience_entitlement":
+        registry["commercial_authorization"]["authorized_entitlements"] = []
+        registry["commercial_authorization"]["authorization_digest"] = canonical_digest({key: item for key, item in registry["commercial_authorization"].items() if key != "authorization_digest"})
+        value["commercial_authorization_digest"] = registry["commercial_authorization"]["authorization_digest"]
+    elif mutation == "missing_required_experience_tag":
+        registry["experience_requirements"][0]["required_tags"] = ["nonexistent-tag"]
+    elif mutation == "commercial_authorization_digest_mismatch":
+        value["commercial_authorization_digest"] = "sha256:" + "7" * 64
+    elif mutation == "scenario_definition_mismatch":
+        registry["scenario_definition"]["id"] = "other-scenario"
+        registry["scenario_definition"]["definition_digest"] = canonical_digest({key: item for key, item in registry["scenario_definition"].items() if key != "definition_digest"})
     else:
         raise AssertionError(f"Unknown mutation: {mutation}")
     if mutation != "wrong_run_manifest_digest":
         value["run_manifest_digest"] = canonical_digest({key: item for key, item in value.items() if key != "run_manifest_digest"})
     try:
-        validate_run_admission(value, context)
+        validate_run_admission(value, registry)
     except AssertionError:
         pass
     else:
@@ -317,8 +421,8 @@ for case in admission_negative["cases"]:
     elif mutation == "forged_agent_runtime_outer_conformance":
         value["agent_runtime"]["governed_conformance_report_digest"] = "sha256:" + "b" * 64
     elif mutation == "capability_incompatible_provider_kind":
-        value["capability_resolutions"][0]["selected_provider_revision"] = copy.deepcopy(value["agent_runtime"]["provider_revision"])
-        value["capability_resolutions"][0]["selected_provider_instance_id"] = value["agent_runtime"]["provider_instance_id"]
+        value["capability_resolutions"][1]["selected_provider_revision"] = copy.deepcopy(value["agent_runtime"]["provider_revision"])
+        value["capability_resolutions"][1]["selected_provider_instance_id"] = value["agent_runtime"]["provider_instance_id"]
     elif mutation == "missing_admission_predecessor":
         previous = registry["admission_decisions"][0]
         forged = copy.deepcopy(previous)
@@ -553,4 +657,170 @@ if any(current <= previous for previous, current in zip(fencing_tokens, fencing_
 else:
     raise AssertionError("Expected Sandbox fencing-token negative fixture to fail")
 
-print("Semantic validation passed with deterministic state-machine/safety checks and 39 negative invariant fixtures.")
+
+def validate_conversation_message_sequence(messages: list[dict[str, Any]]) -> None:
+    if not messages:
+        return
+    conversation_id = messages[0]["conversation_id"]
+    identifiers = [item["message_id"] for item in messages]
+    if len(identifiers) != len(set(identifiers)):
+        raise AssertionError("Conversation message IDs must be unique")
+    if [item["message_sequence"] for item in messages] != list(range(1, len(messages) + 1)):
+        raise AssertionError("Conversation message_sequence must be contiguous from one")
+    if any(item["conversation_id"] != conversation_id for item in messages):
+        raise AssertionError("Conversation message history contains a cross-Conversation record")
+    prior: set[str] = set()
+    for item in messages:
+        parent = item.get("parent_message_id")
+        if parent is not None and parent not in prior:
+            raise AssertionError("Conversation parent_message_id must reference a prior immutable message")
+        prior.add(item["message_id"])
+
+
+conversation_fixture = load("contracts/tests/semantic-invalid/conversation-message-sequence.json")
+validate_conversation_message_sequence(conversation_fixture["messages"])
+for case in conversation_fixture["cases"]:
+    candidate = copy.deepcopy(conversation_fixture["messages"])
+    if case["mutation"] == "sequence_gap":
+        candidate[1]["message_sequence"] = 3
+    elif case["mutation"] == "duplicate_message_id":
+        candidate[1]["message_id"] = candidate[0]["message_id"]
+    elif case["mutation"] == "parent_not_prior":
+        candidate[1]["parent_message_id"] = "msg_future"
+    elif case["mutation"] == "cross_conversation":
+        candidate[1]["conversation_id"] = "conv_other"
+    else:
+        raise AssertionError(f"Unknown Conversation mutation: {case['mutation']}")
+    try:
+        validate_conversation_message_sequence(candidate)
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError(f"Expected Conversation semantic fixture to fail: {case['id']}")
+
+
+def validate_runtime_recording_sequence(recording: dict[str, Any], chunks: list[dict[str, Any]]) -> None:
+    if recording["chunk_count"] != len(chunks):
+        raise AssertionError("RuntimeRecording chunk_count conflicts with persisted chunk history")
+    if any(item["recording_id"] != recording["recording_id"] for item in chunks):
+        raise AssertionError("RuntimeRecording contains a chunk from another recording")
+    by_channel: dict[str, list[dict[str, Any]]] = {}
+    for item in chunks:
+        by_channel.setdefault(item["channel"], []).append(item)
+        start = datetime.fromisoformat(item["started_at"].replace("Z", "+00:00"))
+        end = datetime.fromisoformat(item["ended_at"].replace("Z", "+00:00"))
+        if start > end or item["start_work_sequence"] > item["end_work_sequence"]:
+            raise AssertionError("RuntimeRecording chunk chronology is reversed")
+    for channel_chunks in by_channel.values():
+        if [item["chunk_sequence"] for item in channel_chunks] != list(range(1, len(channel_chunks) + 1)):
+            raise AssertionError("RuntimeRecording chunk_sequence must be contiguous per channel")
+        for previous, current in zip(channel_chunks, channel_chunks[1:]):
+            if current["start_work_sequence"] < previous["end_work_sequence"]:
+                raise AssertionError("RuntimeRecording work_sequence ranges overlap or reverse")
+
+
+recording_fixture = load("contracts/tests/semantic-invalid/runtime-recording-sequence.json")
+validate_runtime_recording_sequence(recording_fixture["recording"], recording_fixture["chunks"])
+for case in recording_fixture["cases"]:
+    candidate = copy.deepcopy(recording_fixture["chunks"])
+    if case["mutation"] == "sequence_gap":
+        candidate[1]["chunk_sequence"] = 3
+    elif case["mutation"] == "cross_recording":
+        candidate[1]["recording_id"] = "rec_other"
+    elif case["mutation"] == "work_sequence_reversal":
+        candidate[1]["start_work_sequence"] = 1
+    elif case["mutation"] == "time_reversal":
+        candidate[1]["ended_at"] = "2026-07-15T10:04:00Z"
+        candidate[1]["started_at"] = "2026-07-15T10:05:00Z"
+    else:
+        raise AssertionError(f"Unknown RuntimeRecording mutation: {case['mutation']}")
+    try:
+        validate_runtime_recording_sequence(recording_fixture["recording"], candidate)
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError(f"Expected RuntimeRecording semantic fixture to fail: {case['id']}")
+
+
+def validate_runtime_command_sequence(commands: list[dict[str, Any]]) -> None:
+    if not commands:
+        return
+    runtime_run_id = commands[0]["runtime_run_id"]
+    identifiers = [item["command_id"] for item in commands]
+    if len(identifiers) != len(set(identifiers)):
+        raise AssertionError("Agent Runtime command IDs must be unique")
+    if [item["command_sequence"] for item in commands] != list(range(1, len(commands) + 1)):
+        raise AssertionError("Agent Runtime command_sequence must be contiguous from one")
+    if any(item["runtime_run_id"] != runtime_run_id for item in commands):
+        raise AssertionError("Agent Runtime command history contains another run")
+    fencing = [item["fencing_token"] for item in commands]
+    if any(current <= previous for previous, current in zip(fencing, fencing[1:])):
+        raise AssertionError("Agent Runtime command fencing_token must strictly increase")
+
+
+runtime_command_fixture = load("contracts/tests/semantic-invalid/agent-runtime-command-sequence.json")
+validate_runtime_command_sequence(runtime_command_fixture["commands"])
+for case in runtime_command_fixture["cases"]:
+    candidate = copy.deepcopy(runtime_command_fixture["commands"])
+    if case["mutation"] == "sequence_gap":
+        candidate[1]["command_sequence"] = 3
+    elif case["mutation"] == "stale_fencing":
+        candidate[1]["fencing_token"] = candidate[0]["fencing_token"]
+    elif case["mutation"] == "duplicate_id":
+        candidate[1]["command_id"] = candidate[0]["command_id"]
+    elif case["mutation"] == "cross_run":
+        candidate[1]["runtime_run_id"] = "runtime_other"
+    else:
+        raise AssertionError(f"Unknown Agent Runtime command mutation: {case['mutation']}")
+    try:
+        validate_runtime_command_sequence(candidate)
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError(f"Expected Agent Runtime command semantic fixture to fail: {case['id']}")
+
+
+def validate_conversation_branch(
+    branch: dict[str, Any], message: dict[str, Any], work_order: dict[str, Any],
+) -> None:
+    if (branch["head_message_id"] is None) != (branch["head_message_sequence"] == 0):
+        raise AssertionError("ConversationBranch head ID and sequence do not represent the same head")
+    if branch["head_message_id"] is not None:
+        if message["message_id"] != branch["head_message_id"] or message["message_sequence"] != branch["head_message_sequence"]:
+            raise AssertionError("ConversationBranch head does not bind the projected ConversationMessage")
+        if message["conversation_id"] != branch["conversation_id"] or message["branch_id"] != branch["branch_id"]:
+            raise AssertionError("ConversationBranch head belongs to another Conversation or branch")
+    if branch["active_work_order_id"] is not None:
+        work = work_order["work"]
+        if work["conversation_id"] != branch["conversation_id"] or work["branch_id"] != branch["branch_id"]:
+            raise AssertionError("ConversationBranch active WorkOrder belongs to another Conversation or branch")
+
+
+branch_fixture = load("contracts/tests/semantic-invalid/conversation-branch-cases.json")
+branch = load(branch_fixture["branch"])
+branch_message = load(branch_fixture["message"])
+branch_work_order = load(branch_fixture["work_order"])
+validate_conversation_branch(branch, branch_message, branch_work_order)
+for case in branch_fixture["cases"]:
+    candidate_branch = copy.deepcopy(branch)
+    candidate_message = copy.deepcopy(branch_message)
+    candidate_work_order = copy.deepcopy(branch_work_order)
+    if case["mutation"] == "zero_sequence_with_head":
+        candidate_branch["head_message_sequence"] = 0
+    elif case["mutation"] == "positive_sequence_without_head":
+        candidate_branch["head_message_id"] = None
+    elif case["mutation"] == "cross_conversation_message":
+        candidate_message["conversation_id"] = "conv_other"
+    elif case["mutation"] == "active_work_order_branch_mismatch":
+        candidate_work_order["work"]["branch_id"] = "other-branch"
+    else:
+        raise AssertionError(f"Unknown ConversationBranch mutation: {case['mutation']}")
+    try:
+        validate_conversation_branch(candidate_branch, candidate_message, candidate_work_order)
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError(f"Expected ConversationBranch semantic fixture to fail: {case['id']}")
+
+
+print("Semantic validation passed with deterministic state-machine/safety checks and 60 negative invariant fixtures.")

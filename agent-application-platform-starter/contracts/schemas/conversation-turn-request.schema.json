@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:conversation-turn-request:v1",
+  "title": "CreateConversationTurnRequest",
+  "type": "object",
+  "required": [
+    "client_message_id",
+    "branch_id",
+    "content",
+    "scenario",
+    "execution_grant",
+    "delivery"
+  ],
+  "properties": {
+    "client_message_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "branch_id": { "type": "string", "minLength": 1 },
+    "parent_message_id": { "type": ["string", "null"] },
+    "command": { "enum": ["enqueue", "interrupt_and_enqueue", "append_context"] },
+    "content": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["type", "text"],
+            "properties": {
+              "type": { "const": "text" },
+              "text": { "type": "string", "minLength": 1 }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["type", "artifact_id", "version_id"],
+            "properties": {
+              "type": { "const": "artifact" },
+              "artifact_id": { "type": "string", "minLength": 1 },
+              "version_id": { "type": "string", "minLength": 1 },
+              "role": { "type": "string", "minLength": 1 }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "scenario": {
+      "type": "object",
+      "required": ["id", "version", "definition_digest"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "definition_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "experience_selections": {
+      "type": "array",
+      "items": { "$ref": "urn:agent-platform:selected-experience:v1" },
+      "uniqueItems": true
+    },
+    "execution_grant": { "type": "string", "minLength": 20 },
+    "delivery": {
+      "type": "object",
+      "required": ["storage_mode", "required_formats", "retention_days"],
+      "properties": {
+        "storage_mode": { "enum": ["agent_managed", "business_managed", "replicated"] },
+        "required_formats": { "type": "array", "items": { "type": "string" } },
+        "retention_days": { "type": "integer", "minimum": 0, "maximum": 3650 },
+        "callback_registration_id": { "type": "string" },
+        "delivery_target_id": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "metadata": { "type": "object" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "client_message_id is idempotent within the Conversation",
+    "interrupt_and_enqueue records cancellation intent for the active WorkOrder before a successor starts",
+    "append_context never mutates a completed message and cannot bypass a fresh ExecutionGrant"
+  ]
+}

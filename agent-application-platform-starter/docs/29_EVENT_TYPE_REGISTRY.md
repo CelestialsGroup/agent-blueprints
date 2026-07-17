@@ -19,6 +19,8 @@ CanonicalEvent Envelope 统一并不足以保证消费者可安全解析 `data`�
 
 ```text
 work_order.*
+conversation.*
+message.*
 workflow.*
 agent.*
 invocation.*
@@ -26,6 +28,9 @@ artifact.*
 approval.*
 delivery.*
 usage.*
+sandbox.*
+runtime_session.*
+runtime_recording.*
 ```
 
 Plugin 私有事件必须带发布者命名空间，且不能直接驱动核心 Projection。

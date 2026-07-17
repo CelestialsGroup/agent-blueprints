@@ -1,0 +1,16 @@
+{
+  "client_message_id": "client-msg-invalid",
+  "branch_id": "main",
+  "command": "enqueue",
+  "content": [{ "type": "text", "text": "continue" }],
+  "scenario": {
+    "id": "html-generation",
+    "version": "1.0.0",
+    "definition_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "delivery": {
+    "storage_mode": "agent_managed",
+    "required_formats": ["text/html"],
+    "retention_days": 30
+  }
+}

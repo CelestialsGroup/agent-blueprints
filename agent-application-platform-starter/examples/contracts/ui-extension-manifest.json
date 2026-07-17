@@ -1,0 +1,43 @@
+{
+  "extension_id": "open-design/artifact-editor",
+  "version": "1.0.0",
+  "provider_revision": {
+    "provider_revision_id": "edpr_01J0000000000000000000000",
+    "provider_revision_digest": "sha256:c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1",
+    "provider_kind": "editor",
+    "plugin_id": "editor-provider.open-design",
+    "plugin_version": "1.0.0",
+    "manifest_digest": "sha256:c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2",
+    "package_digest": "sha256:c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3",
+    "runtime_binding_digest": "sha256:c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4",
+    "configuration_digest": "sha256:c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5",
+    "approved_permissions_digest": "sha256:c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6",
+    "credential_binding_digest": "sha256:c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7",
+    "conformance_report_digest": "sha256:c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8",
+    "admission_decision_id": "edad_01J0000000000000000000000",
+    "admission_decision_digest": "sha256:c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9",
+    "admission_status": "certified"
+  },
+  "bundle_artifact": {
+    "artifact_id": "art_ui_open_design_editor",
+    "version_id": "ver_ui_open_design_editor_1",
+    "digest": "sha256:cacacacacacacacacacacacacacacacacacacacacacacacacacacacacacaca00",
+    "media_type": "application/vnd.agent.ui-extension+zip"
+  },
+  "slots": [
+    "artifact.editor"
+  ],
+  "message_protocol_version": "ui-extension/v1",
+  "isolation": {
+    "mode": "sandboxed_iframe",
+    "origin": "opaque",
+    "csp_profile": "editor-controlled-v1"
+  },
+  "requested_permissions": [
+    "artifact:read",
+    "artifact:draft",
+    "catalog:read"
+  ],
+  "manifest_digest": "sha256:eb776dd578d3b520a2f7a44d7808f1d2fa80776caca023a75aa4fbae9e96a11e",
+  "lifecycle": "experimental"
+}

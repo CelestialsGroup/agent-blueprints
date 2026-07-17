@@ -32,11 +32,39 @@
         "scenario_id",
         "scenario_version",
         "scenario_definition_digest",
+        "conversation_id",
+        "turn_id",
+        "branch_id",
+        "input_message_id",
+        "experience_selections",
         "input"
       ],
       "properties": {
         "scenario_id": {
           "type": "string"
+        },
+        "conversation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "turn_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "branch_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input_message_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "experience_selections": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:agent-platform:selected-experience:v1"
+          },
+          "uniqueItems": true
         },
         "input": {
           "type": "object"
@@ -180,5 +208,10 @@
       "description": "Behavior-affecting metadata is included in request_digest; trace transport headers are not."
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "conversation_id, turn_id, branch_id and input_message_id bind one immutable Conversation turn",
+    "experience_selections exactly match the catalog revisions authorized by the Scenario and ExecutionGrant",
+    "a one-shot request creates an implicit Conversation before this WorkOrder transaction commits"
+  ]
 }

@@ -1,0 +1,41 @@
+{
+  "client_message_id": "client-msg-0001",
+  "branch_id": "main",
+  "parent_message_id": null,
+  "command": "enqueue",
+  "content": [
+    {
+      "type": "text",
+      "text": "生成一个 SaaS 产品介绍页面"
+    }
+  ],
+  "scenario": {
+    "id": "html-generation",
+    "version": "1.0.0",
+    "definition_digest": "sha256:2ef129bc2277d1927147c533a18bcc5500db43e4c36ef12313b904fe80bb709c"
+  },
+  "experience_selections": [
+    {
+      "kind": "template",
+      "catalog_entry_id": "html-anything/landing-saas-dark",
+      "revision_id": "tmplrev_01J00000000000000000000000",
+      "revision_digest": "sha256:f3ffedb6bbba3ed14d227ba9ac7df4562efe6a246b093ac34522f63d5d615e5b",
+      "capability_id": "template.html.generate",
+      "parameter_values": {
+        "theme": "dark"
+      }
+    }
+  ],
+  "execution_grant": "eyJhbGciOiJFZERTQSIsImtpZCI6ImtleS0xIiwidHlwIjoiYWdlbnQtZXhlY3V0aW9uLWdyYW50K2p3dCJ9.payload.signature",
+  "delivery": {
+    "storage_mode": "agent_managed",
+    "required_formats": [
+      "text/html"
+    ],
+    "retention_days": 30,
+    "delivery_target_id": "agent-managed-default"
+  },
+  "metadata": {
+    "locale": "zh-CN"
+  }
+}

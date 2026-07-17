@@ -25,14 +25,31 @@ capabilities:
     version_range: '>=1.0.0 <2.0.0'
   - id: converter.html-to-pptx
     version_range: '>=1.0.0 <2.0.0'
+experience_requirements:
+- kind: template
+  capability_id: template.html.generate
+  minimum: 1
+  maximum: 1
+  required_tags:
+  - landing
 outputs:
   primary_media_type: text/html
   optional_media_types:
   - application/vnd.openxmlformats-officedocument.presentationml.presentation
 resource_class: standard
 ui:
+  schema:
+    uri: urn:agent-platform:ui-schema:html-generation:v1
+    digest: sha256:9ba190794f4da405e588ae4d9af7a4e98d056a8cf93866dfdb677785f35f95ef
+    dialect: https://json-schema.org/draft/2020-12/schema
   slots:
     scenario.input.before: template-picker
     workspace.preview: html-preview
     workspace.artifact-actions: capability-actions
-definition_digest: sha256:dd7b535a7cd877a389665d18edd8b2340c41e1af13c2029d33be666518dccd30
+  option_sources:
+  - field_pointer: /template_id
+    source: experience_catalog
+    kind: template
+    capability_id: template.html.generate
+lifecycle: stable
+definition_digest: sha256:2ef129bc2277d1927147c533a18bcc5500db43e4c36ef12313b904fe80bb709c

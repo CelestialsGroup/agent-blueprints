@@ -1,6 +1,8 @@
 # Business 与 Agent Platform 契约
 
-## 1. WorkOrder
+## 1. Conversation and WorkOrder
+
+AgentConversation owns the durable Workspace and append-only Message sequence. Each executable user Turn creates one immutable WorkOrder. One-shot calls create an implicit Conversation in the same transaction.
 
 业务后端使用 Sender-constrained Service Token 提交：
 
@@ -12,6 +14,8 @@ Idempotency-Key: ...
 返回 202。
 
 client_app_id 不出现在请求正文。
+
+WorkOrder and ExecutionGrant both bind `conversation_id`、`turn_id`、`branch_id` and `input_message_id`.
 
 ## 2. Request Digest
 
@@ -40,9 +44,11 @@ WorkOrder 只引用：
 
 ## 5. WorkSession
 
-业务后端创建一次性 Exchange Token。
+业务后端创建 Conversation-bound 一次性 Exchange Token，并附带当前 CommercialAuthorizationSnapshot。可选 `work_order_id` 只能进一步收窄权限。
 
 Browser Exchange 后获得 HttpOnly Cookie。
+
+每个可执行 follow-up 仍需要新的 ExecutionGrant；WorkSession 不能自行扩大会员权益或商业配额。
 
 ## 6. Usage
 

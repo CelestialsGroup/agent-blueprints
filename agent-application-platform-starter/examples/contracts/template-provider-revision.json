@@ -1,0 +1,26 @@
+{
+  "provider_revision_id": "tplpr_01J0000000000000000000000",
+  "provider_revision_digest": "sha256:8761661ce1d2e7233d942d0e4945bd8502c56f86a91c84ab9e91fbb3f4bafa01",
+  "provider_instance_id": "tpli_html_anything",
+  "plugin_id": "template-provider.html-anything",
+  "plugin_version": "1.0.0",
+  "manifest_digest": "sha256:8181818181818181818181818181818181818181818181818181818181818181",
+  "package_digest": "sha256:8282828282828282828282828282828282828282828282828282828282828282",
+  "configuration_digest": "sha256:8383838383838383838383838383838383838383838383838383838383838383",
+  "approved_permissions_digest": "sha256:8484848484848484848484848484848484848484848484848484848484848484",
+  "runtime_binding_digest": "sha256:8585858585858585858585858585858585858585858585858585858585858585",
+  "credential_binding_digest": "sha256:8686868686868686868686868686868686868686868686868686868686868686",
+  "provider_kind": "template",
+  "conformance": [
+    {
+      "capability": "template.html.generate",
+      "version": "1.0",
+      "profile": "landing-page",
+      "suite_version": "1.0.0",
+      "status": "passed",
+      "report_digest": "sha256:8787878787878787878787878787878787878787878787878787878787878787"
+    }
+  ],
+  "conformance_set_digest": "sha256:ec3bc4229e8b502ff3d3f821f65d191d01f5aa3d9584a5e8a25c70809a81271e",
+  "created_at": "2026-07-16T09:00:25Z"
+}

@@ -33,6 +33,8 @@ agent.general
 html.generate
 artifact.preview.html
 converter.html-to-pptx
+template.html.generate
+runtime.recording.playback
 ```
 
 第三方专用能力使用发布者命名空间。
@@ -88,3 +90,5 @@ ProviderResolution 必须固化：
 - Image Digest
 - Configuration Digest
 - Conformance Report Digest
+
+User-visible Experiences add an immutable Catalog revision on top of Provider resolution. A mutable `template_id` alone is never sufficient for WorkOrder admission or Run replay.

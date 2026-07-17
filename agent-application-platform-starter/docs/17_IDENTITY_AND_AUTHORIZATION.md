@@ -37,7 +37,7 @@ Headless SDK 可使用内存 Bearer Profile。
 
 ## 3. WorkSession Subject
 
-默认 `subject_mode=owner`，Principal 必须等于 WorkOrder 的 Grant Principal。
+默认 `subject_mode=owner`，Principal 必须等于 Conversation/WorkOrder 的 Grant Principal。
 
 `subject_mode=delegated` 仅在以下条件允许：
 
@@ -57,6 +57,9 @@ Service：
 - artifact:read
 - artifact:write
 - provider:admin
+- conversation:create
+- conversation:read
+- catalog:read
 
 WorkSession：
 
@@ -67,10 +70,14 @@ WorkSession：
 - artifact:edit
 - artifact:export
 - work:control
+- conversation:read
+- conversation:write
+- catalog:read
 - approval:read
 - approval:decide
 - runtime:view
 - runtime:control
+- recording:read
 
 OpenAPI 使用 `x-required-work-session-scopes` 表达 Bearer/Cookie Scheme 无法原生表达的 Scope。
 
@@ -83,8 +90,10 @@ credential type
 + token profile
 + scope
 + internal tenant
-+ work_order binding
++ conversation binding
++ optional work_order narrowing binding
 + object ownership
++ commercial authorization ID/digest
 + current session version
 + optional policy
 ```

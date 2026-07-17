@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:agent-runtime-checkpoint-manifest:v1",
+  "title": "AgentRuntimeCheckpointManifest",
+  "type": "object",
+  "required": [
+    "checkpoint_id",
+    "runtime_run_id",
+    "provider_revision_id",
+    "runtime_version",
+    "event_sequence",
+    "content_reference",
+    "digest",
+    "size_bytes",
+    "portability",
+    "created_at"
+  ],
+  "properties": {
+    "checkpoint_id": { "type": "string", "minLength": 1 },
+    "runtime_run_id": { "type": "string", "minLength": 1 },
+    "provider_revision_id": { "type": "string", "minLength": 1 },
+    "runtime_version": { "type": "string", "minLength": 1 },
+    "event_sequence": { "type": "integer", "minimum": 0 },
+    "content_reference": { "type": "string", "minLength": 1 },
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "size_bytes": { "type": "integer", "minimum": 0 },
+    "portability": { "enum": ["same_revision", "compatible_revision", "portable"] },
+    "compatibility_profile": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}
