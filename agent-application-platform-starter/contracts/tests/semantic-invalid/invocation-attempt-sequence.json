@@ -1,0 +1,12 @@
+{
+  "aggregate": "examples/contracts/invocation-attempt-sequence-record.json",
+  "attempts": [
+    "examples/contracts/invocation-attempt-1.json",
+    "examples/contracts/invocation-attempt-2.json"
+  ],
+  "cases": [
+    { "id": "duplicate-invocation-fencing-token", "mutation": "duplicate_fencing_token" },
+    { "id": "invocation-attempt-number-gap", "mutation": "attempt_number_gap" },
+    { "id": "invocation-current-attempt-mismatch", "mutation": "current_attempt_mismatch" }
+  ]
+}

@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -223,8 +224,8 @@ def validate_state_machine(machine: dict[str, Any], allowed_states: set[str]) ->
             if source in reachable and target not in reachable:
                 reachable.add(target)
                 changed = True
-    if terminal - reachable:
-        raise AssertionError(f"Unreachable terminal states: {terminal-reachable}")
+    if allowed_states - reachable:
+        raise AssertionError(f"Unreachable states: {allowed_states-reachable}")
 
 
 def status_enum(schema_path: str) -> set[str]:
@@ -254,6 +255,14 @@ except AssertionError:
     pass
 else:
     raise AssertionError("Expected non-deterministic state-machine fixture to fail")
+orphaned = copy.deepcopy(invocation_machine)
+orphaned["transitions"].append({"from": "orphaned", "event": "remain_orphaned", "to": "orphaned"})
+try:
+    validate_state_machine(orphaned, status_enum("contracts/schemas/invocation-record.schema.json") | {"orphaned"})
+except AssertionError:
+    pass
+else:
+    raise AssertionError("Expected unreachable non-terminal state fixture to fail")
 
 context = load("examples/contracts/run-admission-context.json")
 manifest = load("examples/contracts/run-manifest-v2.json")
@@ -328,9 +337,19 @@ for case in admission_negative["cases"]:
 
 def validate_case_decision_binding(
     record: dict[str, Any], case: dict[str, Any], decision: dict[str, Any],
-    *, record_id_field: str, case_record_id_field: str, expected_decision: str,
-    expected_outcome: str,
+    *, record_id_field: str, case_record_id_field: str,
 ) -> None:
+    status_bindings = {
+        "succeeded": ("resolve_success", "succeeded"),
+        "failed": ("resolve_failure", "failed"),
+        "cancelled": ("resolve_cancelled", "cancelled"),
+        "abandoned": ("abandon", "abandoned"),
+        "retry_scheduled": ("retry", "retry_approved"),
+    }
+    binding = status_bindings.get(record.get("status"))
+    if binding is None:
+        raise AssertionError("Aggregate status cannot carry a terminal/retry ManualReviewDecision binding")
+    expected_decision, expected_outcome = binding
     validate_self_digest(case, "case_digest")
     validate_self_digest(decision, "decision_digest")
     if record[record_id_field] != case[case_record_id_field] or record[record_id_field] != decision[case_record_id_field]:
@@ -352,6 +371,15 @@ def validate_case_decision_binding(
         raise AssertionError("Manual review must cite non-empty evidence recorded on the resolved case")
     if expected_decision == "abandon" and decision["risk_accepted"] is not True:
         raise AssertionError("Abandon requires explicit risk acceptance")
+    parse_time = lambda value: datetime.fromisoformat(value.replace("Z", "+00:00"))
+    opened_at = parse_time(case["opened_at"])
+    resolved_at = parse_time(case["resolved_at"])
+    decided_at = parse_time(decision["occurred_at"])
+    if not opened_at <= resolved_at <= decided_at:
+        raise AssertionError("Adjudication timestamps must satisfy opened_at <= resolved_at <= decision.occurred_at")
+    for aggregate_field in ("updated_at", "completed_at"):
+        if aggregate_field in record and decided_at > parse_time(record[aggregate_field]):
+            raise AssertionError(f"Decision occurred after aggregate {aggregate_field}")
 
 
 operation_schema = load("contracts/schemas/sandbox-operation-record.schema.json")
@@ -360,7 +388,7 @@ operation_validator = Draft202012Validator(operation_schema, registry=SCHEMA_REG
 manual_validator = Draft202012Validator(manual_schema, registry=SCHEMA_REGISTRY, format_checker=FormatChecker())
 operation = load("examples/contracts/sandbox-operation.json")
 reconciliation = load("examples/contracts/sandbox-reconciliation-case.json")
-validate_case_decision_binding(operation, reconciliation, manual, record_id_field="operation_id", case_record_id_field="operation_id", expected_decision="abandon", expected_outcome="abandoned")
+validate_case_decision_binding(operation, reconciliation, manual, record_id_field="operation_id", case_record_id_field="operation_id")
 if operation["current_attempt_number"] > operation["max_attempts"]:
     raise AssertionError("current_attempt_number exceeds max_attempts")
 sandbox_negative = load("contracts/tests/semantic-invalid/sandbox-operation-cases.json")
@@ -396,7 +424,7 @@ for case in sandbox_negative["cases"]:
             candidate_case["evidence_references"] = []
             candidate_case["case_digest"] = canonical_digest({key: item for key, item in candidate_case.items() if key != "case_digest"})
         try:
-            validate_case_decision_binding(candidate_operation, candidate_case, candidate_manual, record_id_field="operation_id", case_record_id_field="operation_id", expected_decision="abandon", expected_outcome="abandoned")
+            validate_case_decision_binding(candidate_operation, candidate_case, candidate_manual, record_id_field="operation_id", case_record_id_field="operation_id")
         except AssertionError:
             failed = True
         else:
@@ -412,11 +440,11 @@ invocation_validator = Draft202012Validator(invocation_schema, registry=SCHEMA_R
 invocation_manual_validator = Draft202012Validator(invocation_manual_schema, registry=SCHEMA_REGISTRY, format_checker=FormatChecker())
 invocation = load("examples/contracts/invocation-record.json")
 invocation_reconciliation = load("examples/contracts/invocation-reconciliation-case.json")
-validate_case_decision_binding(invocation, invocation_reconciliation, invocation_manual, record_id_field="invocation_id", case_record_id_field="invocation_id", expected_decision="abandon", expected_outcome="abandoned")
+validate_case_decision_binding(invocation, invocation_reconciliation, invocation_manual, record_id_field="invocation_id", case_record_id_field="invocation_id")
 retry_invocation = load("examples/contracts/invocation-non-idempotent-retry.json")
 retry_case = load("examples/contracts/invocation-retry-reconciliation-case.json")
 retry_decision = load("examples/contracts/invocation-retry-manual-review-decision.json")
-validate_case_decision_binding(retry_invocation, retry_case, retry_decision, record_id_field="invocation_id", case_record_id_field="invocation_id", expected_decision="retry", expected_outcome="retry_approved")
+validate_case_decision_binding(retry_invocation, retry_case, retry_decision, record_id_field="invocation_id", case_record_id_field="invocation_id")
 invocation_negative = load("contracts/tests/semantic-invalid/invocation-cases.json")
 for case in invocation_negative["cases"]:
     candidate = copy.deepcopy(invocation)
@@ -434,7 +462,7 @@ for case in invocation_negative["cases"]:
     elif case["mutation"] == "abandon_without_risk_acceptance":
         decision["risk_accepted"] = False
         failed = bool(list(invocation_manual_validator.iter_errors(decision)))
-    elif case["mutation"] in {"forged_case_reference", "forged_decision_reference", "case_digest_mismatch", "outcome_mismatch", "empty_resolved_evidence"}:
+    elif case["mutation"] in {"forged_case_reference", "forged_decision_reference", "case_digest_mismatch", "outcome_mismatch", "empty_resolved_evidence", "aggregate_status_mismatch", "decision_before_case_opened"}:
         candidate_case = copy.deepcopy(invocation_reconciliation)
         if case["mutation"] == "forged_case_reference":
             candidate["reconciliation_case_id"] = "irc_forged"
@@ -446,11 +474,17 @@ for case in invocation_negative["cases"]:
         elif case["mutation"] == "outcome_mismatch":
             candidate_case["resolved_outcome"] = "failed"
             candidate_case["case_digest"] = canonical_digest({key: item for key, item in candidate_case.items() if key != "case_digest"})
+        elif case["mutation"] == "aggregate_status_mismatch":
+            candidate["status"] = "succeeded"
+            candidate["result_reference"] = "artifact://result/contradictory"
+        elif case["mutation"] == "decision_before_case_opened":
+            decision["occurred_at"] = "2026-07-16T09:00:00Z"
+            decision["decision_digest"] = canonical_digest({key: item for key, item in decision.items() if key != "decision_digest"})
         else:
             candidate_case["evidence_references"] = []
             candidate_case["case_digest"] = canonical_digest({key: item for key, item in candidate_case.items() if key != "case_digest"})
         try:
-            validate_case_decision_binding(candidate, candidate_case, decision, record_id_field="invocation_id", case_record_id_field="invocation_id", expected_decision="abandon", expected_outcome="abandoned")
+            validate_case_decision_binding(candidate, candidate_case, decision, record_id_field="invocation_id", case_record_id_field="invocation_id")
         except AssertionError:
             failed = True
         else:
@@ -465,6 +499,49 @@ for case in invocation_negative["cases"]:
     if not failed:
         raise AssertionError(f"Expected Invocation semantic fixture to fail: {case['id']}")
 
+
+def validate_invocation_attempt_sequence(aggregate: dict[str, Any], attempts: list[dict[str, Any]]) -> None:
+    if aggregate["attempt_count"] > aggregate["max_attempts"] or len(attempts) != aggregate["attempt_count"]:
+        raise AssertionError("Invocation aggregate attempt_count/max_attempts conflicts with Attempt history")
+    if any(item["invocation_id"] != aggregate["invocation_id"] for item in attempts):
+        raise AssertionError("InvocationAttempt belongs to a different Invocation")
+    if any(item["request_digest"] != aggregate["request_digest"] for item in attempts):
+        raise AssertionError("InvocationAttempt request_digest differs from the immutable aggregate request")
+    attempt_ids = [item["invocation_attempt_id"] for item in attempts]
+    attempt_numbers = [item["attempt_number"] for item in attempts]
+    fencing_tokens = [item["fencing_token"] for item in attempts]
+    if len(attempt_ids) != len(set(attempt_ids)):
+        raise AssertionError("InvocationAttempt IDs must be unique")
+    if attempt_numbers != list(range(1, len(attempts) + 1)):
+        raise AssertionError("Invocation attempt numbers must be contiguous and start at one")
+    if any(current <= previous for previous, current in zip(fencing_tokens, fencing_tokens[1:])):
+        raise AssertionError("Invocation fencing tokens must be unique and strictly increasing")
+    if aggregate.get("current_attempt_id") != attempt_ids[-1]:
+        raise AssertionError("Invocation current_attempt_id must reference the latest Attempt")
+
+
+invocation_attempt_fixture = load("contracts/tests/semantic-invalid/invocation-attempt-sequence.json")
+invocation_attempt_aggregate = load(invocation_attempt_fixture["aggregate"])
+invocation_attempts = [load(path) for path in invocation_attempt_fixture["attempts"]]
+validate_invocation_attempt_sequence(invocation_attempt_aggregate, invocation_attempts)
+for case in invocation_attempt_fixture["cases"]:
+    candidate_aggregate = copy.deepcopy(invocation_attempt_aggregate)
+    candidate_attempts = copy.deepcopy(invocation_attempts)
+    if case["mutation"] == "duplicate_fencing_token":
+        candidate_attempts[1]["fencing_token"] = candidate_attempts[0]["fencing_token"]
+    elif case["mutation"] == "attempt_number_gap":
+        candidate_attempts[1]["attempt_number"] = 3
+    elif case["mutation"] == "current_attempt_mismatch":
+        candidate_aggregate["current_attempt_id"] = candidate_attempts[0]["invocation_attempt_id"]
+    else:
+        raise AssertionError(f"Unknown InvocationAttempt mutation: {case['mutation']}")
+    try:
+        validate_invocation_attempt_sequence(candidate_aggregate, candidate_attempts)
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError(f"Expected InvocationAttempt sequence fixture to fail: {case['id']}")
+
 attempt_sequence = load("contracts/tests/semantic-invalid/sandbox-attempt-sequence.json")
 attempts = attempt_sequence["attempts"]
 attempt_numbers = [item["attempt_number"] for item in attempts]
@@ -476,4 +553,4 @@ if any(current <= previous for previous, current in zip(fencing_tokens, fencing_
 else:
     raise AssertionError("Expected Sandbox fencing-token negative fixture to fail")
 
-print("Semantic validation passed with deterministic state-machine/safety checks and 33 negative invariant fixtures.")
+print("Semantic validation passed with deterministic state-machine/safety checks and 39 negative invariant fixtures.")

@@ -1,0 +1,22 @@
+{
+  "invocation_id": "inv_sequence_01",
+  "tenant_id": "tenant_demo",
+  "work_order_id": "wo_sequence_01",
+  "workflow_run_id": "wfr_sequence_01",
+  "workflow_step_id": "step_sequence",
+  "capability_id": "tool.sequence",
+  "capability_version": "1.0",
+  "provider_instance_id": "pi_sequence",
+  "idempotency_key": "ik_sequence",
+  "request_digest": "sha256:0303030303030303030303030303030303030303030303030303030303030303",
+  "side_effect": "non_idempotent",
+  "status": "outcome_unknown",
+  "provider_operation_id": "provider-sequence-2",
+  "current_attempt_id": "ia_sequence_02",
+  "attempt_count": 2,
+  "max_attempts": 3,
+  "reconciliation_case_id": "irc_sequence_01",
+  "reconciliation_deadline_at": "2026-07-16T12:10:00Z",
+  "created_at": "2026-07-16T12:00:00Z",
+  "updated_at": "2026-07-16T12:03:00Z"
+}

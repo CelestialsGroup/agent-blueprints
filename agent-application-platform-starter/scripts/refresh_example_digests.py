@@ -121,4 +121,4 @@ for case_path, manual_path in case_decision_pairs:
     manual["case_digest"] = case["case_digest"]
     manual["decision_digest"] = digest_without(manual, "decision_digest")
     write(manual_path, manual)
-print("Refreshed v0.8.5 Provider, admission, RunManifest, reconciliation-case and manual-review digests.")
+print("Refreshed v0.8.6 Provider, admission, RunManifest, reconciliation-case and manual-review digests.")

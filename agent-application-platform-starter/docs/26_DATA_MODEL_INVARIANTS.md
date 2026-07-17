@@ -1,4 +1,4 @@
-# Data Model Invariants — v0.8.5
+# Data Model Invariants — v0.8.6
 
 以下约束必须由 PostgreSQL migration/constraint 实现，不能只由应用代码约定。
 
@@ -13,9 +13,11 @@
 - `invocations(invocation_id)` 主键；`logical_invocation_key` 唯一。
 - `invocation_attempts(attempt_id)` 主键；`(invocation_id, attempt_number)` 唯一。
 - `(invocation_id, fencing_token)` 唯一且新 Attempt token 单调递增。
+- Attempt 编号必须从 1 连续；InvocationRecord.attempt_count 等于已持久化 Attempt 数量，current_attempt_id 引用编号最大的 Attempt；所有 Attempt 绑定相同 immutable request_digest。
 - 一个 Attempt 只能绑定 Result 或 Error；succeeded 必须有 Result，failed/outcome_unknown 必须有相应 Error。
 - Invocation active 状态必须绑定 current_attempt_id；`attempt_count <= max_attempts` 必须有 CHECK/事务约束。
-- outcome_unknown/reconciling/manual_review 必须绑定 InvocationReconciliationCase；abandoned 与 non-idempotent retry_scheduled 必须同时绑定 resolved Case 和 append-only InvocationManualReviewDecision。Decision 的 case_id/version/digest、证据与 outcome 必须匹配；abandon 还必须 `risk_accepted=true`。
+- outcome_unknown/reconciling/manual_review 必须绑定 InvocationReconciliationCase；abandoned 与 non-idempotent retry_scheduled 必须同时绑定 resolved Case 和 append-only InvocationManualReviewDecision。Validator 必须从 Aggregate status 推导唯一 Decision/outcome 组合，不能由调用方声明期望值；Decision 的 case_id/version/digest、证据与 outcome 必须匹配；abandon 还必须 `risk_accepted=true`。
+- Case/Decision/Aggregate 使用平台持久化时间，允许时钟偏差为 0：`opened_at <= resolved_at <= decision.occurred_at <= updated_at`，终态还必须 `decision.occurred_at <= completed_at`。Provider 自报时间只能作为 evidence，不参与该顺序。
 - Invocation 与 Sandbox 的 cancelled 只能引用 `not_started` 或 `stopped_before_effect` 证据；已完成副作用不得记为取消成功。
 
 ## Sandbox

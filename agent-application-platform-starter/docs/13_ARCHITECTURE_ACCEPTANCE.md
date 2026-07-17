@@ -1,4 +1,4 @@
-# v0.8.5 Architecture Acceptance
+# v0.8.6 Architecture Acceptance
 
 ## Contract admission
 
@@ -20,6 +20,7 @@
 ## Reliability acceptance
 
 - [ ] Invocation 与 SandboxOperation 都有逻辑记录、append-only Attempt、fencing 和 reconciliation。
+- [ ] Invocation Attempt 编号从 1 连续、fencing token 唯一且严格递增，current_attempt_id/attempt_count 与完整历史一致。
 - [ ] 聚合、ReconciliationCase 和 ManualReviewDecision 的 ID/version/digest/evidence/outcome 形成可执行引用闭环；非幂等 retry/abandon 无绕过路径。
 - [ ] unknown outcome 可到达 success/failure/retry/manual review/abandoned，不存在永久悬空状态。
 - [ ] Outbox/Inbox、Event sequence、Artifact staging/finalization 和 Delivery Attempt 有数据库约束。

@@ -11,7 +11,7 @@ from typing import Any
 import rfc8785
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST = ROOT / "contracts/compatibility/v0.8.5-contract-manifest.json"
+MANIFEST = ROOT / "contracts/compatibility/v0.8.6-contract-manifest.json"
 
 
 def sha(value: bytes) -> str:
@@ -52,7 +52,7 @@ if "--print-values" in sys.argv:
     raise SystemExit(0)
 if "--refresh" in sys.argv:
     manifest = {
-        "baseline": "v0.8.5",
+        "baseline": "v0.8.6",
         "status": "candidate-not-frozen",
         "digest_profile": "RFC8785-JCS+SHA-256; Strict-I-JSON-v2.0",
         "resource_count": len(resources),
@@ -70,4 +70,4 @@ expected = unsigned.pop("manifest_digest")
 actual = sha(rfc8785.dumps(unsigned))
 if actual != expected:
     raise AssertionError(f"Manifest self-digest mismatch: {actual} != {expected}")
-print(f"Verified v0.8.5 contract manifest over {len(resources)} governed resources.")
+print(f"Verified v0.8.6 contract manifest over {len(resources)} governed resources.")

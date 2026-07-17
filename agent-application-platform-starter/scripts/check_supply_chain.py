@@ -69,7 +69,7 @@ for group in ("dependencies", "devDependencies"):
         if not re.fullmatch(r"\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?", version):
             raise AssertionError(f"Unpinned npm dependency: {name}={version}")
 
-requirements = (ROOT / "requirements-contracts-v0.8.5.txt").read_text(encoding="utf-8")
+requirements = (ROOT / "requirements-contracts-v0.8.6.txt").read_text(encoding="utf-8")
 logical_lines: list[str] = []
 buffer = ""
 for raw in requirements.splitlines():
@@ -115,6 +115,22 @@ if repository is not None and repository.resolve() != ROOT.resolve():
     root_gitignore = repository / ".gitignore"
     if not root_gitignore.exists() or ".DS_Store" not in {line.strip() for line in root_gitignore.read_text(encoding="utf-8").splitlines()}:
         raise AssertionError("Monorepo Git root must ignore .DS_Store; run scripts/install_github_workflow.sh and commit .gitignore")
+    head_workflow = subprocess.run(
+        ["git", "show", "HEAD:.github/workflows/contracts.yml"], cwd=repository,
+        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, check=False,
+    )
+    if head_workflow.returncode != 0 or head_workflow.stdout != workflow_path.read_bytes():
+        raise AssertionError("The governed Git-root contracts workflow must exist unchanged in HEAD, not only in the working tree/index")
+    head_gitignore = subprocess.run(
+        ["git", "show", "HEAD:.gitignore"], cwd=repository,
+        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, check=False,
+    )
+    if head_gitignore.returncode != 0 or b".DS_Store" not in {line.strip() for line in head_gitignore.stdout.splitlines()}:
+        raise AssertionError("The Git-root .gitignore with an exact .DS_Store rule must be committed in HEAD")
+    for source in ("index", "HEAD"):
+        command = ["git", "ls-files", "--error-unmatch", "--", ".DS_Store"] if source == "index" else ["git", "cat-file", "-e", "HEAD:.DS_Store"]
+        if subprocess.run(command, cwd=repository, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False).returncode == 0:
+            raise AssertionError(f"Git-root .DS_Store remains tracked in {source}; remove it and commit the removal")
 
 npmrc = (ROOT / ".npmrc").read_text(encoding="utf-8")
 assert "registry=https://registry.npmjs.org/" in npmrc

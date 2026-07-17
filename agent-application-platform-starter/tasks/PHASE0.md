@@ -1,6 +1,6 @@
 # Phase 0 — Contract-admitted vertical slice
 
-Phase 0 只能在 v0.8.5 Git 根 Workflow 激活、公共 CI Admission 全绿并获批准后开始；Phase 1 在 Phase 0 验收前禁止启动。
+Phase 0 只能在 v0.8.6 Git 根 Workflow 激活、公共 CI Admission 全绿并获批准后开始；Phase 1 在 Phase 0 验收前禁止启动。
 
 ## 0A：最小完整链路（优先）
 

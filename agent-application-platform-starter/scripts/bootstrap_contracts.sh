@@ -28,12 +28,12 @@ if not ((3, 11) <= sys.version_info[:2] <= (3, 13)):
 PY
 
 if [ ! -x "$VENV/bin/python" ]; then
-  "$PYTHON" -m venv "$VENV"
+  "$PYTHON" -m venv --copies "$VENV"
 fi
 "$VENV/bin/python" -m pip install \
   --index-url "$PIP_INDEX_URL" \
   --require-hashes \
-  -r requirements-contracts-v0.8.5.txt
+  -r requirements-contracts-v0.8.6.txt
 
 npm ci --registry "$NPM_CONFIG_REGISTRY"
 

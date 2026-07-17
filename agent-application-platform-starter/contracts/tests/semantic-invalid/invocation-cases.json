@@ -9,6 +9,8 @@
     { "id": "invocation-case-digest-mismatch", "mutation": "case_digest_mismatch" },
     { "id": "invocation-outcome-mismatch", "mutation": "outcome_mismatch" },
     { "id": "invocation-empty-resolved-evidence", "mutation": "empty_resolved_evidence" },
-    { "id": "non-idempotent-retry-without-approval", "mutation": "non_idempotent_retry_without_approval" }
+    { "id": "non-idempotent-retry-without-approval", "mutation": "non_idempotent_retry_without_approval" },
+    { "id": "aggregate-status-conflicts-with-adjudication", "mutation": "aggregate_status_mismatch" },
+    { "id": "decision-occurs-before-case-opened", "mutation": "decision_before_case_opened" }
   ]
 }

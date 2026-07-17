@@ -1,4 +1,4 @@
-# Agent Application Platform v0.8.5
+# Agent Application Platform v0.8.6
 
 面向多个 Business Application 的通用 Agent 执行、Workflow、Sandbox、Artifact 与 Delivery 平台。
 

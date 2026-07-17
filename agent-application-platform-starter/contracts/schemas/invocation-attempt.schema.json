@@ -15,10 +15,12 @@
   ],
   "properties": {
     "invocation_attempt_id": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1
     },
     "invocation_id": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1
     },
     "attempt_number": {
       "type": "integer",
@@ -46,7 +48,8 @@
       ]
     },
     "provider_operation_id": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1
     },
     "error": {
       "$ref": "urn:agent-platform:capability-error:v1"
@@ -64,5 +67,10 @@
       "format": "date-time"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "per Invocation, attempt_number is contiguous from one and fencing_token is unique and strictly increasing",
+    "InvocationRecord current_attempt_id references the latest Attempt and attempt_count equals the persisted Attempt history length",
+    "all Attempts bind the immutable Invocation request_digest"
+  ]
 }

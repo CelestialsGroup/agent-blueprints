@@ -1,4 +1,4 @@
-# Contract Validation Report — v0.8.5
+# Contract Validation Report — v0.8.6
 
 Status: **local re-hardening evidence complete except Go/public matrix; repository-root integration and public re-admission remain pending; candidate is not frozen**
 
@@ -9,13 +9,14 @@ Validation date: 2026-07-16
 | Check | Result |
 |---|---|
 | Official Bootstrap from a clean ZIP with CPython 3.12 and npm | pass with the exact command; Python hashes and npm integrity enforced |
-| Supply-chain Gate after virtual-environment creation | pass; generated `.pyc` ignored, tracked bytecode/`.DS_Store` remain forbidden |
-| Source-only static audit | pass: 193 JSON, 21 YAML, 4 OpenAPI, 98 Markdown at execution time |
+| Supply-chain Gate after virtual-environment creation | pass; generated `.pyc` ignored, nested Git root requires committed Workflow/`.gitignore` and no `.DS_Store` in index/HEAD |
+| Monorepo integration regression | pass: post-installer state fails, staged-only state fails, committed clean state passes |
+| Source-only static audit | pass: 198 JSON, 21 YAML, 4 OpenAPI, 101 Markdown at execution time |
 | JSON Schema | pass: 116 schemas |
-| Fixtures | pass: 43 valid, 11 schema-invalid; generic Tool Provider and non-idempotent approved-retry paths included |
-| Semantic invariants | pass: deterministic state machines, aggregate/Case/Decision closure and 33 negative fixtures |
+| Fixtures | pass: 46 valid, 11 schema-invalid; real Invocation aggregate plus two InvocationAttempt ledger fixtures included |
+| Semantic invariants | pass: all-state reachability, aggregate-derived adjudication, Invocation fencing ledger and 39 negative fixtures |
 | Contract Manifest | pass in Python and Node: 126 governed resources |
-| Compatibility self-tests | pass for `$ref`, enum/const/type, `not`, `dependentRequired`, alternatives, optional/local-`$ref` parameters, body schema and response media narrowing plus prior cases |
+| Compatibility self-tests | pass for prior cases plus `if/then`, `unevaluatedProperties`, `contains`, effective top-level Security and chained local `$ref`; this remains a conservative policy comparator, not a general proof |
 | Non-commit baseline negative test | pass: branch/tag/abbreviated ref rejected |
 | Compatibility baseline | N/A locally: no publicly admitted frozen baseline; CI fail-closed behavior separately tested |
 | CI missing-baseline negative test | pass: `CI=true` without protected exception exits non-zero |

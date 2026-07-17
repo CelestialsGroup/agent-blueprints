@@ -1,0 +1,11 @@
+{
+  "invocation_attempt_id": "ia_sequence_02",
+  "invocation_id": "inv_sequence_01",
+  "attempt_number": 2,
+  "fencing_token": 102,
+  "request_digest": "sha256:0303030303030303030303030303030303030303030303030303030303030303",
+  "status": "outcome_unknown",
+  "provider_operation_id": "provider-sequence-2",
+  "created_at": "2026-07-16T12:02:00Z",
+  "updated_at": "2026-07-16T12:03:00Z"
+}

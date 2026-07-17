@@ -1,9 +1,9 @@
 {
   "provider_revision_id": "tpr_01J00000000000000000000000",
-  "provider_revision_digest": "sha256:ee7080f3990b403f5f3dc286ac8cc7990ed3064c79c61447fad69f798950342c",
+  "provider_revision_digest": "sha256:bec5fa8eab48c9a022fa5c63375c79d15446d22aa78daeeec9a3d64f68000012",
   "provider_instance_id": "tpi_echo",
   "plugin_id": "tool-provider.echo",
-  "plugin_version": "0.8.5",
+  "plugin_version": "0.8.6",
   "manifest_digest": "sha256:2121212121212121212121212121212121212121212121212121212121212121",
   "package_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
   "configuration_digest": "sha256:2323232323232323232323232323232323232323232323232323232323232323",

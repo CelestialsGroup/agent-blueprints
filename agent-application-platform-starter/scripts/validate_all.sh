@@ -7,6 +7,7 @@ cd "$ROOT"
 PYTHON="${PYTHON:-.venv/bin/python}"
 
 "$PYTHON" scripts/check_supply_chain.py
+"$PYTHON" scripts/test_monorepo_integration.py
 "$PYTHON" scripts/offline_static_audit.py
 "$PYTHON" scripts/validate_contracts.py
 "$PYTHON" scripts/validate_semantics.py

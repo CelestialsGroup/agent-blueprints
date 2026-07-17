@@ -1,6 +1,6 @@
-# State Machine Specification — v0.8.5
+# State Machine Specification — v0.8.6
 
-JSON 状态机是状态名称与迁移的权威事实源；Schema 定义允许状态集合，`validate_semantics.py` 强制两者一致、终态无出边且终态可达。
+JSON 状态机是状态名称与迁移的权威事实源；Schema 定义允许状态集合，`validate_semantics.py` 强制两者一致、同一 `(from,event)` 唯一、终态无出边且全部状态从 initial state 可达。
 
 ## WorkOrder
 

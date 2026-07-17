@@ -1,4 +1,4 @@
-# RFC 8785 JCS and Strict I-JSON Profile — v0.8.5
+# RFC 8785 JCS and Strict I-JSON Profile — v0.8.6
 
 ExecutionGrant request_digest、SchemaReference、ProviderRevision、AdmissionDecision、RunManifest 和人工 Decision 的安全摘要都使用 RFC 8785 JCS + SHA-256。
 

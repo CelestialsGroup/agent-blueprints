@@ -71,6 +71,10 @@ def schema_breaks(old: Any, new: Any, path: str = "$") -> list[str]:
         breaks.append(f"{path}: not constraint added")
     elif "not" in old and "not" in new and old["not"] != new["not"]:
         breaks.append(f"{path}: not constraint changed")
+    old_conditional = {key: old[key] for key in ("if", "then", "else") if key in old}
+    new_conditional = {key: new[key] for key in ("if", "then", "else") if key in new}
+    if new_conditional and old_conditional != new_conditional:
+        breaks.append(f"{path}: conditional if/then/else constraint added or changed")
     old_dependent, new_dependent = old.get("dependentRequired", {}), new.get("dependentRequired", {})
     if isinstance(old_dependent, dict) and isinstance(new_dependent, dict):
         for name, requirements in new_dependent.items():
@@ -85,8 +89,20 @@ def schema_breaks(old: Any, new: Any, path: str = "$") -> list[str]:
             breaks.append(f"{path}: additionalProperties changed from unrestricted to a schema")
         elif isinstance(old_additional, dict):
             breaks.extend(schema_breaks(old_additional, new_additional, f"{path}.additionalProperties"))
+    old_unevaluated, new_unevaluated = old.get("unevaluatedProperties", True), new.get("unevaluatedProperties", True)
+    if old_unevaluated is not False and new_unevaluated is False:
+        breaks.append(f"{path}: unevaluatedProperties changed to false")
+    elif isinstance(new_unevaluated, dict):
+        if old_unevaluated is True:
+            breaks.append(f"{path}: unevaluatedProperties changed from unrestricted to a schema")
+        elif isinstance(old_unevaluated, dict):
+            breaks.extend(schema_breaks(old_unevaluated, new_unevaluated, f"{path}.unevaluatedProperties"))
     if isinstance(old.get("items"), dict) and isinstance(new.get("items"), dict):
         breaks.extend(schema_breaks(old["items"], new["items"], f"{path}.items"))
+    if "contains" not in old and "contains" in new:
+        breaks.append(f"{path}: contains constraint added")
+    elif isinstance(old.get("contains"), dict) and isinstance(new.get("contains"), dict):
+        breaks.extend(schema_breaks(old["contains"], new["contains"], f"{path}.contains"))
     for keyword in ("allOf", "anyOf", "oneOf"):
         old_items, new_items = old.get(keyword), new.get(keyword)
         if isinstance(old_items, list) and isinstance(new_items, list):
@@ -100,11 +116,16 @@ def schema_breaks(old: Any, new: Any, path: str = "$") -> list[str]:
 
 
 def _resolve_local_ref(document: dict[str, Any], value: Any) -> Any:
-    if not isinstance(value, dict) or not isinstance(value.get("$ref"), str) or not value["$ref"].startswith("#/"):
-        return value
-    current: Any = document
-    for token in value["$ref"][2:].split("/"):
-        current = current[token.replace("~1", "/").replace("~0", "~")]
+    current = value
+    visited: set[str] = set()
+    while isinstance(current, dict) and isinstance(current.get("$ref"), str) and current["$ref"].startswith("#/"):
+        reference = current["$ref"]
+        if reference in visited:
+            raise ValueError(f"Cyclic local OpenAPI reference: {reference}")
+        visited.add(reference)
+        current = document
+        for token in reference[2:].split("/"):
+            current = current[token.replace("~1", "/").replace("~0", "~")]
     return current
 
 
@@ -157,8 +178,10 @@ def openapi_breaks(old: dict[str, Any], new: dict[str, Any], path: str) -> list[
                 breaks.append(f"{path}: {label} request removed media type {media_type}")
             for media_type in sorted(set(old_request_content) & set(new_request_content)):
                 breaks.extend(schema_breaks(old_request_content[media_type].get("schema", {}), new_request_content[media_type].get("schema", {}), f"{path}: {label} request {media_type}"))
-            if not old_op.get("security") and new_op.get("security"):
-                breaks.append(f"{path}: {label} added a security requirement")
+            old_security = old_op["security"] if "security" in old_op else old.get("security", [])
+            new_security = new_op["security"] if "security" in new_op else new.get("security", [])
+            if new_security and old_security != new_security:
+                breaks.append(f"{path}: {label} added or changed its effective security requirement")
     return breaks
 
 
@@ -179,6 +202,9 @@ def self_test() -> None:
         ({"anyOf": [{"type": "string"}, {"type": "number"}]}, {"anyOf": [{"type": "string"}]}),
         ({"type": "string"}, {"type": "string", "not": {"const": "blocked"}}),
         ({"type": "object"}, {"type": "object", "dependentRequired": {"a": ["b"]}}),
+        ({"type": "object"}, {"type": "object", "if": {"required": ["a"]}, "then": {"required": ["b"]}}),
+        ({"type": "object"}, {"type": "object", "unevaluatedProperties": False}),
+        ({"type": "array"}, {"type": "array", "contains": {"const": "required"}}),
     ]:
         assert schema_breaks(old, new)
     old_api = {"paths": {"/v1/x": {"get": {"parameters": [{"in": "query", "name": "p", "schema": {"type": "string"}}], "requestBody": {"content": {"application/json": {"schema": {"type": "string"}}}}, "responses": {"200": {"content": {"application/json": {}, "text/plain": {}}}, "404": {}}}}}}
@@ -194,6 +220,11 @@ def self_test() -> None:
     assert any("minLength" in item for item in openapi_breaks(ref_old, ref_new, "ref-api.yaml"))
     removed_optional = copy_api = {"paths": {"/v1/x": {"get": {"parameters": [], "responses": {"200": {}}}}}}
     assert any("removed accepted parameter" in item for item in openapi_breaks(old_api, removed_optional, "api.yaml"))
+    secured_api = json.loads(json.dumps(old_api)); secured_api["security"] = [{"oauth2": ["read"]}]
+    assert any("effective security" in item for item in openapi_breaks(old_api, secured_api, "api.yaml"))
+    chained_old = {"components": {"parameters": {"P": {"$ref": "#/components/parameters/P2"}, "P2": {"in": "query", "name": "p", "schema": {"type": "string"}}}}, "paths": {"/v1/x": {"get": {"parameters": [{"$ref": "#/components/parameters/P"}], "responses": {"200": {}}}}}}
+    chained_new = json.loads(json.dumps(chained_old)); chained_new["components"]["parameters"]["P2"]["schema"]["minLength"] = 1
+    assert any("minLength" in item for item in openapi_breaks(chained_old, chained_new, "chain-api.yaml"))
     assert transition_breaks({"transitions": [{"from": "a", "event": "go", "to": "b"}]}, {"transitions": []}, "machine.json")
 
 
@@ -232,7 +263,7 @@ def compare(ref: str) -> list[str]:
     schema_paths = [*(ROOT / "contracts/schemas").glob("*.json"), *(ROOT / "examples/schemas").glob("*.json")]
     current_schemas = {json.loads(item.read_text())["$id"]: item for item in schema_paths}
     old_manifest_text = None
-    for version in ("v0.8.5", "v0.8.4", "v0.8.3", "v0.8.2", "v0.8.1"):
+    for version in ("v0.8.6", "v0.8.5", "v0.8.4", "v0.8.3", "v0.8.2", "v0.8.1"):
         old_manifest_text = git_text(ref, f"contracts/compatibility/{version}-contract-manifest.json", prefix)
         if old_manifest_text:
             break
