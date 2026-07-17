@@ -1,17 +1,17 @@
-# Event Type Registry
+# Event Type 注册表
 
 ## 1. 目标
 
-CanonicalEvent Envelope 统一并不足以保证消费者可安全解析 `data`。
+仅统一 CanonicalEvent Envelope 不足以保证消费者可安全解析 `data`。
 
-每个 Core Event Type 必须注册：
+每个核心 Event Type 必须注册：
 
 - type
 - data_version
-- immutable data_schema URI + digest
-- classification
-- retention class
-- projection consumers
+- 不可变 `data_schema` URI + 摘要
+- 数据分类
+- 保留类别
+- Projection Consumer
 
 ## 2. 命名
 
@@ -33,7 +33,7 @@ runtime_session.*
 runtime_recording.*
 ```
 
-Plugin 私有事件必须带发布者命名空间，且不能直接驱动核心 Projection。
+Plugin 私有 Event 必须带发布者 Namespace，且不能直接驱动核心 Projection。
 
 ## 3. 时间
 
@@ -42,7 +42,7 @@ Plugin 私有事件必须带发布者命名空间，且不能直接驱动核心 
 - occurred_at：来源发生时间
 - recorded_at：平台持久化时间
 
-WorkOrder Timeline 使用 `work_sequence` 排序，不使用 occurred_at 排序。
+WorkOrder Timeline 使用 `work_sequence` 排序，不使用 `occurred_at` 排序。
 
 ## 4. 高频事件
 
@@ -54,7 +54,7 @@ Delta 必须按以下任一策略合并：
 - 字节大小
 - 语义消息块
 
-最终 Message Completed Event 必须持久化完整可重建结果或 Artifact Reference。
+最终的 Message Completed Event 必须持久化完整可重建结果或 Artifact Reference。
 
 ## 5. 留存
 

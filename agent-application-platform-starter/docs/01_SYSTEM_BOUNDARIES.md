@@ -1,38 +1,38 @@
 # 系统边界与数据所有权
 
-## Business Application
+## Business Application 边界
 
 唯一事实源：
 
-- User/Login
-- Organization Membership
-- Membership/Product
-- Order/Payment/Refund
-- Commercial Entitlement/Quota
-- Entitlement Revision/Quota Reservation/Settlement
-- Price/Invoice
-- Business Notification
+- 用户/登录
+- 组织成员关系
+- 会员/产品
+- 订单/支付/退款
+- 商业权益/额度
+- Entitlement Revision/额度 Reservation/Settlement
+- 价格/发票
+- Business 通知
 
-## Agent Platform
+## Agent Platform 边界
 
 唯一事实源：
 
 - ClientApplication
-- InternalTenant/Principal Mapping
+- InternalTenant/Principal 映射
 - AgentConversation/ConversationBranch/ConversationMessage
 - Conversation Workspace/WorkOrder
 - GrantConsumption
 - WorkflowRun/AgentRun
 - Invocation
 - CanonicalEvent
-- Artifact/Version/Staging
+- Artifact/Version/暂存区
 - TechnicalUsage
 - Delivery
 - Provider Revision/Resolution
-- RuntimeRecording/Playback Manifest
-- Experience Catalog/Immutable Revision
+- RuntimeRecording/回放 Manifest
+- Experience Catalog/不可变 Revision
 
-## Plugin
+## Plugin 边界
 
 Plugin 只负责执行能力。
 
@@ -52,7 +52,7 @@ Plugin 只负责执行能力。
 
 外部内容通过：
 
-- Artifact Ingest Session
+- Artifact 导入 Session
 - 预注册 Storage Connector
 - 已存在 Artifact Reference
 - 预注册 Callback/Delivery Target
@@ -61,8 +61,8 @@ Plugin 只负责执行能力。
 
 ```text
 client_app_id         <- Service OAuth
-external tenant/user  <- ExecutionGrant
-internal tenant/user  <- Agent Platform Mapping
+外部 tenant/user      <- ExecutionGrant
+内部 tenant/user      <- Agent Platform 映射
 ```
 
 平台内部访问控制只使用内部 ID。
@@ -71,20 +71,20 @@ internal tenant/user  <- Agent Platform Mapping
 
 Agent Platform 是以下对象的事实源：
 
-- Sandbox identity and tenant/work mapping
+- Sandbox 身份与 Tenant/Work 映射
 - Desired state
 - Lease policy
 - Provider resolution
-- RuntimeSession user authorization
+- RuntimeSession 用户授权
 - Normalized usage
 - Audit
 
 Sandbox Provider 是以下数据的事实源：
 
-- Observed backend state
-- Backend operation status
-- Internal runtime endpoint
-- Backend metrics
-- Snapshot payload
+- 后端观测状态
+- 后端 Operation 状态
+- 内部 Runtime Endpoint
+- 后端指标
+- Snapshot Payload
 
-Provider 私有 Pod/VM/Container ID 不进入公共 Contract。
+Provider 私有 Pod/VM/Container ID 不进入公共契约。

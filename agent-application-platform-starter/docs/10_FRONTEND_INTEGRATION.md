@@ -2,7 +2,7 @@
 
 ## 1. 推荐模式
 
-第一阶段使用 Standalone Agent Workbench。
+第一阶段使用独立部署的 Agent Workbench。
 
 ```text
 Business UI
@@ -46,12 +46,12 @@ Business UI
 - Terminal
 - Browser
 - Files
-- Artifact Viewer/Edit
+- Artifact 查看/编辑
 - History
 - Export
-- Conversation branches and follow-up Turns
-- Runtime recording playback
-- Entitlement-filtered Experience Catalog
+- Conversation 分支与后续 Turn
+- Runtime 录制回放
+- 按 Entitlement 过滤的 Experience Catalog
 
 业务应用提供：
 
@@ -61,7 +61,7 @@ Business UI
 - 订单
 - 业务导航
 
-## 5. Capability-driven UI
+## 5. Capability 驱动 UI
 
 正确：
 
@@ -80,8 +80,8 @@ plugin_id == "html-to-pptx"
 第一阶段只允许：
 
 - Schema-driven UI
-- 平台认证的 `UiExtensionManifest`，固定 Artifact bundle、slot、opaque-origin iframe、CSP 与 typed postMessage protocol
+- 平台认证的 `UiExtensionManifest`，固定 Artifact Bundle、Slot、不透明 Origin iframe、CSP 与类型化 postMessage 协议
 
 不允许任意远程 JavaScript。
 
-html-anything、Open Design 和 motion-anything 优先拆分为 Catalog importer、Template/Skill、Converter、Renderer/Editor Provider。只有无法用平台 Workbench 表达的富交互部分才使用受隔离的 UI Extension。
+html-anything、Open Design 和 motion-anything 优先拆分为 Catalog 导入器、Template/Skill、Converter、Renderer/Editor Provider。只有无法用平台 Workbench 表达的富交互部分才使用受隔离的 UI Extension。

@@ -3,7 +3,7 @@
   "status": "candidate-not-frozen",
   "digest_profile": "RFC8785-JCS+SHA-256; Strict-I-JSON-v2.0",
   "resource_count": 157,
-  "resources_digest": "sha256:84bbd8a0a28e71406915cb8a376bb50befb8e1e1564649ce9ce7f068e887f090",
+  "resources_digest": "sha256:5563b0b1d3f4f62bf02e066130532f7feb6082660cc7548fc9074aa5fc74436d",
   "resources": [
     {
       "path": "contracts/openapi/agent-access-v1.yaml",
@@ -891,13 +891,13 @@
       "path": "docs/23_STATE_MACHINE_SPEC.md",
       "kind": "governance",
       "id": "docs/23_STATE_MACHINE_SPEC.md",
-      "digest": "sha256:bbfb485dbb75167d6eaf7de8052f97e39d88deccafd6d8814dcb1a46ce6003b0"
+      "digest": "sha256:63eefae9f95cd743e92dcbcb53b38f993356bdc7691361c449bef1eb99136217"
     },
     {
       "path": "docs/26_DATA_MODEL_INVARIANTS.md",
       "kind": "governance",
       "id": "docs/26_DATA_MODEL_INVARIANTS.md",
-      "digest": "sha256:87526fa99d04366ede8549250c61de5d671995a14ef3ab747f213fddf3cf90ed"
+      "digest": "sha256:f3f6a7b8b717682af50d4d9fcce99621d107f9b4010b33ac45f5a0410c1044c0"
     },
     {
       "path": "examples/schemas/html-anything-config.schema.json",
@@ -948,5 +948,5 @@
       "digest": "sha256:46d6fa17b4a8b06e6da4a016d776385952a12d2e59e51066fcd5173248258d8e"
     }
   ],
-  "manifest_digest": "sha256:b5d84573731efd4f7b65756a1e0ecc573465b517fcf3d3b0ec74a2deb8ed1eaf"
+  "manifest_digest": "sha256:6c989ea620be15308e6112bef9728a017c07194e3a464c975987bebd2a6fd678"
 }

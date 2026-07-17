@@ -2,32 +2,32 @@
 
 ## 技术基线
 
-### Agent Platform
+### Agent Platform 技术栈
 
 - Go
 - PostgreSQL
 - Temporal
-- S3-compatible Object Storage
-- Redis：Cache、Presence、Rate Limit、Event Wakeup
+- 兼容 S3 的 Object Storage
+- Redis：缓存、在线状态、限流、Event 唤醒
 - OpenAPI 3.1.1 + JSON Schema 2020-12
 
-### Web
+### Web 技术栈
 
 - React / Next.js
-- Standalone Agent Workbench
-- Cookie-authenticated SSE
+- 独立部署的 Agent Workbench
+- Cookie 认证的 SSE
 - Runtime Gateway WebSocket
 
-### Runtime 与治理
+### Runtime 与治理组件
 
-- DeerFlow Runtime Service
+- DeerFlow Runtime 服务
 - Model Gateway
 - Tool/MCP Gateway
-- Sandbox Egress Gateway
+- Sandbox 出站 Gateway
 - Artifact Gateway
-- Plugin Service / Job / Sandbox CLI / MCP / Remote Service
+- Plugin 服务 / Job / Sandbox CLI / MCP / 远程服务
 
-## Kubernetes Workload
+## Kubernetes 工作负载
 
 ```text
 agent-api Deployment
@@ -52,9 +52,9 @@ sandbox Pod / Job
 migration Job
 ```
 
-Agent API 和普通 Worker 不保存权威 WorkOrder、Event sequence、Session、Provider health 或 Sandbox route；这些状态位于 PostgreSQL、Temporal 和 Object Storage。Redis 只用于 cache、rate limit、presence 和持久化后事件唤醒，丢失 Redis 不影响正确性。
+Agent API 和普通 Worker 不保存权威 WorkOrder、Event 序列、Session、Provider 健康状态或 Sandbox 路由；这些状态位于 PostgreSQL、Temporal 和 Object Storage。Redis 只用于缓存、限流、在线状态和持久化后的 Event 唤醒，丢失 Redis 不影响正确性。
 
-Runtime Gateway 通过 opaque provider route 代理 Terminal/Browser/Desktop，禁止向前端返回 Pod/VM/raw endpoint，也不依赖 Sticky Session。只有独立 Sandbox Provisioner/Controller 拥有最小范围 Kubernetes API 权限。
+Runtime Gateway 通过不透明 Provider 路由代理 Terminal/Browser/Desktop，禁止向前端返回 Pod/VM/原始 Endpoint，也不依赖粘性 Session。只有独立 Sandbox Provisioner/Controller 拥有最小范围 Kubernetes API 权限。
 
 ## 数据服务
 
@@ -94,9 +94,9 @@ audit
 
 - Business -> Agent：Service OAuth HTTP
 - Browser -> Workbench：WorkSession Cookie + HTTP/SSE/WebSocket
-- Agent -> Business：Signed Webhook + Outbox
-- Agent -> Plugin Service：mTLS + Invocation Token
-- Worker -> Plugin Job：Kubernetes Adapter + Manifest Protocol
+- Agent -> Business：签名 Webhook + Outbox
+- Agent -> Plugin 服务：mTLS + Invocation Token
+- Worker -> Plugin Job：Kubernetes Adapter + Manifest 协议
 - Agent Runtime -> Model/Tool/Egress：强制 Gateway
 - Workflow：Temporal
 
@@ -105,14 +105,14 @@ audit
 数据库：
 
 ```text
-Expand Migration
- -> Deploy Backward-compatible Code
- -> Backfill
- -> Verify
- -> Contract Cleanup in Later Release
+扩展 Migration
+ -> 部署向后兼容代码
+ -> 数据回填
+ -> 验证
+ -> 在后续版本清理契约
 ```
 
-Workflow：
+Workflow 发布：
 
 - Worker Deployment/Build ID
 - Pinned 或 Auto-Upgrade 策略
@@ -121,7 +121,7 @@ Workflow：
 
 应用 Pod 禁止自动执行 Migration。
 
-生产 Workload 必须定义 startup/readiness/liveness probe、resource request/limit、PDB、topology spread、anti-affinity、RollingUpdate、graceful termination、ServiceAccount、RBAC、NetworkPolicy 和 HPA/KEDA。Temporal Worker Deployment/Build ID 独立于 Kubernetes rollout；Worker 升级必须通过 Replay Test。
+生产工作负载必须定义 Startup/Readiness/Liveness Probe、资源 Request/Limit、PDB、Topology Spread、Anti-affinity、RollingUpdate、优雅终止、ServiceAccount、RBAC、NetworkPolicy 和 HPA/KEDA。Temporal Worker Deployment/Build ID 独立于 Kubernetes 发布；Worker 升级必须通过回放测试。
 
 ## 7. sandbox-runtime 部署
 

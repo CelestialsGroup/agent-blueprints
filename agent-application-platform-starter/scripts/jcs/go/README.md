@@ -1,8 +1,7 @@
-# Go JCS Conformance Harness
+# Go JCS 一致性测试工具
 
-This directory contains a small self-contained RFC 8785 conformance implementation
-used only to verify the shared test vectors without requiring network downloads.
+本目录包含一个小型、自包含的 RFC 8785 一致性实现，
+仅用于在无需网络下载的情况下验证共享测试向量。
 
-Production Go code should use an independently reviewed RFC 8785 implementation and
-must pass the same vectors. The harness intentionally has no external Go modules,
-so `go test ./...` is reproducible offline.
+生产 Go 代码应使用经过独立审查的 RFC 8785 实现，并且必须通过相同测试向量。
+该测试工具有意不依赖外部 Go Module，因此 `go test ./...` 可以离线复现。

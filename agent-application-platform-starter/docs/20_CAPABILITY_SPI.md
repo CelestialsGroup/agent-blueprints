@@ -1,6 +1,6 @@
-# Capability SPI
+# Capability SPI 规范
 
-## Relationship
+## 关系模型
 
 ```text
 Scenario
@@ -17,25 +17,25 @@ Scenario 只声明版本范围、Profile、Artifact 和风险要求，不绑定�
 
 Capability 是版本化语义契约，必须定义：
 
-- namespace owner
-- semantic version
+- Namespace 所有者
+- 语义版本
 - kind
-- immutable request/result/error SchemaReference
-- side-effect class
-- idempotency scope
-- cancellation
-- progress
-- status query
-- timeout
-- Artifact contract
-- lifecycle
-- conformance suite
+- 不可变的 Request/Result/Error SchemaReference
+- 副作用分类
+- 幂等范围
+- 取消能力
+- 进度
+- 状态查询
+- 超时
+- Artifact 契约
+- 生命周期
+- 一致性测试套件
 
 SchemaReference 包含：
 
-- absolute URI
-- SHA-256 digest
-- JSON Schema dialect
+- 绝对 URI
+- SHA-256 摘要
+- JSON Schema 方言
 
 ## 2. 命名治理
 
@@ -54,7 +54,7 @@ runtime.recording.playback
 
 Capability Registry 维护 Owner，禁止名称抢占。
 
-## 3. Plugin Implements
+## 3. Plugin 实现声明
 
 Plugin 只声明：
 
@@ -74,7 +74,7 @@ implements:
 
 Deprecated 必须声明 Sunset、Replacement 和迁移窗口。
 
-## 5. Conformance
+## 5. 一致性验证
 
 ProviderInstance 只有通过目标 Capability Version 的标准套件才能 healthy。
 
@@ -90,21 +90,21 @@ ProviderInstance 只有通过目标 Capability Version 的标准套件才能 hea
 - Artifact Validation
 - Budget/Policy Profile（适用时）
 
-## 6. Immutable Resolution
+## 6. 不可变解析结果
 
 Run 不能只保存 ProviderInstance ID。
 
 ProviderResolution 必须固化：
 
-- Capability Definition Digest
-- Provider Revision ID
-- Plugin Version
-- Manifest Digest
-- Image Digest
-- Configuration Digest
-- Conformance Report Digest
+- CapabilityDefinition 摘要
+- ProviderRevision ID
+- Plugin 版本
+- Manifest 摘要
+- Image 摘要
+- Configuration 摘要
+- Conformance Report 摘要
 
-User-visible Experiences add an immutable Catalog revision on top of Provider resolution. A mutable `template_id` alone is never sufficient for WorkOrder admission or Run replay.
+用户可见的 Experience 在 Provider Resolution 之上增加不可变 Catalog Revision。只有可变 `template_id` 绝不足以支持 WorkOrder 准入或 Run 回放。
 
 Resolver 优先级是 Tenant Binding、ClientApplication Binding、Scenario Requirement、Platform Default、显式安全 Fallback。Fallback 只有在 Capability 与 side-effect policy 允许时才能发生；非幂等外部操作禁止自动切换 Provider。
 

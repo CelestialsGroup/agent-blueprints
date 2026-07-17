@@ -17,7 +17,7 @@ runAsNonRoot = true
 seccomp = RuntimeDefault
 ```
 
-Root Filesystem 默认只读；需要写入时仅允许 writable overlay。
+根文件系统默认只读；需要写入时仅允许可写 Overlay。
 
 ## 2. 隔离等级
 
@@ -96,7 +96,7 @@ Secret Grant 必须：
 - Malware
 - Active content
 - Tenant
-- Capability Artifact Contract
+- Capability Artifact 契约
 
 验证前不得交付、预览或作为下游正式输入。
 
@@ -112,7 +112,7 @@ Namespace 不是唯一租户隔离边界，必须组合：
 - NetworkPolicy
 - Egress Gateway
 - RLS
-- Object storage isolation
+- Object Storage 隔离
 - Workload identity
 - Audit
 
@@ -120,12 +120,12 @@ Namespace 不是唯一租户隔离边界，必须组合：
 
 记录：
 
-- Sandbox create/restore/terminate
+- Sandbox 创建/恢复/终止
 - Runtime Profile
 - Image/Provider Revision
 - Network Policy
 - Secret Grant
-- Exec command digest
+- Exec Command 摘要
 - Runtime Session
 - Snapshot
 - Policy denial

@@ -1,6 +1,6 @@
-# Sandbox Conformance 与迁移
+# Sandbox 一致性验证与迁移
 
-## 1. Conformance Profile
+## 1. 一致性 Profile
 
 ProviderRevision 必须通过其声明能力对应的测试 Profile。
 
@@ -50,7 +50,7 @@ ProviderRevision 必须通过其声明能力对应的测试 Profile。
 - Kubernetes API
 - Host filesystem
 - privilege escalation
-- Secret expiry/revoke
+- Secret 过期/撤销
 - Egress bypass
 
 ### Runtime Session
@@ -58,10 +58,10 @@ ProviderRevision 必须通过其声明能力对应的测试 Profile。
 - Endpoint 不泄漏
 - Session expiry
 - Gateway reconnect
-- Browser/Terminal permission
+- Browser/Terminal 权限
 - Sandbox rebuild
 
-### Usage
+### 用量
 
 - Wall time
 - CPU
@@ -84,9 +84,9 @@ Agent Platform -> SandboxProvider Port
 
 ### 阶段 B：影子验证
 
-sandbox-runtime 创建同等 Spec 的测试 Sandbox，运行 Conformance 和非生产 Shadow Workload。
+sandbox-runtime 创建同等 Spec 的测试 Sandbox，运行一致性测试和非生产 Shadow Workload。
 
-### 阶段 C：按场景 Canary
+### 阶段 C：按场景进行 Canary
 
 Capability/Provider Binding 将少量：
 
@@ -98,7 +98,7 @@ Capability/Provider Binding 将少量：
 
 ### 阶段 D：默认切换
 
-Platform Default 改为 sandbox-runtime ProviderRevision。
+Platform 默认值改为 sandbox-runtime ProviderRevision。
 
 现有 Run 继续锁定旧 Revision。
 
@@ -120,7 +120,7 @@ Platform Default 改为 sandbox-runtime ProviderRevision。
 
 ## 5. 禁止耦合
 
-Agent Platform Contract 中禁止出现：
+Agent Platform 契约中禁止出现：
 
 - deerflow_sandbox_type
 - deerflow_workspace_path

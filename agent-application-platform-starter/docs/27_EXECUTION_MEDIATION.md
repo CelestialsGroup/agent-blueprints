@@ -18,34 +18,34 @@ Agent Runtime
   └── Sandbox Egress Gateway
 ```
 
-## 3. Model Gateway
+## 3. 模型 Gateway
 
 负责：
 
 - Model Provider 路由
-- Token Budget
+- Token 预算
 - Request/Response Usage
 - Model Allowlist
-- Tenant/WorkOrder Attribution
-- Timeout 和取消
+- Tenant/WorkOrder 归属
+- 超时和取消
 - 内容与数据分类策略
 - BYOK Secret 临时授权
-- Usage Evidence
+- Usage 证据
 
 Runtime 不得直接持有平台长期 Model Key。
 
-## 4. Tool Gateway
+## 4. 工具 Gateway
 
 具有外部副作用或需要审批的 Tool/MCP 调用必须：
 
 1. 创建 Invocation。
-2. 进行 Policy/Approval。
+2. 进行策略判断/审批。
 3. 调用 Tool Provider。
 4. 记录 Usage、Event 和结果。
 
 只读、无副作用的本地工具也必须产生可审计 Run Event，但可按策略合并，不必为每个内部指令创建重型 Invocation。
 
-## 5. Egress Gateway
+## 5. 出站 Gateway
 
 Sandbox 默认无任意公网出口。
 
@@ -60,16 +60,16 @@ HTTP/DNS 出站通过受控 Egress Proxy：
 
 Kubernetes NetworkPolicy 不提供通用 FQDN 策略，因此不能单独承担域名 Allowlist。
 
-## 6. Governed Agent Runtime Profile
+## 6. 受治理 Agent Runtime Profile
 
 面向 SaaS 的 AgentRuntimeProvider 必须通过 `governed` Conformance Profile：
 
 - 支持预算注入
 - 所有模型请求经过 Model Gateway
 - 所有外部 Tool 请求经过 Tool Gateway
-- 支持 cancel
-- 支持 usage
-- 支持 approval signal
+- 支持取消
+- 支持 Usage
+- 支持审批 Signal
 - 支持 Event Cursor
 - 不绕过 Sandbox 网络策略
 
@@ -81,10 +81,10 @@ Kubernetes NetworkPolicy 不提供通用 FQDN 策略，因此不能单独承担�
 
 ```text
 min(
-  ExecutionGrant limit,
-  Platform safety ceiling,
-  Scenario limit,
-  Provider limit
+  ExecutionGrant 限制,
+  Platform 安全上限,
+  Scenario 限制,
+  Provider 限制
 )
 ```
 
@@ -94,10 +94,10 @@ min(
 
 ExecutionBudgetEnforcer 在创建 SandboxSpec 前计算：
 
-- Max lease
+- 最大 Lease
 - CPU/Memory/Storage/GPU
-- Network bytes/policy
-- Runtime profile
-- Required capabilities
+- 网络字节/策略
+- Runtime Profile
+- 必需 Capability
 
 Provider 返回的 Usage 进入统一 Technical Usage，但平台仍可基于基础设施指标独立复核。

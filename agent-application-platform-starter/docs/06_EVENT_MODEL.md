@@ -1,16 +1,16 @@
-# Canonical Event v2
+# 规范事件模型 v2
 
 ## 1. 存储模型
 
 ```text
-PostgreSQL Current State
-+ Append-only Canonical Event
+PostgreSQL 当前状态
++ 仅追加 CanonicalEvent
 + Projection
 ```
 
 不采用全系统 Event Sourcing。
 
-## 2. WorkOrder Cursor
+## 2. WorkOrder 游标
 
 每个 WorkOrder 维护 `next_work_sequence`。
 
@@ -21,7 +21,7 @@ PostgreSQL Current State
 - 回放
 - 断点续传
 
-## 3. Aggregate Cursor
+## 3. 聚合游标
 
 事件包含：
 
@@ -42,9 +42,9 @@ ConversationMessage 另有严格递增 `message_sequence`；RuntimeRecordingChun
 - occurred_at：来源时间
 - recorded_at：平台事务持久化时间
 
-WorkOrder 流排序只使用 work_sequence。Conversation 创建、archive/delete 等非执行事件不伪造 WorkOrder 上下文，按 `aggregate.sequence` 排序。
+WorkOrder 流排序只使用 `work_sequence`。Conversation 创建、归档/删除等非执行 Event 不伪造 WorkOrder 上下文，按 `aggregate.sequence` 排序。
 
-## 5. Event Type Registry
+## 5. Event Type 注册表
 
 `data` 必须符合 EventTypeRegistry 中 type + data_version 对应的不可变 Schema。
 
@@ -53,12 +53,12 @@ WorkOrder 流排序只使用 work_sequence。Conversation 创建、archive/delet
 ## 6. 写入事务
 
 1. 按 `(provider_instance_id, source_stream_id, source_cursor)` 去重。
-2. 对 WorkOrder 事件原子分配 work_sequence；Conversation-only 事件省略完整 Work 上下文组。
-3. 原子分配 aggregate sequence。
+2. 对 WorkOrder Event 原子分配 `work_sequence`；仅属于 Conversation 的 Event 省略完整 Work 上下文组。
+3. 原子分配 Aggregate Sequence。
 4. 写 Event。
 5. 更新必要 Projection。
 6. 写 Outbox。
-7. Commit。
+7. 提交事务。
 
 ## 7. SSE
 
@@ -74,7 +74,7 @@ GET /v1/work-orders/{id}/events?after_work_sequence=152
 - Cursor 过期返回 410
 - Redis 只用于唤醒，不是事实源
 
-## 8. 高频 Delta
+## 8. 高频增量事件
 
 模型 Token 不逐 Token 持久化。
 

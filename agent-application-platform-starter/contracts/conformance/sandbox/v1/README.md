@@ -1,8 +1,8 @@
-# Sandbox Provider Conformance v1
+# Sandbox Provider 一致性规范 v1
 
-## Required profiles
+## 必需 Profile
 
-### lifecycle
+### 生命周期
 
 - create-idempotent
 - create-digest-conflict
@@ -11,7 +11,7 @@
 - terminate-idempotent
 - orphan-cleanup
 
-### exec
+### 执行
 
 - exec-idempotent
 - exec-cancel
@@ -19,7 +19,7 @@
 - stale-fencing-rejected
 - outcome-unknown-reconciliation
 
-### security-restricted
+### 受限安全
 
 - no-host-namespace
 - no-kubernetes-api
@@ -30,7 +30,7 @@
 - secret-revocation
 - artifact-staging-only
 
-### multi-node
+### 多节点
 
 - provider-api-restart
 - controller-failover
@@ -38,7 +38,7 @@
 - runtime-session-reroute
 - provider-draining
 
-### usage
+### 用量
 
 - wall-time
 - cpu
@@ -47,7 +47,7 @@
 - storage
 - evidence-reference
 
-## Optional profiles
+## 可选 Profile
 
 - terminal
 - browser

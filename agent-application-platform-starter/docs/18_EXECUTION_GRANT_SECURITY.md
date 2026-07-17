@@ -2,9 +2,9 @@
 
 ## 1. 格式
 
-Compact JWS。
+使用 JWS 紧凑序列化。
 
-Header：
+头部：
 
 ```json
 {
@@ -28,7 +28,7 @@ Header：
 
 JWKS 或公钥只能来自管理员预注册的 ClientApplication 配置。
 
-## 2. Claims
+## 2. Claim
 
 必须包含：
 
@@ -64,7 +64,7 @@ max_ttl = 300 seconds
 clock_skew = 30 seconds
 ```
 
-## 3. Request Digest
+## 3. 请求摘要
 
 使用 RFC 8785 JCS。
 
@@ -102,7 +102,7 @@ execution_grant
 
 同一 PostgreSQL 事务：
 
-1. Upsert/Lock IdempotencyRecord。
+1. Upsert 并锁定 IdempotencyRecord。
 2. 比较 request_digest。
 3. 校验 Token Profile、签名、时间、issuer、audience。
 4. 校验 authenticated client 与 Grant client。
@@ -111,7 +111,7 @@ execution_grant
 7. 校验 CommercialAuthorizationSnapshot ID/digest、有效期与 quota reservation。
 8. 锁定或创建 Conversation 及其 Workspace，追加 Message，并创建 WorkOrder。
 9. 写 Workflow Start Outbox 与 Canonical Event。
-10. Commit。
+10. 提交事务。
 
 ## 5. 重复请求
 

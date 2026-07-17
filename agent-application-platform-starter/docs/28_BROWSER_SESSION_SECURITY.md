@@ -5,16 +5,16 @@
 Standalone Agent Workbench 使用：
 
 ```text
-Business Backend
+Business 后端
  -> 创建 WorkSession
  -> 返回一次性 Exchange Token
- -> Browser 在 Workbench Origin 完成 Exchange
- -> Server 设置 HttpOnly Secure Cookie
+ -> 浏览器在 Workbench Origin 完成 Exchange
+ -> 服务端设置 HttpOnly Secure Cookie
 ```
 
 不把长期 Bearer Token 放入：
 
-- URL Query
+- URL Query 参数
 - localStorage
 - sessionStorage
 - 浏览器日志

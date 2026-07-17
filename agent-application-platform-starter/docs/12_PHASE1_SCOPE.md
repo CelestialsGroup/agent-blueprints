@@ -1,32 +1,32 @@
-# Delivery Roadmap — v0.9.0
+# 交付路线图 — v0.9.0
 
-`tasks/PHASE0.md` is the only Phase 0 acceptance plan. This document describes what follows it and must not redefine Phase 0 as a directory/schema skeleton.
+`tasks/PHASE0.md` 是唯一的 Phase 0 验收计划。本文描述其后的工作，不得把 Phase 0 重新定义为目录或 Schema 骨架。
 
-## Phase 0: contract-admitted vertical slice
+## Phase 0：契约准入的纵向链路
 
-Implement one real Conversation Turn through Business authorization, WorkOrder/Temporal, DeerFlow AgentRuntimeProvider, Built-in Sandbox, Invocation/Event, Artifact, RuntimeRecording and Delivery. Complete the failure and replay evidence in `tasks/PHASE0.md` before Phase 1.
+实现一条真实 Conversation Turn 链路，依次经过 Business 授权、WorkOrder/Temporal、DeerFlow AgentRuntimeProvider、Built-in Sandbox、Invocation/Event、Artifact、RuntimeRecording 和 Delivery。进入 Phase 1 前，必须完成 `tasks/PHASE0.md` 中的故障与回放证据。
 
-## Phase 1A: product completion
+## Phase 1A：产品能力补全
 
-- Conversation list/archive/branch UX and context-builder Provider;
-- Experience Catalog administration and html-anything template importer;
-- Open Design/motion-anything renderer/editor integration profiles;
-- html-to-pptx and html-video Converter profiles;
-- full RuntimeRecording playback for terminal/browser/desktop;
-- Provider administration, draining and upgrade canary UI.
+- Conversation 列表、归档、分支体验和 Context Builder Provider；
+- Experience Catalog 管理和 html-anything 模板导入器；
+- Open Design/motion-anything Renderer/Editor 集成 Profile；
+- html-to-pptx 和 html-video Converter Profile；
+- Terminal/Browser/Desktop 的完整 RuntimeRecording 回放；
+- Provider 管理、Draining 和升级 Canary 界面。
 
-## Phase 1B: reference Business application
+## Phase 1B：参考 Business Application
 
-- productize the Phase 0 reference identity/membership flow with account administration and recovery;
-- add organization membership, plan upgrade/downgrade, invoice/refund and billing operations;
-- expose reservation/settlement/release/reconciliation operations and support tooling;
-- complete Business UI navigation, observability and Agent Workbench handoff UX.
+- 将 Phase 0 的参考身份/会员流程产品化，补充账户管理与恢复；
+- 增加组织成员关系、套餐升降级、发票/退款和计费操作；
+- 暴露 Reservation/Settlement/Release/Reconciliation 操作及支持工具；
+- 补全 Business UI 导航、可观测性和 Agent Workbench 交接体验。
 
-## Deferred
+## 延后事项
 
-- user-uploaded arbitrary Plugins;
-- arbitrary remote JavaScript or unsandboxed UI extensions;
-- full Office editing suite;
-- complete Marketplace and revenue sharing;
-- intelligent cost routing;
-- multi-region active/active disaster recovery.
+- 用户上传的任意 Plugin；
+- 任意远程 JavaScript 或未隔离的 UI Extension；
+- 完整 Office 编辑套件；
+- 完整 Marketplace 与收入分成；
+- 智能成本路由；
+- 多区域双活灾难恢复。

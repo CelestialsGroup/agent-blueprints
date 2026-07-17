@@ -1,34 +1,34 @@
-# Kubernetes Deployment Profiles
+# Kubernetes 部署 Profile
 
-`base/` is a policy-bearing, renderable architecture base. It is not a standalone production installation.
+`base/` 是包含策略且可渲染的架构基础，不是独立的生产安装方案。
 
-It deliberately requires an environment Overlay to supply:
+它有意要求环境 Overlay 提供：
 
-- public Gateway namespace labelled `agent-platform.io/public-gateway=true`
-- dependency namespace labelled `agent-platform.io/control-plane-dependency=true`
-- Egress Gateway namespace labelled `agent-platform.io/egress-gateway=true`
-- concrete PostgreSQL, Redis, Temporal and Object Storage endpoints
-- TLS, Secrets, StorageClass, RuntimeClass and image digests
-- CNI implementation that enforces NetworkPolicy
-- HPA/KEDA, topology and regional policy
+- 标记为 `agent-platform.io/public-gateway=true` 的公共 Gateway Namespace；
+- 标记为 `agent-platform.io/control-plane-dependency=true` 的依赖 Namespace；
+- 标记为 `agent-platform.io/egress-gateway=true` 的 Egress Gateway Namespace；
+- 具体的 PostgreSQL、Redis、Temporal 和 Object Storage Endpoint；
+- TLS、Secret、StorageClass、RuntimeClass 和镜像摘要；
+- 能强制执行 NetworkPolicy 的 CNI 实现；
+- HPA/KEDA、拓扑和区域策略。
 
-Security boundaries in the base:
+Base 中的安全边界：
 
-- separate `agent-platform` and `agent-runtime` namespaces
-- default-deny ingress and egress in both namespaces
-- explicit DNS rules
-- public ingress restricted by namespace label
-- Sandbox Provisioner RBAC limited to `agent-runtime`
-- Runtime Gateway uses Restricted-compatible SecurityContext
-- Sandbox egress only through an Egress Gateway
+- 分离 `agent-platform` 和 `agent-runtime` Namespace；
+- 两个 Namespace 的 Ingress 和 Egress 均默认拒绝；
+- 显式 DNS 规则；
+- 通过 Namespace Label 限制公共 Ingress；
+- Sandbox Provisioner RBAC 仅限 `agent-runtime`；
+- Runtime Gateway 使用兼容 Restricted Profile 的 SecurityContext；
+- Sandbox 只能通过 Egress Gateway 出站。
 
-A production deployment is accepted only after the selected Overlay passes:
+只有所选 Overlay 通过以下检查后，生产部署才能被接受：
 
 ```text
 kubectl kustomize
-server-side dry-run
-policy tests
-network reachability tests
-Pod Security admission tests
-failure injection
+服务端 Dry-run
+策略测试
+网络可达性测试
+Pod Security 准入测试
+故障注入
 ```

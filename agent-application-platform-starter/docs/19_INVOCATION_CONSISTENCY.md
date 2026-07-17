@@ -1,4 +1,4 @@
-# Invocation Ledger 与副作用一致性
+# Invocation 账本与副作用一致性
 
 ## 1. 边界
 
@@ -13,12 +13,12 @@ Temporal Activity 可能重复调度，网络调用可能超时，外部 Provide
 - InvocationAttempt：一次真实提交
 - InvocationResult：已确认结果
 - ExternalOperation：Provider Operation ID
-- InvocationReconciliationCase：Outcome Unknown 对账
-- InvocationManualReviewDecision：无法自动确认时的 append-only 人工裁决
+- InvocationReconciliationCase：未知结果对账
+- InvocationManualReviewDecision：无法自动确认时的仅追加人工裁决
 
 ## 3. 稳定标识
 
-Invocation：
+Invocation 标识：
 
 ```text
 workflow_run_id
@@ -26,7 +26,7 @@ workflow_run_id
 + logical_operation_key
 ```
 
-Attempt：
+Attempt 属性：
 
 - invocation_attempt_id
 - attempt_number
@@ -35,7 +35,7 @@ Attempt：
 
 同一个逻辑操作的重试复用 Invocation ID，但创建新的 Attempt。
 
-## 4. Prepare Attempt
+## 4. 准备 Attempt
 
 数据库事务：
 
@@ -47,7 +47,7 @@ Attempt：
 6. 写 `invocation.attempt.prepared` Event。
 7. Commit。
 
-## 5. External Call
+## 5. 外部调用
 
 调用携带：
 
@@ -60,7 +60,7 @@ Attempt：
 - cancellation context
 - Artifact grants
 
-## 6. Complete
+## 6. 完成
 
 数据库事务：
 
@@ -74,9 +74,9 @@ Attempt：
 8. 更新 Invocation。
 9. Commit。
 
-## 7. Retry
+## 7. 重试
 
-Retryable Failure：
+可重试失败：
 
 ```text
 Attempt -> failed_retryable
@@ -99,7 +99,7 @@ Invocation -> executing
 - 在 Outcome Unknown 状态直接重试
 - 超过 Invocation Deadline 后继续自动重试
 
-## 8. Outcome Unknown 与 Reconciliation
+## 8. 未知结果与对账
 
 ```text
 executing
@@ -108,7 +108,7 @@ executing
  -> succeeded | failed | manual_review
 ```
 
-Reconciliation 必须定义：
+对账必须定义：
 
 - Deadline
 - Query Strategy
@@ -118,9 +118,9 @@ Reconciliation 必须定义：
 - Ownership
 - Alert
 
-超过 Deadline 进入 `manual_review`，不能永久停留在 reconciling。
+超过 Deadline 进入 `manual_review`，不能永久停留在 `reconciling`。
 
-## 9. Manual Review
+## 9. 人工复核
 
 允许的决策：
 
@@ -139,11 +139,11 @@ Reconciliation 必须定义：
 - risk acceptance
 - occurred_at
 
-`abandon` 必须显式 `risk_accepted=true` 并由 InvocationRecord 同时引用 ReconciliationCase 和 decision_id。Decision 必须绑定 Case ID、version、digest 及证据。非幂等重试也必须引用 outcome=`retry_approved` 的 resolved Case 与 decision=`retry` 的 Decision；普通自动重试事件只适用于可幂等重试。`abandoned` 是独立终态，后续若发现真实结果，只能追加 Correction Event，不修改历史决定。
+`abandon` 必须显式 `risk_accepted=true`，并由 InvocationRecord 同时引用 ReconciliationCase 和 `decision_id`。Decision 必须绑定 Case ID、版本、摘要及证据。非幂等重试也必须引用结果为 `retry_approved` 的已解决 Case 与决策为 `retry` 的 Decision；普通自动重试事件只适用于可幂等重试。`abandoned` 是独立终态，后续若发现真实结果，只能追加更正 Event，不修改历史决定。
 
 取消请求只表示 intent。执行中先进入 `cancel_requested`；Provider/人工证据证明外部副作用 `not_started` 或 `stopped_before_effect` 后进入 `cancellation_confirmed`，持久化终态后才进入 `cancelled`。已完成的外部副作用不能记录为取消成功。
 
-## 10. Side-effect Class
+## 10. 副作用分类
 
 - pure：允许自动重试
 - idempotent：稳定 Idempotency Key
@@ -152,11 +152,11 @@ Reconciliation 必须定义：
 
 Fencing Token 只能防止平台接受旧结果，不能撤销已经发生的外部副作用。
 
-## 11. Sandbox Operation Ledger
+## 11. Sandbox Operation 账本
 
 Sandbox Operation 使用同样的 Attempt/Fencing/Outcome Unknown 原则，但保留专用：
 
-- Desired/Observed State
+- 期望状态/观测状态
 - Lease
 - Snapshot
 - RuntimeSession

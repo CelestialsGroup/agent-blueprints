@@ -1,41 +1,41 @@
-# Experience Catalog and UI Extensions
+# Experience Catalog 与 UI Extension
 
-## Catalog model
+## Catalog 模型
 
-Templates, skill packs, design systems and editor profiles are user-visible Experiences. A mutable display entry points to an immutable revision; every WorkOrder and RunManifest stores the selected revision digest.
+Template、Skill Pack、Design System 和 Editor Profile 都是用户可见的 Experience。可变展示条目指向不可变 Revision；每个 WorkOrder 和 RunManifest 都保存所选 Revision 的摘要。
 
 ```text
 ExperienceCatalogEntry
- -> current immutable TemplateRevision
- -> certified ProviderRevision
- -> source/preview ArtifactVersion
- -> parameter SchemaReference
+ -> 当前不可变 TemplateRevision
+ -> 已认证 ProviderRevision
+ -> 源/预览 ArtifactVersion
+ -> 参数 SchemaReference
 ```
 
-Catalog discovery is filtered by tenant/client binding, lifecycle, Capability and the Business-signed commercial authorization. A hidden or unauthorized entry cannot be selected by sending its ID directly.
+Catalog 发现结果按 Tenant/Client 绑定、生命周期、Capability 和 Business 签名的商业授权过滤。隐藏或未授权条目不能通过直接提交 ID 进行选择。
 
-Run admission rechecks Scenario `required_tags`, TemplateRevision `required_entitlements` and the explicit entitlement set in `CommercialAuthorizationSnapshot`; Catalog filtering alone is not an authorization boundary.
+Run 准入会重新检查 Scenario 的 `required_tags`、TemplateRevision 的 `required_entitlements`，以及 `CommercialAuthorizationSnapshot` 中的显式 Entitlement 集合；仅靠 Catalog 过滤不能构成授权边界。
 
-Scenario UI uses a signed UI Schema and typed option sources. Fields such as `/template_id` query the Experience Catalog; they never hard-code Plugin IDs.
+Scenario UI 使用签名 UI Schema 和类型化选项源。`/template_id` 等字段查询 Experience Catalog，绝不硬编码 Plugin ID。
 
-## nexu-io integration profiles
+## nexu-io 集成 Profile
 
-- html-anything template/skill folders: Catalog importer plus Template Provider.
-- html-anything generation: Skill or sandbox_cli/MCP capability under DeerFlow.
-- html-to-pptx/html-video: Converter Provider producing Artifact Staging.
-- Open Design/motion-anything editors: Artifact Editor/Renderer Provider; reuse headless capability and catalog assets before embedding UI.
-- complete desktop applications are not mounted wholesale into the stable kernel.
+- html-anything Template/Skill 目录：Catalog 导入器加 Template Provider。
+- html-anything 生成：DeerFlow 下的 Skill 或 sandbox_cli/MCP Capability。
+- html-to-pptx/html-video：生成 Artifact Staging 的 Converter Provider。
+- Open Design/motion-anything Editor：Artifact Editor/Renderer Provider；嵌入 UI 前优先复用无界面 Capability 和 Catalog Asset。
+- 完整桌面应用不得整体挂载到稳定内核中。
 
-Each upstream project is pinned by source commit/package digest, license/provenance, Adapter version and Conformance evidence. Upgrades create new Provider and Experience revisions; existing Runs keep old snapshots.
+每个上游项目都通过源码 Commit/Package 摘要、许可证/来源、Adapter 版本和一致性证据固定。升级时创建新的 Provider 和 Experience Revision；已有 Run 保留旧快照。
 
-## UI extension security
+## UI Extension 安全
 
-Schema-driven UI is preferred. A richer contribution requires a certified `UiExtensionManifest`:
+优先使用 Schema 驱动 UI。更丰富的扩展必须提供经过认证的 `UiExtensionManifest`：
 
-- signed immutable bundle Artifact;
-- fixed platform slot and `ui-extension/v1` message protocol;
-- opaque-origin sandboxed iframe and approved CSP profile;
-- object-scoped Artifact/Catalog grants;
-- no WorkSession cookie, raw token, host DOM or arbitrary network access.
+- 签名且不可变的 Bundle Artifact；
+- 固定 Platform Slot 和 `ui-extension/v1` 消息协议；
+- 使用不透明 Origin 的 Sandboxed iframe 和已批准 CSP Profile；
+- 对象级 Artifact/Catalog Grant；
+- 不得访问 WorkSession Cookie、原始 Token、宿主 DOM 或任意网络。
 
-Arbitrary remote JavaScript remains forbidden.
+始终禁止任意远程 JavaScript。

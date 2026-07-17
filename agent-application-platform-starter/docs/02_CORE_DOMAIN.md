@@ -1,6 +1,6 @@
 # 核心领域
 
-## Access
+## 访问
 
 - ClientApplication
 - ServicePrincipal
@@ -10,7 +10,7 @@
 - ExternalTenantMapping
 - ExternalPrincipalMapping
 
-## Authorization
+## 授权
 
 - ExecutionGrant
 - GrantConsumption
@@ -18,7 +18,7 @@
 - ExecutionBudget
 - PolicyDecision
 
-## Work
+## 工作执行
 
 - AgentConversation
 - ConversationMessage
@@ -31,7 +31,7 @@
 - RunManifest
 - Approval
 
-## Invocation
+## 外部调用
 
 - Invocation
 - InvocationAttempt
@@ -39,7 +39,7 @@
 - ExternalOperation
 - ReconciliationCase
 
-## Extension
+## 扩展
 
 - ScenarioDefinition
 - CapabilityDefinition
@@ -54,7 +54,7 @@
 - TemplateRevision
 - UiExtensionManifest
 
-## Event
+## 事件
 
 - CanonicalEvent
 - EventTypeDefinition
@@ -63,7 +63,7 @@
 - Projection
 - Outbox/Inbox
 
-## Artifact
+## 产物
 
 - Artifact
 - ArtifactVersion
@@ -74,7 +74,7 @@
 - EditSession
 - ConversionJob
 
-## Delivery
+## 交付
 
 - CallbackRegistration
 - DeliveryTarget
@@ -95,7 +95,7 @@
 - SandboxUsageEntry
 - SandboxConformanceReport
 
-## Runtime Experience
+## Runtime 体验
 
 - AgentRuntimeRun
 - AgentRuntimeCommand
@@ -105,4 +105,4 @@
 - RuntimeRecordingChunk
 - RuntimeRecordingManifest
 
-Business-owned Membership, EntitlementRevision, QuotaReservation and commercial Settlement remain outside this domain. The Platform stores the Business-signed CommercialAuthorizationSnapshot values and digest needed for local admission, but cannot mutate entitlement or commercial balance truth.
+Business 拥有的 Membership、EntitlementRevision、QuotaReservation 和商业 Settlement 仍位于本领域之外。Platform 保存本地准入所需、由 Business 签名的 CommercialAuthorizationSnapshot 值及摘要，但无权修改 Entitlement 或商业余额事实。

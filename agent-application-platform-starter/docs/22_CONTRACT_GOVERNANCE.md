@@ -1,47 +1,47 @@
-# Contract Governance — v0.9.0
+# 契约治理 — v0.9.0
 
-## Governed surfaces
+## 受治理范围
 
-JSON Schema、OpenAPI、状态机、JCS/I-JSON 向量、数据不变量和 Contract Manifest 都是受治理契约。叙述性“必须”只有在 Schema、语义 Validator、数据库约束、状态机或 CI 中有对应执行点时才算完成。
+JSON Schema、OpenAPI、状态机、JCS/I-JSON 向量、数据不变量和契约清单都是受治理契约。叙述性“必须”只有在 Schema、语义 Validator、数据库约束、状态机或 CI 中有对应执行点时才算完成。
 
-## Admission Gates
+## 准入 Gate
 
-| Gate | Enforcement |
+| Gate | 强制执行方式 |
 |---|---|
 | Strict I-JSON/JCS | Python、Node、Go 共用全部正反向向量 |
-| Schema | Draft 2020-12 meta-validation、绝对 `$id`、Registry `$ref`、正反向 Fixture |
-| Semantic | Conversation/Runtime/Recording sequence、RunManifest、Experience Admission、CapabilityDefinition/Provider Kind/Conformance、Provider/Decision 摘要、Slot、Snapshot、Fencing、状态可达性 |
-| OpenAPI | Registry 投影后 Redocly lint 0 error/0 warning，5 个 deterministic bundle |
-| Integrity | v0.9.0 Contract Manifest 自摘要和全资源摘要 |
-| Compatibility | 与受保护变量指定的冻结基线比较删除/收窄；CI 缺基线 fail-closed |
-| Supply chain | hash lock、npm integrity、Action SHA、公开 Registry、Git 跟踪文件无 bytecode/`.DS_Store`、Git 根 Workflow 已激活 |
+| Schema | Draft 2020-12 元验证、绝对 `$id`、Registry `$ref`、正反向 Fixture |
+| 语义 | Conversation/Runtime/Recording 序列、RunManifest、Experience 准入、CapabilityDefinition/Provider Kind/Conformance、Provider/Decision 摘要、Slot、Snapshot、Fencing、状态可达性 |
+| OpenAPI | Registry 投影后 Redocly Lint 为 0 个错误、0 个警告，5 个确定性 Bundle |
+| 完整性 | v0.9.0 契约清单自摘要和全资源摘要 |
+| 兼容性 | 与受保护变量指定的冻结基线比较删除/收窄；CI 缺基线时默认失败 |
+| 供应链 | 摘要锁、npm 完整性校验、Action SHA、公开 Registry、Git 跟踪文件无 Bytecode/`.DS_Store`、Git 根 Workflow 已激活 |
 
 ## URN 与 OpenAPI
 
 原始 JSON Schema 只使用绝对 URN `$ref`，这是可移植事实源。Redocly 不支持外部 Registry 注入，因此 `prepare_openapi.py` 生成一次性本地文件投影；生成物不得反向成为契约源。
 
-## Reproducible toolchain
+## 可复现工具链
 
-- CPython 3.11–3.13，依赖 exact version/hash lock；
-- Node 22.16 与 npm lock integrity；
+- CPython 3.11–3.13，依赖使用精确版本/摘要锁；
+- Node 22.16 与 npm 锁文件完整性校验；
 - Go 1.23.2；
 - Redocly CLI 2.39.0；
-- 第三方 CI Action 使用完整 commit SHA。
+- 第三方 CI Action 使用完整 Commit SHA。
 
-验证报告必须记录真实工具版本、命令、计数和未运行项。公共 admission 前不能写 frozen；Contract Gate 也不能证明 production ready。
+验证报告必须记录真实工具版本、命令、计数和未运行项。公共准入前不能写“已冻结”；契约 Gate 也不能证明生产就绪。
 
-## Compatibility policy
+## 兼容性策略
 
-Contract Manifest 只证明当前资源未被静默修改，不代表兼容。`check_contract_compatibility.py` 是保守策略 Gate，检测 Schema/Endpoint/Operation/响应/Media Type/状态迁移删除，required 输入增加，`$ref`、type/enum/const/not/if-then/dependentRequired/contains/unevaluatedProperties/组合与边界收窄，以及参数（含链式本地 `$ref`）、Request Body、Response 和 effective Security 变化。
+契约清单只证明当前资源未被静默修改，不代表兼容。`check_contract_compatibility.py` 是保守策略 Gate，检测 Schema/Endpoint/Operation/响应/Media Type/状态迁移删除、Required 输入增加，`$ref`、type/enum/const/not/if-then/dependentRequired/contains/unevaluatedProperties/组合与边界收窄，以及参数（含链式本地 `$ref`）、Request Body、Response 和有效 Security 变化。
 
-该比较器不构成通用兼容性证明。冻结审批还必须有人审阅的 Compatibility Review、`DECISIONS.md` 变更、版本迁移策略，并在实现存在后执行 Consumer Contract、历史载荷回放和双版本互操作测试；不得用“比较器通过”替代这些证据。
+该比较器不构成通用兼容性证明。冻结审批还必须包含人工兼容性审查、`DECISIONS.md` 变更、版本迁移策略，并在实现存在后执行消费者契约、历史载荷回放和双版本互操作测试；不得用“比较器通过”替代这些证据。
 
-CI 的唯一基线权威是受保护仓库变量 `AGENT_PLATFORM_FROZEN_CONTRACT_REF`，且值必须是已 fetch 的完整小写 Commit SHA；PR 内可修改的 `baseline-policy.json` 仅用于说明。CI 缺基线时默认失败；只有第一个冻结基线产生前，受保护变量 `AGENT_PLATFORM_ALLOW_NO_FROZEN_BASELINE=true` 才允许输出 `N/A`，不得宣称 pass。明确 breaking change 必须升级契约版本、更新 `DECISIONS.md`、给出迁移窗口，不能靠忽略规则绕过。
+CI 的唯一基线权威是受保护仓库变量 `AGENT_PLATFORM_FROZEN_CONTRACT_REF`，且值必须是已 Fetch 的完整小写 Commit SHA；PR 内可修改的 `baseline-policy.json` 仅用于说明。CI 缺基线时默认失败；只有第一个冻结基线产生前，受保护变量 `AGENT_PLATFORM_ALLOW_NO_FROZEN_BASELINE=true` 才允许输出 `N/A`，不得宣称通过。明确的破坏性变更必须升级契约版本、更新 `DECISIONS.md`、给出迁移窗口，不能靠忽略规则绕过。
 
-## Repository layout
+## 仓库布局
 
-GitHub 只读取 Git 根目录 `.github/workflows`。包独立成库时直接使用当前 Workflow；嵌入 monorepo 时运行 `scripts/install_github_workflow.sh`，提交 Git 根 Workflow 与 `.gitignore`，并设置 `AGENT_PLATFORM_CONTRACT_ROOT`。Supply-chain Gate 在受 Git 跟踪的嵌套包中检查根 Workflow 一致性、根 `.gitignore` 和被跟踪的 `.DS_Store`。Workflow 中的全部第三方 Action 使用完整 commit SHA。
+GitHub 只读取 Git 根目录 `.github/workflows`。包独立成库时直接使用当前 Workflow；嵌入 Monorepo 时运行 `scripts/install_github_workflow.sh`，提交 Git 根 Workflow 与 `.gitignore`，并设置 `AGENT_PLATFORM_CONTRACT_ROOT`。供应链 Gate 在受 Git 跟踪的嵌套包中检查根 Workflow 一致性、根 `.gitignore` 和被跟踪的 `.DS_Store`。Workflow 中的全部第三方 Action 使用完整 Commit SHA。
 
-## Freeze rule
+## 冻结规则
 
 公共 CI 全绿只是冻结的必要条件。冻结仍需审查批准；生产批准属于另一套实现、安全、性能和恢复证据。
