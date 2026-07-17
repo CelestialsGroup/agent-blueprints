@@ -1,65 +1,41 @@
 # START HERE
 
-这是 Agent Application Platform **v0.9.0 Product Boundary Candidate**。
+这是 Agent Application Platform **v0.9.0 Product Boundary Candidate**。v0.8.6 及更早版本不是实施基线，仓库不再保留其审查快照。
 
-v0.3–v0.8.6 均不得作为当前实施基线；旧版本只保留为历史审查证据。
+## Current status
 
-## 唯一 Admission 入口
+- Conversation/Branch/Turn 与 Conversation-owned Workspace 已闭合。
+- DeerFlow 通过独立 AgentRuntimeProvider 接入，私有 Thread/Run/Checkpoint 不进入平台模型。
+- RuntimeRecording、Experience Catalog、Template/Skill/Renderer Provider 和 Business CommercialAuthorization 已闭合。
+- Conversation、AgentRuntimeRun、RuntimeRecording、Invocation、SandboxOperation、WorkOrder 都有权威状态机或持久化状态约束。
+- 本地 Contract Gate 已通过；候选版本未冻结，也不代表 Production Ready。
+
+## Authority
+
+按以下顺序阅读：
+
+1. `AGENTS.md`：实施规则和禁止项。
+2. `docs/00_ARCHITECTURE_BASELINE.md`：当前架构摘要。
+3. `docs/DECISIONS.md`：当前有效的关键决策及理由。
+4. `docs/README.md`：按主题进入详细规范。
+5. `tasks/PHASE0.md`：唯一实现与验收路线。
+6. `prompts/CODEX_PHASE0_BOOTSTRAP.md`：实现代理入口。
+
+Schema、OpenAPI、状态机、数据库不变量和验证 Gate 高于叙述性文档。
+
+## Validation
 
 ```bash
 ./scripts/bootstrap_contracts.sh
 make validate-all
 ```
 
-支持 CPython 3.11–3.13、Node 22.16、Go 1.23.2。Python 和 npm 依赖、GitHub Actions 均锁定完整性；不支持的本机 Python 是环境问题，不是架构失败。
+支持 CPython 3.11–3.13、Node 22.16、Go 1.23.2。结果和实际计数见 `CONTRACT_VALIDATION_REPORT.md`。
 
-## 必读顺序
-
-1. `AGENTS.md`
-2. `ARCHITECTURE_REVIEW_STATUS.md`
-3. `V090_PRODUCT_BOUNDARY_AUDIT_REPORT.md`
-4. `docs/45_V090_PRODUCT_BOUNDARY_RESOLUTION.md`
-5. `docs/00_ARCHITECTURE_BASELINE.md`
-6. `docs/01_SYSTEM_BOUNDARIES.md`
-7. `docs/17_IDENTITY_AND_AUTHORIZATION.md`
-8. `docs/18_EXECUTION_GRANT_SECURITY.md`
-9. `docs/03_WORK_CONTRACTS.md`
-10. `docs/46_CONVERSATION_AND_TURNS.md`
-11. `docs/47_AGENT_RUNTIME_PROVIDER_CONTRACT.md`
-12. `docs/48_RUNTIME_RECORDING_AND_PLAYBACK.md`
-13. `docs/49_EXPERIENCE_CATALOG_AND_UI_EXTENSIONS.md`
-14. `docs/50_BUSINESS_ENTITLEMENT_INTEGRATION.md`
-15. `docs/23_STATE_MACHINE_SPEC.md`
-16. `docs/05_WORKFLOW_RELIABILITY.md`
-17. `docs/19_INVOCATION_CONSISTENCY.md`
-18. `docs/20_CAPABILITY_SPI.md`
-19. `docs/21_PLUGIN_INVOCATION_PROTOCOL.md`
-20. `docs/33_SANDBOX_PROVIDER_CONTRACT.md`
-21. `docs/34_SANDBOX_SECURITY_AND_ISOLATION.md`
-22. `docs/35_SANDBOX_LIFECYCLE_AND_SNAPSHOT.md`
-23. `docs/36_SANDBOX_CONFORMANCE_AND_MIGRATION.md`
-24. `docs/26_DATA_MODEL_INVARIANTS.md`
-25. `docs/22_CONTRACT_GOVERNANCE.md`
-26. `docs/37_JCS_AND_IJSON_PROFILE.md`
-27. `docs/38_CONTRACT_CI_AND_PROVENANCE.md`
-28. `tasks/PHASE0.md`
-29. `prompts/CODEX_PHASE0_BOOTSTRAP.md`
-
-## 稳定边界
+## Stable boundary
 
 Business Application 拥有 User、Membership、Product、Order、Payment、Entitlement 和 Commercial Quota Reservation/Settlement。Agent Platform 拥有 Conversation、Message、WorkOrder、Workflow、Invocation、Event、Artifact、Technical Usage、Delivery、Provider、Sandbox、RuntimeRecording 与 Experience Catalog。双方只能通过版本化契约集成。
 
-稳定内核不得保存 Pod、Namespace、Container、VM、Node 或原始 Runtime Endpoint；这些字段只属于 Sandbox Provider Adapter 私有模型。
+稳定内核不得保存 Pod、Namespace、Container、VM、Node 或原始 Runtime Endpoint；这些字段只属于 Provider Adapter 私有模型。
 
-## 成熟度
-
-当前状态只能表述为：
-
-```text
-Local architecture and contract closure validated
-Ready to enter implementation and repository admission
-Not frozen until public CI passes
-Not production ready
-```
-
-生产批准还需要实现证据、故障注入、安全隔离、容量、Temporal Replay、备份恢复以及 DeerFlow AgentRuntimeProvider/sandbox-runtime Conformance。
+生产批准仍需要真实 migrations、DeerFlow/Sandbox Adapter、Temporal Replay、故障注入、安全隔离、容量和备份恢复证据。

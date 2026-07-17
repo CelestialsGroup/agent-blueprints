@@ -46,6 +46,8 @@ DeerFlow 不得直接持有平台长期模型凭据，也不得绕过网络策�
 
 稳定操作是 capability negotiation、start/restore run、append-only command、status、cursor event 和 checkpoint manifest。DeerFlow Thread/Run/Checkpoint ID 与原始事件只存在于 Adapter Private Store。
 
+`contracts/state-machines/agent-runtime-run-v1.json` 是 normalized run status 的权威来源。所有 mutation 携带 InvocationAttempt、idempotency 和 fencing；cancel intent 不等于取消证明，`outcome_unknown` 必须经 Ledger 对账后才能提交终态。
+
 ## 4. 多副本
 
 长期目标：
@@ -77,6 +79,8 @@ RunManifest 固化：
 - Config Digest
 - Provider Revision
 - Governed Conformance Report
+
+每次上游升级创建新的 immutable ProviderRevision。旧 Run 不迁移到新 Revision；canary/draining 必须保留旧 checkpoint 和历史事件 replay。Core Patch 需要 patch ledger、上游 base commit 和 rebase test。
 
 ## 6. Contract Test
 

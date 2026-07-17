@@ -56,33 +56,16 @@ Provider 不拥有业务授权和 Artifact 元数据。
 
 ## 3. Provider Port
 
-```go
-type SandboxProvider interface {
-    GetCapabilities(ctx context.Context) (SandboxCapabilities, error)
-    Create(ctx context.Context, req CreateSandboxRequest) (SandboxOperation, error)
-    Get(ctx context.Context, sandboxID string) (SandboxStatus, error)
-    SetDesiredState(ctx context.Context, sandboxID string, req DesiredStateRequest) (SandboxOperation, error)
-    ExtendLease(ctx context.Context, sandboxID string, req LeaseRequest) (SandboxOperation, error)
+权威传输契约是 [`sandbox-provider-v1.yaml`](../contracts/openapi/sandbox-provider-v1.yaml)，Provider Adapter 必须实现其中的操作族：
 
-    Exec(ctx context.Context, sandboxID string, req ExecRequest) (SandboxOperation, error)
-    CancelExec(ctx context.Context, sandboxID string, req CancelExecRequest) (SandboxOperation, error)
-    GetOperation(ctx context.Context, operationID string) (SandboxOperation, error)
-    GetExecResult(ctx context.Context, operationID string) (SandboxExecResult, error)
+- capability discovery
+- create/get/desired-state/lease/terminate
+- exec/cancel/result
+- runtime session
+- snapshot/manifest/restore
+- operation query and event stream
 
-    OpenRuntimeSession(
-        ctx context.Context,
-        sandboxID string,
-        req OpenRuntimeSessionRequest,
-    ) (SandboxRuntimeSessionEndpoint, error)
-
-    Snapshot(ctx context.Context, sandboxID string, req SnapshotRequest) (SandboxOperation, error)
-    GetSnapshotManifest(ctx context.Context, operationID string) (SnapshotManifest, error)
-    Restore(ctx context.Context, req RestoreRequest) (SandboxOperation, error)
-
-    Terminate(ctx context.Context, sandboxID string, req TerminateRequest) (SandboxOperation, error)
-    WatchEvents(ctx context.Context, sandboxID string, after uint64) (SandboxEventStream, error)
-}
-```
+具体语言接口由该 OpenAPI 生成或薄封装，不在叙述性文档中复制方法签名。
 
 ## 4. Capability Negotiation
 
@@ -233,7 +216,7 @@ Provider 对 Agent 暴露固定语义：
 
 ## 12. 多 Sandbox 与 Slot
 
-一个 WorkOrder/Workspace 可以拥有多个 Sandbox。
+一个 Conversation Workspace 可以拥有多个 Sandbox；每个 WorkOrder 的 RunManifest 只绑定本次 Turn 实际使用的 Slot。
 
 平台使用 `sandbox_slot_key` 表达逻辑用途，而不是把 Sandbox 与 WorkOrder 一对一绑定：
 
@@ -271,3 +254,19 @@ runtime_endpoint_reference
 
 RunManifest 使用 `sandboxes[]` 锁定多个 Sandbox Slot，并用
 `primary_sandbox_slot_key` 标识默认工作环境。禁止重新收缩为单一 Sandbox 字段。
+
+## 14. Lifecycle、Lease 与 Snapshot
+
+Provider transport attempt 返回 `SandboxOperationStatus`：accepted/running/succeeded/failed/cancelled/outcome_unknown。平台不得把 outcome_unknown 作为持久化终点；它必须原子转换为 SandboxOperation `reconciling`。
+
+平台逻辑聚合使用 `sandbox-operation-record:v2` 和 `contracts/state-machines/sandbox-operation-v2.json`，支持 retry、reconciliation deadline、manual review、安全取消确认和 abandoned。每个 Attempt 拥有新 attempt_id 与更高 fencing_token，旧响应必须被拒绝。
+
+SandboxRegistry 保存期望状态、租约、Slot 与代数；Provider Adapter 保存实际 Pod/VM/Container/endpoint。Lease 过期由 Temporal 定时器驱动 terminate/reconcile，不能依赖 Redis TTL 作为事实。
+
+SnapshotManifest 固化 provider_revision_id、level、digest、size、content_reference 和兼容性。workspace 级 Snapshot 可跨符合 Contract 的 Provider 迁移；filesystem/process 级默认只在声明兼容时恢复。Restore 使用标准 mutation envelope，并为恢复后的 Sandbox 分配新的 sandbox_id 和显式 Slot；Snapshot 本身不可变。
+
+## 15. Reconciliation 与取消
+
+Provider response 丢失时，先用 provider_operation_id/idempotency key 查询证据；不得盲目重试非幂等副作用。证据不足到 deadline 后进入人工复核；人工 Decision 必须 append-only，并带 evidence references 和 digest。
+
+取消请求只表达 intent。运行中请求先进入 `cancel_requested`；未知结果继续 reconciliation。只有 Provider/人工证据写入 `cancellation_confirmation` 并经过 `cancellation_confirmed`，或平台证明从未派发/当前无 in-flight Attempt，才允许终态 `cancelled`。无法证明时只能继续对账，或由 `risk_accepted=true` 的人工决策 abandon。

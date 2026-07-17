@@ -19,8 +19,8 @@
 
 - ClientApplication
 - InternalTenant/Principal Mapping
-- AgentConversation/ConversationMessage
-- WorkOrder/Workspace
+- AgentConversation/ConversationBranch/ConversationMessage
+- Conversation Workspace/WorkOrder
 - GrantConsumption
 - WorkflowRun/AgentRun
 - Invocation

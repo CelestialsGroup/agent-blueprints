@@ -1,5 +1,11 @@
 # 生产运行治理
 
+## SLI and initial SLO
+
+必须观测 Access 延迟/可用性、Temporal queue latency、Invocation retry/outcome_unknown/reconciliation age、Event append/SSE lag、DeerFlow/Sandbox start/recovery、Runtime connection、Artifact/Delivery 和 Gateway budget/deny 指标。
+
+初始目标：Agent Access 月可用性 99.9%，已接受 WorkOrder 持久化丢失 0，P95 accept < 500ms，P95 durable event lag < 3s，outcome_unknown 24 小时内对账 99%，Delivery 24 小时最终送达 99.9%。这些目标必须经容量测试后按部署等级修订。
+
 ## 1. 恢复目标
 
 初始基线：
@@ -111,6 +117,8 @@
 - Provider 故障
 - Delivery DLQ
 - Event Projection 重建
+
+多节点验收至少覆盖：任意 API/Worker/Provider Pod 删除、跨 Pod SSE 续传、Redis 通知丢失补拉、Provider Controller failover、Sandbox node failure、Runtime reroute、Temporal replay、Artifact 并发提交和 migration rollback。
 
 ## 11. Sandbox Capacity
 

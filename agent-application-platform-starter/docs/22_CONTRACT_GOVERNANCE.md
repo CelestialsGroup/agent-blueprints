@@ -20,13 +20,23 @@ JSON Schema、OpenAPI、状态机、JCS/I-JSON 向量、数据不变量和 Contr
 
 原始 JSON Schema 只使用绝对 URN `$ref`，这是可移植事实源。Redocly 不支持外部 Registry 注入，因此 `prepare_openapi.py` 生成一次性本地文件投影；生成物不得反向成为契约源。
 
+## Reproducible toolchain
+
+- CPython 3.11–3.13，依赖 exact version/hash lock；
+- Node 22.16 与 npm lock integrity；
+- Go 1.23.2；
+- Redocly CLI 2.39.0；
+- 第三方 CI Action 使用完整 commit SHA。
+
+验证报告必须记录真实工具版本、命令、计数和未运行项。公共 admission 前不能写 frozen；Contract Gate 也不能证明 production ready。
+
 ## Compatibility policy
 
 Contract Manifest 只证明当前资源未被静默修改，不代表兼容。`check_contract_compatibility.py` 是保守策略 Gate，检测 Schema/Endpoint/Operation/响应/Media Type/状态迁移删除，required 输入增加，`$ref`、type/enum/const/not/if-then/dependentRequired/contains/unevaluatedProperties/组合与边界收窄，以及参数（含链式本地 `$ref`）、Request Body、Response 和 effective Security 变化。
 
-该比较器不构成通用兼容性证明。冻结审批还必须有人审阅的 Compatibility Review/ADR、版本迁移策略，并在实现存在后执行 Consumer Contract、历史载荷回放和双版本互操作测试；不得用“比较器通过”替代这些证据。
+该比较器不构成通用兼容性证明。冻结审批还必须有人审阅的 Compatibility Review、`DECISIONS.md` 变更、版本迁移策略，并在实现存在后执行 Consumer Contract、历史载荷回放和双版本互操作测试；不得用“比较器通过”替代这些证据。
 
-CI 的唯一基线权威是受保护仓库变量 `AGENT_PLATFORM_FROZEN_CONTRACT_REF`，且值必须是已 fetch 的完整小写 Commit SHA；PR 内可修改的 `baseline-policy.json` 仅用于说明。CI 缺基线时默认失败；只有第一个冻结基线产生前，受保护变量 `AGENT_PLATFORM_ALLOW_NO_FROZEN_BASELINE=true` 才允许输出 `N/A`，不得宣称 pass。明确 breaking change 必须升级契约版本、给迁移窗口和 ADR，不能靠忽略规则绕过。
+CI 的唯一基线权威是受保护仓库变量 `AGENT_PLATFORM_FROZEN_CONTRACT_REF`，且值必须是已 fetch 的完整小写 Commit SHA；PR 内可修改的 `baseline-policy.json` 仅用于说明。CI 缺基线时默认失败；只有第一个冻结基线产生前，受保护变量 `AGENT_PLATFORM_ALLOW_NO_FROZEN_BASELINE=true` 才允许输出 `N/A`，不得宣称 pass。明确 breaking change 必须升级契约版本、更新 `DECISIONS.md`、给出迁移窗口，不能靠忽略规则绕过。
 
 ## Repository layout
 

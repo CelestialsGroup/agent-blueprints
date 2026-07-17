@@ -1,70 +1,55 @@
-# 文档索引
+# Documentation
 
-## 基线与边界
+只保留当前 v0.9.0 实施需要的事实源；历史审查与逐版本修复报告已经删除。
 
-- `00_ARCHITECTURE_BASELINE.md`
-- `01_SYSTEM_BOUNDARIES.md`
-- `02_CORE_DOMAIN.md`
-- `03_WORK_CONTRACTS.md`
-- `46_CONVERSATION_AND_TURNS.md`
-- `GLOSSARY.md`
+## Start and decisions
 
-## 身份与安全
+- `00_ARCHITECTURE_BASELINE.md`: baseline summary and maturity boundary.
+- `DECISIONS.md`: current accepted architecture decisions.
+- `01_SYSTEM_BOUNDARIES.md`: ownership and dependency direction.
+- `02_CORE_DOMAIN.md`: aggregate and module model.
+- `GLOSSARY.md`: canonical terminology.
 
-- `17_IDENTITY_AND_AUTHORIZATION.md`
-- `18_EXECUTION_GRANT_SECURITY.md`
-- `28_BROWSER_SESSION_SECURITY.md`
-- `08_SECURITY_TENANCY.md`
+## Product and access
 
-## Workflow、Invocation 与执行治理
+- `03_WORK_CONTRACTS.md`: Business/Platform request, usage and delivery contracts.
+- `46_CONVERSATION_AND_TURNS.md`: multi-turn conversation and branch model.
+- `50_BUSINESS_ENTITLEMENT_INTEGRATION.md`: membership, entitlement and quota handoff.
+- `17_IDENTITY_AND_AUTHORIZATION.md`: principals, scopes and object authorization.
+- `18_EXECUTION_GRANT_SECURITY.md`: signed per-turn authorization.
+- `28_BROWSER_SESSION_SECURITY.md`: browser Cookie/SSE/WebSocket security.
+- `10_FRONTEND_INTEGRATION.md`: Workbench integration.
 
-- `05_WORKFLOW_RELIABILITY.md`
-- `19_INVOCATION_CONSISTENCY.md`
-- `27_EXECUTION_MEDIATION.md`
-- `09_DEERFLOW_INTEGRATION.md`
-- `47_AGENT_RUNTIME_PROVIDER_CONTRACT.md`
+## Execution and extension
 
-## Event
+- `05_WORKFLOW_RELIABILITY.md`: Temporal, Outbox and replay rules.
+- `19_INVOCATION_CONSISTENCY.md`: side-effect ledger and reconciliation.
+- `27_EXECUTION_MEDIATION.md`: Model/Tool/Artifact/Egress enforcement.
+- `09_DEERFLOW_INTEGRATION.md`: AgentRuntimeProvider adapter and upgrades.
+- `20_CAPABILITY_SPI.md`: Capability, Resolution, Revision and Conformance.
+- `21_PLUGIN_INVOCATION_PROTOCOL.md`: governed invocation protocol.
+- `30_PLUGIN_MODE_BINDINGS.md`: service/job/sandbox_cli/MCP bindings.
+- `49_EXPERIENCE_CATALOG_AND_UI_EXTENSIONS.md`: templates and isolated rich UI.
 
-- `06_EVENT_MODEL.md`
-- `29_EVENT_TYPE_REGISTRY.md`
+## State, data and artifacts
 
-## Capability 与 Plugin
+- `23_STATE_MACHINE_SPEC.md`: authoritative lifecycle mapping.
+- `26_DATA_MODEL_INVARIANTS.md`: required database constraints.
+- `06_EVENT_MODEL.md` and `29_EVENT_TYPE_REGISTRY.md`: event ordering and payload governance.
+- `07_ARTIFACT_WORKSPACE.md` and `31_DELIVERY_AND_INGEST.md`: artifact lifecycle and registered external I/O.
+- `48_RUNTIME_RECORDING_AND_PLAYBACK.md`: historical runtime playback.
 
-- `04_SCENARIO_CAPABILITY_PLUGIN.md`
-- `20_CAPABILITY_SPI.md`
-- `21_PLUGIN_INVOCATION_PROTOCOL.md`
-- `30_PLUGIN_MODE_BINDINGS.md`
+## Sandbox and operations
 
-## Artifact 与 Delivery
+- `33_SANDBOX_PROVIDER_CONTRACT.md`: stable SandboxProvider port.
+- `34_SANDBOX_SECURITY_AND_ISOLATION.md`: isolation profiles and threat boundary.
+- `36_SANDBOX_CONFORMANCE_AND_MIGRATION.md`: provider replacement evidence.
+- `11_DEPLOYMENT_AND_STACK.md`: deployment topology and release rules.
+- `24_PRODUCTION_GOVERNANCE.md`: SLO, capacity, retention and recovery.
 
-- `07_ARTIFACT_WORKSPACE.md`
-- `31_DELIVERY_AND_INGEST.md`
-- `10_FRONTEND_INTEGRATION.md`
-- `48_RUNTIME_RECORDING_AND_PLAYBACK.md`
-- `49_EXPERIENCE_CATALOG_AND_UI_EXTENSIONS.md`
-- `50_BUSINESS_ENTITLEMENT_INTEGRATION.md`
+## Governance and delivery plan
 
-## 数据、Kubernetes 与运维
-
-- `26_DATA_MODEL_INVARIANTS.md`
-- `14_KUBERNETES_DISTRIBUTED_RUNTIME.md`
-- `15_OPERATIONS_SLO.md`
-- `16_MULTI_NODE_ACCEPTANCE.md`
-- `24_PRODUCTION_GOVERNANCE.md`
-
-## 治理与验收
-
-- `22_CONTRACT_GOVERNANCE.md`
-- `23_STATE_MACHINE_SPEC.md`
-- `13_ARCHITECTURE_ACCEPTANCE.md`
-- `45_V090_PRODUCT_BOUNDARY_RESOLUTION.md`
-- `adr/`
-
-
-## Sandbox
-
-- `33_SANDBOX_PROVIDER_CONTRACT.md`
-- `34_SANDBOX_SECURITY_AND_ISOLATION.md`
-- `35_SANDBOX_LIFECYCLE_AND_SNAPSHOT.md`
-- `36_SANDBOX_CONFORMANCE_AND_MIGRATION.md`
+- `22_CONTRACT_GOVERNANCE.md`: integrity, compatibility and reproducibility.
+- `37_JCS_AND_IJSON_PROFILE.md`: cross-language digest profile.
+- `13_ARCHITECTURE_ACCEPTANCE.md`: acceptance checklist.
+- `12_PHASE1_SCOPE.md`: work allowed after Phase 0 evidence.

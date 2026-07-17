@@ -35,3 +35,6 @@
 ## Production acceptance（不属于 Contract Gate）
 
 - [ ] Phase 0A 真实链路、Temporal Replay、故障注入、安全隔离、容量/SLO、备份恢复演练和 Provider Conformance 均有运行证据。
+- [ ] API/Worker 多副本不依赖 Sticky Session 或 Pod 本地权威状态；跨 Pod SSE 可从 work_sequence 恢复。
+- [ ] Redis 通知丢失、Provider/Controller 重启、Sandbox node failure 和 Runtime reroute 均能恢复或进入可对账状态。
+- [ ] 所有生产 Workload 具备 probe、resource limit、PDB、topology、最小 RBAC、NetworkPolicy 和 graceful drain 证据。

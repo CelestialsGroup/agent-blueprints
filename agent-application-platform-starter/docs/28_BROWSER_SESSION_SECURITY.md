@@ -86,6 +86,6 @@ Cookie 认证的写操作要求：
 
 WorkSession 保存 session_version 和 revoked_at。
 
-权限变更、用户退出、WorkOrder 终止或安全事件可以立即撤销。
+权限变更、用户退出、商业授权失效或安全事件可以立即撤销 Conversation WorkSession；仅当 Session 被缩窄到该 WorkOrder 时，WorkOrder 终止才要求撤销。
 
 长连接必须在 Token 到期或 Session 撤销时关闭。

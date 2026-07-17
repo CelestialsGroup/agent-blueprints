@@ -105,4 +105,4 @@
 - RuntimeRecordingChunk
 - RuntimeRecordingManifest
 
-Business-owned Membership, EntitlementRevision, QuotaReservation and commercial Settlement remain outside this domain. The Platform stores only a signed CommercialAuthorizationSnapshot reference/digest with a WorkOrder.
+Business-owned Membership, EntitlementRevision, QuotaReservation and commercial Settlement remain outside this domain. The Platform stores the Business-signed CommercialAuthorizationSnapshot values and digest needed for local admission, but cannot mutate entitlement or commercial balance truth.

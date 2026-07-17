@@ -1,6 +1,6 @@
 # Codex Phase 0 Bootstrap — v0.9.0
 
-Read `START_HERE.md`, `AGENTS.md`, `docs/45_V090_PRODUCT_BOUNDARY_RESOLUTION.md` and `tasks/PHASE0.md`. v0.8.6 and earlier are historical evidence only.
+Read `START_HERE.md`, `AGENTS.md`, `docs/00_ARCHITECTURE_BASELINE.md`, `docs/DECISIONS.md` and `tasks/PHASE0.md`.
 
 ## Admission first
 

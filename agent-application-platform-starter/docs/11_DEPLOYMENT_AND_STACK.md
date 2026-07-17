@@ -52,6 +52,10 @@ sandbox Pod / Job
 migration Job
 ```
 
+Agent API 和普通 Worker 不保存权威 WorkOrder、Event sequence、Session、Provider health 或 Sandbox route；这些状态位于 PostgreSQL、Temporal 和 Object Storage。Redis 只用于 cache、rate limit、presence 和持久化后事件唤醒，丢失 Redis 不影响正确性。
+
+Runtime Gateway 通过 opaque provider route 代理 Terminal/Browser/Desktop，禁止向前端返回 Pod/VM/raw endpoint，也不依赖 Sticky Session。只有独立 Sandbox Provisioner/Controller 拥有最小范围 Kubernetes API 权限。
+
 ## 数据服务
 
 Business 与 Agent 使用独立 PostgreSQL。
@@ -116,6 +120,8 @@ Workflow：
 - Canary/Drain
 
 应用 Pod 禁止自动执行 Migration。
+
+生产 Workload 必须定义 startup/readiness/liveness probe、resource request/limit、PDB、topology spread、anti-affinity、RollingUpdate、graceful termination、ServiceAccount、RBAC、NetworkPolicy 和 HPA/KEDA。Temporal Worker Deployment/Build ID 独立于 Kubernetes rollout；Worker 升级必须通过 Replay Test。
 
 ## 7. sandbox-runtime 部署
 

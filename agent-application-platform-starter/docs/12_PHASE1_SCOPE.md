@@ -17,11 +17,10 @@ Implement one real Conversation Turn through Business authorization, WorkOrder/T
 
 ## Phase 1B: reference Business application
 
-- own User/Login and Personal Organization;
-- Free/Pro Plan, Membership and EntitlementRevision;
-- idempotent quota reservation/settlement/release/reconciliation;
-- ExecutionGrant and Conversation WorkSession issuance;
-- Business UI plus Agent Workbench integration.
+- productize the Phase 0 reference identity/membership flow with account administration and recovery;
+- add organization membership, plan upgrade/downgrade, invoice/refund and billing operations;
+- expose reservation/settlement/release/reconciliation operations and support tooling;
+- complete Business UI navigation, observability and Agent Workbench handoff UX.
 
 ## Deferred
 

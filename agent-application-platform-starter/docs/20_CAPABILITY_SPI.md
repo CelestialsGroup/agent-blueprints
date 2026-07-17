@@ -1,5 +1,18 @@
 # Capability SPI
 
+## Relationship
+
+```text
+Scenario
+ -> CapabilityDefinition
+ -> ProviderResolution
+ -> immutable ProviderRevision
+ -> ProviderAdmissionDecision
+ -> Plugin / Runtime / Sandbox Provider
+```
+
+Scenario 只声明版本范围、Profile、Artifact 和风险要求，不绑定实现。
+
 ## 1. CapabilityDefinition
 
 Capability 是版本化语义契约，必须定义：
@@ -92,3 +105,7 @@ ProviderResolution 必须固化：
 - Conformance Report Digest
 
 User-visible Experiences add an immutable Catalog revision on top of Provider resolution. A mutable `template_id` alone is never sufficient for WorkOrder admission or Run replay.
+
+Resolver 优先级是 Tenant Binding、ClientApplication Binding、Scenario Requirement、Platform Default、显式安全 Fallback。Fallback 只有在 Capability 与 side-effect policy 允许时才能发生；非幂等外部操作禁止自动切换 Provider。
+
+Sandbox 使用独立 Provider Contract 表达 Desired/Observed State、Lease、Exec、RuntimeSession 和 Snapshot，不能用普通 Plugin Invocation 代替；它仍使用同一 ProviderRevision/Admission/Conformance 治理模型。

@@ -6,7 +6,7 @@ Validation date: 2026-07-17
 
 | Check | Local result |
 |---|---|
-| Source-only static audit | pass: 271 JSON, 22 YAML, 5 OpenAPI, 109 Markdown files |
+| Source-only static audit | pass: 271 JSON, 22 YAML, 5 OpenAPI, 46 Markdown files |
 | JSON Schema and fixtures | pass: 143 schemas, 79 valid fixtures, 16 schema-invalid fixtures |
 | Semantic invariants | pass: 6 deterministic/schema-aligned state machines and 60 negative fixtures |
 | Product boundary closure | pass: Conversation/Branch/Turn, Agent Runtime, Recording, Experience admission and explicit CommercialAuthorization binding |

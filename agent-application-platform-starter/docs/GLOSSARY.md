@@ -1,47 +1,51 @@
-# 术语
+# Glossary
 
-- Business Application：拥有用户、会员、商品和交易的业务产品。
-- ClientApplication：被 Agent Platform 认证的业务后端客户端。
-- ServicePrincipal：OAuth2 Client Credentials 调用身份。
-- ExecutionGrant：业务系统签发的短期、单次、请求绑定授权。
-- GrantConsumption：ExecutionGrant 的原子消费记录。
-- WorkSession：绑定单个 WorkOrder 的短期浏览器或 SDK 会话。
-- WorkSession Exchange：一次性 Token 换取 HttpOnly Cookie 的流程。
-- InternalTenant：Agent Platform 内部租户标识。
-- WorkOrder：业务系统提交的异步工作请求和总状态。
-- Workspace：一个 WorkOrder 内的文件、Sandbox 和 Artifact 工作空间。
-- WorkflowRun：Temporal Durable Workflow 实例。
-- AgentRun：一次 Agent Runtime 调用。
-- ExecutionBudget：从 Grant、平台安全上限、场景和 Provider 限制计算出的有效运行预算。
-- Invocation：一次逻辑外部能力调用。
-- InvocationAttempt：Invocation 的一次真实提交，带 Fencing Token。
-- Reconciliation：确认 outcome_unknown 外部操作结果的流程。
-- Scenario：面向业务的工作场景。
-- CapabilityDefinition：能力的完整、版本化、可验证语义契约。
-- SchemaReference：Schema 的绝对 URI、SHA-256 Digest 和 Dialect。
-- PluginManifest：Plugin 自声明的分发、运行、权限和实现信息，不包含 Trust。
-- PluginRegistryRecord：平台验证的 Trust、Signature、SBOM、Scan 和批准权限记录。
-- ProviderInstance：逻辑 Provider 配置容器。
-- ProviderRevision：一次不可变的 Plugin、配置、权限和 Conformance 快照。
-- ProviderResolution：为 Run 选择并锁定 ProviderRevision 的结果。
-- CanonicalEvent：WorkOrder 范围严格有序的执行事实。
-- EventTypeDefinition：事件 data 的 Schema、分类和保留规则。
-- Artifact：逻辑产物。
-- ArtifactVersion：不可变产物内容版本。
-- ArtifactStaging：Plugin 输出进入正式 Artifact 前的临时区。
-- ArtifactIngestSession：外部输入文件上传和验证会话。
-- DeliveryTarget：预注册的 Artifact 交付位置。
-- CallbackRegistration：预注册的业务回调配置。
-- Model Gateway：强制模型路由、预算、凭据和 Usage 的中介层。
-- Tool Gateway：强制 Tool/MCP Policy、Approval 和 Invocation 的中介层。
-- Egress Gateway：控制 Sandbox/Plugin 出站网络的中介层。
-- Governed Runtime：通过模型、工具、网络、预算治理 Conformance 的 Agent Runtime。
+## Ownership and access
 
+- **Business Application**: User、Organization、Membership、Product、Order、Payment、Entitlement 和商业额度的事实源。
+- **Agent Platform**: Conversation、执行账本、Artifact、Provider、Sandbox、Technical Usage 和 Delivery 的事实源。
+- **ClientApplication / ServicePrincipal**: 使用 OAuth2 Client Credentials 调用平台的业务后端。
+- **CommercialAuthorizationSnapshot**: Business 签发的 entitlement、capability、limit 和 quota reservation 快照。
+- **ExecutionGrant**: 绑定 Conversation Turn、请求摘要和商业授权的短期单次 JWS。
+- **WorkSession**: 绑定一个 Conversation、可选缩窄到一个 WorkOrder 的短期浏览器/SDK 会话。
 
-- SandboxRegistry：Agent Platform 保存 Sandbox 身份、租户归属、Desired State 和 Lease 的稳定内核对象。
-- SandboxProvider：实现 Sandbox 创建、Exec、RuntimeSession、Snapshot 和终止的可替换基础设施 Provider。
-- SandboxSpec：平台解析 Budget、Policy、Capability 后生成的后端无关期望规范。
-- SandboxStatus：Provider 返回的 Observed State、Generation 和 Runtime location。
-- SandboxOperation：创建、Exec、Snapshot、Terminate 等异步逻辑操作。
-- SandboxSnapshot：Workspace、Filesystem 或 Process 状态的不可变快照 Manifest。
-- RuntimeProfile：container、hardened-container、microvm、VM 等隔离执行配置。
+## Conversation and execution
+
+- **Conversation**: 多轮 Agent 会话，拥有一个 durable Workspace。
+- **ConversationBranch**: 分支 head、fork point、CAS version 和 branch-local active WorkOrder 投影。
+- **ConversationMessage**: Conversation 内按 message_sequence 追加的不可变消息。
+- **Turn**: 一次可执行输入；原子创建 Message、GrantConsumption 和 WorkOrder。
+- **WorkOrder**: 一个 Turn 的异步执行与总状态，不承担无限期 Conversation。
+- **Workspace**: Conversation 范围的 Artifact、文件和 Sandbox 工作空间。
+- **WorkflowRun**: Temporal durable workflow 实例。
+- **AgentRuntimeProvider**: start/command/status/event/checkpoint 的稳定 Agent Runtime Port；DeerFlow 是首个 Adapter。
+- **RunManifest**: 固化 Scenario、Capability、Provider/Admission、Experience、Sandbox、Runtime 和商业授权摘要的执行快照。
+
+## Reliability
+
+- **Invocation**: 一次逻辑外部能力调用。
+- **InvocationAttempt**: 一次真实提交，拥有唯一 attempt ID 和递增 fencing token。
+- **Reconciliation**: 根据 Provider/业务证据确认 outcome_unknown 的流程。
+- **CanonicalEvent**: 不可变执行事实；Work 事件按 work_sequence 排序，Conversation-only 事件按 aggregate sequence 排序。
+- **Outbox/Inbox**: 事务提交后可靠发布和消费去重机制。
+
+## Capability and extension
+
+- **Scenario**: 面向业务的输入、Workflow、Capability、Experience、UI 和输出定义。
+- **CapabilityDefinition**: 请求/结果/错误、副作用、取消、Artifact 和 Conformance 的版本化语义契约。
+- **ProviderInstance**: 可变的逻辑 Provider 配置容器。
+- **ProviderRevision**: Plugin、配置、权限、运行绑定和 Conformance 的不可变快照。
+- **ProviderAdmissionDecision**: 对 ProviderRevision 的 append-only certified/revoked 决策。
+- **ProviderResolution**: 为精确 Capability/Profile 选择并锁定 Revision 的结果。
+- **ExperienceCatalogEntry**: 用户可发现的模板、Skill、Design System 或 Editor 条目。
+- **TemplateRevision / SelectedExperience**: 不可变 Experience 内容及 Run 中的精确选择。
+
+## Artifact and runtime
+
+- **Artifact / ArtifactVersion**: 逻辑产物及不可变内容版本。
+- **ArtifactStaging**: Provider 输出在正式提交前的隔离验证区。
+- **SandboxProvider**: create/exec/session/snapshot/terminate 的可替换基础设施 Port。
+- **SandboxOperation**: Sandbox 生命周期或 Exec 的持久化逻辑操作；与单次 transport Attempt 分离。
+- **RuntimeSession**: 前端经 Runtime Gateway 访问 Terminal/Browser/Desktop 的短期实时授权。
+- **RuntimeRecording**: 与 live Session 分离的 immutable chunk/manifest 历史回放资源。
+- **Model/Tool/Artifact/Egress Gateway**: 强制预算、审批、凭据、Artifact 和网络策略的执行中介。
