@@ -38,3 +38,23 @@ RuntimeRecording
 - `recording:read` 与 `runtime:view` 权限相互独立。
 - 删除和法律保留遵循 Artifact Policy；Audit 保留决策，不保留已删除内容。
 - 部分失败或 Finalize 失败必须可见，不得表现为完整录制。
+
+## 调试副本与重新运行
+
+RuntimeRecording 回放始终只读。Agent Engineering Workbench 可以把 Recording、CanonicalEvent、RunManifest、ArtifactVersion 和 TechnicalUsage 组合为调试投影，但该投影不能修改原始证据。
+
+```text
+不可变 Run Evidence
+ -> 只读回放
+ -> 显式创建调试副本
+ -> 新 ConversationBranch + WorkOrder + ExecutionGrant
+ -> 新 Run
+```
+
+- 调试副本记录来源 Run、Recording Manifest、Event Cursor 范围、Artifact 摘要和 ProviderRevision。
+- 修改 Prompt、消息、Tool、Model 或变量只作用于调试副本；原始证据不变。
+- 重新运行必须重新执行 Business 授权、ProviderResolution、预算和 Gateway 策略，不得沿用旧 Run 的 ExecutionGrant。
+- 新 Run 产生独立的 Event、Usage、Artifact 和 Recording；结果不得追加到旧 Recording。
+- 导入的第三方 Trace 只能作为带来源标记的外部证据或调试输入，不能提升为平台执行成功的证明。
+
+本节不定义新的 v0.9 持久化对象；实现可以先使用只读投影和短期调试状态。若后续需要长期保存调试副本或评测结果，必须先新增正式契约、授权、保留和删除语义。
