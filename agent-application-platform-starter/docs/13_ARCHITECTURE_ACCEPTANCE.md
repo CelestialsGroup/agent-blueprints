@@ -36,7 +36,7 @@
 
 ## 生产验收（不属于契约 Gate）
 
-- [ ] Phase 0A 真实链路、Temporal Replay、故障注入、安全隔离、容量/SLO、备份恢复演练和 Provider 一致性均有运行证据。
+- [ ] Phase 0 真实纵向链路、Temporal Replay、故障注入、安全隔离、容量/SLO、备份恢复演练和 Provider 一致性均有运行证据。
 - [ ] API/Worker 多副本不依赖粘性 Session 或 Pod 本地权威状态；跨 Pod SSE 可从 `work_sequence` 恢复。
 - [ ] Redis 通知丢失、Provider/Controller 重启、Sandbox Node 故障和 Runtime 重路由均能恢复或进入可对账状态。
 - [ ] 所有生产工作负载具备 Probe、资源限制、PDB、Topology、最小 RBAC、NetworkPolicy 和优雅 Draining 证据。

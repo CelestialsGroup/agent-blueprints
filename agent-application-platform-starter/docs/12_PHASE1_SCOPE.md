@@ -1,33 +1,34 @@
-# 交付路线图 — v0.9.0
+# v0.9.0 交付路线图
 
-`tasks/PHASE0.md` 是唯一的 Phase 0 验收计划。本文描述其后的工作，不得把 Phase 0 重新定义为目录或 Schema 骨架。
+`tasks/PHASE0.md` 是唯一 Phase 0 验收计划。Phase 1 只在真实纵向链路、第二 Runtime Adapter、故障测试和最小恢复证据完成后开始。
 
-## Phase 0：契约准入的纵向链路
+## Phase 0：纵向链路
 
-实现一条真实 Conversation Turn 链路，依次经过 Business 授权、WorkOrder/Temporal、已认证 AgentRuntimeProvider、已认证 SandboxProvider、Invocation/Event、Artifact、RuntimeRecording 和 Delivery。DeerFlow 可作为主参考 Adapter，但进入 Phase 1 前还必须完成第二个最小 Runtime Adapter、故障和回放证据，以证明平台不依赖单一框架。
+实现一条经过 Business 授权、WorkOrder/Temporal、AgentRuntimeProvider、SandboxProvider、Invocation/Event、Artifact、RuntimeRecording、TechnicalUsage 和 Delivery 的真实 Conversation Turn 链路。目录、生成代码、Schema 或单次 Happy Path 不代表 Phase 0 完成。
 
 ## Phase 1A：产品能力补全
 
-- Conversation 列表、归档、分支体验和 Context Builder Provider；
-- Experience Catalog 管理和 html-anything 模板导入器；
-- Open Design/motion-anything Renderer/Editor 集成 Profile；
-- html-to-pptx 和 html-video Converter Profile；
-- Terminal/Browser/Desktop 的完整 RuntimeRecording 回放；
-- Provider 管理、Draining 和升级 Canary 界面。
-- Agent Runtime 选型矩阵、Provider 对比观测和 Native Runtime 可行性评估。
+- 完善 Conversation 列表、归档、分支和 Context Builder
+- 产品化 Experience Catalog 管理和 html-anything 导入器
+- 接入 Open Design、motion-anything Renderer/Editor Profile
+- 补全 html-to-pptx 和 html-video Converter Profile
+- 完成 Terminal、Browser、Desktop Recording 和多通道回放
+- 增加 Provider 管理、Draining、Canary 和跨 Provider 观测
+- 评估 Native Runtime，但不将其预设为平台依赖
 
-## Phase 1B：参考 Business Application
+## Phase 1B：Business 产品化
 
-- 将 Phase 0 的参考身份/会员流程产品化，补充账户管理与恢复；
-- 增加组织成员关系、套餐升降级、发票/退款和计费操作；
-- 暴露 Reservation/Settlement/Release/Reconciliation 操作及支持工具；
-- 补全 Business UI 导航、可观测性和 Agent Workbench 交接体验。
+- 完善账户、Organization、Membership 和恢复流程
+- 增加套餐变更、发票、退款和计费运营
+- 产品化 Reservation、Settlement、Release 和 Reconciliation
+- 完善 Business UI、可观测性和 Workbench 交接体验
 
-## 延后事项
+## 后续阶段
 
-- 用户上传的任意 Plugin；
-- 任意远程 JavaScript 或未隔离的 UI Extension；
-- 完整 Office 编辑套件；
-- 完整 Marketplace 与收入分成；
-- 智能成本路由；
-- 多区域双活灾难恢复。
+- Agent Engineering Workbench 的持久 Evaluation/Rubric 领域
+- 自研 sandbox-runtime、影子验证、Canary 和 Provider 迁移
+- 用户可安装 Plugin、Marketplace 和收入分成
+- 智能成本路由和更大规模多租户容量治理
+- 多区域双活和区域级灾难恢复
+
+任意远程 JavaScript、未隔离 UI Extension 和未经验证的跨 Provider Checkpoint 恢复始终不属于默认开放能力。

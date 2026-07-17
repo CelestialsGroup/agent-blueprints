@@ -1,6 +1,6 @@
 # Plugin Invocation 协议
 
-## 1. 统一语义
+## 统一语义
 
 运行模式：
 
@@ -12,7 +12,7 @@
 
 传输绑定详见 `30_PLUGIN_MODE_BINDINGS.md`。
 
-## 2. 调用尝试
+## 调用尝试
 
 每个消息必须携带：
 
@@ -22,7 +22,7 @@
 
 旧 Attempt 结果必须被平台拒绝。
 
-## 3. Token 授权
+## Token 授权
 
 Plugin Invocation Token 内容：
 
@@ -36,7 +36,7 @@ Plugin Invocation Token 内容：
 
 服务模式同时使用 mTLS Workload Identity。
 
-## 4. 请求
+## 请求
 
 - protocol version
 - idempotency key
@@ -47,7 +47,7 @@ Plugin Invocation Token 内容：
 - Artifact 暂存 Grant
 - Trace Context
 
-## 5. 结果
+## 结果
 
 - structured output
 - StagedArtifact
@@ -55,7 +55,7 @@ Plugin Invocation Token 内容：
 - Provider Operation ID
 - Attempt/Fencing
 
-## 6. Artifact 暂存区
+## Artifact 暂存区
 
 Plugin 不创建正式 ArtifactVersion。
 
@@ -70,7 +70,7 @@ Plugin 不创建正式 ArtifactVersion。
 - Tenant
 - Capability Artifact 契约
 
-## 7. 信任治理
+## 信任治理
 
 Manifest 不声明 Trust。
 
@@ -86,7 +86,7 @@ Platform Registry 管理：
 - Approved Permissions
 - Trust Level
 
-## 8. 配置与凭据
+## 配置与凭据
 
 Manifest 必须声明：
 

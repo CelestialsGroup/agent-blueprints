@@ -129,7 +129,7 @@ Workflow 发布：
 
 生产工作负载必须定义 Startup/Readiness/Liveness Probe、资源 Request/Limit、PDB、Topology Spread、Anti-affinity、RollingUpdate、优雅终止、ServiceAccount、RBAC、NetworkPolicy 和 HPA/KEDA。Temporal Worker Deployment/Build ID 独立于 Kubernetes 发布；Worker 升级必须通过回放测试。
 
-## 7. sandbox-runtime 部署
+## sandbox-runtime 部署
 
 后期新增：
 

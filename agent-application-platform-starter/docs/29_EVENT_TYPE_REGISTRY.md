@@ -1,6 +1,6 @@
 # Event Type 注册表
 
-## 1. 目标
+## 目标
 
 仅统一 CanonicalEvent Envelope 不足以保证消费者可安全解析 `data`。
 
@@ -13,7 +13,7 @@
 - 保留类别
 - Projection Consumer
 
-## 2. 命名
+## 命名
 
 核心事件：
 
@@ -35,7 +35,7 @@ runtime_recording.*
 
 Plugin 私有 Event 必须带发布者 Namespace，且不能直接驱动核心 Projection。
 
-## 3. 时间
+## 时间
 
 事件同时保存：
 
@@ -44,7 +44,7 @@ Plugin 私有 Event 必须带发布者 Namespace，且不能直接驱动核心 P
 
 WorkOrder Timeline 使用 `work_sequence` 排序，不使用 `occurred_at` 排序。
 
-## 4. 高频事件
+## 高频事件
 
 禁止将每个模型 Token 作为独立持久化 Event。
 
@@ -56,7 +56,7 @@ Delta 必须按以下任一策略合并：
 
 最终的 Message Completed Event 必须持久化完整可重建结果或 Artifact Reference。
 
-## 5. 留存
+## 留存
 
 当 SSE Cursor 早于最早保留序列时返回 410，并提供：
 
@@ -64,7 +64,7 @@ Delta 必须按以下任一策略合并：
 - latest_available
 - Snapshot/Timeline API 指引
 
-## 6. 内容安全
+## 内容安全
 
 Event 默认不保存：
 

@@ -1,6 +1,6 @@
 # ExecutionGrant 安全规范
 
-## 1. 格式
+## 格式
 
 使用 JWS 紧凑序列化。
 
@@ -28,7 +28,7 @@
 
 JWKS 或公钥只能来自管理员预注册的 ClientApplication 配置。
 
-## 2. Claim
+## Claim
 
 必须包含：
 
@@ -64,7 +64,7 @@ max_ttl = 300 seconds
 clock_skew = 30 seconds
 ```
 
-## 3. 请求摘要
+## 请求摘要
 
 使用 RFC 8785 JCS。
 
@@ -98,7 +98,7 @@ execution_grant
 - Python、Node 和 Go 必须产生完全相同的 canonical bytes
 - 详细规则见 `37_JCS_AND_IJSON_PROFILE.md`
 
-## 4. 原子消费
+## 原子消费
 
 同一 PostgreSQL 事务：
 
@@ -113,7 +113,7 @@ execution_grant
 9. 写 Workflow Start Outbox 与 Canonical Event。
 10. 提交事务。
 
-## 5. 重复请求
+## 重复请求
 
 - 同一 Client + Idempotency Key + Request Digest：返回原 WorkOrder。
 - 同 Key 不同 Digest：409。

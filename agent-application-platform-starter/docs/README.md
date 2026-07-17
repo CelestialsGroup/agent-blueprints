@@ -1,55 +1,35 @@
 # 文档目录
 
-只保留当前 v0.9.0 实施需要的事实源；历史审查与逐版本修复报告已经删除。
+本目录只描述当前 v0.9.0 候选架构。历史审查过程、临时修复记录和重复的字段说明不属于实施事实源。
 
-## 入口与决策
+## 事实源层级
 
-- `00_ARCHITECTURE_BASELINE.md`：基线摘要与成熟度边界。
-- `DECISIONS.md`：当前已接受的架构决策。
-- `01_SYSTEM_BOUNDARIES.md`：所有权与依赖方向。
-- `02_CORE_DOMAIN.md`：聚合与模块模型。
-- `GLOSSARY.md`：规范术语。
+1. `contracts/` 下的 Schema、OpenAPI、状态机、一致性套件和测试夹具。
+2. 数据库 Migration、Constraint 和运行时验证证据；实现后必须满足上层契约。
+3. `DECISIONS.md` 中的架构边界与决策。
+4. 本目录中的领域规范。
+5. 路线图、参考项目和验证报告。
 
-## 产品与访问
+叙述文档不复制完整字段或状态迁移；需要精确实现时直接引用对应可执行契约。
 
-- `03_WORK_CONTRACTS.md`：Business/Platform 请求、Usage 和 Delivery 契约。
-- `46_CONVERSATION_AND_TURNS.md`：多轮 Conversation 与分支模型。
-- `50_BUSINESS_ENTITLEMENT_INTEGRATION.md`：会员、Entitlement 和额度交接。
-- `17_IDENTITY_AND_AUTHORIZATION.md`：Principal、Scope 和对象授权。
-- `18_EXECUTION_GRANT_SECURITY.md`：按 Turn 签名授权。
-- `28_BROWSER_SESSION_SECURITY.md`：浏览器 Cookie/SSE/WebSocket 安全。
-- `10_FRONTEND_INTEGRATION.md`：Workbench 集成。
+## 入口与领域规范
 
-## 执行与扩展
+| 主题 | 主文档 | 补充文档 |
+|---|---|---|
+| 架构入口 | `00_ARCHITECTURE_BASELINE.md`、`DECISIONS.md` | `01_SYSTEM_BOUNDARIES.md`、`02_CORE_DOMAIN.md`、`GLOSSARY.md` |
+| Conversation 与 Business | `46_CONVERSATION_AND_TURNS.md`、`50_BUSINESS_ENTITLEMENT_INTEGRATION.md` | `03_WORK_CONTRACTS.md`、`17_IDENTITY_AND_AUTHORIZATION.md`、`18_EXECUTION_GRANT_SECURITY.md`、`28_BROWSER_SESSION_SECURITY.md` |
+| Runtime 与扩展 | `09_DEERFLOW_INTEGRATION.md`、`20_CAPABILITY_SPI.md` | `21_PLUGIN_INVOCATION_PROTOCOL.md`、`27_EXECUTION_MEDIATION.md`、`30_PLUGIN_MODE_BINDINGS.md`、`49_EXPERIENCE_CATALOG_AND_UI_EXTENSIONS.md` |
+| Workflow 与可靠性 | `05_WORKFLOW_RELIABILITY.md`、`19_INVOCATION_CONSISTENCY.md` | `23_STATE_MACHINE_SPEC.md`、`26_DATA_MODEL_INVARIANTS.md` |
+| Event 与 Workbench | `06_EVENT_MODEL.md`、`10_FRONTEND_INTEGRATION.md` | `29_EVENT_TYPE_REGISTRY.md`、`48_RUNTIME_RECORDING_AND_PLAYBACK.md` |
+| Artifact 与 Delivery | `07_ARTIFACT_WORKSPACE.md`、`31_DELIVERY_AND_INGEST.md` | - |
+| Sandbox | `33_SANDBOX_PROVIDER_CONTRACT.md`、`34_SANDBOX_SECURITY_AND_ISOLATION.md` | `36_SANDBOX_CONFORMANCE_AND_MIGRATION.md` |
+| 部署与生产 | `11_DEPLOYMENT_AND_STACK.md`、`24_PRODUCTION_GOVERNANCE.md` | `13_ARCHITECTURE_ACCEPTANCE.md` |
+| 契约治理 | `22_CONTRACT_GOVERNANCE.md`、`37_JCS_AND_IJSON_PROFILE.md` | - |
+| 路线图 | `../tasks/PHASE0.md`、`12_PHASE1_SCOPE.md` | `../prompts/CODEX_PHASE0_BOOTSTRAP.md` |
 
-- `05_WORKFLOW_RELIABILITY.md`：Temporal、Outbox 和回放规则。
-- `19_INVOCATION_CONSISTENCY.md`：副作用账本与对账。
-- `27_EXECUTION_MEDIATION.md`：Model/Tool/Artifact/Egress 强制治理。
-- `09_DEERFLOW_INTEGRATION.md`：框架无关 AgentRuntimeProvider、选型、升级与 DeerFlow 参考 Adapter。
-- `20_CAPABILITY_SPI.md`：Capability、Resolution、Revision 和 Conformance。
-- `21_PLUGIN_INVOCATION_PROTOCOL.md`：受治理的 Invocation 协议。
-- `30_PLUGIN_MODE_BINDINGS.md`：service/job/sandbox_cli/MCP 绑定。
-- `49_EXPERIENCE_CATALOG_AND_UI_EXTENSIONS.md`：Template 与隔离的富 UI。
+## 使用原则
 
-## 状态、数据与 Artifact
-
-- `23_STATE_MACHINE_SPEC.md`：权威生命周期映射。
-- `26_DATA_MODEL_INVARIANTS.md`：必需的数据库约束。
-- `06_EVENT_MODEL.md` 和 `29_EVENT_TYPE_REGISTRY.md`：Event 排序与 Payload 治理。
-- `07_ARTIFACT_WORKSPACE.md` 和 `31_DELIVERY_AND_INGEST.md`：Artifact 生命周期与注册制外部 I/O。
-- `48_RUNTIME_RECORDING_AND_PLAYBACK.md`：历史 Runtime 回放。
-
-## Sandbox 与运行治理
-
-- `33_SANDBOX_PROVIDER_CONTRACT.md`：稳定 SandboxProvider Port。
-- `34_SANDBOX_SECURITY_AND_ISOLATION.md`：隔离 Profile 与威胁边界。
-- `36_SANDBOX_CONFORMANCE_AND_MIGRATION.md`：Provider 替换证据。
-- `11_DEPLOYMENT_AND_STACK.md`：部署拓扑与发布规则。
-- `24_PRODUCTION_GOVERNANCE.md`：SLO、容量、保留与恢复。
-
-## 治理与交付计划
-
-- `22_CONTRACT_GOVERNANCE.md`：完整性、兼容性与可复现性。
-- `37_JCS_AND_IJSON_PROFILE.md`：跨语言摘要 Profile。
-- `13_ARCHITECTURE_ACCEPTANCE.md`：验收清单。
-- `12_PHASE1_SCOPE.md`：取得 Phase 0 证据后允许开展的工作。
+- 查边界先读架构入口，查字段和迁移直接读 `contracts/`。
+- `09_DEERFLOW_INTEGRATION.md` 中的参考项目只用于选型，不构成平台依赖或准入结论。
+- `13_ARCHITECTURE_ACCEPTANCE.md` 同时包含契约、实现和生产证据，验收时不得混用。
+- `CONTRACT_VALIDATION_REPORT.md` 和 `VALIDATION.json` 是某次验证结果，不是可替代契约的事实源。

@@ -1,6 +1,6 @@
 # Sandbox 安全与隔离规范
 
-## 1. 默认拒绝
+## 默认拒绝
 
 默认 Sandbox：
 
@@ -19,7 +19,7 @@ seccomp = RuntimeDefault
 
 根文件系统默认只读；需要写入时仅允许可写 Overlay。
 
-## 2. 隔离等级
+## 隔离等级
 
 Runtime Profile 至少区分：
 
@@ -33,7 +33,7 @@ Runtime Profile 至少区分：
 
 高风险、非可信代码优先使用 hardened-container 或 microVM。
 
-## 3. 网络
+## 网络
 
 默认：
 
@@ -63,7 +63,7 @@ network.mode = restricted
 
 `network.mode=full` 只允许平台策略明确批准的受信场景。
 
-## 4. Secret
+## Secret
 
 Sandbox 不获得平台长期密钥。
 
@@ -77,7 +77,7 @@ Secret Grant 必须：
 
 优先通过内存文件、代理或 Workload Identity 提供。
 
-## 5. Workspace
+## Workspace
 
 - `/inputs` 只读。
 - `/workspace` 只能访问当前 Workspace。
@@ -86,7 +86,7 @@ Secret Grant 必须：
 - 禁止跨 Tenant Volume。
 - Snapshot 不得包含 Secret、ServiceAccount Token 或平台代理凭据。
 
-## 6. Artifact 安全
+## Artifact 安全
 
 输出进入 Artifact Staging 后由平台执行：
 
@@ -100,7 +100,7 @@ Secret Grant 必须：
 
 验证前不得交付、预览或作为下游正式输入。
 
-## 7. Kubernetes
+## Kubernetes
 
 只有独立 Sandbox Provisioner 拥有最小 Kubernetes RBAC。
 
@@ -116,7 +116,7 @@ Namespace 不是唯一租户隔离边界，必须组合：
 - Workload identity
 - Audit
 
-## 8. 审计
+## 审计
 
 记录：
 

@@ -13,7 +13,7 @@ Scenario
 
 Scenario 只声明版本范围、Profile、Artifact 和风险要求，不绑定实现。
 
-## 1. CapabilityDefinition
+## CapabilityDefinition
 
 Capability 是版本化语义契约，必须定义：
 
@@ -37,7 +37,7 @@ SchemaReference 包含：
 - SHA-256 摘要
 - JSON Schema 方言
 
-## 2. 命名治理
+## 命名治理
 
 平台核心能力保留稳定短名称：
 
@@ -54,7 +54,7 @@ runtime.recording.playback
 
 Capability Registry 维护 Owner，禁止名称抢占。
 
-## 3. Plugin 实现声明
+## Plugin 实现声明
 
 Plugin 只声明：
 
@@ -65,7 +65,7 @@ implements:
   profiles: [responsive]
 ```
 
-## 4. 生命周期
+## 生命周期
 
 - experimental
 - stable
@@ -74,7 +74,7 @@ implements:
 
 Deprecated 必须声明 Sunset、Replacement 和迁移窗口。
 
-## 5. 一致性验证
+## 一致性验证
 
 ProviderInstance 只有通过目标 Capability Version 的标准套件才能 healthy。
 
@@ -90,7 +90,7 @@ ProviderInstance 只有通过目标 Capability Version 的标准套件才能 hea
 - Artifact Validation
 - Budget/Policy Profile（适用时）
 
-## 6. 不可变解析结果
+## 不可变解析结果
 
 Run 不能只保存 ProviderInstance ID。
 
@@ -110,7 +110,7 @@ Resolver 优先级是 Tenant Binding、ClientApplication Binding、Scenario Requ
 
 Sandbox 使用独立 Provider Contract 表达 Desired/Observed State、Lease、Exec、RuntimeSession 和 Snapshot，不能用普通 Plugin Invocation 代替；它仍使用同一 ProviderRevision/Admission/Conformance 治理模型。
 
-## 7. Agent Runtime Provider 解析
+## Agent Runtime Provider 解析
 
 Agent Runtime 使用同一 Revision/Admission/Conformance 治理，但不能按平台级默认框架直接选择。Resolver 必须结合 Scenario 所需 Runtime Feature/Profile、Tenant/Client Binding、数据驻留、模型/工具兼容性、容量和健康状态。
 

@@ -1,6 +1,6 @@
 # 规范事件模型 v2
 
-## 1. 存储模型
+## 存储模型
 
 ```text
 PostgreSQL 当前状态
@@ -10,7 +10,7 @@ PostgreSQL 当前状态
 
 不采用全系统 Event Sourcing。
 
-## 2. WorkOrder 游标
+## WorkOrder 游标
 
 每个 WorkOrder 维护 `next_work_sequence`。
 
@@ -21,7 +21,7 @@ PostgreSQL 当前状态
 - 回放
 - 断点续传
 
-## 3. 聚合游标
+## 聚合游标
 
 事件包含：
 
@@ -37,20 +37,20 @@ ConversationMessage 另有严格递增 `message_sequence`；RuntimeRecordingChun
 
 文档中统一使用 Schema 字段名 `aggregate.sequence`，不再使用不存在的平铺字段。
 
-## 4. 时间
+## 时间
 
 - occurred_at：来源时间
 - recorded_at：平台事务持久化时间
 
 WorkOrder 流排序只使用 `work_sequence`。Conversation 创建、归档/删除等非执行 Event 不伪造 WorkOrder 上下文，按 `aggregate.sequence` 排序。
 
-## 5. Event Type 注册表
+## Event Type 注册表
 
 `data` 必须符合 EventTypeRegistry 中 type + data_version 对应的不可变 Schema。
 
 核心 Projection 不消费未注册 Plugin 私有事件。
 
-## 6. 写入事务
+## 写入事务
 
 1. 按 `(provider_instance_id, source_stream_id, source_cursor)` 去重。
 2. 对 WorkOrder Event 原子分配 `work_sequence`；仅属于 Conversation 的 Event 省略完整 Work 上下文组。
@@ -60,7 +60,7 @@ WorkOrder 流排序只使用 `work_sequence`。Conversation 创建、归档/删�
 6. 写 Outbox。
 7. 提交事务。
 
-## 7. SSE
+## SSE
 
 ```http
 GET /v1/work-orders/{id}/events?after_work_sequence=152
@@ -74,7 +74,7 @@ GET /v1/work-orders/{id}/events?after_work_sequence=152
 - Cursor 过期返回 410
 - Redis 只用于唤醒，不是事实源
 
-## 8. 高频增量事件
+## 高频增量事件
 
 模型 Token 不逐 Token 持久化。
 

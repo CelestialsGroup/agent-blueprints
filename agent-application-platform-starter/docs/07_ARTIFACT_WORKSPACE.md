@@ -1,6 +1,6 @@
 # Artifact Workspace 规范
 
-## 1. Workspace
+## Workspace
 
 v1：一个 AgentConversation 对应一个内部持久 Workspace；Conversation 的多个 WorkOrder/AgentRun 共享该 Workspace 的版本化 Artifact 视图。一次性调用创建隐式 Conversation/Workspace。
 
@@ -14,7 +14,7 @@ v1：一个 AgentConversation 对应一个内部持久 Workspace；Conversation 
 - Delivery
 - Runtime Recording Chunk/回放 Manifest
 
-## 2. 稳定内核
+## 稳定内核
 
 - Artifact Metadata
 - ArtifactVersion
@@ -26,7 +26,7 @@ v1：一个 AgentConversation 对应一个内部持久 Workspace；Conversation 
 - Conflict
 - Lifecycle/Audit
 
-## 3. 生命周期
+## 生命周期
 
 ArtifactVersion 内容不可变，生命周期状态单独变化：
 
@@ -35,7 +35,7 @@ ArtifactVersion 内容不可变，生命周期状态单独变化：
 - deleted
 - retained_for_legal_hold
 
-## 4. 数据导入
+## 数据导入
 
 外部文件先进入 Ingest/Staging：
 
@@ -48,7 +48,7 @@ ArtifactVersion 内容不可变，生命周期状态单独变化：
 
 验证后创建 ArtifactVersion。
 
-## 5. 编辑
+## 编辑
 
 ```text
 Version
@@ -60,7 +60,7 @@ Version
 
 提交使用 CAS 与 Idempotency-Key。
 
-## 6. 转换
+## 转换
 
 ```text
 源 Version
@@ -73,19 +73,19 @@ Version
 
 保留 `converted_from` 关系。
 
-## 7. 代码
+## 代码
 
 代码以 Sandbox Workspace 为编辑源。
 
 Artifact 负责 Snapshot、Diff、Version、导出和交付。
 
-## 8. 预览安全
+## 预览安全
 
 HTML 使用隔离 Origin、Sandboxed iframe、CSP 和受控出站访问。
 
 Office/PDF/Image/Video 先扫描，宏和主动内容默认不执行。
 
-## 9. Sandbox Workspace 契约
+## Sandbox Workspace 契约
 
 ```text
 /inputs      read-only Artifact

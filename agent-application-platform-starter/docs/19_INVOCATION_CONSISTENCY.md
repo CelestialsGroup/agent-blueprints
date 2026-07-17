@@ -1,13 +1,13 @@
 # Invocation 账本与副作用一致性
 
-## 1. 边界
+## 边界
 
 Temporal Activity 可能重复调度，网络调用可能超时，外部 Provider 可能已经成功但响应丢失。
 
 所有 Agent Runtime、Plugin、Model、Tool 和外部系统调用必须经过 Invocation Ledger，
 除非明确属于受控 Runtime 内部的纯计算事件。
 
-## 2. 对象
+## 对象
 
 - Invocation：一次稳定逻辑操作
 - InvocationAttempt：一次真实提交
@@ -16,7 +16,7 @@ Temporal Activity 可能重复调度，网络调用可能超时，外部 Provide
 - InvocationReconciliationCase：未知结果对账
 - InvocationManualReviewDecision：无法自动确认时的仅追加人工裁决
 
-## 3. 稳定标识
+## 稳定标识
 
 Invocation 标识：
 
@@ -35,7 +35,7 @@ Attempt 属性：
 
 同一个逻辑操作的重试复用 Invocation ID，但创建新的 Attempt。
 
-## 4. 准备 Attempt
+## 准备 Attempt
 
 数据库事务：
 
@@ -47,7 +47,7 @@ Attempt 属性：
 6. 写 `invocation.attempt.prepared` Event。
 7. Commit。
 
-## 5. 外部调用
+## 外部调用
 
 调用携带：
 
@@ -60,7 +60,7 @@ Attempt 属性：
 - cancellation context
 - Artifact grants
 
-## 6. 完成
+## 完成
 
 数据库事务：
 
@@ -74,7 +74,7 @@ Attempt 属性：
 8. 更新 Invocation。
 9. Commit。
 
-## 7. 重试
+## 重试
 
 可重试失败：
 
@@ -99,7 +99,7 @@ Invocation -> executing
 - 在 Outcome Unknown 状态直接重试
 - 超过 Invocation Deadline 后继续自动重试
 
-## 8. 未知结果与对账
+## 未知结果与对账
 
 ```text
 executing
@@ -120,7 +120,7 @@ executing
 
 超过 Deadline 进入 `manual_review`，不能永久停留在 `reconciling`。
 
-## 9. 人工复核
+## 人工复核
 
 允许的决策：
 
@@ -143,7 +143,7 @@ executing
 
 取消请求只表示 intent。执行中先进入 `cancel_requested`；Provider/人工证据证明外部副作用 `not_started` 或 `stopped_before_effect` 后进入 `cancellation_confirmed`，持久化终态后才进入 `cancelled`。已完成的外部副作用不能记录为取消成功。
 
-## 10. 副作用分类
+## 副作用分类
 
 - pure：允许自动重试
 - idempotent：稳定 Idempotency Key
@@ -152,7 +152,7 @@ executing
 
 Fencing Token 只能防止平台接受旧结果，不能撤销已经发生的外部副作用。
 
-## 11. Sandbox Operation 账本
+## Sandbox Operation 账本
 
 Sandbox Operation 使用同样的 Attempt/Fencing/Outcome Unknown 原则，但保留专用：
 

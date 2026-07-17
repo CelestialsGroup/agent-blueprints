@@ -1,6 +1,6 @@
 # Sandbox 一致性验证与迁移
 
-## 1. 一致性 Profile
+## 一致性 Profile
 
 ProviderRevision 必须通过其声明能力对应的测试 Profile。
 
@@ -21,7 +21,7 @@ ProviderRevision 必须通过其声明能力对应的测试 Profile。
 - snapshot-process
 - gpu
 
-## 2. 必测故障
+## 必测故障
 
 ### 生命周期
 
@@ -71,7 +71,7 @@ ProviderRevision 必须通过其声明能力对应的测试 Profile。
 - Exec count
 - Evidence
 
-## 3. 参考 SandboxProvider 到 sandbox-runtime 的迁移
+## 参考 SandboxProvider 到 sandbox-runtime 的迁移
 
 ### 阶段 A：契约抽象
 
@@ -109,7 +109,7 @@ Platform 默认值改为 sandbox-runtime ProviderRevision。
 - 保留历史可读
 - 禁用旧 ProviderRevision
 
-## 4. 回滚
+## 回滚
 
 切换失败时：
 
@@ -118,7 +118,7 @@ Platform 默认值改为 sandbox-runtime ProviderRevision。
 - 禁止运行中直接把 Process Snapshot 恢复到不兼容 Provider。
 - Workspace Snapshot 可在兼容声明通过后恢复到旧 Provider。
 
-## 5. 禁止耦合
+## 禁止耦合
 
 Agent Platform 契约中禁止出现：
 

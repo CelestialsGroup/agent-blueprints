@@ -1,26 +1,57 @@
 # v0.9.0 架构基线候选版本
 
-Agent Application Platform 为多个 Business Application 提供受治理的多轮 Conversation、Agent 执行、工作流、Sandbox、Artifact、Runtime Recording 和 Delivery 能力。Business 与 Platform 不共享领域数据库。
+Agent Application Platform 为多个 Business Application 提供受治理的 Conversation、长任务执行、Sandbox、Artifact、Runtime Recording 和 Delivery 能力。Business 与 Agent Platform 使用独立事实源，只通过版本化契约交换授权和技术用量。
 
-## 所有权
+## 系统分层
 
-- Business：User、Membership、Product、Order、Payment、Entitlement、Commercial Quota Reservation/Settlement。
-- Platform：Conversation、Message、WorkOrder、Workspace、Workflow、Invocation、Event、Artifact、Technical Usage、Delivery、Provider、Sandbox、RuntimeRecording、Experience Catalog、Audit。
+```text
+Business Application
+  User / Organization / Membership / Product / Order / Payment / Entitlement
+        │ CommercialAuthorization / ExecutionGrant / WorkSession
+        ▼
+Agent Access 与稳定内核
+  Conversation / Message / Branch / Workspace / WorkOrder
+  Provider Admission / Event / Artifact / TechnicalUsage / Recording / Audit
+        │
+        ├── Temporal：持久编排 History
+        ├── PostgreSQL：当前状态、Ledger、Outbox/Inbox 和元数据
+        ├── Object Storage：Artifact 与 Recording Blob
+        └── Redis：Cache、Presence 和 Wakeup，不保存事实
+        │
+        ▼
+执行与扩展平面
+  AgentRuntimeProvider / SandboxProvider / Capability Provider
+  Model / Tool / Artifact / Egress / Runtime Gateway
+        │
+        ▼
+DeerFlow / OpenAI Agents SDK / Native Runtime / Sandbox Adapter / nexu Provider
+```
 
-## 稳定内核与执行平面
+Agent Workbench 只访问 Agent Access API、SSE 和 Runtime Gateway。Agent Engineering Workbench 只消费不可变运行证据的只读投影；调试重跑必须创建新的 ConversationBranch、WorkOrder、ExecutionGrant、ProviderResolution 和 RunManifest。
 
-稳定内核只保存可复现、可审计、与后端无关的标识和状态。Agent Runtime 框架、Sandbox 后端、模型、工具、Template、Renderer/Converter 都是 Provider Adapter。DeerFlow、LangGraph/Deep Agents、OpenAI Agents SDK 等只能作为参考或可选 Runtime 实现，不得成为平台能力前提。`Conversation binding + ProviderRevision + ProviderAdmissionDecision + ExperienceRevision + RunManifest` 固化一次 Run 的可重放输入。
+## 数据所有权
 
-## 持久化与可靠性
+| 所有者 | 权威数据 | 禁止拥有 |
+|---|---|---|
+| Business | User、Organization、Membership、Product、Order、Payment、Entitlement、Commercial Quota | WorkOrder、Run、Event、Artifact、TechnicalUsage |
+| Agent Platform | Conversation、Workspace、WorkOrder、Workflow、Event、Artifact、TechnicalUsage、Provider、Sandbox、Recording、Audit | 价格、商业余额、支付和会员事实 |
+| Runtime/Sandbox Provider | 私有 Run、Checkpoint、Pod/VM、内部 Endpoint、后端观测状态 | Business 授权、Platform 终态和正式 ArtifactVersion |
+| Workbench | 用户交互和短期客户端状态 | 任何服务端权威事实 |
 
-Temporal 保存持久 Workflow History；PostgreSQL 保存当前状态、Ledger、Outbox/Inbox 和元数据；兼容 S3 的 Storage 保存 Artifact Blob；Redis 仅用于 Cache/Presence/Wakeup。
+## 稳定内核与 Provider
 
-系统承诺至少一次投递、幂等、Fencing、对账、事务 Outbox 和不可变版本，不承诺全局 Exactly-once。
+稳定内核只保存可复现、可审计且与执行后端无关的标识和状态。Agent Runtime、Sandbox、Model、Tool、Template、Renderer、Editor 和 Converter 都通过不可变 ProviderRevision、仅追加 AdmissionDecision 和 ProviderResolution 接入。
 
-## Sandbox
+一次 Run 由 Conversation 绑定、授权摘要、ProviderRevision、AdmissionDecision、Experience Revision、Sandbox Slot 和 RunManifest 固化。运行中的 Run 不得静默切换 Provider；Provider 原生 Checkpoint 默认不具备跨框架可移植性。
 
-Conversation Workspace 拥有多个 Sandbox Slot。DeerFlow Built-in Sandbox 可作为首个参考 Sandbox Adapter，未来 `sandbox-runtime` 或其他实现使用相同契约；稳定内核禁止后端基础设施标识和原始 Endpoint。Runtime Gateway 可产生独立、加密、受保留策略管理的 RuntimeRecording。
+## 可靠性边界
 
-## 状态
+- Temporal 保存执行控制 History，PostgreSQL 保存查询态和账本。
+- 外部副作用通过 Invocation 或 SandboxOperation Ledger 管理。
+- 双写通过事务 Outbox/Inbox 或可重放协调器闭合。
+- Artifact 和 Recording 大块字节只进入对象存储，数据库和 Event 只保存引用与摘要。
+- 系统不承诺全局 Exactly-once。
 
-v0.9.0 是产品边界候选版本，不是已冻结基线，更不是生产就绪版本。
+## 当前状态
+
+v0.9.0 已通过本地契约 Gate，但尚未冻结。当前没有真实 Agent Platform 产品实现；Phase 0 的 Adapter、Migration、Runtime Gateway、故障注入、容量和备份恢复证据仍待完成。

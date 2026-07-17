@@ -1,6 +1,6 @@
 # Artifact 导入、交付与 Webhook
 
-## 1. 禁止任意 URL
+## 禁止任意 URL
 
 WorkOrder 不接受任意：
 
@@ -10,7 +10,7 @@ WorkOrder 不接受任意：
 
 这些字段会产生 SSRF、数据泄漏和凭据外带风险。
 
-## 2. 输入 Artifact
+## 输入 Artifact
 
 支持：
 
@@ -26,7 +26,7 @@ Ingest Session 使用：
 - 短期上传 URL
 - 上传后扫描和确认
 
-## 3. Callback 注册
+## Callback 注册
 
 Business Application 预先注册 Callback：
 
@@ -40,7 +40,7 @@ Business Application 预先注册 Callback：
 
 WorkOrder 只引用 Registration ID。
 
-## 4. Webhook
+## Webhook
 
 Delivery Webhook 内容：
 
@@ -54,7 +54,7 @@ Delivery Webhook 内容：
 - 指数退避
 - DLQ
 
-## 5. Delivery Target
+## Delivery Target
 
 `business_managed` 和 `replicated` 使用预注册 Delivery Target：
 
@@ -64,7 +64,7 @@ Delivery Webhook 内容：
 
 Target Credential 由 Secret Broker 临时授权，Plugin 不直接获得。
 
-## 6. SSRF 防护
+## SSRF 防护
 
 所有注册 Endpoint 经过：
 

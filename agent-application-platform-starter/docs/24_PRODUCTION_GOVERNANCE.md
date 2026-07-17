@@ -6,7 +6,7 @@
 
 初始目标：Agent Access 月可用性 99.9%，已接受 WorkOrder 持久化丢失 0，P95 接受延迟 < 500ms，P95 持久 Event 延迟 < 3s，`outcome_unknown` 24 小时内对账率 99%，Delivery 24 小时最终送达率 99.9%。这些目标必须经容量测试后按部署等级修订。
 
-## 1. 恢复目标
+## 恢复目标
 
 初始基线：
 
@@ -17,7 +17,7 @@
 | Artifact Object Storage | 15 分钟 | 120 分钟 |
 | Signing/Verification Keys | 0 | 30 分钟 |
 
-## 2. 准入与背压
+## 准入与背压
 
 - Client 请求速率
 - Tenant 并发量
@@ -33,7 +33,7 @@
 - 503 + Retry-After：平台容量不足
 - `accepted`/`queued`：在排队 SLO 内
 
-## 3. 公平性
+## 公平性
 
 - 每 Tenant 并发量
 - 加权队列
@@ -41,7 +41,7 @@
 - 突发限制
 - 饥饿告警
 
-## 4. Token 与密钥
+## Token 与密钥
 
 - Service Token 使用 RFC 9068 Profile 或等价验证
 - 生产使用 Audience 限制
@@ -50,7 +50,7 @@
 - JWKS Endpoint 预注册，拒绝 Token Header 动态 URL
 - Signing Key 轮换与撤销
 
-## 5. Temporal
+## Temporal
 
 - Worker Deployment + Build ID
 - Workflow Type 明确固定版本/自动升级策略
@@ -60,7 +60,7 @@
 - Namespace 保留期限
 - 回放测试
 
-## 6. 数据保留
+## 数据保留
 
 - Event：90 天，按 Event Type Retention Class 覆盖
 - Artifact：30 天
@@ -72,7 +72,7 @@
 
 敏感内容避免进入日志、Event 和 Temporal History。
 
-## 7. Webhook 与 Connector
+## Webhook 与 Connector
 
 - 注册制 Endpoint
 - HTTP Message Signature 或 mTLS
@@ -81,7 +81,7 @@
 - DLQ
 - SSRF 防护
 
-## 8. 容量
+## 容量
 
 估算：
 
@@ -95,7 +95,7 @@
 - Conversion CPU
 - Object Storage 吞吐量
 
-## 9. 降级
+## 降级
 
 - 停止重型任务
 - 关闭 Optional Converter
@@ -105,7 +105,7 @@
 - 延迟非关键 Projection
 - 明确 503
 
-## 10. 灾难恢复
+## 灾难恢复
 
 演练：
 
@@ -120,7 +120,7 @@
 
 多节点验收至少覆盖：任意 API/Worker/Provider Pod 删除、跨 Pod SSE 续传、Redis 通知丢失补拉、Provider Controller 故障转移、Sandbox Node 故障、Runtime 重路由、Temporal 回放、Artifact 并发提交和 Migration 回滚。
 
-## 11. Sandbox 容量
+## Sandbox 容量
 
 Sandbox Admission 需要独立容量模型：
 

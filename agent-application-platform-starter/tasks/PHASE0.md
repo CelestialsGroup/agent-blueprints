@@ -1,57 +1,127 @@
-# Phase 0 — v0.9.0 产品纵向链路
+# Phase 0 - v0.9.0 产品纵向链路
 
-Phase 0 实现一条真实的 Manus-like Conversation 链路。只有目录骨架或契约代码不算完成。只有本验收计划通过后才能开始 Phase 1。
+Phase 0 实现一条真实、可恢复的 Manus-like Conversation 链路。目录骨架、生成代码、Schema 通过或单次 Happy Path 都不算完成。所有阶段按依赖顺序推进；未完成前置阶段时，不并行扩展产品范围。
 
-## 0A：Business 授权与 Conversation
+```text
+0A 最小契约闭合
+ -> 0B 持久化内核
+ -> 0C Business 到 Conversation
+ -> 0D 主 Runtime 与 Sandbox
+ -> 0E Workbench 与 Recording
+ -> 0F nexu Experience
+ -> 0G 第二 Runtime
+ -> 0H 故障、安全与恢复证据
+```
 
-实现参考 Business User/Organization/Free-Pro Membership、不可变 EntitlementRevision、幂等 QuotaReservation 和 CommercialAuthorizationSnapshot。创建 Conversation/Workspace，签发 Conversation WorkSession，然后提交使用新 Grant 的 Turn，并原子追加 Message、创建 WorkOrder 和 Workflow Start Outbox。
+## 0A：最小契约闭合
 
-证明重复 Conversation/Turn 请求不会创建第二个 Message、WorkOrder、Reservation 或消费记录。
+开始产品实现前，收敛 Phase 0 实际需要的公共模型：
 
-## 0B：执行链路
+- 明确 WorkOrder、WorkflowRun、AgentRun、AgentRuntimeRun 和 Invocation 的关系及基数；
+- 为 Chat、Plan、Tool、Approval、Artifact、Usage 和终态定义最小核心 Event Payload 与 Registry；
+- 明确 Runtime Gateway 的连接、重连、控制和录制关联协议；
+- 固化 TechnicalUsage 的 Meter、归属、幂等、更正和 Business Settlement Envelope；
+- 区分 ProviderRevision 公共字段与 Runtime、Sandbox、Plugin 等 Port-specific 字段；
+- 保持 Temporal 为 Phase 0 实现选择，不把第三方私有模型提升为平台领域事实。
 
-实现 PostgreSQL/Outbox -> Temporal WorkOrder Workflow -> ProviderResolution/RunManifest -> 一个已认证 AgentRuntimeProvider -> 一个已认证 SandboxProvider `primary-code` -> Invocation/Sandbox Attempt Ledger -> CanonicalEvent -> Artifact Staging/Finalize -> Delivery/TechnicalUsage Settlement。主链路可以使用 DeerFlow 参考 Adapter 和 DeerFlow Built-in Sandbox Adapter，但不得依赖其私有模型。
+验收证据：更新后的 Schema/OpenAPI/状态机、正反向夹具、兼容性审查和 Runtime/Sandbox Conformance 测试骨架全部通过 Gate。
 
-证明：
+## 0B：持久化内核
 
-- 后续输入、Interrupt、Pause/Resume、Approval 和 Cancel 使用仅追加 Runtime Command 与 Fencing；
-- Worker/Adapter 重启后可以从外部状态或 Checkpoint 恢复；
-- Provider 响应丢失后进入对账；
-- 旧 Attempt/Runtime Command 结果会被拒绝；
-- Redis 丢失不会导致事实丢失。
+实现 PostgreSQL Migration、事务 Repository、Outbox/Inbox、Temporal Worker、对象存储和 Redis 非权威通知路径。首批聚合包括 Conversation、Message、Branch、Workspace、WorkOrder、GrantConsumption、Provider Resolution、Event、Artifact、TechnicalUsage 和 Recording Metadata。
 
-## 0C：Experience 与 nexu 集成
+验收证据：
 
-至少将一个 html-anything Template 作为 ExperienceCatalogEntry + 不可变 TemplateRevision 导入。Scenario UI 通过 Catalog 发现它，WorkOrder 选择其精确摘要，RunManifest 绑定已认证的 Template ProviderRevision，所选 Agent Runtime 通过受治理的 Skill/Tool 路径消费它。
+- Migration 可从空库升级并安全回滚；
+- 数据库 Constraint 实现 `26_DATA_MODEL_INVARIANTS.md` 中 Phase 0 使用的不变量；
+- WorkOrder 与 Workflow Start Outbox 原子提交；
+- Redis 清空不影响授权、状态、账本和游标正确性；
+- Temporal Workflow 可以 Replay。
 
-将 html-to-pptx 或 html-video 实现为一个生成派生 ArtifactVersion 的 Converter Provider。Scenario 或 Workbench 逻辑中不得硬编码 Plugin ID。
+## 0C：Business 到 Conversation
 
-## 0D：实时 Runtime 与回放
+实现参考 Business User、Organization、Free/Pro Membership、不可变 EntitlementRevision、幂等 QuotaReservation 和 CommercialAuthorizationSnapshot。完成 WorkSession Exchange，并用新的 ExecutionGrant 提交 Conversation Turn。
 
-通过 Runtime Gateway 打开 Terminal RuntimeSession，并由 Platform 管理录制。Finalize 至少两个不可变 Chunk，以及一个与 `work_sequence` 对齐的回放 Manifest。UI 必须能在没有实时 Sandbox 的情况下回放 Chat、Plan、Timeline、Terminal、Files 和 Artifact。
+Turn 事务必须原子完成 Message 追加、Message Sequence、GrantConsumption、WorkOrder、Workflow Start Outbox 和 CanonicalEvent。
 
-在 Capture、Consent、Redaction 和容量测试通过前，Browser/Desktop 录制继续由 Capability Gate 控制。
+验收证据：重复 Conversation/Turn 请求不会创建第二个 Message、WorkOrder、Reservation 或消费记录；Grant 不能跨 Turn、Tenant 或请求摘要重用；Platform 不查询 Business 会员数据库，也不修改商业余额。
 
-## 0E：安全与故障证据
+## 0D：主 Runtime 与 Sandbox
 
-- ExecutionGrant/CommercialAuthorization 不得超限，也不得跨 Turn 重用。
-- 任何 Agent Runtime（包括 DeerFlow 参考 Adapter）都不得绕过 Model/Tool/Egress Gateway。
-- Runtime Recording 不得在 Event/Temporal/PostgreSQL 中持久化 Secret、原始 Token 或未加密字节。
-- Template 选择不得引用隐藏、已撤销或未准入的 Revision。
-- Conversation/Message/Command/Recording/Catalog 数据库约束通过并发测试。
-- Temporal Replay、重复/丢失响应、NetworkPolicy/RBAC/Pod Security 和最小备份恢复演练通过。
+实现以下主链路：
 
-## 0F：Agent Runtime 可替换性证明
+```text
+PostgreSQL / Outbox
+ -> Temporal WorkOrder Workflow
+ -> ProviderResolution / RunManifest
+ -> 主 AgentRuntimeProvider
+ -> primary-code SandboxProvider
+ -> Invocation / SandboxOperation Ledger
+ -> CanonicalEvent / Artifact Staging / TechnicalUsage
+ -> Artifact Finalize / Delivery / Business Settlement
+```
 
-除主链路 Runtime 外，实现第二个最小 AgentRuntimeProvider Adapter。推荐使用 OpenAI Agents SDK 或 Native Minimal Runtime，但选择不构成平台依赖。
+主 Runtime 可以使用 DeerFlow Adapter，主 Sandbox 可以包装 DeerFlow Built-in Sandbox，但公共 API、数据库和 Event 不得出现 DeerFlow 私有 Thread、Checkpoint、Sandbox 或 Endpoint 字段。
 
-两个 Adapter 必须通过 `runtime-core-v1`，主链路 Runtime 还必须通过 `runtime-general-v1 + governed-v1`，并证明：
+主链路必须支持 Append-input、Interrupt、Pause/Resume、Approval 和 Cancel；所有 Command 仅追加并使用 Fencing。Model、Tool、Artifact 和 Egress 必须经过受治理 Gateway。
 
-- ProviderResolution 可以为新 Run 选择不同 Runtime ProviderRevision；
-- Start、Command、Status、Cursor Event、Artifact Staging 和 Usage 使用相同公共契约；
-- 同一 Workbench、Timeline 和 RuntimeRecording 可以消费两个 Provider 的标准 Event；
-- 稳定 Schema、数据库和 API 不出现任一框架的私有 Agent/Thread/Run/Checkpoint 字段；
-- 运行中不会自动切换 Provider，Provider 原生 Checkpoint 不会被宣称为跨框架可移植；
-- 不支持的 Capability 明确拒绝，不静默降级。
+验收证据：Worker/Adapter 重启可恢复；Provider 响应丢失进入对账；旧 Attempt 和旧 Command 结果被拒绝；Artifact 只有通过 Staging 验证后才能 Finalize。
 
-完成 Phase 0 仍不代表生产就绪；容量、SLO、全面故障注入和生产恢复需要单独批准。
+## 0E：Workbench 与 Runtime Recording
+
+实现 Chat、Plan、Timeline、Terminal、Files 和 Artifact 的最小 Workbench。SSE 使用 `work_sequence` 续传；Terminal 通过 Runtime Gateway 建立短期 RuntimeSession。
+
+Runtime Gateway 至少 Finalize 两个不可变 Terminal Chunk 和一个与 `work_sequence` 对齐的 Recording Manifest。没有实时 Sandbox 时，Workbench 仍能回放 Chat、Plan、Timeline、Terminal、Files 和 Artifact。
+
+Browser/Desktop 可以提供受控实时查看，但在 Capture、Consent、Redaction 和容量测试完成前，其录制继续由 Capability Gate 关闭。
+
+验收证据：浏览器集成测试覆盖 Session 过期、SSE 断线续传、Runtime Gateway 重连、只读回放和跨 Tenant 对象拒绝。
+
+## 0F：Experience 与 nexu
+
+至少导入一个 html-anything Template，形成 ExperienceCatalogEntry、不可变 TemplateRevision、源/预览 Artifact 和已认证 ProviderRevision。Scenario 通过 Catalog 发现选项，WorkOrder 和 RunManifest 绑定精确 Revision 摘要。
+
+将 html-to-pptx 或 html-video 实现为 Converter Provider，生成派生 ArtifactVersion。Scenario、Workbench 和 Runtime Adapter 中不得硬编码 Plugin ID。
+
+验收证据：隐藏、撤销、未准入或缺少 Entitlement 的 Revision 无法选择；相同输入固定 Provider/Experience Revision 后可重现相同执行配置和 Artifact 来源链。
+
+## 0G：Agent Runtime 可替换性
+
+除主 Runtime 外，实现第二个最小 AgentRuntimeProvider Adapter。推荐 OpenAI Agents SDK 或 Native Minimal Runtime，但选择不构成平台依赖。
+
+两个 Adapter 必须通过 `runtime-core-v1`；主 Runtime 还必须通过 `runtime-general-v1 + governed-v1`。两者使用相同 Start、Command、Status、Cursor Event、Artifact Staging 和 Usage 契约，并可被同一 Workbench、Timeline 和 RuntimeRecording 消费。
+
+验收证据：ProviderResolution 只为新 Run 选择不同 Revision；运行中不自动切换 Provider；不支持的 Capability 明确拒绝；任何稳定 Schema、数据库和 API 都不包含框架私有字段。
+
+## 0H：故障、安全与恢复
+
+至少覆盖：
+
+- ExecutionGrant 超限、重用和跨 Tenant 攻击；
+- Runtime 绕过 Model/Tool/Egress Gateway；
+- Provider 响应丢失、重复响应、旧 Fencing Token 和非幂等重试；
+- Runtime/Recording 中的 Secret、Token 和未加密字节泄漏；
+- API、Worker、Provider Controller 和 Sandbox Node 故障；
+- Redis 通知丢失、Temporal Replay、跨 Pod SSE 续传；
+- NetworkPolicy、RBAC、Pod Security、Artifact 并发提交；
+- PostgreSQL、Temporal 和 Object Storage 的最小备份恢复演练；
+- 基础容量、队列背压和 Runtime/Sandbox 并发上限。
+
+所有测试必须输出可复现命令、环境、运行日志、指标和结论。失败或未运行项不能记录为通过。
+
+## 完成定义
+
+| 结论 | Phase 0 要求 |
+|---|---|
+| 契约验证通过 | 所有契约、语义、兼容性和供应链 Gate 通过 |
+| 实现完成 | 0B-0G 的真实组件和纵向链路可以重复部署与运行 |
+| 最小可靠性证据 | 0H 的故障、安全和恢复测试有可复现报告 |
+| 生产就绪 | 不由 Phase 0 自动授予，仍需独立容量、SLO、安全和生产恢复批准 |
+
+## 不提前实现
+
+- 用户上传的任意 Plugin、完整 Marketplace 或收入分成；
+- 任意远程 JavaScript、完整 Office 编辑器或复杂 UI Extension；
+- 持久 Evaluation/Rubric 领域模型；
+- 自研 sandbox-runtime 或跨 Provider Process/Checkpoint 恢复；
+- 智能成本路由、多区域双活和大规模 Provider 管理界面。

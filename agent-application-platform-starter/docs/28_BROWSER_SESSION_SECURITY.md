@@ -1,6 +1,6 @@
 # 浏览器 WorkSession 安全
 
-## 1. 默认模式
+## 默认模式
 
 Standalone Agent Workbench 使用：
 
@@ -20,7 +20,7 @@ Business 后端
 - 浏览器日志
 - iframe 属性
 
-## 2. Cookie
+## Cookie
 
 默认 Cookie：
 
@@ -36,7 +36,7 @@ SameSite 由部署模式决定：
 - 顶级导航 Workbench：`Lax` 或 `Strict`
 - 跨站嵌入：需要经过安全评审，不默认支持第三方 Cookie
 
-## 3. SSE
+## SSE
 
 原生 EventSource 无法可靠设置自定义 Authorization Header。
 
@@ -44,7 +44,7 @@ SameSite 由部署模式决定：
 
 Headless SDK 可以使用内存中的 WorkSession Bearer，并通过 Fetch streaming 实现事件流。
 
-## 4. WebSocket
+## WebSocket
 
 WebSocket 不得在 Query String 中携带长期 Token。
 
@@ -56,7 +56,7 @@ WebSocket 不得在 Query String 中携带长期 Token。
 
 Runtime Token 必须短期、单次或连接绑定。
 
-## 5. CSRF
+## CSRF
 
 Cookie 认证的写操作要求：
 
@@ -66,7 +66,7 @@ Cookie 认证的写操作要求：
 - 禁止简单跨域请求
 - 严格 CORS Allowlist
 
-## 6. Token 类型隔离
+## Token 类型隔离
 
 不同 JWT 使用不同：
 
@@ -82,7 +82,7 @@ Cookie 认证的写操作要求：
 - WorkSession：`agent-work-session+jwt`
 - Plugin Invocation：`agent-plugin-invocation+jwt`
 
-## 7. 撤销
+## 撤销
 
 WorkSession 保存 session_version 和 revoked_at。
 

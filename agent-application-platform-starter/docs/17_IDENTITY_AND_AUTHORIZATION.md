@@ -1,6 +1,6 @@
 # 身份与授权
 
-## 1. Service Principal 身份
+## Service Principal 身份
 
 业务后端使用 OAuth2 Client Credentials。
 
@@ -22,7 +22,7 @@
 
 `client_app_id` 只从认证上下文产生。
 
-## 2. WorkSession Principal 身份
+## WorkSession Principal 身份
 
 浏览器默认不直接接收可长期复用 Bearer Token。
 
@@ -35,7 +35,7 @@
 
 Headless SDK 可使用内存 Bearer Profile。
 
-## 3. WorkSession Subject
+## WorkSession Subject
 
 默认 `subject_mode=owner`，Principal 必须等于 Conversation/WorkOrder 的 Grant Principal。
 
@@ -45,7 +45,7 @@ Headless SDK 可使用内存 Bearer Profile。
 - WorkOrder collaboration policy 允许
 - 记录 delegation reason 和 Audit
 
-## 4. 权限范围
+## 权限范围
 
 Service 权限：
 
@@ -82,7 +82,7 @@ WorkSession 权限：
 
 OpenAPI 使用 `x-required-work-session-scopes` 表达 Bearer/Cookie Scheme 无法原生表达的 Scope。
 
-## 5. 对象授权
+## 对象授权
 
 每次资源访问必须同时校验：
 
@@ -101,14 +101,14 @@ OpenAPI 使用 `x-required-work-session-scopes` 表达 Bearer/Cookie Scheme 无�
 
 不通过资源 ID 是否存在来泄露跨租户信息。
 
-## 6. Tenant 与数据隔离
+## Tenant 与数据隔离
 
 - 所有权威记录显式携带内部 `tenant_id`，Repository scope、PostgreSQL RLS、Object Storage prefix、搜索/缓存 filter 和签名下载授权形成纵深防御。
 - Secret 不进入 CanonicalEvent、日志或 Temporal History；Temporal 敏感 payload 使用加密 codec，大内容只保存 Artifact reference。
 - Audit 默认不保存用户正文；删除按 retention、tombstone 和 crypto erasure policy 执行。
 - Callback、Connector、Remote Provider 和 Storage endpoint 必须预注册；网络访问经 DNS/IP/rebinding/redirect policy 与 Egress Gateway 校验。
 
-## 7. JWT 类型隔离
+## JWT 类型隔离
 
 不同 Token 必须使用互斥验证规则、不同 audience 和明确 typ：
 

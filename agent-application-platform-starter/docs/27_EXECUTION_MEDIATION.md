@@ -1,12 +1,12 @@
 # 执行治理与强制中介层
 
-## 1. 问题
+## 问题
 
 ExecutionGrant 中的 Token、Sandbox、网络和外部通信限制必须可被实际执行。
 
 如果任一 Runtime（包括 DeerFlow、LangGraph、OpenAI Agents SDK 或 Native Runtime）可以直接调用模型、MCP、HTTP 和外部工具，Grant 只能成为建议，无法成为安全边界。
 
-## 2. 强制中介
+## 强制中介
 
 平台管理的生产运行必须通过：
 
@@ -18,7 +18,7 @@ Agent Runtime
   └── Sandbox Egress Gateway
 ```
 
-## 3. 模型 Gateway
+## 模型 Gateway
 
 负责：
 
@@ -34,7 +34,7 @@ Agent Runtime
 
 Runtime 不得直接持有平台长期 Model Key。
 
-## 4. 工具 Gateway
+## 工具 Gateway
 
 具有外部副作用或需要审批的 Tool/MCP 调用必须：
 
@@ -45,7 +45,7 @@ Runtime 不得直接持有平台长期 Model Key。
 
 只读、无副作用的本地工具也必须产生可审计 Run Event，但可按策略合并，不必为每个内部指令创建重型 Invocation。
 
-## 5. 出站 Gateway
+## 出站 Gateway
 
 Sandbox 默认无任意公网出口。
 
@@ -60,7 +60,7 @@ HTTP/DNS 出站通过受控 Egress Proxy：
 
 Kubernetes NetworkPolicy 不提供通用 FQDN 策略，因此不能单独承担域名 Allowlist。
 
-## 6. 受治理 Agent Runtime Profile
+## 受治理 Agent Runtime Profile
 
 面向 SaaS 的 AgentRuntimeProvider 必须通过 `governed-v1` Conformance Profile：
 
@@ -75,7 +75,7 @@ Kubernetes NetworkPolicy 不提供通用 FQDN 策略，因此不能单独承担�
 
 未通过该 Profile 的 Runtime 只能用于受信任的私有部署。
 
-## 7. 预算
+## 预算
 
 有效预算：
 
@@ -90,7 +90,7 @@ min(
 
 平台必须在预算接近耗尽时发出事件，并在硬限制到达时停止后续调用。
 
-## 8. Sandbox Provider
+## Sandbox Provider
 
 ExecutionBudgetEnforcer 在创建 SandboxSpec 前计算：
 

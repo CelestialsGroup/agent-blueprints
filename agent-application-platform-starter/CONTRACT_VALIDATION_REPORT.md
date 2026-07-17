@@ -1,6 +1,6 @@
 # 契约验证报告 — v0.9.0
 
-状态：**本地产品边界契约已闭合；仓库/CI 集成不在本次架构审查范围内；候选版本尚未冻结，也未达到生产就绪状态**
+状态：**本地产品边界契约验证已通过；仓库/CI 集成不在本次架构审查范围内；候选版本尚未冻结，也未达到生产就绪状态**
 
 验证日期：2026-07-17
 
@@ -9,7 +9,7 @@
 | 纯源码静态审计 | 通过：271 个 JSON、22 个 YAML、5 个 OpenAPI、46 个 Markdown 文件 |
 | JSON Schema 与测试夹具 | 通过：143 个 Schema、79 个有效夹具、16 个 Schema 无效夹具 |
 | 语义不变量 | 通过：6 个确定性且与 Schema 对齐的状态机，以及 60 个负向夹具 |
-| 产品边界闭合 | 通过：Conversation/Branch/Turn、Agent Runtime、Recording、Experience 准入和显式 CommercialAuthorization 绑定 |
+| 产品边界契约覆盖 | 通过：Conversation/Branch/Turn、Agent Runtime、Recording、Experience 准入和显式 CommercialAuthorization 绑定 |
 | 契约清单 | 通过：157 项受治理资源；Python 3.11/3.13 与 Node 22.16 结果一致 |
 | 兼容性比较器 | 自测通过；由于未提供已冻结的 Git 引用，本地基线为 N/A |
 | Python JCS/Strict I-JSON | Python 3.11 和 3.13 通过 |

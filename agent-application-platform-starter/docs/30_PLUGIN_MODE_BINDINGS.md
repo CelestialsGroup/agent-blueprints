@@ -2,21 +2,21 @@
 
 所有运行模式必须映射到统一 Invocation 语义，但传输细节不同。
 
-## 1. service
+## service
 
 - 使用 Plugin Invocation HTTP/gRPC 协议。
 - mTLS Workload Identity。
 - Invocation Bearer 绑定 Attempt。
 - 服务必须支持 Readiness、Liveness、Draining。
 
-## 2. remote_service
+## remote_service
 
 - Endpoint 只能由管理员或受信任业务配置注册。
 - 禁止 Plugin Manifest 或 WorkOrder 提供任意运行时 URL。
 - TLS 证书、DNS、IP 范围和数据驻留策略必须校验。
 - 推荐支持状态查询和业务幂等键。
 
-## 3. job
+## job
 
 固定文件布局：
 
@@ -38,7 +38,7 @@
 
 Kubernetes Job 被删除但外部副作用结果未知时，Invocation 进入 `outcome_unknown`。
 
-## 4. sandbox_cli
+## sandbox_cli
 
 - Command 必须来自已签名 Manifest，不接受用户任意可执行路径。
 - Input 通过固定 JSON 文件或 Stdin。
@@ -46,7 +46,7 @@ Kubernetes Job 被删除但外部副作用结果未知时，Invocation 进入 `o
 - SIGTERM 用于取消。
 - 工作目录限定在本次 Sandbox Workspace。
 
-## 5. mcp
+## mcp
 
 MCP Adapter 负责：
 
@@ -59,7 +59,7 @@ MCP Adapter 负责：
 
 不支持状态查询或幂等的 MCP Tool 不得声明对应 Capability 特性。
 
-## 6. 过期 Attempt
+## 过期 Attempt
 
 所有运行模式的结果必须携带：
 
@@ -69,7 +69,7 @@ MCP Adapter 负责：
 
 平台拒绝旧 Fencing Token 的结果。
 
-## 7. 与 Sandbox Provider 的区别
+## 与 Sandbox Provider 的区别
 
 Sandbox 不作为普通 `service` Plugin 处理完整生命周期。
 

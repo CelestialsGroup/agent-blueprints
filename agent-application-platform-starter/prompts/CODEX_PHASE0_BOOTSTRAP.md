@@ -1,6 +1,6 @@
 # Codex Phase 0 启动指引 — v0.9.0
 
-阅读 `START_HERE.md`、`AGENTS.md`、`docs/00_ARCHITECTURE_BASELINE.md`、`docs/DECISIONS.md` 和 `tasks/PHASE0.md`。
+按顺序阅读 `AGENTS.md`、`START_HERE.md`、`docs/00_ARCHITECTURE_BASELINE.md`、`docs/DECISIONS.md`、`docs/README.md` 和 `tasks/PHASE0.md`。
 
 ## 准入优先
 
@@ -13,17 +13,15 @@ make validate-all
 
 ## 实现顺序
 
-1. Conversation/Message/Turn/Workspace Migration 与约束。
-2. CommercialAuthorizationSnapshot、Grant 消费和额度 Reservation/Settlement 参考流程。
-3. WorkOrder/Outbox 与 Temporal Workflow。
-4. ProviderResolution、不可变 Revision/Admission/Experience 快照和 RunManifest。
-5. 首个参考 AgentRuntimeProvider Adapter（可使用 DeerFlow），以及 Command/Event/Checkpoint 私有映射。
-6. 首个参考 SandboxProvider Adapter（可使用 DeerFlow Built-in Sandbox）和 Invocation/Sandbox Ledger。
-7. CanonicalEvent、Artifact Staging/Finalize、RuntimeRecording 和 Delivery。
-8. html-anything Catalog 导入，以及一个 Converter Provider。
-9. 多轮 Workbench 和离线历史回放。
-10. 重复请求、响应丢失、回放、安全和备份测试。
-11. 第二个最小 AgentRuntimeProvider Adapter，以及双 Provider 核心一致性和 Workbench 消费测试。
+1. 完成 `tasks/PHASE0.md` 的 0A 最小契约闭合，不带着未定义的 Run、Event、Usage 或 Gateway 关系进入实现。
+2. 实现 PostgreSQL Migration、Constraint、Outbox/Inbox、Temporal 和对象存储基础。
+3. 实现 CommercialAuthorization、Grant 消费、Reservation/Settlement 和 Conversation Turn 原子链路。
+4. 实现 ProviderResolution、Revision/Admission、RunManifest、主 Runtime 和主 Sandbox Adapter。
+5. 闭合 Invocation/Sandbox Ledger、CanonicalEvent、Artifact Staging/Finalize、TechnicalUsage 和 Delivery。
+6. 实现多轮 Workbench、Runtime Gateway、Terminal Recording 和离线历史回放。
+7. 导入 html-anything Catalog Experience，并实现一个 Converter Provider。
+8. 实现第二个最小 AgentRuntimeProvider Adapter 和双 Provider 一致性测试。
+9. 完成重复请求、响应丢失、旧 Fencing、Replay、隔离、容量和备份恢复证据。
 
 ## 禁止事项
 

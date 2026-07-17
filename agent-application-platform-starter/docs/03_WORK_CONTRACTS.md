@@ -1,6 +1,6 @@
 # Business 与 Agent Platform 契约
 
-## 1. Conversation 与 WorkOrder
+## Conversation 与 WorkOrder
 
 AgentConversation 拥有持久 Workspace 和仅追加的 Message 序列。每个可执行用户 Turn 创建一个不可变 WorkOrder。一次性调用在同一事务中创建隐式 Conversation。
 
@@ -17,13 +17,13 @@ client_app_id 不出现在请求正文。
 
 WorkOrder 与 ExecutionGrant 都绑定 `conversation_id`、`turn_id`、`branch_id` 和 `input_message_id`。
 
-## 2. 请求摘要
+## 请求摘要
 
 ExecutionGrant 绑定完整 WorkOrder Request，唯一排除 `execution_grant`。
 
 使用 RFC 8785 JCS 与固定跨语言 Test Vector。
 
-## 3. 输入 Artifact
+## 输入 Artifact
 
 WorkOrder 只接受：
 
@@ -33,7 +33,7 @@ WorkOrder 只接受：
 
 禁止任意下载 URL。
 
-## 4. 交付
+## 交付
 
 WorkOrder 只引用：
 
@@ -42,7 +42,7 @@ WorkOrder 只引用：
 
 禁止任意 Callback/Upload URL。
 
-## 5. WorkSession
+## WorkSession
 
 业务后端创建 Conversation-bound 一次性 Exchange Token，并附带当前 CommercialAuthorizationSnapshot。可选 `work_order_id` 只能进一步收窄权限。
 
@@ -50,7 +50,7 @@ Browser Exchange 后获得 HttpOnly Cookie。
 
 每个可执行 follow-up 仍需要新的 ExecutionGrant；WorkSession 不能自行扩大会员权益或商业配额。
 
-## 6. 用量
+## 用量
 
 Agent Platform 只报告技术事实。
 
@@ -67,7 +67,7 @@ Agent Platform 只报告技术事实。
 - provider_reported
 - reconciled
 
-## 7. Delivery Webhook
+## Delivery Webhook
 
 - 至少一次
 - delivery_id/webhook_id 幂等

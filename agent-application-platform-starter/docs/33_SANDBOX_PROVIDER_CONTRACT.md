@@ -1,6 +1,6 @@
 # Sandbox Provider 契约
 
-## 1. 目标
+## 目标
 
 平台前期可以使用 DeerFlow Built-in Sandbox 作为首个参考实现，但不把它设为前置依赖；后期可以切换到自研 `sandbox-runtime` 或其他符合契约的 Provider。
 
@@ -27,7 +27,7 @@ DeerFlow Sandbox Adapter | sandbox-runtime | 其他 Provider
 - 前端
 - Usage / Delivery
 
-## 2. 核心归属
+## 核心归属
 
 ### Agent Platform 稳定内核
 
@@ -54,7 +54,7 @@ DeerFlow Sandbox Adapter | sandbox-runtime | 其他 Provider
 
 Provider 不拥有业务授权和 Artifact 元数据。
 
-## 3. Provider Port
+## Provider Port
 
 权威传输契约是 [`sandbox-provider-v1.yaml`](../contracts/openapi/sandbox-provider-v1.yaml)，Provider Adapter 必须实现其中的操作族：
 
@@ -67,7 +67,7 @@ Provider 不拥有业务授权和 Artifact 元数据。
 
 具体语言接口由该 OpenAPI 生成或薄封装，不在叙述性文档中复制方法签名。
 
-## 4. Capability 协商
+## Capability 协商
 
 Provider 必须显式声明支持能力和版本：
 
@@ -96,7 +96,7 @@ SANDBOX_CAPABILITY_UNSUPPORTED
 
 禁止静默降级。
 
-## 5. SandboxSpec
+## SandboxSpec
 
 SandboxSpec 是平台解析 Policy、ExecutionBudget 和 Provider Capability 后产生的规范。
 
@@ -116,7 +116,7 @@ SandboxSpec 是平台解析 Policy、ExecutionBudget 和 Provider Capability 后
 
 外部业务系统不能直接构造 SandboxSpec。
 
-## 6. 期望状态与观测状态
+## 期望状态与观测状态
 
 Agent Platform 保存期望状态，Provider 返回观测状态。
 
@@ -136,7 +136,7 @@ observed_generation
 
 用于实现乐观并发和 Controller 对账。
 
-## 7. Operation、Attempt 与 Fencing 机制
+## Operation、Attempt 与 Fencing 机制
 
 所有修改操作携带：
 
@@ -151,7 +151,7 @@ observed_generation
 
 Provider 可能已经产生副作用时，平台只接受当前 Attempt 的状态更新；无法确认时进入 `outcome_unknown`。
 
-## 8. Runtime Session
+## Runtime Session
 
 Provider 只返回内部 Endpoint 引用。
 
@@ -171,7 +171,7 @@ Provider 的内部 Pod IP、Node IP 和凭据不得直接返回给浏览器。
 - desktop
 - port_forward
 
-## 9. Workspace 路径
+## Workspace 路径
 
 Provider 对 Agent 暴露固定语义：
 
@@ -184,7 +184,7 @@ Provider 对 Agent 暴露固定语义：
 
 宿主机、平台数据库、业务存储不通过文件系统暴露。
 
-## 10. OCI 与底层 Runtime
+## OCI 与底层 Runtime
 
 - Sandbox Image 必须兼容 OCI Image 规范。
 - Provider 自研底层 Container Runtime 时，应兼容 OCI Runtime 规范。
@@ -192,7 +192,7 @@ Provider 对 Agent 暴露固定语义：
 - Kubernetes 多 Runtime 场景推荐映射 RuntimeClass。
 - Sandbox Provider Contract 不暴露 Kubernetes Pod、CRI 或某个 VM 后端细节。
 
-## 11. 标准错误
+## 标准错误
 
 - SANDBOX_SPEC_INVALID
 - SANDBOX_CAPABILITY_UNSUPPORTED
@@ -214,7 +214,7 @@ Provider 对 Agent 暴露固定语义：
 
 错误必须使用 StandardError，并为外部执行结果提供 `known_failed` 或 `outcome_unknown` 语义。
 
-## 12. 多 Sandbox 与 Slot
+## 多 Sandbox 与 Slot
 
 一个 Conversation Workspace 可以拥有多个 Sandbox；每个 WorkOrder 的 RunManifest 只绑定本次 Turn 实际使用的 Slot。
 
@@ -238,7 +238,7 @@ Provider Resolution 可以为不同 Slot 选择不同：
 
 同一 Slot 的后端重建通过 Generation 表达；不同用途使用不同 Slot。
 
-## 13. Provider 私有模型
+## Provider 私有模型
 
 公共 SandboxStatus 只允许：
 
@@ -255,7 +255,7 @@ runtime_endpoint_reference
 RunManifest 使用 `sandboxes[]` 锁定多个 Sandbox Slot，并用
 `primary_sandbox_slot_key` 标识默认工作环境。禁止重新收缩为单一 Sandbox 字段。
 
-## 14. 生命周期、Lease 与 Snapshot
+## 生命周期、Lease 与 Snapshot
 
 Provider 单次传输 Attempt 返回 `SandboxOperationStatus`：`accepted`/`running`/`succeeded`/`failed`/`cancelled`/`outcome_unknown`。平台不得把 `outcome_unknown` 作为持久化终点；它必须原子转换为 SandboxOperation `reconciling`。
 
@@ -265,7 +265,7 @@ SandboxRegistry 保存期望状态、租约、Slot 与代数；Provider Adapter 
 
 SnapshotManifest 固化 `provider_revision_id`、Level、摘要、Size、`content_reference` 和兼容性。Workspace 级 Snapshot 可跨符合契约的 Provider 迁移；Filesystem/Process 级默认只在声明兼容时恢复。Restore 使用标准变更 Envelope，并为恢复后的 Sandbox 分配新的 `sandbox_id` 和显式 Slot；Snapshot 本身不可变。
 
-## 15. 对账与取消
+## 对账与取消
 
 Provider 响应丢失时，先用 `provider_operation_id`/幂等键查询证据；不得盲目重试非幂等副作用。到达 Deadline 后证据仍不足则进入人工复核；人工 Decision 必须仅允许追加，并带证据引用和摘要。
 

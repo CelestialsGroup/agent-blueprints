@@ -1,6 +1,6 @@
 # Workflow 与可靠性
 
-## 1. Temporal
+## Temporal
 
 Temporal 是持久 Workflow Runtime。
 
@@ -14,7 +14,7 @@ Workflow Runtime Port 隔离 SDK，但不得隐藏以下语义：
 - Cancellation
 - Continue-as-New
 
-## 2. WorkOrder 启动
+## WorkOrder 启动
 
 WorkOrder 数据库事务只写 Workflow 启动 Outbox。
 
@@ -30,7 +30,7 @@ Workflow 启动后通过幂等领域 Activity 将 WorkOrder 从 `accepted` 转�
 
 Conversation Turn 事务先原子追加 Message、分配 message_sequence、创建 WorkOrder 和 Workflow Start Outbox。Conversation Workflow 只协调长期实体；每个 WorkOrder Workflow 保持可终止、可回放的执行边界。
 
-## 3. 权威状态
+## 权威状态
 
 PostgreSQL 是 API 当前状态事实源。
 
@@ -40,13 +40,13 @@ Temporal 是执行控制事实源。
 
 对账流程检测 Temporal 与 PostgreSQL 漂移。
 
-## 4. 外部副作用
+## 外部副作用
 
 Temporal 不提供外部副作用 Exactly-once。
 
 所有外部调用通过 Invocation Ledger。
 
-## 5. Worker 版本管理
+## Worker 版本管理
 
 每个 Worker 使用：
 
@@ -61,7 +61,7 @@ Temporal 不提供外部副作用 Exactly-once。
 
 禁止笼统假设所有运行中 Workflow 永远固定同一版本。
 
-## 6. History 与 Payload 管理
+## History 与 Payload 管理
 
 - 大文件和 Artifact 只传引用/摘要。
 - Prompt 和敏感 Payload 使用加密 Payload Codec。
@@ -69,7 +69,7 @@ Temporal 不提供外部副作用 Exactly-once。
 - 长期 Workflow 使用 Continue-as-New 控制 History。
 - Temporal Namespace 保留期限与数据删除策略一致。
 
-## 7. 超时
+## 超时
 
 Capability Timeout 映射到：
 
@@ -80,7 +80,7 @@ Capability Timeout 映射到：
 
 长任务必须发送 Heartbeat 并响应取消请求。
 
-## 8. Sandbox Workflow
+## Sandbox Workflow
 
 Sandbox 创建、Lease、Exec、Snapshot、Restore、Terminate 都是异步 Operation。
 

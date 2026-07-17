@@ -1,41 +1,46 @@
 # 从这里开始
 
-这是 Agent Application Platform **v0.9.0 产品边界候选版本**。v0.8.6 及更早版本不是实施基线，仓库不再保留其审查快照。
+Agent Application Platform v0.9.0 是产品边界候选版本。它定义 Manus-like Agent 平台的领域边界、公共契约和实施约束，但尚未冻结，也不代表产品已经实现或具备生产可靠性。
 
-## 当前状态
+## 当前成熟度
 
-- Conversation/Branch/Turn 与 Conversation 拥有的 Workspace 已闭合。
-- Agent Runtime 只通过独立 AgentRuntimeProvider 接入；平台不强制依赖 DeerFlow 或其他单一框架。DeerFlow 是首个参考 Adapter，其私有 Thread/Run/Checkpoint 不进入平台模型。
-- RuntimeRecording、Experience Catalog、Template/Skill/Renderer Provider 和 Business CommercialAuthorization 已闭合。
-- Conversation、AgentRuntimeRun、RuntimeRecording、Invocation、SandboxOperation、WorkOrder 都有权威状态机或持久化状态约束。
-- 本地契约 Gate 已通过；候选版本未冻结，也不代表生产就绪。
+| 层级 | 当前状态 | 说明 |
+|---|---|---|
+| 架构设计 | 候选完成 | 核心所有权、Provider 模型、Conversation、Sandbox、Recording 和 Business 交接已有设计 |
+| 契约验证 | 本地通过 | Schema、OpenAPI、状态机、正反向夹具和语义 Gate 已通过本地验证 |
+| 产品实现 | 未完成 | 当前仓库主要包含文档、契约和验证工具，没有真实 Agent Platform 纵向链路 |
+| 生产证明 | 未开始 | 故障注入、容量、安全隔离、Temporal Replay 和备份恢复仍缺运行证据 |
 
-## 权威来源
+“契约验证通过”只表示候选契约内部可接纳，不等于实现完成，更不等于生产就绪。
 
-按以下顺序阅读：
+## 阅读顺序
 
-1. `AGENTS.md`：实施规则和禁止项。
-2. `docs/00_ARCHITECTURE_BASELINE.md`：当前架构摘要。
-3. `docs/DECISIONS.md`：当前有效的关键决策及理由。
-4. `docs/README.md`：按主题进入详细规范。
-5. `tasks/PHASE0.md`：唯一实现与验收路线。
+1. `AGENTS.md`：实施规则、所有权和禁止项。
+2. `docs/00_ARCHITECTURE_BASELINE.md`：系统分层和当前架构摘要。
+3. `docs/DECISIONS.md`：当前有效的关键决策。
+4. `docs/README.md`：详细规范索引和事实源层级。
+5. `tasks/PHASE0.md`：唯一 Phase 0 实现与验收路线。
 6. `prompts/CODEX_PHASE0_BOOTSTRAP.md`：实现代理入口。
 
-Schema、OpenAPI、状态机、数据库不变量和验证 Gate 高于叙述性文档。
+Schema、OpenAPI、状态机、数据库不变量和验证 Gate 高于叙述性文档。发生冲突时，应先修复低层事实源，再同步说明文档。
 
-## 验证
+## 已确定的边界
+
+- Business Application 拥有 User、Organization、Membership、Product、Order、Payment、Entitlement 和商业额度。
+- Agent Platform 拥有 Conversation、WorkOrder、Workflow、Event、Artifact、Technical Usage、Provider、Sandbox、RuntimeRecording 和 Experience Catalog。
+- Agent Runtime 和 Sandbox 只能通过 Provider Port 接入，框架或基础设施私有模型不得进入稳定内核。
+- RuntimeRecording 原始证据只读；调试和重跑必须创建新的授权与执行链路。
+- 系统只承诺至少一次投递、幂等、Fencing、对账、事务 Outbox 和不可变版本，不承诺全局 Exactly-once。
+
+## 本地验证
 
 ```bash
 ./scripts/bootstrap_contracts.sh
 make validate-all
 ```
 
-支持 CPython 3.11–3.13、Node 22.16、Go 1.23.2。结果和实际计数见 `CONTRACT_VALIDATION_REPORT.md`。
+支持 CPython 3.11-3.13、Node 22.16 和 Go 1.23.2。实际结果与计数见 `CONTRACT_VALIDATION_REPORT.md`。
 
-## 稳定边界
+## 下一里程碑
 
-Business Application 拥有 User、Membership、Product、Order、Payment、Entitlement 和 Commercial Quota Reservation/Settlement。Agent Platform 拥有 Conversation、Message、WorkOrder、Workflow、Invocation、Event、Artifact、Technical Usage、Delivery、Provider、Sandbox、RuntimeRecording 与 Experience Catalog。双方只能通过版本化契约集成。
-
-稳定内核不得保存 Pod、Namespace、Container、VM、Node 或原始 Runtime Endpoint；这些字段只属于 Provider Adapter 私有模型。
-
-生产批准仍需要真实 Migration、至少一个 Agent Runtime Adapter、Sandbox Adapter、Temporal Replay、故障注入、安全隔离、容量和备份恢复证据。冻结 AgentRuntimeProvider v1 前还需要第二个最小 Runtime Adapter 通过核心一致性测试，以证明契约没有按单一框架反向设计。
+进入 Phase 1 前必须完成 `tasks/PHASE0.md` 中的真实纵向链路、两个 Agent Runtime Adapter、Sandbox Adapter、Runtime Gateway/Recording、nexu Provider、故障注入和最小恢复证据。
