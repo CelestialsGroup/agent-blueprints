@@ -17,7 +17,9 @@
 - [ ] Sandbox 多 Slot 唯一且主 Slot 存在。
 - [ ] 稳定模型不包含 Pod/Namespace/Container/VM/Node/原始 Endpoint。
 - [ ] Conversation 拥有持久 Workspace；每个可执行 Turn 都绑定 Message/WorkOrder/Grant/RunManifest。
-- [ ] DeerFlow 实现 AgentRuntimeProvider v1，且 Thread/Checkpoint 不泄漏到稳定模型。
+- [ ] Agent Platform 不依赖任何单一 Agent 框架；所有 Runtime 只通过 AgentRuntimeProvider v1 接入，且框架私有 Agent/Thread/Run/Checkpoint 不泄漏到稳定模型。
+- [ ] 至少两个 Runtime Adapter 通过 `runtime-core-v1`；主链路 Runtime 通过 `runtime-general-v1 + governed-v1`。第二个可以是功能最小实现，但必须证明公共 Command/Event/Artifact/Usage 与 Workbench 消费路径不依赖 DeerFlow。
+- [ ] 每个 Run 锁定一个 Agent Runtime ProviderRevision；Fallback 只用于未开始的新 Run，原生 Checkpoint 不被错误宣称为跨框架可移植。
 - [ ] Experience 选择绑定不可变 Catalog Revision 和 ProviderRevision。
 - [ ] RuntimeSession 实时传输与 RuntimeRecording 回放是相互独立的授权资源。
 - [ ] CommercialAuthorizationSnapshot 由 Business 拥有，且无权修改 Platform TechnicalUsage。

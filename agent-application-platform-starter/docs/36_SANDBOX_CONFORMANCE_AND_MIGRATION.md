@@ -71,16 +71,16 @@ ProviderRevision 必须通过其声明能力对应的测试 Profile。
 - Exec count
 - Evidence
 
-## 3. DeerFlow 到 sandbox-runtime 迁移
+## 3. 参考 SandboxProvider 到 sandbox-runtime 的迁移
 
 ### 阶段 A：契约抽象
 
 ```text
 Agent Platform -> SandboxProvider Port
-              -> DeerFlowSandboxAdapter
+              -> ReferenceSandboxAdapter
 ```
 
-不改变现有运行行为。
+首个 ReferenceSandboxAdapter 可以包装 DeerFlow Built-in Sandbox，但这不是契约要求。抽象阶段不改变现有运行行为。
 
 ### 阶段 B：影子验证
 
@@ -102,7 +102,7 @@ Platform 默认值改为 sandbox-runtime ProviderRevision。
 
 现有 Run 继续锁定旧 Revision。
 
-### 阶段 E：DeerFlow Built-in Draining
+### 阶段 E：旧参考 Provider Draining
 
 - 不接受新 Sandbox
 - 等待旧 Run 结束
@@ -113,7 +113,7 @@ Platform 默认值改为 sandbox-runtime ProviderRevision。
 
 切换失败时：
 
-- 新 WorkOrder Binding 回滚到 DeerFlow Provider。
+- 新 WorkOrder Binding 回滚到旧参考 Provider。
 - 已创建 sandbox-runtime Sandbox 按其 Revision 完成或取消。
 - 禁止运行中直接把 Process Snapshot 恢复到不兼容 Provider。
 - Workspace Snapshot 可在兼容声明通过后恢复到旧 Provider。

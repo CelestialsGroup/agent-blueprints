@@ -18,7 +18,7 @@
 - **WorkOrder**：一个 Turn 的异步执行与总状态，不承担无限期 Conversation。
 - **Workspace**：Conversation 范围的 Artifact、文件和 Sandbox 工作空间。
 - **WorkflowRun**：Temporal 持久 Workflow 实例。
-- **AgentRuntimeProvider**：启动/Command/Status/Event/Checkpoint 的稳定 Agent Runtime Port；DeerFlow 是首个 Adapter。
+- **AgentRuntimeProvider**：启动/Command/Status/Event/Checkpoint 的稳定 Agent Runtime Port；平台不依赖单一框架，DeerFlow 只是首个参考 Adapter。
 - **RunManifest**：固化 Scenario、Capability、Provider/Admission、Experience、Sandbox、Runtime 和商业授权摘要的执行快照。
 
 ## 可靠性

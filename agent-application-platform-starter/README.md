@@ -12,7 +12,9 @@ Scenario -> CapabilityDefinition -> ProviderResolution
          -> Plugin / Runtime / Sandbox Provider
 ```
 
-默认实现为 DeerFlow AgentRuntimeProvider、Temporal、PostgreSQL、兼容 S3 的 Storage 和 DeerFlow Built-in Sandbox；未来 `sandbox-runtime` 实现同一 Sandbox Provider 契约。html-anything、Open Design、motion-anything、html-to-pptx/html-video 通过 Catalog/Template/Skill/Editor/Converter Provider 集成。
+平台不强制依赖任何单一 Agent 框架。DeerFlow 可作为首个参考 AgentRuntimeProvider Adapter，并可借鉴 LangGraph/Deep Agents、OpenAI Agents SDK、Microsoft Agent Framework、LlamaIndex Workflows、Google ADK、CrewAI 和 Mastra；未来也可以实现自有 Native Runtime。外层可靠性统一由 Temporal、PostgreSQL、兼容 S3 的 Storage 和平台 Ledger 提供。
+
+DeerFlow Built-in Sandbox 可作为首个参考 SandboxProvider，但不是平台前置依赖；未来 `sandbox-runtime` 实现同一 Sandbox Provider 契约。html-anything、Open Design、motion-anything、html-to-pptx/html-video 通过 Catalog/Template/Skill/Editor/Converter Provider 集成。
 
 校验：
 

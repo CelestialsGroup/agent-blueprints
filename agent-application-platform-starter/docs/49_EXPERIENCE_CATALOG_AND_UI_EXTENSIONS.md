@@ -21,7 +21,7 @@ Scenario UI 使用签名 UI Schema 和类型化选项源。`/template_id` 等字
 ## nexu-io 集成 Profile
 
 - html-anything Template/Skill 目录：Catalog 导入器加 Template Provider。
-- html-anything 生成：DeerFlow 下的 Skill 或 sandbox_cli/MCP Capability。
+- html-anything 生成：所选 AgentRuntimeProvider 下的 Skill，或 sandbox_cli/MCP Capability；不得依赖 DeerFlow 私有调用路径。
 - html-to-pptx/html-video：生成 Artifact Staging 的 Converter Provider。
 - Open Design/motion-anything Editor：Artifact Editor/Renderer Provider；嵌入 UI 前优先复用无界面 Capability 和 Catalog Asset。
 - 完整桌面应用不得整体挂载到稳定内核中。

@@ -17,18 +17,20 @@ make validate-all
 2. CommercialAuthorizationSnapshot、Grant 消费和额度 Reservation/Settlement 参考流程。
 3. WorkOrder/Outbox 与 Temporal Workflow。
 4. ProviderResolution、不可变 Revision/Admission/Experience 快照和 RunManifest。
-5. DeerFlow AgentRuntimeProvider Adapter，以及 Command/Event/Checkpoint 私有映射。
-6. DeerFlow Built-in Sandbox Adapter 和 Invocation/Sandbox Ledger。
+5. 首个参考 AgentRuntimeProvider Adapter（可使用 DeerFlow），以及 Command/Event/Checkpoint 私有映射。
+6. 首个参考 SandboxProvider Adapter（可使用 DeerFlow Built-in Sandbox）和 Invocation/Sandbox Ledger。
 7. CanonicalEvent、Artifact Staging/Finalize、RuntimeRecording 和 Delivery。
 8. html-anything Catalog 导入，以及一个 Converter Provider。
 9. 多轮 Workbench 和离线历史回放。
 10. 重复请求、响应丢失、回放、安全和备份测试。
+11. 第二个最小 AgentRuntimeProvider Adapter，以及双 Provider 核心一致性和 Workbench 消费测试。
 
 ## 禁止事项
 
 - 不得把 Business 的 User、Membership、Order、Payment 或 Balance 事实复制到 Agent Platform。
 - 不得把 WorkOrder 当作无边界 Conversation，也不得让 Workspace 只属于 WorkOrder。
-- 不得在 DeerFlow Adapter 之外暴露 Thread/Run/Checkpoint Payload。
+- 不得在任何 Runtime Adapter 之外暴露框架私有 Agent/Thread/Run/Checkpoint Payload。
+- 不得将 DeerFlow、LangGraph、OpenAI Agents SDK 或任何其他框架设为稳定内核的前置依赖或唯一实现。
 - 不得把实时 Runtime 字节持久化到 Event、Temporal 或 PostgreSQL。
 - 不得只用可变字符串标识 Template，也不得硬编码 nexu Plugin ID。
 - 不得加载任意远程 JavaScript，也不得授予 UI Extension 宿主 Cookie、Token 或 DOM 访问权限。

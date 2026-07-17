@@ -20,7 +20,9 @@
 
 ### Runtime 与治理组件
 
-- DeerFlow Runtime 服务
+- 一个或多个独立 Agent Runtime Provider 服务
+- DeerFlow Runtime 服务（可选参考 Adapter）
+- 第二个最小 Runtime 服务（冻结前可替换性验证）
 - Model Gateway
 - Tool/MCP Gateway
 - Sandbox 出站 Gateway
@@ -45,7 +47,9 @@ agent-worker-conversion Deployment
 agent-worker-delivery Deployment
 agent-worker-maintenance Deployment
 
-deerflow-runtime Deployment
+agent-runtime-provider-* Deployment
+deerflow-runtime Deployment（可选参考实现）
+agent-runtime-secondary Deployment（冻结前一致性验证）
 html-anything Deployment
 html-to-pptx Job
 sandbox Pod / Job
@@ -99,6 +103,8 @@ audit
 - Worker -> Plugin Job：Kubernetes Adapter + Manifest 协议
 - Agent Runtime -> Model/Tool/Egress：强制 Gateway
 - Workflow：Temporal
+
+不同语言的 Runtime Provider 作为独立 Workload 部署；Go Agent Platform 不直接链接其 Python/TypeScript 框架依赖。每个 ProviderRevision 独立发布、扩缩容、Canary 和 Draining。
 
 ## 发布
 

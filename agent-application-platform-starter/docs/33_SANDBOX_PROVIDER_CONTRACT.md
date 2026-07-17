@@ -2,7 +2,7 @@
 
 ## 1. 目标
 
-平台前期使用 DeerFlow Built-in Sandbox，后期切换到自研 `sandbox-runtime`。
+平台前期可以使用 DeerFlow Built-in Sandbox 作为首个参考实现，但不把它设为前置依赖；后期可以切换到自研 `sandbox-runtime` 或其他符合契约的 Provider。
 
 两者必须实现同一个稳定接口：
 

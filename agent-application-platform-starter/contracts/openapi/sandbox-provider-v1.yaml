@@ -2,16 +2,12 @@ openapi: 3.1.1
 info:
   title: Sandbox Provider API
   version: 1.0.0
-  description: 'Stable provider contract implemented by DeerFlow Sandbox Adapter today
-    and
-
-    by sandbox-runtime later. The Agent Platform owns SandboxRegistry, leases,
-
-    authorization, WorkOrder mapping and RuntimeSession exposure. Providers own
-
-    backend provisioning and observation.
-
-    '
+  description: >-
+    Stable provider contract with no required backend. A DeerFlow Built-in Sandbox
+    Adapter may be used as the first reference implementation; sandbox-runtime or
+    another conformant provider can implement the same protocol. The Agent Platform
+    owns SandboxRegistry, leases, authorization, WorkOrder mapping and RuntimeSession
+    exposure. Providers own backend provisioning and observation.
   license:
     name: Proprietary
     identifier: LicenseRef-Proprietary

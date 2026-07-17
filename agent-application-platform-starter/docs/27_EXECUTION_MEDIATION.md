@@ -4,7 +4,7 @@
 
 ExecutionGrant 中的 Token、Sandbox、网络和外部通信限制必须可被实际执行。
 
-如果 DeerFlow 或其他 Runtime 可以直接调用模型、MCP、HTTP 和外部工具，Grant 只能成为建议，无法成为安全边界。
+如果任一 Runtime（包括 DeerFlow、LangGraph、OpenAI Agents SDK 或 Native Runtime）可以直接调用模型、MCP、HTTP 和外部工具，Grant 只能成为建议，无法成为安全边界。
 
 ## 2. 强制中介
 
@@ -62,7 +62,7 @@ Kubernetes NetworkPolicy 不提供通用 FQDN 策略，因此不能单独承担�
 
 ## 6. 受治理 Agent Runtime Profile
 
-面向 SaaS 的 AgentRuntimeProvider 必须通过 `governed` Conformance Profile：
+面向 SaaS 的 AgentRuntimeProvider 必须通过 `governed-v1` Conformance Profile：
 
 - 支持预算注入
 - 所有模型请求经过 Model Gateway

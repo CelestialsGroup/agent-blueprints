@@ -18,4 +18,4 @@
 | OpenAPI | 通过：5 份文档均为 0 个错误、0 个警告 |
 | OpenAPI Bundle | 通过：5 个 Bundle，第二次生成结果逐字节一致 |
 
-本次审查有意排除了仓库根 Workflow、隐藏文件策略和受保护 CI 变量。这不会削弱运行时验收边界：在作出任何生产声明前，Phase 0 仍需要真实 Migration、DeerFlow/Sandbox Adapter、故障注入、Temporal Replay、隔离、容量和恢复证据。
+本次审查有意排除了仓库根 Workflow、隐藏文件策略和受保护 CI 变量。这不会削弱运行时验收边界：在作出任何生产声明前，Phase 0 仍需要真实 Migration、至少两个 Agent Runtime Adapter 的可替换性证据、Sandbox Adapter、故障注入、Temporal Replay、隔离、容量和恢复证据。

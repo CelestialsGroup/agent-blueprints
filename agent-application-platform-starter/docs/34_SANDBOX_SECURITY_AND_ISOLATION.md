@@ -104,7 +104,7 @@ Secret Grant 必须：
 
 只有独立 Sandbox Provisioner 拥有最小 Kubernetes RBAC。
 
-Agent API、普通 Worker、DeerFlow、Plugin 和 Sandbox 无 Kubernetes API 权限。
+Agent API、普通 Worker、任何 Agent Runtime Provider（包括 DeerFlow）、Plugin 和 Sandbox 无 Kubernetes API 权限。
 
 Namespace 不是唯一租户隔离边界，必须组合：
 

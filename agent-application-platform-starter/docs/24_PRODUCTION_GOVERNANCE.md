@@ -2,7 +2,7 @@
 
 ## SLI 与初始 SLO
 
-必须观测 Access 延迟/可用性、Temporal 队列延迟、Invocation 重试/未知结果/对账时长、Event 追加/SSE 延迟、DeerFlow/Sandbox 启动/恢复、Runtime 连接、Artifact/Delivery 和 Gateway 预算/拒绝指标。
+必须观测 Access 延迟/可用性、Temporal 队列延迟、Invocation 重试/未知结果/对账时长、Event 追加/SSE 延迟、各 AgentRuntimeProvider/SandboxProvider 启动与恢复、Runtime 连接、Artifact/Delivery 和 Gateway 预算/拒绝指标。指标必须携带 ProviderInstance/ProviderRevision 维度，支持跨框架比较。
 
 初始目标：Agent Access 月可用性 99.9%，已接受 WorkOrder 持久化丢失 0，P95 接受延迟 < 500ms，P95 持久 Event 延迟 < 3s，`outcome_unknown` 24 小时内对账率 99%，Delivery 24 小时最终送达率 99.9%。这些目标必须经容量测试后按部署等级修订。
 

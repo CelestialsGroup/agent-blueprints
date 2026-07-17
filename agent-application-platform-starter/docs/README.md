@@ -25,7 +25,7 @@
 - `05_WORKFLOW_RELIABILITY.md`：Temporal、Outbox 和回放规则。
 - `19_INVOCATION_CONSISTENCY.md`：副作用账本与对账。
 - `27_EXECUTION_MEDIATION.md`：Model/Tool/Artifact/Egress 强制治理。
-- `09_DEERFLOW_INTEGRATION.md`：AgentRuntimeProvider Adapter 与升级。
+- `09_DEERFLOW_INTEGRATION.md`：框架无关 AgentRuntimeProvider、选型、升级与 DeerFlow 参考 Adapter。
 - `20_CAPABILITY_SPI.md`：Capability、Resolution、Revision 和 Conformance。
 - `21_PLUGIN_INVOCATION_PROTOCOL.md`：受治理的 Invocation 协议。
 - `30_PLUGIN_MODE_BINDINGS.md`：service/job/sandbox_cli/MCP 绑定。

@@ -5,7 +5,7 @@
 ## 当前状态
 
 - Conversation/Branch/Turn 与 Conversation 拥有的 Workspace 已闭合。
-- DeerFlow 通过独立 AgentRuntimeProvider 接入，私有 Thread/Run/Checkpoint 不进入平台模型。
+- Agent Runtime 只通过独立 AgentRuntimeProvider 接入；平台不强制依赖 DeerFlow 或其他单一框架。DeerFlow 是首个参考 Adapter，其私有 Thread/Run/Checkpoint 不进入平台模型。
 - RuntimeRecording、Experience Catalog、Template/Skill/Renderer Provider 和 Business CommercialAuthorization 已闭合。
 - Conversation、AgentRuntimeRun、RuntimeRecording、Invocation、SandboxOperation、WorkOrder 都有权威状态机或持久化状态约束。
 - 本地契约 Gate 已通过；候选版本未冻结，也不代表生产就绪。
@@ -38,4 +38,4 @@ Business Application 拥有 User、Membership、Product、Order、Payment、Enti
 
 稳定内核不得保存 Pod、Namespace、Container、VM、Node 或原始 Runtime Endpoint；这些字段只属于 Provider Adapter 私有模型。
 
-生产批准仍需要真实 migrations、DeerFlow/Sandbox Adapter、Temporal Replay、故障注入、安全隔离、容量和备份恢复证据。
+生产批准仍需要真实 Migration、至少一个 Agent Runtime Adapter、Sandbox Adapter、Temporal Replay、故障注入、安全隔离、容量和备份恢复证据。冻结 AgentRuntimeProvider v1 前还需要第二个最小 Runtime Adapter 通过核心一致性测试，以证明契约没有按单一框架反向设计。

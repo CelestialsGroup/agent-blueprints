@@ -9,7 +9,7 @@ Agent Application Platform 为多个 Business Application 提供受治理的多�
 
 ## 稳定内核与执行平面
 
-稳定内核只保存可复现、可审计、与后端无关的标识和状态。DeerFlow、Sandbox 后端、模型、工具、Template、Renderer/Converter 都是 Provider Adapter。`Conversation binding + ProviderRevision + ProviderAdmissionDecision + ExperienceRevision + RunManifest` 固化一次 Run 的可重放输入。
+稳定内核只保存可复现、可审计、与后端无关的标识和状态。Agent Runtime 框架、Sandbox 后端、模型、工具、Template、Renderer/Converter 都是 Provider Adapter。DeerFlow、LangGraph/Deep Agents、OpenAI Agents SDK 等只能作为参考或可选 Runtime 实现，不得成为平台能力前提。`Conversation binding + ProviderRevision + ProviderAdmissionDecision + ExperienceRevision + RunManifest` 固化一次 Run 的可重放输入。
 
 ## 持久化与可靠性
 
@@ -19,7 +19,7 @@ Temporal 保存持久 Workflow History；PostgreSQL 保存当前状态、Ledger�
 
 ## Sandbox
 
-Conversation Workspace 拥有多个 Sandbox Slot。DeerFlow Built-in Sandbox 与未来 `sandbox-runtime` 实现相同契约；稳定内核禁止后端基础设施标识和原始 Endpoint。Runtime Gateway 可产生独立、加密、受保留策略管理的 RuntimeRecording。
+Conversation Workspace 拥有多个 Sandbox Slot。DeerFlow Built-in Sandbox 可作为首个参考 Sandbox Adapter，未来 `sandbox-runtime` 或其他实现使用相同契约；稳定内核禁止后端基础设施标识和原始 Endpoint。Runtime Gateway 可产生独立、加密、受保留策略管理的 RuntimeRecording。
 
 ## 状态
 

@@ -4,10 +4,14 @@ info:
   title: Agent Runtime Provider Protocol
   version: 1.0.0
   description: |
-    Stable anti-corruption contract for stateful Agent Runtime providers. DeerFlow is
-    the first adapter. Thread IDs, checkpoint formats and upstream event payloads stay
-    provider-private; the platform sees versioned runs, commands, cursors and portable
-    checkpoint manifests. Every mutation is mediated by the Invocation Ledger.
+    Stable anti-corruption contract for stateful Agent Runtime providers. The platform
+    does not require one Agent framework; DeerFlow may be the first reference adapter,
+    while other frameworks or a native runtime can implement the same protocol. Native
+    agent, thread and run IDs, checkpoint payload formats and upstream events remain
+    provider-private. The platform sees versioned runs, commands, cursors and
+    ProviderRevision-bound checkpoint manifests. Every mutation is mediated by the
+    Invocation Ledger. A manifest is portable metadata, not proof that checkpoint
+    payloads can be restored across unrelated providers.
   license:
     name: Proprietary
     identifier: LicenseRef-Proprietary

@@ -4,7 +4,7 @@
 
 ## Phase 0：契约准入的纵向链路
 
-实现一条真实 Conversation Turn 链路，依次经过 Business 授权、WorkOrder/Temporal、DeerFlow AgentRuntimeProvider、Built-in Sandbox、Invocation/Event、Artifact、RuntimeRecording 和 Delivery。进入 Phase 1 前，必须完成 `tasks/PHASE0.md` 中的故障与回放证据。
+实现一条真实 Conversation Turn 链路，依次经过 Business 授权、WorkOrder/Temporal、已认证 AgentRuntimeProvider、已认证 SandboxProvider、Invocation/Event、Artifact、RuntimeRecording 和 Delivery。DeerFlow 可作为主参考 Adapter，但进入 Phase 1 前还必须完成第二个最小 Runtime Adapter、故障和回放证据，以证明平台不依赖单一框架。
 
 ## Phase 1A：产品能力补全
 
@@ -14,6 +14,7 @@
 - html-to-pptx 和 html-video Converter Profile；
 - Terminal/Browser/Desktop 的完整 RuntimeRecording 回放；
 - Provider 管理、Draining 和升级 Canary 界面。
+- Agent Runtime 选型矩阵、Provider 对比观测和 Native Runtime 可行性评估。
 
 ## Phase 1B：参考 Business Application
 
