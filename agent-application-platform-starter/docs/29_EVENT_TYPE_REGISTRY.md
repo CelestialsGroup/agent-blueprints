@@ -35,6 +35,8 @@ runtime_recording.*
 
 Plugin 私有 Event 必须带发布者 Namespace，且不能直接驱动核心 Projection。
 
+Agent Runtime 核心注册表位于 `contracts/event-types/agent-runtime-core-v1.json`。Registry 本身拥有 ID/Version/Digest 并由 RunManifest 固化；其中 URI 可以指向 Schema `$defs`。Data Schema 使用 `rfc8785-schema-closure-v1`，对根 Schema 与按绝对 `$id` 排序的传递外部依赖一起执行 JCS + SHA-256，避免只哈希根文件而漏掉 `$ref` 变化；`type + data_version` 在一个 Registry Revision 中唯一。
+
 ## 时间
 
 事件同时保存：
@@ -55,6 +57,8 @@ Delta 必须按以下任一策略合并：
 - 语义消息块
 
 最终的 Message Completed Event 必须持久化完整可重建结果或 Artifact Reference。
+
+Runtime 的 `message.delta` 可以短期传输或批量合并；`message.completed`、`plan.updated`、`task.completed`、`usage.reported` 和 Run 终态必须有持久、可重建的引用。Headless/Workbench/IDE Adapter 只能投影同一核心流，不创建竞争事实源。
 
 ## 留存
 

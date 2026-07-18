@@ -1,14 +1,9 @@
 {
   "provider_revision_id": "rpr_01J00000000000000000000000",
-  "provider_revision_digest": "sha256:2ce33278f0ac607ce7c2c6d70020aa3e2edc85e83a461ed696bd063dfc762f70",
+  "provider_revision_digest": "sha256:6256b3a88b33892ac387a0ae5e6dc935743c7f01433a6dce942e59b94d0475aa",
   "provider_instance_id": "rpi_html_preview",
-  "plugin_id": "renderer-provider.html-preview",
-  "plugin_version": "1.0.0",
-  "manifest_digest": "sha256:3636363636363636363636363636363636363636363636363636363636363636",
-  "package_digest": "sha256:3737373737373737373737373737373737373737373737373737373737373737",
   "configuration_digest": "sha256:3838383838383838383838383838383838383838383838383838383838383838",
   "approved_permissions_digest": "sha256:3939393939393939393939393939393939393939393939393939393939393939",
-  "runtime_binding_digest": "sha256:3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a",
   "credential_binding_digest": "sha256:3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b",
   "provider_kind": "renderer",
   "conformance": [
@@ -18,9 +13,33 @@
       "profile": "default",
       "suite_version": "1.0.0",
       "status": "passed",
-      "report_digest": "sha256:3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c"
+      "report_digest": "sha256:3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c",
+      "suite_id": "capability-provider",
+      "suite_digest": "sha256:87070d107edb785270c9e2c7b50ed775362b39e0262f319232f56093a2e1225d",
+      "suite_profile_id": "capability-core-v1"
     }
   ],
-  "conformance_set_digest": "sha256:0f7c1ce53cee245bda4acf3f8d95a4276cb7ae4a0f0689bc208d23f584adef20",
-  "created_at": "2026-07-16T09:00:22Z"
+  "conformance_set_digest": "sha256:b1892b5b2d7166d0e8a02857c69f8dc437e45f789b43fdffc4bdaa8961e914fa",
+  "created_at": "2026-07-16T09:00:22Z",
+  "implementation": {
+    "implementation_id": "renderer-provider.html-preview",
+    "implementation_version": "1.0.0",
+    "distribution_type": "package",
+    "distribution_digest": "sha256:3737373737373737373737373737373737373737373737373737373737373737",
+    "manifest_digest": "sha256:3636363636363636363636363636363636363636363636363636363636363636",
+    "provenance": {
+      "source_revision": "2251cca58dd51fcc8576ed01cde49988693c245328d08664970b53b202b7059b",
+      "source_tree_digest": "sha256:de324776ca2fc656a882554433228bf24a5261c8edad31faa0d2ce0d2b4d5198",
+      "build_artifact_digest": "sha256:3737373737373737373737373737373737373737373737373737373737373737",
+      "sbom_digest": "sha256:0e16c0107b1b6a20c3c89ee5280e028b8adc9ffbf914c3d28c60c636adc4032c",
+      "provenance_statement_digest": "sha256:fdb92839e992ae3a10e6ba23b139877f2ebed04cdfc65767b4ea92a7fdeabfe8",
+      "build_system": "contract-fixture-build-v1"
+    }
+  },
+  "port": {
+    "protocol": "capability-provider",
+    "protocol_version": "v1",
+    "contract_digest": "sha256:343f4f6aee161db54b083204d9fe45684e77e7a69dabea7ecdc69b3688e0c0b7",
+    "binding_digest": "sha256:3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a"
+  }
 }

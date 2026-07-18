@@ -8,7 +8,7 @@
     { "id": "stale-admission-decision", "mutation": "stale_admission_decision" },
     { "id": "forged-capability-definition-digest", "mutation": "forged_capability_definition_digest" },
     { "id": "sandbox-unsupported-capability", "mutation": "sandbox_unsupported_capability" },
-    { "id": "forged-agent-runtime-outer-conformance", "mutation": "forged_agent_runtime_outer_conformance" },
+    { "id": "missing-agent-runtime-resolution", "mutation": "agent_runtime_resolution_missing" },
     { "id": "capability-bound-to-incompatible-provider-kind", "mutation": "capability_incompatible_provider_kind" },
     { "id": "admission-decision-missing-predecessor", "mutation": "missing_admission_predecessor" }
   ]

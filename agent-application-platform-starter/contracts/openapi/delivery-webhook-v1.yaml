@@ -1,11 +1,12 @@
 openapi: 3.1.1
 
 info:
-  title: Agent Delivery Webhook
-  version: 1.0.0
+  title: Agent Business Callback
+  version: 1.1.0
   description: |
-    Receiver contract implemented by a registered Business Application callback.
-    Requests are delivered at least once and must be idempotent by webhook_id and delivery_id.
+    Receiver contract implemented by a registered Business Application callback. Delivery
+    and settlement requests are sent at least once, authenticated independently and accepted
+    idempotently by their immutable ID plus digest.
   license:
     name: Proprietary
     identifier: LicenseRef-Proprietary
@@ -17,12 +18,67 @@ servers:
 tags:
   - name: Delivery
     description: Receive completed or terminal Agent deliveries.
+  - name: Settlement
+    description: Receive technical usage facts for Business-owned settlement and reconciliation.
 
 security:
   - CallbackMutualTLS: []
   - CallbackMessageSignature: []
 
 paths:
+  /v1/agent-settlements:
+    post:
+      tags: [Settlement]
+      operationId: receiveAgentSettlement
+      summary: Receive a signed BusinessSettlementEnvelope
+      description: |
+        The embedded UsageReport is immutable technical evidence. The receiver owns price,
+        balance and commercial settlement facts and must not mutate Platform TechnicalUsage.
+      parameters:
+        - name: Content-Digest
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: Signature-Input
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: Signature
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: traceparent
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/business-settlement-envelope.schema.json
+      responses:
+        '204':
+          description: Settlement request accepted idempotently
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
   /v1/agent-deliveries:
     post:
       tags: [Delivery]
@@ -96,7 +152,13 @@ components:
           schema:
             $ref: ../schemas/standard-error.schema.json
     Conflict:
-      description: The same webhook_id was previously accepted with a different digest.
+      description: The same immutable request ID was previously accepted with a different digest.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Unprocessable:
+      description: The signed request is valid but violates the registered Business contract.
       content:
         application/json:
           schema:

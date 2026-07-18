@@ -1,0 +1,115 @@
+{
+  "suite_id": "sandbox-provider",
+  "suite_version": "1.0.0",
+  "suite_digest": "sha256:42f7ce9cbc975ac765db65d42e4317353ac65f90e65e38c1d3efce3b69347764",
+  "target_kind": "sandbox",
+  "profiles": [
+    {
+      "profile_id": "sandbox-core-v1",
+      "tests": [
+        {
+          "test_id": "create-idempotent",
+          "category": "lifecycle",
+          "evidence_type": "test_log",
+          "description": "Repeated create returns the same Sandbox for the same digest."
+        },
+        {
+          "test_id": "create-digest-conflict",
+          "category": "contract",
+          "evidence_type": "test_log",
+          "description": "Create rejects reuse with a conflicting request digest."
+        },
+        {
+          "test_id": "controller-restart-reconcile",
+          "category": "recovery",
+          "evidence_type": "trace",
+          "description": "Controller restart reconstructs desired and observed state."
+        },
+        {
+          "test_id": "lease-expiration",
+          "category": "lifecycle",
+          "evidence_type": "trace",
+          "description": "Expired leases stop new work and trigger termination or reconciliation."
+        },
+        {
+          "test_id": "exec-idempotent",
+          "category": "lifecycle",
+          "evidence_type": "test_log",
+          "description": "Exec retries reuse the logical operation and append attempts."
+        },
+        {
+          "test_id": "exec-cancel-confirmed",
+          "category": "lifecycle",
+          "evidence_type": "trace",
+          "description": "Exec cancellation requires evidence and never infers success from intent."
+        },
+        {
+          "test_id": "stale-fencing-rejected",
+          "category": "ordering",
+          "evidence_type": "test_log",
+          "description": "Stale operation attempts cannot mutate Sandbox state."
+        },
+        {
+          "test_id": "outcome-unknown-reconcile",
+          "category": "recovery",
+          "evidence_type": "trace",
+          "description": "Lost responses resolve through status query or reconciliation."
+        },
+        {
+          "test_id": "no-host-namespace",
+          "category": "security",
+          "evidence_type": "report",
+          "description": "Sandbox cannot enter host namespaces."
+        },
+        {
+          "test_id": "no-kubernetes-api",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "Sandbox workload cannot access Kubernetes credentials or API."
+        },
+        {
+          "test_id": "no-cloud-metadata",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "Cloud instance metadata is unreachable."
+        },
+        {
+          "test_id": "no-cross-tenant-network",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "Cross-tenant network paths are denied."
+        },
+        {
+          "test_id": "no-cross-tenant-volume",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "Cross-tenant storage paths are denied."
+        },
+        {
+          "test_id": "artifact-staging-only",
+          "category": "security",
+          "evidence_type": "artifact",
+          "description": "Sandbox can write only admitted staging locations."
+        },
+        {
+          "test_id": "provider-failover",
+          "category": "multi_node",
+          "evidence_type": "trace",
+          "description": "Provider API or controller failover preserves fencing and reconciliation."
+        },
+        {
+          "test_id": "node-failure",
+          "category": "multi_node",
+          "evidence_type": "trace",
+          "description": "Node loss produces recoverable or explicitly failed Sandbox state."
+        },
+        {
+          "test_id": "usage-evidence",
+          "category": "usage",
+          "evidence_type": "report",
+          "description": "Sandbox usage entries bind MeterDefinition, WorkOrder and immutable evidence."
+        }
+      ]
+    }
+  ]
+}

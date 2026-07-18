@@ -18,10 +18,16 @@
     "runtime.artifact-staging",
     "runtime.usage"
   ],
-  "event_schema_versions": [1],
   "limits": {
     "max_input_bytes": 1048576,
     "max_event_batch": 1000,
     "max_checkpoint_bytes": 104857600
-  }
+  },
+  "event_registries": [
+    {
+      "registry_id": "agent-runtime-core",
+      "registry_version": 1,
+      "registry_digest": "sha256:9ccdd4614fee2676150d8bd728fad02bb82f1a3bbeb9fbdd2357792157e53c67"
+    }
+  ]
 }

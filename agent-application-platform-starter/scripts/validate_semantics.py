@@ -37,32 +37,221 @@ def validate_self_digest(value: dict[str, Any], field: str) -> None:
         raise AssertionError(f"{field} mismatch: expected {actual}, got {expected}")
 
 
+def validate_provider_architecture(context: dict[str, Any], suites: list[dict[str, Any]]) -> None:
+    protocol_by_kind = {
+        "agent_runtime": "agent-runtime-provider",
+        "sandbox": "sandbox-provider",
+    }
+    suites_by_id = {suite["suite_id"]: suite for suite in suites}
+    for revision in context["provider_revisions"]:
+        expected_protocol = protocol_by_kind.get(revision["provider_kind"], "capability-provider")
+        if revision["port"]["protocol"] != expected_protocol:
+            raise AssertionError("Provider kind is bound to the wrong stable Port")
+        implementation = revision["implementation"]
+        if implementation["provenance"]["build_artifact_digest"] != implementation["distribution_digest"]:
+            raise AssertionError("Provider distribution and BuildProvenance bind different artifacts")
+        if implementation["distribution_type"] == "oci_image" and "image_digest" not in implementation:
+            raise AssertionError("OCI Provider implementation is missing image_digest")
+        for result in revision["conformance"]:
+            suite = suites_by_id.get(result["suite_id"])
+            if suite is None or result["suite_version"] != suite["suite_version"] or result["suite_digest"] != suite["suite_digest"]:
+                raise AssertionError("Provider conformance does not bind an admitted immutable Suite")
+            if result["suite_profile_id"] not in {profile["profile_id"] for profile in suite["profiles"]}:
+                raise AssertionError("Provider conformance binds an unknown Suite profile")
+
+
+def validate_execution_topology(
+    manifest: dict[str, Any], workflow_run: dict[str, Any], agent_run: dict[str, Any],
+    runtime_start: dict[str, Any],
+) -> None:
+    validate_self_digest(manifest["orchestration_binding"], "binding_digest")
+    validate_self_digest(runtime_start, "request_digest")
+    tenant_ids = {manifest["tenant_id"], workflow_run["tenant_id"], agent_run["tenant_id"], runtime_start["tenant_id"]}
+    if len(tenant_ids) != 1:
+        raise AssertionError("Execution topology crosses tenants")
+    if workflow_run["workflow_run_id"] != manifest["workflow_run_id"]:
+        raise AssertionError("RunManifest and WorkflowRun IDs differ")
+    if workflow_run["work_order_id"] != manifest["work_order_id"]:
+        raise AssertionError("WorkflowRun belongs to a different WorkOrder")
+    if workflow_run["workflow"] != manifest["workflow"] or workflow_run["orchestration_binding"] != manifest["orchestration_binding"]:
+        raise AssertionError("WorkflowRun and RunManifest bind different orchestration evidence")
+    if agent_run["agent_run_id"] != manifest["agent_run_id"] or runtime_start["agent_run_id"] != manifest["agent_run_id"]:
+        raise AssertionError("AgentRun identity is not closed across Manifest and Runtime start")
+    if agent_run["workflow_run_id"] != manifest["workflow_run_id"] or agent_run["work_order_id"] != manifest["work_order_id"]:
+        raise AssertionError("AgentRun belongs to a different WorkflowRun or WorkOrder")
+    if agent_run["runtime_run_id"] != runtime_start["runtime_run_id"]:
+        raise AssertionError("One AgentRun must bind exactly one AgentRuntimeRun identity")
+    if agent_run["run_manifest_digest"] != manifest["run_manifest_digest"] or runtime_start["run_manifest_digest"] != manifest["run_manifest_digest"]:
+        raise AssertionError("Execution topology binds different RunManifest digests")
+    if agent_run["run_kind"] == "root" and agent_run["root_agent_run_id"] != agent_run["agent_run_id"]:
+        raise AssertionError("Root AgentRun must identify itself as root")
+    if workflow_run["root_agent_run_id"] != agent_run["agent_run_id"]:
+        raise AssertionError("WorkflowRun does not bind its unique root AgentRun")
+    if runtime_start["workflow_run_id"] != manifest["workflow_run_id"]:
+        raise AssertionError("Runtime start belongs to a different WorkflowRun")
+    if agent_run["runtime_provider_resolution_id"] != manifest["agent_runtime"]["resolution_id"]:
+        raise AssertionError("AgentRun and RunManifest bind different Runtime Provider resolutions")
+
+
+def validate_runtime_token(
+    token: dict[str, Any], manifest: dict[str, Any], agent_run: dict[str, Any],
+    runtime_start: dict[str, Any], policy: dict[str, Any], budget: dict[str, Any],
+) -> None:
+    expected = {
+        "tenant_id": manifest["tenant_id"],
+        "runtime_run_id": runtime_start["runtime_run_id"],
+        "agent_run_id": manifest["agent_run_id"],
+        "workflow_run_id": manifest["workflow_run_id"],
+        "work_order_id": manifest["work_order_id"],
+        "run_manifest_digest": manifest["run_manifest_digest"],
+        "request_digest": runtime_start["request_digest"],
+        "invocation_id": runtime_start["invocation_id"],
+        "invocation_attempt_id": runtime_start["invocation_attempt_id"],
+        "fencing_token": runtime_start["fencing_token"],
+        "policy_decision_digest": policy["decision_digest"],
+        "execution_budget_digest": budget["budget_digest"],
+        "effective_permissions_digest": policy["effective_permissions_digest"],
+    }
+    for field, value in expected.items():
+        if token[field] != value:
+            raise AssertionError(f"Agent Runtime token differs from execution context on {field}")
+    if token["operation"] != "start" or not token["iat"] <= token["nbf"] < token["exp"]:
+        raise AssertionError("Agent Runtime token operation or lifetime is invalid")
+    if agent_run["runtime_run_id"] != token["runtime_run_id"]:
+        raise AssertionError("Agent Runtime token binds a different AgentRun")
+    runtime_resolution = next(
+        item for item in manifest["capability_resolutions"]
+        if item["resolution_id"] == manifest["agent_runtime"]["resolution_id"]
+    )
+    if token["provider_revision_id"] != runtime_resolution["selected_provider_revision"]["provider_revision_id"]:
+        raise AssertionError("Agent Runtime token binds a different ProviderRevision")
+
+
+def validate_gateway_frames(connect: dict[str, Any], control: dict[str, Any]) -> None:
+    channels = [cursor["channel"] for cursor in connect["resume_cursors"]]
+    if len(channels) != len(set(channels)):
+        raise AssertionError("Runtime Gateway resume cursors contain duplicate channels")
+    control_payload = {
+        field: control[field]
+        for field in ("command", "columns", "rows", "text", "key", "url")
+        if field in control
+    }
+    if control["control_digest"] != canonical_digest(control_payload):
+        raise AssertionError("Runtime Gateway control_digest does not bind the command payload")
+    if connect["runtime_session_id"] != control["runtime_session_id"] or connect["connection_generation"] != control["connection_generation"]:
+        raise AssertionError("Runtime Gateway frames belong to different session generations")
+
+
+def validate_event_registry(registry: dict[str, Any]) -> None:
+    validate_self_digest(registry, "registry_digest")
+    dependencies = sorted(
+        [
+            load("contracts/schemas/capability-error.schema.json"),
+            load("contracts/schemas/technical-usage-entry.schema.json"),
+        ],
+        key=lambda schema: schema["$id"],
+    )
+    expected_schema_digest = canonical_digest({
+        "root": load("contracts/schemas/agent-runtime-event-data.schema.json"),
+        "dependencies": dependencies,
+    })
+    keys: set[tuple[str, int]] = set()
+    for definition in registry["definitions"]:
+        key = (definition["type"], definition["data_version"])
+        if key in keys:
+            raise AssertionError("EventTypeRegistry contains duplicate type plus data_version")
+        keys.add(key)
+        if definition["data_schema"]["digest"] != expected_schema_digest:
+            raise AssertionError("EventTypeRegistry data schema digest is not admitted")
+        if definition["data_schema"]["digest_profile"] != "rfc8785-schema-closure-v1":
+            raise AssertionError("EventTypeRegistry uses an unsupported Schema closure digest profile")
+        if not definition["data_schema"]["uri"].startswith("urn:agent-platform:agent-runtime-event-data:v1#/$defs/"):
+            raise AssertionError("Runtime core event points outside the admitted payload registry")
+
+
+def validate_usage_contracts(
+    meter: dict[str, Any], entry: dict[str, Any], report: dict[str, Any], settlement: dict[str, Any],
+) -> None:
+    validate_self_digest(meter, "definition_digest")
+    validate_self_digest(report, "usage_report_digest")
+    validate_self_digest(settlement, "settlement_envelope_digest")
+    if entry["meter_id"] != meter["meter_id"] or entry["meter_version"] != meter["meter_version"]:
+        raise AssertionError("TechnicalUsageEntry binds a different MeterDefinition")
+    if entry["meter_definition_digest"] != meter["definition_digest"] or entry["unit"] != meter["base_unit"]:
+        raise AssertionError("TechnicalUsageEntry Meter digest or unit mismatch")
+    if any(item["tenant_id"] != report["tenant_id"] or item["work_order_id"] != report["work_order_id"] for item in report["entries"]):
+        raise AssertionError("UsageReport contains cross-tenant or cross-WorkOrder entries")
+    if len({item["entry_id"] for item in report["entries"]}) != len(report["entries"]):
+        raise AssertionError("UsageReport contains duplicate entry IDs")
+    if report["report_status"] == "final" and any(item["measurement_status"] not in {"confirmed", "corrected"} for item in report["entries"]):
+        raise AssertionError("Final UsageReport cannot silently settle partial or estimated usage")
+    if report["report_status"] == "correction" and any(item["measurement_status"] != "corrected" for item in report["entries"]):
+        raise AssertionError("Correction UsageReport contains non-correction entries")
+    if settlement.get("usage_report") != report:
+        raise AssertionError("BusinessSettlementEnvelope binds a different UsageReport")
+    for field in ("tenant_id", "work_order_id", "commercial_authorization_id", "commercial_authorization_digest", "quota_reservation_id", "quota_reservation_digest"):
+        if settlement[field] != report[field]:
+            raise AssertionError(f"Settlement and UsageReport differ on {field}")
+
+
+def validate_policy_decision(decision: dict[str, Any]) -> None:
+    validate_self_digest(decision, "decision_digest")
+    actions = {item["action"] for item in decision["evaluations"]}
+    expected = "deny" if "deny" in actions else "approval_required" if "ask" in actions else "allow"
+    if decision["outcome"] != expected:
+        raise AssertionError("PolicyDecision does not resolve deny greater than ask greater than allow")
+    if datetime.fromisoformat(decision["expires_at"].replace("Z", "+00:00")) <= datetime.fromisoformat(decision["decided_at"].replace("Z", "+00:00")):
+        raise AssertionError("PolicyDecision expires_at must be later than decided_at")
+
+
+def validate_conformance_suite(suite: dict[str, Any]) -> None:
+    validate_self_digest(suite, "suite_digest")
+    profile_ids = [profile["profile_id"] for profile in suite["profiles"]]
+    if len(profile_ids) != len(set(profile_ids)):
+        raise AssertionError("Conformance suite contains duplicate profiles")
+    known = set(profile_ids)
+    dependencies = {profile["profile_id"]: set(profile.get("depends_on", [])) for profile in suite["profiles"]}
+    if any(not value <= known for value in dependencies.values()):
+        raise AssertionError("Conformance profile depends on an unknown profile")
+    test_ids = [test["test_id"] for profile in suite["profiles"] for test in profile["tests"]]
+    if len(test_ids) != len(set(test_ids)):
+        raise AssertionError("Conformance suite contains duplicate test IDs")
+    visiting: set[str] = set()
+    visited: set[str] = set()
+    def visit(profile_id: str) -> None:
+        if profile_id in visiting:
+            raise AssertionError("Conformance profile dependency cycle")
+        if profile_id in visited:
+            return
+        visiting.add(profile_id)
+        for dependency in dependencies[profile_id]:
+            visit(dependency)
+        visiting.remove(profile_id)
+        visited.add(profile_id)
+    for profile_id in profile_ids:
+        visit(profile_id)
+
+
 def snapshot_fields(revision: dict[str, Any], decision: dict[str, Any]) -> dict[str, Any]:
     result = {
         "provider_revision_id": revision["provider_revision_id"],
         "provider_revision_digest": revision["provider_revision_digest"],
         "provider_kind": revision["provider_kind"],
-        "plugin_id": revision["plugin_id"],
-        "plugin_version": revision["plugin_version"],
-        "manifest_digest": revision["manifest_digest"],
-        "package_digest": revision["package_digest"],
-        "runtime_binding_digest": revision["runtime_binding_digest"],
+        "implementation": revision["implementation"],
+        "port": revision["port"],
         "configuration_digest": revision["configuration_digest"],
         "approved_permissions_digest": revision["approved_permissions_digest"],
         "credential_binding_digest": revision["credential_binding_digest"],
-        "conformance_report_digest": revision["conformance_set_digest"],
+        "conformance_set_digest": revision["conformance_set_digest"],
         "admission_decision_id": decision["decision_id"],
         "admission_decision_digest": decision["decision_digest"],
         "admission_status": "certified",
     }
-    if "image_digest" in revision:
-        result["image_digest"] = revision["image_digest"]
     return result
 
 
 def provider_snapshot_bindings(manifest: dict[str, Any]) -> list[tuple[dict[str, Any], str]]:
-    bindings = [(manifest["agent_runtime"]["provider_revision"], manifest["agent_runtime"]["provider_instance_id"])]
-    bindings.extend((item["selected_provider_revision"], item["selected_provider_instance_id"]) for item in manifest["capability_resolutions"])
+    bindings = [(item["selected_provider_revision"], item["selected_provider_instance_id"]) for item in manifest["capability_resolutions"]]
     bindings.extend((item["provider_revision"], item["provider_instance_id"]) for item in manifest["sandboxes"])
     bindings.extend((item["provider_revision"], item["provider_instance_id"]) for item in manifest["selected_experiences"])
     return bindings
@@ -99,10 +288,14 @@ def validate_run_admission(manifest: dict[str, Any], context: dict[str, Any]) ->
     if context["experience_requirements"] != scenario_definition.get("experience_requirements", []):
         raise AssertionError("Run admission Experience requirements differ from the ScenarioDefinition")
     commercial = context["commercial_authorization"]
-    validate_self_digest(commercial, "authorization_digest")
+    validate_self_digest(commercial, "commercial_authorization_digest")
     if commercial["authorized_limits_digest"] != canonical_digest(commercial["authorized_limits"]):
         raise AssertionError("Commercial authorization does not bind its explicit limits")
-    if manifest["commercial_authorization_digest"] != commercial["authorization_digest"]:
+    expected_commercial = {
+        "commercial_authorization_id": commercial["commercial_authorization_id"],
+        "commercial_authorization_digest": commercial["commercial_authorization_digest"],
+    }
+    if manifest["commercial_authorization"] != expected_commercial:
         raise AssertionError("RunManifest does not bind the admitted CommercialAuthorizationSnapshot")
     required_items = [(item["id"], item["version"], item["profile"]) for item in context["required_capabilities"]]
     resolved_items = [(item["capability"]["id"], item["capability"]["version"], item["capability"]["profile"]) for item in manifest["capability_resolutions"]]
@@ -130,9 +323,6 @@ def validate_run_admission(manifest: dict[str, Any], context: dict[str, Any]) ->
         expected_conformance_digest = canonical_digest(revision["conformance"])
         if revision["conformance_set_digest"] != expected_conformance_digest:
             raise AssertionError("ProviderRevision conformance_set_digest mismatch")
-        for legacy in ("sandbox_conformance_report_digest", "governed_conformance_report_digest"):
-            if legacy in revision and revision[legacy] != expected_conformance_digest:
-                raise AssertionError(f"Legacy {legacy} conflicts with generic conformance_set_digest")
         revision_id = revision["provider_revision_id"]
         if revision_id in revisions:
             raise AssertionError(f"Duplicate ProviderRevision in admission context: {revision_id}")
@@ -201,13 +391,18 @@ def validate_run_admission(manifest: dict[str, Any], context: dict[str, Any]) ->
         if not revision_supports(revision, key):
             raise AssertionError(f"ProviderRevision conformance does not cover selected capability: {key}")
 
-    runtime_revision = revisions[manifest["agent_runtime"]["provider_revision"]["provider_revision_id"]]
+    runtime_resolutions = [
+        resolution for resolution in manifest["capability_resolutions"]
+        if resolution["resolution_id"] == manifest["agent_runtime"]["resolution_id"]
+    ]
+    if len(runtime_resolutions) != 1:
+        raise AssertionError("RunManifest agent_runtime must reference exactly one CapabilityResolution")
+    runtime_resolution = runtime_resolutions[0]
+    runtime_revision = revisions[runtime_resolution["selected_provider_revision"]["provider_revision_id"]]
     if runtime_revision["provider_kind"] != "agent_runtime" or "agent_runtime" not in context["agent_runtime_capability"]["allowed_provider_kinds"]:
         raise AssertionError("RunManifest agent_runtime must bind an admitted Agent Runtime Provider")
     if not revision_supports(runtime_revision, runtime_key):
         raise AssertionError("Agent Runtime Provider conformance does not cover its governed execution capability")
-    if manifest["agent_runtime"]["governed_conformance_report_digest"] != runtime_revision["conformance_set_digest"]:
-        raise AssertionError("Agent Runtime outer conformance digest conflicts with the verified ProviderRevision")
 
     for sandbox in manifest["sandboxes"]:
         revision = revisions[sandbox["provider_revision"]["provider_revision_id"]]
@@ -337,20 +532,140 @@ else:
 
 context = load("examples/contracts/run-admission-context.json")
 manifest = load("examples/contracts/run-manifest-v2.json")
+workflow_run = load("examples/contracts/workflow-run.json")
+agent_run = load("examples/contracts/agent-run.json")
+runtime_start = load("examples/contracts/agent-runtime-start-request.json")
+runtime_token = load("examples/contracts/agent-runtime-invocation-token-claims.json")
+event_registry = load("contracts/event-types/agent-runtime-core-v1.json")
+meter = load("examples/contracts/meter-definition.json")
+usage_entry = load("examples/contracts/technical-usage-entry.json")
+usage_report = load("examples/contracts/usage-report.json")
+settlement = load("examples/contracts/business-settlement-envelope.json")
+policy_decision = load("examples/contracts/policy-decision.json")
+execution_budget = load("examples/contracts/execution-budget.json")
+gateway_connect = load("examples/contracts/runtime-gateway-frame.json")
+gateway_control = load("examples/contracts/runtime-gateway-control-frame.json")
+conformance_suites = [
+    load("contracts/conformance/runtime/v1/suite.json"),
+    load("contracts/conformance/sandbox/v1/suite.json"),
+    load("contracts/conformance/runtime-gateway/v1/suite.json"),
+    load("contracts/conformance/capability/v1/suite.json"),
+]
+validate_provider_architecture(context, conformance_suites)
+validate_execution_topology(manifest, workflow_run, agent_run, runtime_start)
+validate_runtime_token(runtime_token, manifest, agent_run, runtime_start, policy_decision, execution_budget)
+validate_gateway_frames(gateway_connect, gateway_control)
+validate_event_registry(event_registry)
+if manifest["event_registry"] != {
+    "registry_id": event_registry["registry_id"],
+    "registry_version": event_registry["registry_version"],
+    "registry_digest": event_registry["registry_digest"],
+}:
+    raise AssertionError("RunManifest binds a different EventTypeRegistry revision")
+validate_usage_contracts(meter, usage_entry, usage_report, settlement)
+validate_policy_decision(policy_decision)
+for conformance_suite in conformance_suites:
+    validate_conformance_suite(conformance_suite)
 validate_run_admission(manifest, context)
 grant = load("examples/contracts/execution-grant-claims.json")
 commercial = grant["commercial_authorization"]
-validate_self_digest(commercial, "authorization_digest")
+validate_self_digest(commercial, "commercial_authorization_digest")
+validate_self_digest(execution_budget, "budget_digest")
 if commercial != context["commercial_authorization"]:
     raise AssertionError("ExecutionGrant and Run admission bind different CommercialAuthorizationSnapshots")
 if not set(grant["capabilities"]) <= set(commercial["authorized_capabilities"]):
     raise AssertionError("ExecutionGrant capabilities exceed commercial authorization")
 if any(name not in commercial["authorized_limits"] or value > commercial["authorized_limits"][name] for name, value in grant["limits"].items()):
     raise AssertionError("ExecutionGrant limits exceed commercial authorization")
+if policy_decision["commercial_authorization_id"] != commercial["commercial_authorization_id"] or policy_decision["commercial_authorization_digest"] != commercial["commercial_authorization_digest"]:
+    raise AssertionError("PolicyDecision binds a different CommercialAuthorizationSnapshot")
+if policy_decision["execution_budget_id"] != execution_budget["budget_id"] or policy_decision["execution_budget_digest"] != execution_budget["budget_digest"]:
+    raise AssertionError("PolicyDecision binds a different ExecutionBudget")
+if manifest["policy_decision"] != {"decision_id": policy_decision["decision_id"], "decision_digest": policy_decision["decision_digest"]}:
+    raise AssertionError("RunManifest binds a different PolicyDecision")
+if manifest["execution_budget"] != {"budget_id": execution_budget["budget_id"], "budget_digest": execution_budget["budget_digest"]}:
+    raise AssertionError("RunManifest binds a different ExecutionBudget")
+if usage_report["commercial_authorization_digest"] != commercial["commercial_authorization_digest"]:
+    raise AssertionError("UsageReport binds a different CommercialAuthorizationSnapshot")
+if settlement["commercial_authorization_digest"] != commercial["commercial_authorization_digest"]:
+    raise AssertionError("Settlement envelope binds a different CommercialAuthorizationSnapshot")
 manual = load("examples/contracts/sandbox-manual-review-decision.json")
 validate_self_digest(manual, "decision_digest")
 invocation_manual = load("examples/contracts/invocation-manual-review-decision.json")
 validate_self_digest(invocation_manual, "decision_digest")
+
+architecture_negative = load("contracts/tests/semantic-invalid/architecture-closure-cases.json")
+for case in architecture_negative["cases"]:
+    mutation = case["mutation"]
+    try:
+        if mutation == "provider_runtime_wrong_port":
+            candidate = copy.deepcopy(context)
+            runtime_revision = next(item for item in candidate["provider_revisions"] if item["provider_kind"] == "agent_runtime")
+            runtime_revision["port"]["protocol"] = "capability-provider"
+            validate_provider_architecture(candidate, conformance_suites)
+        elif mutation == "orchestration_digest_mismatch":
+            candidate_manifest = copy.deepcopy(manifest)
+            candidate_manifest["orchestration_binding"]["binding_digest"] = "sha256:" + "f" * 64
+            validate_execution_topology(candidate_manifest, workflow_run, agent_run, runtime_start)
+        elif mutation == "agent_run_manifest_mismatch":
+            candidate_agent_run = copy.deepcopy(agent_run)
+            candidate_agent_run["run_manifest_digest"] = "sha256:" + "f" * 64
+            validate_execution_topology(manifest, workflow_run, candidate_agent_run, runtime_start)
+        elif mutation == "event_registry_duplicate":
+            candidate = copy.deepcopy(event_registry)
+            candidate["definitions"].append(copy.deepcopy(candidate["definitions"][0]))
+            candidate["registry_digest"] = canonical_digest({key: item for key, item in candidate.items() if key != "registry_digest"})
+            validate_event_registry(candidate)
+        elif mutation == "usage_final_partial":
+            candidate = copy.deepcopy(usage_report)
+            candidate["entries"][0]["measurement_status"] = "partial"
+            candidate["usage_report_digest"] = canonical_digest({key: item for key, item in candidate.items() if key != "usage_report_digest"})
+            validate_usage_contracts(meter, candidate["entries"][0], candidate, settlement)
+        elif mutation == "policy_deny_overridden":
+            candidate = copy.deepcopy(policy_decision)
+            candidate["evaluations"].append({
+                "subject_kind": "egress", "subject_id": "forbidden", "action": "deny",
+                "source": "platform", "rule_digest": "sha256:" + "f" * 64,
+            })
+            candidate["decision_digest"] = canonical_digest({key: item for key, item in candidate.items() if key != "decision_digest"})
+            validate_policy_decision(candidate)
+        elif mutation == "conformance_unknown_dependency":
+            candidate = copy.deepcopy(conformance_suites[0])
+            candidate["profiles"][0]["depends_on"] = ["missing-profile"]
+            candidate["suite_digest"] = canonical_digest({key: item for key, item in candidate.items() if key != "suite_digest"})
+            validate_conformance_suite(candidate)
+        elif mutation == "execution_topology_cross_tenant":
+            candidate_start = copy.deepcopy(runtime_start)
+            candidate_start["tenant_id"] = "ten_other"
+            candidate_start["request_digest"] = canonical_digest({key: item for key, item in candidate_start.items() if key != "request_digest"})
+            validate_execution_topology(manifest, workflow_run, agent_run, candidate_start)
+        elif mutation == "workflow_root_mismatch":
+            candidate_workflow = copy.deepcopy(workflow_run)
+            candidate_workflow["root_agent_run_id"] = "agr_other"
+            validate_execution_topology(manifest, candidate_workflow, agent_run, runtime_start)
+        elif mutation == "provider_suite_digest_mismatch":
+            candidate = copy.deepcopy(context)
+            candidate["provider_revisions"][0]["conformance"][0]["suite_digest"] = "sha256:" + "f" * 64
+            validate_provider_architecture(candidate, conformance_suites)
+        elif mutation == "settlement_usage_binding_mismatch":
+            candidate = copy.deepcopy(settlement)
+            candidate["usage_report"]["tenant_id"] = "ten_other"
+            candidate["settlement_envelope_digest"] = canonical_digest({key: item for key, item in candidate.items() if key != "settlement_envelope_digest"})
+            validate_usage_contracts(meter, usage_entry, usage_report, candidate)
+        elif mutation == "gateway_duplicate_resume_channel":
+            candidate = copy.deepcopy(gateway_connect)
+            candidate["resume_cursors"].append({"channel": "terminal", "sequence": 40})
+            validate_gateway_frames(candidate, gateway_control)
+        elif mutation == "runtime_token_request_digest_mismatch":
+            candidate = copy.deepcopy(runtime_token)
+            candidate["request_digest"] = "sha256:" + "f" * 64
+            validate_runtime_token(candidate, manifest, agent_run, runtime_start, policy_decision, execution_budget)
+        else:
+            raise AssertionError(f"Unknown architecture closure mutation: {mutation}")
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError(f"Expected architecture closure fixture to fail: {case['id']}")
 
 negative = load("contracts/tests/semantic-invalid/run-manifest-cases.json")
 for case in negative["cases"]:
@@ -374,17 +689,17 @@ for case in negative["cases"]:
                 "revision_digest": "sha256:" + "9" * 64,
                 "capability_id": "template.html.generate",
             },
-            "provider_instance_id": value["agent_runtime"]["provider_instance_id"],
-            "provider_revision": copy.deepcopy(value["agent_runtime"]["provider_revision"]),
+            "provider_instance_id": value["capability_resolutions"][0]["selected_provider_instance_id"],
+            "provider_revision": copy.deepcopy(value["capability_resolutions"][0]["selected_provider_revision"]),
         }]
     elif mutation == "unauthorized_experience_entitlement":
         registry["commercial_authorization"]["authorized_entitlements"] = []
-        registry["commercial_authorization"]["authorization_digest"] = canonical_digest({key: item for key, item in registry["commercial_authorization"].items() if key != "authorization_digest"})
-        value["commercial_authorization_digest"] = registry["commercial_authorization"]["authorization_digest"]
+        registry["commercial_authorization"]["commercial_authorization_digest"] = canonical_digest({key: item for key, item in registry["commercial_authorization"].items() if key != "commercial_authorization_digest"})
+        value["commercial_authorization"]["commercial_authorization_digest"] = registry["commercial_authorization"]["commercial_authorization_digest"]
     elif mutation == "missing_required_experience_tag":
         registry["experience_requirements"][0]["required_tags"] = ["nonexistent-tag"]
     elif mutation == "commercial_authorization_digest_mismatch":
-        value["commercial_authorization_digest"] = "sha256:" + "7" * 64
+        value["commercial_authorization"]["commercial_authorization_digest"] = "sha256:" + "7" * 64
     elif mutation == "scenario_definition_mismatch":
         registry["scenario_definition"]["id"] = "other-scenario"
         registry["scenario_definition"]["definition_digest"] = canonical_digest({key: item for key, item in registry["scenario_definition"].items() if key != "definition_digest"})
@@ -405,7 +720,8 @@ for case in admission_negative["cases"]:
     registry = copy.deepcopy(context)
     mutation = case["mutation"]
     if mutation == "forged_provider_revision_digest":
-        value["agent_runtime"]["provider_revision"]["provider_revision_digest"] = "sha256:" + "f" * 64
+        runtime_resolution = next(item for item in value["capability_resolutions"] if item["resolution_id"] == value["agent_runtime"]["resolution_id"])
+        runtime_resolution["selected_provider_revision"]["provider_revision_digest"] = "sha256:" + "f" * 64
     elif mutation == "extraneous_capability_resolution":
         extra = copy.deepcopy(value["capability_resolutions"][0]); extra["resolution_id"] = "res_extra"; extra["capability"] = {"id": "scenario.unrequested", "version": "1.0", "profile": None}; value["capability_resolutions"].append(extra)
     elif mutation == "forged_admission_decision_digest":
@@ -418,11 +734,11 @@ for case in admission_negative["cases"]:
         value["capability_resolutions"][0]["capability_definition_digest"] = "sha256:" + "a" * 64
     elif mutation == "sandbox_unsupported_capability":
         value["sandboxes"][0]["required_capabilities"] = [{"id": "tool.echo", "version": "1.0", "profile": "default"}]
-    elif mutation == "forged_agent_runtime_outer_conformance":
-        value["agent_runtime"]["governed_conformance_report_digest"] = "sha256:" + "b" * 64
+    elif mutation == "agent_runtime_resolution_missing":
+        value["agent_runtime"]["resolution_id"] = "res_missing_runtime"
     elif mutation == "capability_incompatible_provider_kind":
-        value["capability_resolutions"][1]["selected_provider_revision"] = copy.deepcopy(value["agent_runtime"]["provider_revision"])
-        value["capability_resolutions"][1]["selected_provider_instance_id"] = value["agent_runtime"]["provider_instance_id"]
+        value["capability_resolutions"][1]["selected_provider_revision"] = copy.deepcopy(value["capability_resolutions"][0]["selected_provider_revision"])
+        value["capability_resolutions"][1]["selected_provider_instance_id"] = value["capability_resolutions"][0]["selected_provider_instance_id"]
     elif mutation == "missing_admission_predecessor":
         previous = registry["admission_decisions"][0]
         forged = copy.deepcopy(previous)
@@ -823,4 +1139,8 @@ for case in branch_fixture["cases"]:
         raise AssertionError(f"Expected ConversationBranch semantic fixture to fail: {case['id']}")
 
 
-print("Semantic validation passed with deterministic state-machine/safety checks and 60 negative invariant fixtures.")
+negative_fixture_count = sum(
+    len(json.loads(path.read_text(encoding="utf-8")).get("cases", []))
+    for path in (ROOT / "contracts/tests/semantic-invalid").glob("*.json")
+)
+print(f"Semantic validation passed with deterministic state-machine/safety checks and {negative_fixture_count} negative invariant fixtures.")

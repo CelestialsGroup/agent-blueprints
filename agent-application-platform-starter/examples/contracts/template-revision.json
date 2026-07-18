@@ -2,22 +2,38 @@
   "template_revision_id": "tmplrev_01J00000000000000000000000",
   "template_id": "html-anything/landing-saas-dark",
   "version": "1.0.0",
-  "revision_digest": "sha256:f3ffedb6bbba3ed14d227ba9ac7df4562efe6a246b093ac34522f63d5d615e5b",
+  "revision_digest": "sha256:aca5ca766f99dbb3a3f167b1d4c375ec929685d33697cc9fbbc5c369099c6ae8",
   "provider_revision": {
     "provider_revision_id": "tplpr_01J0000000000000000000000",
-    "provider_revision_digest": "sha256:8761661ce1d2e7233d942d0e4945bd8502c56f86a91c84ab9e91fbb3f4bafa01",
+    "provider_revision_digest": "sha256:2877104d4087015fd00baa9a13c34ffb7380d36d5165e5221be5389a85b12f44",
     "provider_kind": "template",
-    "plugin_id": "template-provider.html-anything",
-    "plugin_version": "1.0.0",
-    "manifest_digest": "sha256:8181818181818181818181818181818181818181818181818181818181818181",
-    "package_digest": "sha256:8282828282828282828282828282828282828282828282828282828282828282",
-    "runtime_binding_digest": "sha256:8585858585858585858585858585858585858585858585858585858585858585",
+    "implementation": {
+      "implementation_id": "template-provider.html-anything",
+      "implementation_version": "1.0.0",
+      "distribution_type": "static_catalog",
+      "distribution_digest": "sha256:8282828282828282828282828282828282828282828282828282828282828282",
+      "manifest_digest": "sha256:8181818181818181818181818181818181818181818181818181818181818181",
+      "provenance": {
+        "source_revision": "fff069561c01646b12e35cc9b75a06e76f805e8e6c1e9e7e5099d3ddaf1d5644",
+        "source_tree_digest": "sha256:1020243e50e91b511e76859472575ed5f8e3fe4e6c5ed1a45f37bb5f66b98219",
+        "build_artifact_digest": "sha256:8282828282828282828282828282828282828282828282828282828282828282",
+        "sbom_digest": "sha256:024bb69402a12a518c4216765c28f889ad0fc10ba6fc837cf1c87fa2900bbaec",
+        "provenance_statement_digest": "sha256:267e79f31d8b644a5982b132baf74b780293aa98c209979c52953b6f8bdfc702",
+        "build_system": "contract-fixture-build-v1"
+      }
+    },
+    "port": {
+      "protocol": "capability-provider",
+      "protocol_version": "v1",
+      "contract_digest": "sha256:343f4f6aee161db54b083204d9fe45684e77e7a69dabea7ecdc69b3688e0c0b7",
+      "binding_digest": "sha256:8585858585858585858585858585858585858585858585858585858585858585"
+    },
     "configuration_digest": "sha256:8383838383838383838383838383838383838383838383838383838383838383",
     "approved_permissions_digest": "sha256:8484848484848484848484848484848484848484848484848484848484848484",
     "credential_binding_digest": "sha256:8686868686868686868686868686868686868686868686868686868686868686",
-    "conformance_report_digest": "sha256:ec3bc4229e8b502ff3d3f821f65d191d01f5aa3d9584a5e8a25c70809a81271e",
+    "conformance_set_digest": "sha256:9512b4f12af069f19a59c392ca5d15f94c7068534906d23dee8e868873fbeb50",
     "admission_decision_id": "tplad_01J0000000000000000000000",
-    "admission_decision_digest": "sha256:c276cbbee22e652f0886f3548c30d6fdd6e910089143b121ef64240a69579fa7",
+    "admission_decision_digest": "sha256:2b8cf727fc81b7f0579e3457c4f81ad2b57e1f9cd1b4430fad9b24b8cf7679a3",
     "admission_status": "certified"
   },
   "capability": {

@@ -36,6 +36,8 @@ paths:
       tags: [Capabilities]
       operationId: getAgentRuntimeCapabilities
       summary: Read capabilities for the active Agent Runtime ProviderRevision
+      security:
+        - RuntimeMutualTLS: []
       responses:
         '200':
           description: Immutable provider capabilities
@@ -208,7 +210,9 @@ components:
       bearerFormat: JWT
       description: |
         Short-lived token bound to ProviderRevision, runtime_run_id, InvocationAttempt,
-        fencing token, RunManifest digest and approved permissions.
+        fencing token, RunManifest digest and approved permissions. Claims MUST validate
+        against urn:agent-platform:agent-runtime-invocation-token-claims:v1 and match the
+        request body or authenticated path before any state is read or mutated.
 
   parameters:
     RuntimeRunId:

@@ -36,6 +36,7 @@ Business UI
 | Files | Workspace、Artifact、文件增量 Recording | Artifact API、受控 Workspace Projection |
 | Artifact | ArtifactVersion、Preview/Edit/Conversion Session | Agent Access API |
 | History | Conversation、Branch、Recording Manifest | REST + 回放投影 |
+| Tasks | 标准 `runtime.task.*` Event | Task Projection；不暴露 Provider PID/本地队列 |
 
 Workbench 还提供 Approval、Pause/Resume、Cancel、Conversation 分支、Export 和按 Entitlement 过滤的 Experience Catalog。前端不得直接解释 Provider 私有 Thread、Checkpoint、Pod、VM 或 Endpoint。
 
@@ -48,6 +49,21 @@ Workbench 还提供 Approval、Pause/Resume、Cancel、Conversation 分支、Exp
 ```
 
 实时 RuntimeSession 与历史 RuntimeRecording 是独立授权资源。没有存活 Sandbox 时，Workbench 仍应能够消费持久 Event、Artifact 和已完成 Recording。
+
+## Runtime Gateway v1
+
+Terminal、Browser、Desktop、Port Forward 和 File Delta 共用 `runtime-gateway/v1` Envelope：
+
+- 每次连接使用递增 `connection_generation`，旧 Generation 的 Data/Control 一律拒绝；
+- 每个 Direction/Channel 使用连续 `frame_sequence`；
+- ACK 与 Receive Window 执行背压，Control 通过 `command_id + control_digest` 幂等，ID 相同但摘要不同必须拒绝；
+- 重连携带每个订阅 Channel 的 Cursor，窗口过期返回显式 Gap，并转入 RuntimeRecording；
+- Recording Checkpoint 同时绑定 Channel `recorded_through_sequence`、Chunk Sequence 和 WorkOrder `work_sequence`；
+- Port Forward 只允许短期实时传输，不进入 RuntimeRecording。
+
+Phase 0 只冻结 Terminal Profile。Browser/Desktop 可以复用 Envelope，但录制在 Capture、Consent、Redaction 和容量 Conformance 完成前保持关闭。
+
+Workbench、Headless SDK 和未来 IDE/ACP 都是 Presentation Adapter；它们消费相同 Conversation、Command、Event、Artifact 和 Usage，不拥有独立 Session 事实。
 
 ## Capability 驱动 UI
 

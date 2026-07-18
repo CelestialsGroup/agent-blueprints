@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:provider-implementation:v1",
+  "title": "ProviderImplementation",
+  "description": "Framework-neutral implementation identity and distribution evidence. A Provider implementation is not required to be packaged as a Plugin.",
+  "type": "object",
+  "required": [
+    "implementation_id",
+    "implementation_version",
+    "distribution_type",
+    "distribution_digest",
+    "manifest_digest",
+    "provenance"
+  ],
+  "properties": {
+    "implementation_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9.-]{2,127}$"
+    },
+    "implementation_version": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "distribution_type": {
+      "enum": ["oci_image", "package", "remote_service", "builtin_bundle", "static_catalog"]
+    },
+    "distribution_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "manifest_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "image_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "provenance": { "$ref": "urn:agent-platform:build-provenance:v1" }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": { "distribution_type": { "const": "oci_image" } },
+        "required": ["distribution_type"]
+      },
+      "then": { "required": ["image_digest"] }
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "protocol_version": "runtime-gateway/v1",
+  "runtime_session_id": "rts_01J00000000000000000000000",
+  "connection_generation": 2,
+  "direction": "client_to_gateway",
+  "channel": "terminal",
+  "frame_sequence": 1,
+  "frame_type": "control",
+  "command_id": "rgc_01J00000000000000000000000",
+  "control_digest": "sha256:ef08b371b33a4c5e73ff498a9dd3d3e7e029dd4837cdd536938d42d94da6a689",
+  "command": "terminal.resize",
+  "columns": 120,
+  "rows": 40,
+  "sent_at": "2026-07-16T09:10:01Z",
+  "text": "unexpected for terminal.resize"
+}

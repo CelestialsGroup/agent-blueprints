@@ -2,76 +2,91 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:agent-platform:usage-report:v1",
   "title": "UsageReport",
+  "description": "Immutable collection of TechnicalUsage entries for one WorkOrder and one Business reservation.",
   "type": "object",
   "required": [
     "usage_report_id",
+    "usage_report_digest",
+    "tenant_id",
     "work_order_id",
+    "commercial_authorization_id",
+    "commercial_authorization_digest",
+    "quota_reservation_id",
+    "quota_reservation_digest",
+    "report_sequence",
+    "report_status",
+    "idempotency_key",
     "entries",
     "created_at"
   ],
   "properties": {
-    "usage_report_id": {
-      "type": "string"
-    },
-    "work_order_id": {
-      "type": "string"
-    },
+    "usage_report_id": { "type": "string", "minLength": 1 },
+    "usage_report_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "tenant_id": { "type": "string", "minLength": 1 },
+    "work_order_id": { "type": "string", "minLength": 1 },
+    "commercial_authorization_id": { "type": "string", "minLength": 1 },
+    "commercial_authorization_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "quota_reservation_id": { "type": "string", "minLength": 1 },
+    "quota_reservation_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "report_sequence": { "type": "integer", "minimum": 1 },
+    "supersedes_usage_report_id": { "type": "string", "minLength": 1 },
+    "report_status": { "enum": ["partial", "final", "correction"] },
+    "idempotency_key": { "type": "string", "minLength": 16, "maxLength": 255 },
     "entries": {
       "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "entry_id",
-          "meter",
-          "quantity",
-          "unit",
-          "occurred_at",
-          "meter_source"
-        ],
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "urn:agent-platform:technical-usage-entry:v1" }
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "report_sequence": { "const": 1 } }, "required": ["report_sequence"] },
+      "then": { "not": { "required": ["supersedes_usage_report_id"] } }
+    },
+    {
+      "if": { "properties": { "report_sequence": { "minimum": 2 } }, "required": ["report_sequence"] },
+      "then": { "required": ["supersedes_usage_report_id"] }
+    },
+    {
+      "if": { "properties": { "report_status": { "const": "final" } }, "required": ["report_status"] },
+      "then": {
         "properties": {
-          "entry_id": {
-            "type": "string"
-          },
-          "meter": {
-            "type": "string"
-          },
-          "quantity": {
-            "type": "integer"
-          },
-          "unit": {
-            "type": "string"
-          },
-          "occurred_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "provider_operation_id": {
-            "type": "string"
-          },
-          "provider_instance_id": {
-            "type": "string"
-          },
-          "correction_of": {
-            "type": "string"
-          },
-          "meter_source": {
-            "enum": [
-              "platform_metered",
-              "provider_reported",
-              "reconciled"
-            ]
-          },
-          "evidence_reference": {
-            "type": "string"
+          "entries": {
+            "items": {
+              "allOf": [
+                { "$ref": "urn:agent-platform:technical-usage-entry:v1" },
+                { "properties": { "measurement_status": { "enum": ["confirmed", "corrected"] } } }
+              ]
+            }
           }
-        },
-        "additionalProperties": false
+        }
       }
     },
-    "created_at": {
-      "type": "string",
-      "format": "date-time"
+    {
+      "if": { "properties": { "report_status": { "const": "correction" } }, "required": ["report_status"] },
+      "then": {
+        "required": ["supersedes_usage_report_id"],
+        "properties": {
+          "entries": {
+            "items": {
+              "allOf": [
+                { "$ref": "urn:agent-platform:technical-usage-entry:v1" },
+                { "properties": { "measurement_status": { "const": "corrected" } } }
+              ]
+            }
+          }
+        }
+      }
     }
-  },
-  "additionalProperties": false
+  ],
+  "x-semantic-constraints": [
+    "usage_report_digest is RFC 8785 JCS SHA-256 over the report excluding usage_report_digest",
+    "all entries match tenant_id and work_order_id and have unique entry_id",
+    "a final report contains only confirmed or corrected entries; partial and estimated measurements remain visible in partial reports",
+    "report_sequence is contiguous per tenant, WorkOrder and QuotaReservation; every later report supersedes the immediate predecessor",
+    "a correction report contains only corrected entries and never replaces an earlier report"
+  ]
 }

@@ -13,6 +13,9 @@
 - `parent_message_id` 只能引用同一 Conversation 中 Sequence 更小的 Message；每个 Branch 默认最多一个活动 WorkOrder，不能用 Conversation 顶层单值表达并行分支。
 - Conversation Turn 事务原子完成 Message Sequence、WorkOrder、GrantConsumption、Workflow Start Outbox 和 CanonicalEvent。
 - WorkOrder、ExecutionGrant、RunManifest 和 CanonicalEvent 的 Conversation/Turn/Branch/Input Message 绑定必须一致。
+- `workflow_runs(workflow_run_id)` 与 `work_orders(work_order_id)` 一对一；显式 `tenant_id` 必须一致，`root_agent_run_id` 唯一引用同一 WorkflowRun 的 Root；Temporal Continue-as-New 或未来编排器分段不能创建第二个平台 WorkflowRun。
+- `agent_runs(agent_run_id)` 显式绑定 Tenant、WorkflowRun、RunManifest 和 `runtime_run_id`；每个 WorkOrder 恰好一个 Root AgentRun，Sub-agent 的 Parent/Root 必须属于同一 Tenant/WorkOrder/WorkflowRun。
+- RunManifest 的 `agent_runtime.resolution_id` 必须引用恰好一个 Agent Runtime ProviderResolution，并与 AgentRun 的 `runtime_provider_resolution_id` 相同；禁止复制第二份 Runtime Revision/Conformance 快照。
 - Conversation 生命周期必须遵循 `conversation-v1`；`archived`/`deleted` 写入相应审计时间，`deleted` 不可恢复。
 - CommercialAuthorizationSnapshot ID/摘要、显式 Entitlement/Capability/Limit 和 Quota Reservation 引用随 WorkOrder 固化；Limit 摘要必须闭合，Platform 无权更新 Business Entitlement/Balance。
 
@@ -43,22 +46,36 @@
 ## Provider
 
 - `provider_revisions(provider_revision_id)` 主键、`provider_revision_digest` 唯一；撤销 Update/Delete 权限，只允许 Insert。
-- 每个 ProviderRevision（包括 Model/Tool/Skill/Renderer）都必须有 `conformance_set_digest`；CapabilityResolution 的 Definition 摘要、允许的 Provider Kind 和 Conformance 覆盖必须在准入时校验。
+- 每个 ProviderRevision（包括 Model/Tool/Skill/Renderer）都必须有 `conformance_set_digest`；每项结果绑定 Suite ID/Version/Digest/Profile 和 Evidence。CapabilityResolution 的 Definition 摘要、允许的 Provider Kind 和 Conformance 覆盖必须在准入时校验。
+- ProviderRevision 的 Implementation、BuildProvenance、Port Binding、配置、权限和凭据均按摘要不可变；`agent_runtime`/`sandbox`/`capability` kind 只能绑定对应稳定 Port。
+- BuildProvenance 的 Build Artifact Digest 必须等于 Implementation Distribution Digest；OCI 分发必须绑定 Image Digest。
 - `provider_admission_decisions(decision_id)` 主键；`(provider_revision_id, decision_sequence)` 唯一且仅允许追加。
 - Sequence 必须从 1 连续递增；`sequence=1` 不得有 Supersedes，`sequence>1` 必须引用同一 Revision 紧邻的上一 Decision；`revoked` 必须有 Reason。
 - 新 Run 只能选择最新决策为 `certified` 的 Revision；RunManifest 保留 Revision/Decision 摘要，后续撤销不改写历史 Run。
 - Agent Runtime Command `(runtime_run_id, command_sequence)`、`command_id` 唯一；Command 仅允许追加且 Fencing Token 严格递增。
+- Agent Runtime Command 的 `command_digest` 必须与短期 RuntimeInvocation Token 的 `request_digest` 相等；Token 还必须匹配 Tenant、ProviderRevision、WorkflowRun/AgentRun/RuntimeRun、RunManifest、Attempt、Policy、Budget 和 Permissions。
 - AgentRuntimeRun 生命周期必须遵循 `agent-runtime-run-v1`；`cancel_requested` 不是取消证明，`outcome_unknown` 必须经 Invocation Ledger 对账，终态必须有 `completed_at`。
 - TemplateRevision ID/摘要唯一且不可变；SelectedExperience 必须引用已准入 Catalog Revision 和已认证 Template ProviderRevision，并满足 Scenario `required_tags` 与 CommercialAuthorizationSnapshot Entitlement。
 - UiExtensionManifest Bundle/摘要/ProviderRevision 不可变；只允许受支持 Slot、不透明 Origin iframe 和已批准权限。
 
-## Workflow 与 Event
+## Workflow、Policy、Event 与 Gateway
 
-- Temporal Workflow ID 与平台 `run_id` 唯一绑定；`workflow_run_id` 仅允许追加。
+- OrchestrationBinding `binding_digest` 唯一且不可变；原生 Engine 执行引用只保存摘要，Endpoint、Namespace 和原生 Run ID 不进入稳定领域表。
+- PolicyDecision 按 `(tenant_id, work_order_id, decision_id)` 唯一且仅追加；有效 Outcome 必须从所有匹配规则按 `deny > ask > allow` 推导，`ask` 必须绑定 Approval。
 - CanonicalEvent `(aggregate_type, aggregate_id, aggregate_sequence)` 唯一；`event_id` 全局唯一。
 - Outbox Row 与业务变更同事务；Inbox `(consumer, message_id)` 唯一。
 - Canonical Aggregate 支持 Conversation、ConversationBranch、ConversationMessage、Sandbox、RuntimeSession 和 RuntimeRecording；EventPage 必须 `$ref` CanonicalEvent，禁止复制 Schema。
 - CanonicalEvent 的 Work Context 是全有或全无绑定；仅属于 Conversation 的生命周期 Event 不得伪造 `work_order_id`/`work_sequence`。
+- EventTypeRegistry 的 ID/Version/Digest 随 RunManifest 固化，`(type, data_version)` 唯一；核心 Projection 只消费 Registry 中 Schema Digest 已准入的 Payload。
+- Runtime Gateway `(runtime_session_id, connection_generation, direction, channel, frame_sequence)` 唯一；重连 Cursor 按 Channel 唯一，Control ID + Digest 幂等，Recording Checkpoint 固化 recorded-through Sequence。旧 Generation、Sequence Gap、超出 ACK Window 和 Digest 冲突必须拒绝或显式对账。
+
+## Technical Usage
+
+- `meter_definitions(meter_id, meter_version)` 唯一且不可变，不包含 Price/Currency/Plan。
+- `technical_usage(entry_id)` 主键；`(tenant_id, idempotency_key)` 唯一。Entry 必须绑定 WorkOrder、MeterDefinition 摘要/基础单位、Producer、Measurement Status 和 Evidence。
+- Final UsageReport 只允许 Confirmed/Corrected Entry；Partial/Estimated 不得静默结算为 Confirmed 或零。
+- Correction Entry 仅追加，引用同 Tenant/WorkOrder 的先前 Entry，Correction 链无环且不修改历史数量。
+- UsageReport 与 BusinessSettlementEnvelope 在同一 Tenant/WorkOrder/Reservation 内连续编号并引用紧邻前驱。Settlement Envelope 嵌入完整 Final/Correction UsageReport，绑定同一 CommercialAuthorization 和 QuotaReservation；Platform Envelope 不含价格或余额变更。
 
 ## Artifact 与 Delivery
 

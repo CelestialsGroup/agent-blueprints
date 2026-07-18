@@ -266,7 +266,9 @@
       "type": "object",
       "required": [
         "suite_id",
-        "suite_version"
+        "suite_version",
+        "suite_digest",
+        "suite_profile_id"
       ],
       "properties": {
         "suite_id": {
@@ -274,6 +276,14 @@
         },
         "suite_version": {
           "type": "string"
+        },
+        "suite_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "suite_profile_id": {
+          "type": "string",
+          "minLength": 1
         }
       },
       "additionalProperties": false

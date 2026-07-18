@@ -1,0 +1,12 @@
+{
+  "event_id": "rtevt_invalid_payload",
+  "runtime_run_id": "rtr_01J00000000000000000000000",
+  "event_sequence": 43,
+  "type": "runtime.message.completed",
+  "occurred_at": "2026-07-15T10:10:01Z",
+  "data_version": 1,
+  "data": {
+    "message_id": "msg_01J00000000000000000000002",
+    "delta": "wrong payload family"
+  }
+}

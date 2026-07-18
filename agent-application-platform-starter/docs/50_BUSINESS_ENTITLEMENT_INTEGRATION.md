@@ -10,7 +10,8 @@ Membership / Plan
  -> 幂等 QuotaReservation
  -> CommercialAuthorizationSnapshot
  -> ExecutionGrant / WorkSession
- -> Agent TechnicalUsage
+ -> MeterDefinition + TechnicalUsage + UsageReport
+ -> BusinessSettlementEnvelope
  -> 在 Business 中结算 | 释放 | 对账
 ```
 
@@ -24,7 +25,7 @@ WorkSession 携带相同授权身份用于 Catalog 过滤，但每个新的可�
 
 ## 结算
 
-Agent Platform 通过已注册的 Delivery/Usage Target 报告不可变 TechnicalUsage 和 WorkOrder 终态结果。Business 以幂等方式：
+Agent Platform 通过已注册的 Settlement Target 和签名 Business Callback 报告不可变 BusinessSettlementEnvelope。Envelope 与 UsageReport 在同一 Reservation 内连续编号并引用紧邻前驱；`settle` 嵌入完整 Final UsageReport，`reconcile` 嵌入完整 Correction UsageReport，`release` 不携带 Usage。Business 因而无需查询 Platform 数据库，即可按自己的价格事实幂等处理：
 
 - 按 Reservation 结算已确认 Usage；
 - 释放未使用的 Reservation；
@@ -32,6 +33,8 @@ Agent Platform 通过已注册的 Delivery/Usage Target 报告不可变 Technica
 - 应用退款或商业策略。
 
 Platform 无权修改商业余额或推断价格。Business 无权改写 TechnicalUsage 证据。
+
+MeterDefinition 只定义技术单位、聚合方式、测量权威和更正规则，不包含 Price、Currency 或 Plan。TechnicalUsage 绑定 Producer Revision 和不可变 Evidence 摘要，并明确区分 Confirmed、Partial、Estimated 和 Corrected；Final UsageReport 不得把不完整测量伪装为零或已确认。Business 可以拒绝、延迟或对账 Envelope，但只能追加自身结算事实，不能回写 Platform Usage。HTTP 接收成功只证明 Envelope 已持久接纳，不等于商业结算成功。
 
 ## 参考应用模块
 

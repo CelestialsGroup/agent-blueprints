@@ -1,12 +1,13 @@
 # Workflow 与可靠性
 
-## Temporal
+## Orchestration Binding
 
-Temporal 是持久 Workflow Runtime。
+Phase 0 使用 Temporal 作为持久 Workflow Runtime，但稳定执行身份只保存 `WorkflowRun` 与 `OrchestrationBinding`。Binding 固化 Engine/Worker Revision 和原生执行引用摘要；Namespace、Endpoint、Temporal Run ID 与 History 仍由 Orchestration Adapter 管理。
 
-Workflow Runtime Port 隔离 SDK，但不得隐藏以下语义：
+Workflow Runtime Port 隔离 SDK，但不得隐藏以下平台语义：
 
-- Workflow ID
+- Platform WorkflowRun ID
+- Engine ID/Version
 - Worker Deployment
 - Build ID
 - Versioning Behavior
@@ -34,7 +35,7 @@ Conversation Turn 事务先原子追加 Message、分配 message_sequence、创�
 
 PostgreSQL 是 API 当前状态事实源。
 
-Temporal 是执行控制事实源。
+Temporal History 是 Phase 0 的执行控制事实源；PostgreSQL 中的 WorkflowRun 是稳定身份与查询绑定，不复制原生 History。
 
 所有对外状态变化由幂等 Domain Activity 更新 PostgreSQL，并在同一事务写 Event/Outbox。
 

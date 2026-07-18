@@ -72,6 +72,16 @@
 
 敏感内容避免进入日志、Event 和 Temporal History。
 
+## Telemetry Privacy
+
+生产 Telemetry 使用闭合 Attribute Registry，默认不导出 Prompt、代码、完整路径、Tool 参数、Shell Command、Token 或错误正文。内容字段必须单独 Policy Gate，并同时经过：
+
+1. Emit-time Secret/Home Path Scrub 与长度限制；
+2. Export-time Schema/Gate Validator；
+3. 违反闭合 Schema 或发现未脱敏 Secret 时丢弃整条 Record，不能 fail-open 导出。
+
+TechnicalUsage、CanonicalEvent、RuntimeRecording 和第三方 Trace 与 OTEL 指标是不同证据层；Telemetry 丢失不得改变执行终态或结算事实。
+
 ## Webhook 与 Connector
 
 - 注册制 Endpoint

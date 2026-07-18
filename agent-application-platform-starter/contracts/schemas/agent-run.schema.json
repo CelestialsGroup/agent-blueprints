@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:agent-run:v1",
+  "title": "AgentRun",
+  "description": "Immutable Platform identity for one governed root or child Agent execution. Mutable lifecycle is owned by the bound AgentRuntimeRun and projected to the WorkOrder.",
+  "type": "object",
+  "required": [
+    "agent_run_id",
+    "tenant_id",
+    "runtime_run_id",
+    "workflow_run_id",
+    "work_order_id",
+    "root_agent_run_id",
+    "run_kind",
+    "agent_role",
+    "runtime_provider_resolution_id",
+    "run_manifest_digest",
+    "created_at"
+  ],
+  "properties": {
+    "agent_run_id": { "type": "string", "minLength": 1 },
+    "tenant_id": { "type": "string", "minLength": 1 },
+    "runtime_run_id": { "type": "string", "minLength": 1 },
+    "workflow_run_id": { "type": "string", "minLength": 1 },
+    "work_order_id": { "type": "string", "minLength": 1 },
+    "root_agent_run_id": { "type": "string", "minLength": 1 },
+    "parent_agent_run_id": { "type": "string", "minLength": 1 },
+    "run_kind": { "enum": ["root", "subagent"] },
+    "agent_role": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "runtime_provider_resolution_id": { "type": "string", "minLength": 1 },
+    "run_manifest_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "run_kind": { "const": "root" } }, "required": ["run_kind"] },
+      "then": { "not": { "required": ["parent_agent_run_id"] } }
+    },
+    {
+      "if": { "properties": { "run_kind": { "const": "subagent" } }, "required": ["run_kind"] },
+      "then": { "required": ["parent_agent_run_id"] }
+    }
+  ],
+  "x-semantic-constraints": [
+    "root AgentRun has root_agent_run_id equal to agent_run_id",
+    "subagent parent and root belong to the same tenant, WorkOrder and WorkflowRun",
+    "one AgentRun binds exactly one runtime_run_id and one RunManifest; provider retry uses InvocationAttempt, while a new governed execution creates a new AgentRun"
+  ]
+}

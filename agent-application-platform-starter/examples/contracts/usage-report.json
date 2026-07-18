@@ -1,0 +1,43 @@
+{
+  "usage_report_id": "usr_01J00000000000000000000000",
+  "usage_report_digest": "sha256:dcad0b2b1debdac4bac33a8775f97133e715d0707ccc97f0193dfd028df532e1",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "commercial_authorization_id": "cauth_01J00000000000000000000000",
+  "commercial_authorization_digest": "sha256:58fecad357ce4fe69cce9437814834bba7435d3712fc878ab9832ecc1719a20c",
+  "quota_reservation_id": "qres_01J00000000000000000000000",
+  "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
+  "report_status": "final",
+  "idempotency_key": "usage-report-final-0001",
+  "entries": [
+    {
+      "entry_id": "use_01J00000000000000000000000",
+      "tenant_id": "ten_01J00000000000000000000000",
+      "work_order_id": "wrk_01J00000000000000000000000",
+      "agent_run_id": "agr_01J00000000000000000000000",
+      "runtime_run_id": "rtr_01J00000000000000000000000",
+      "invocation_id": "inv_runtime_01J000000000000000000",
+      "meter_id": "model.input_tokens",
+      "meter_version": 1,
+      "meter_definition_digest": "sha256:5fb9469a79d57e8867f640bd6d1e30fa3d74dfc56b630897fd3599b677dac841",
+      "quantity": 1200,
+      "unit": "token",
+      "producer": {
+        "type": "provider",
+        "id": "api_deerflow_runtime",
+        "provider_revision_id": "apr_01J00000000000000000000000",
+        "provider_revision_digest": "sha256:1ef82012bd07d83be302d138c556f27561e14560ae13c5d6a440f5ea1b1858ed"
+      },
+      "provider_operation_id": "provider-op-model-001",
+      "meter_source": "provider_reported",
+      "measurement_status": "confirmed",
+      "idempotency_key": "usage-model-input-0001",
+      "evidence_reference": "evidence://runtime/model-usage-001",
+      "occurred_at": "2026-07-16T09:05:00Z",
+      "recorded_at": "2026-07-16T09:05:01Z",
+      "evidence_digest": "sha256:966b2a055f30a1821225ff320a0c5f6b2e5cc684730d5b761ec79c45dddcd75d"
+    }
+  ],
+  "created_at": "2026-07-16T09:20:00Z",
+  "report_sequence": 1
+}

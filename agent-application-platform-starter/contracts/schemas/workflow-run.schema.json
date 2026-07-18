@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:workflow-run:v1",
+  "title": "WorkflowRun",
+  "description": "Immutable identity and durable orchestration binding for one WorkOrder. Engine-native Continue-as-New segments do not create additional Platform WorkflowRuns.",
+  "type": "object",
+  "required": ["workflow_run_id", "tenant_id", "work_order_id", "root_agent_run_id", "workflow", "orchestration_binding", "created_at"],
+  "properties": {
+    "workflow_run_id": { "type": "string", "minLength": 1 },
+    "tenant_id": { "type": "string", "minLength": 1 },
+    "work_order_id": { "type": "string", "minLength": 1 },
+    "root_agent_run_id": { "type": "string", "minLength": 1 },
+    "workflow": {
+      "type": "object",
+      "required": ["id", "version", "definition_build_id", "definition_digest"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "definition_build_id": { "type": "string", "minLength": 1 },
+        "definition_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "orchestration_binding": { "$ref": "urn:agent-platform:orchestration-binding:v1" },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "work_order_id is unique and binds exactly one WorkflowRun",
+    "root_agent_run_id references exactly one root AgentRun in the same tenant, WorkOrder and WorkflowRun"
+  ]
+}

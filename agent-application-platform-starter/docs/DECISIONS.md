@@ -11,9 +11,17 @@
 | Conversation 拥有 Workspace | 多轮 Agent 需要跨 Turn 保留产物和上下文 | WorkOrder 只表示一个可执行 Turn；ConversationBranch 维护分支头与分支内活动 WorkOrder |
 | 平台拥有 AgentRuntimeProvider，不依赖单一 Agent 框架 | DeerFlow 或其他框架的内部 Agent/Thread/Run/Checkpoint、持久化和升级节奏都不稳定 | DeerFlow 只是首个参考 Adapter；LangGraph/Deep Agents、OpenAI Agents SDK、Microsoft Agent Framework、Google ADK、Mastra 或 Native Runtime 均可实现同一 Port |
 | Capability、一致性验证和不可变 Revision | 同名字符串不能证明 Provider 可替换 | Scenario 解析到精确 Capability/Profile；RunManifest 固化 Definition、Revision、Admission 和 Experience 摘要 |
+| Provider Envelope 与 Build Provenance | Plugin 打包方式不能污染 Runtime、Sandbox 或远程服务 | ProviderRevision 统一绑定 Implementation、稳定 Port、配置和 Conformance；Source Revision、Build、SBOM 与 Provenance 摘要不可变 |
+| 明确执行拓扑 | WorkOrder、Workflow 和框架 Run 混用会破坏重试与恢复 | 一个 WorkOrder 对应一个 Platform WorkflowRun；每个 AgentRun 对应一个 RunManifest 和 AgentRuntimeRun，Sub-agent 使用显式父子关系 |
+| Tenant-qualified 执行与单一 Runtime Resolution | 只靠间接 WorkOrder 关联或复制两份 Runtime Revision 会产生越权和漂移 | WorkflowRun/AgentRun/RunManifest/Runtime Start 显式绑定 Tenant；RunManifest Runtime 只引用一个 ProviderResolution |
 | Service OAuth、Conversation WorkSession、单次 ExecutionGrant | 后端与浏览器信任级别不同，会员授权不能变成长会话权限 | WorkSession 绑定 Conversation、可缩窄到 WorkOrder；每个可执行 Turn 都需要新的 Business Grant 与额度 Reservation |
 | Runtime Gateway 与独立 SandboxProvider | 双向连接和 Sandbox 生命周期不能依赖 API Pod 或 DeerFlow 内部实现 | 前端只访问短期 Gateway Session；Provider 私有 Pod/VM/Endpoint 不进入稳定模型；未来用 sandbox-runtime 替换 Adapter 即可 |
 | 强制 Model/Tool/Artifact/Egress Gateway | Prompt 约束不能执行预算、审批和网络策略 | 公共 SaaS Runtime 必须通过受治理 Profile；外部副作用进入 Invocation Ledger |
+| 类型化 Runtime 事件与 Gateway 帧 | 任意 Payload、隐式重连和无界流无法跨 Adapter 恢复 | 核心 Command/Event、Background Task、Usage 和 `runtime-gateway/v1` 帧均有闭合 Schema；Run 绑定 Event Registry；Gateway 使用多 Channel Cursor、Sequence、Generation、ACK、Control Digest 和回放边界 |
+| Policy 严重度与独立 Sandbox | 配置顺序和 Hook 不能构成安全边界 | 所有规则按 `deny > ask > allow` 合并；Approval、OS Sandbox、Gateway 与 Invocation 各自独立执行 |
+| 技术 Usage 与商业 Settlement 分离 | Provider 用量、价格和余额具有不同事实源 | Platform 固化 MeterRevision、Evidence、顺序、更正链并在 Settlement Envelope 中嵌入完整 UsageReport；Business 独占价格、余额和结算结论 |
+| Conformance 是内容寻址的准入事实 | Suite 名称或 README 声明无法证明不同 Provider 真正可替换 | Suite 自带 Digest；ProviderRevision 结果绑定 Suite ID/Version/Digest/Profile 和不可变 Evidence |
+| Runtime 核心与呈现 Adapter 分离 | 同一执行能力需要支持 Workbench、Headless 和未来 IDE | Runtime Session Core 产生统一 Command/Event/Artifact/Usage；REST/SSE、Workbench、Headless 或 ACP 仅是边缘 Adapter |
 | 注册制 Ingest/Delivery 与隔离 UI Extension | 任意 URL/JS 会破坏 SSRF 和浏览器信任边界 | 外部 Endpoint 预注册；富 UI 仅允许签名 Bundle、不透明 Origin iframe 和类型化 postMessage |
 | 绝对 Schema ID、Strict I-JSON、JCS 和契约清单 | 跨语言摘要与独立发布必须可复现 | 所有实现通过共享正反向向量；兼容性与完整性分别治理 |
 

@@ -14,6 +14,8 @@
 
 - [ ] Business/Platform 所有权无交叉事实源。
 - [ ] Provider 选择只经 Capability/Resolution/不可变 Revision/Admission。
+- [ ] ProviderRevision 使用 Implementation/BuildProvenance/Port Binding；Runtime/Sandbox 公共模型不要求 Plugin 字段。
+- [ ] WorkOrder、Tenant-qualified WorkflowRun、Root/Sub-agent AgentRun、RunManifest 和 AgentRuntimeRun 的基数与引用闭合，Runtime 只引用一个 ProviderResolution。
 - [ ] Sandbox 多 Slot 唯一且主 Slot 存在。
 - [ ] 稳定模型不包含 Pod/Namespace/Container/VM/Node/原始 Endpoint。
 - [ ] Conversation 拥有持久 Workspace；每个可执行 Turn 都绑定 Message/WorkOrder/Grant/RunManifest。
@@ -22,7 +24,10 @@
 - [ ] 每个 Run 锁定一个 Agent Runtime ProviderRevision；Fallback 只用于未开始的新 Run，原生 Checkpoint 不被错误宣称为跨框架可移植。
 - [ ] Experience 选择绑定不可变 Catalog Revision 和 ProviderRevision。
 - [ ] RuntimeSession 实时传输与 RuntimeRecording 回放是相互独立的授权资源。
+- [ ] Terminal Runtime Gateway 使用类型化 v1 Frame、Generation、按 Channel Cursor/Sequence、ACK/Window、Control ID + Digest、Recording Checkpoint 和显式 Replay Gap。
 - [ ] CommercialAuthorizationSnapshot 由 Business 拥有，且无权修改 Platform TechnicalUsage。
+- [ ] MeterDefinition、TechnicalUsage、UsageReport 和 BusinessSettlementEnvelope 不包含价格或余额事实；Envelope 嵌入连续编号的完整 Final/Correction UsageReport，Partial/Estimated 不能作为 Confirmed 结算。
+- [ ] PolicyDecision 从全部规则按 `deny > ask > allow` 推导，Approval、Sandbox、Gateway 和 Invocation 无绕过路径。
 
 ## 可靠性验收
 
@@ -32,6 +37,7 @@
 - [ ] 未知结果可到达成功/失败/重试/人工复核/`abandoned`，不存在永久悬空状态。
 - [ ] Outbox/Inbox、Event Sequence、Artifact Staging/Finalization 和 Delivery Attempt 有数据库约束。
 - [ ] Conversation Message、Agent Runtime Command 和 RuntimeRecording Chunk 序列具有数据库约束与语义负向测试。
+- [ ] 核心 Runtime Event Payload、RunManifest-bound EventTypeRegistry 和 Runtime/Sandbox/Gateway/Capability Conformance Suite 有内容摘要、机器可执行 Schema 与负向测试。
 - [ ] Conversation、AgentRuntimeRun、RuntimeRecording 的状态集合与权威 JSON 状态机一致，终态/取消/未知结果约束由语义 Gate 执行。
 
 ## 生产验收（不属于契约 Gate）

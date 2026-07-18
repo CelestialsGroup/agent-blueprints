@@ -1,0 +1,18 @@
+{
+  "runtime_type": "port_forward",
+  "requested_scopes": [
+    "view",
+    "control",
+    "input"
+  ],
+  "recording": {
+    "mode": "platform_managed",
+    "channels": [
+      "terminal",
+      "file_delta"
+    ],
+    "classification": "internal",
+    "retention_days": 30,
+    "consent_reference": "policy:tenant-default-runtime-recording-v1"
+  }
+}

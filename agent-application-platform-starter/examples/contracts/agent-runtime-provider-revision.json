@@ -1,14 +1,9 @@
 {
   "provider_revision_id": "apr_01J00000000000000000000000",
-  "provider_revision_digest": "sha256:f36191e96fc5717be6b51d730cd408522f4233ea2700b07cb383e9d9879c5599",
+  "provider_revision_digest": "sha256:1ef82012bd07d83be302d138c556f27561e14560ae13c5d6a440f5ea1b1858ed",
   "provider_instance_id": "api_deerflow_runtime",
-  "plugin_id": "agent-runtime.deerflow",
-  "plugin_version": "0.8.3",
-  "manifest_digest": "sha256:abababababababababababababababababababababababababababababababab",
-  "package_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
   "configuration_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   "approved_permissions_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
-  "runtime_binding_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
   "credential_binding_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
   "provider_kind": "agent_runtime",
   "conformance": [
@@ -18,7 +13,10 @@
       "profile": "governed",
       "suite_version": "1.0.0",
       "status": "passed",
-      "report_digest": "sha256:1212121212121212121212121212121212121212121212121212121212121212"
+      "report_digest": "sha256:1212121212121212121212121212121212121212121212121212121212121212",
+      "suite_id": "agent-runtime-provider",
+      "suite_digest": "sha256:3b950315ca1584671203c29af62d1a00eea5b22e046e498e01d39defbcdc7c18",
+      "suite_profile_id": "governed-v1"
     },
     {
       "capability": "agent.general",
@@ -26,10 +24,34 @@
       "profile": "default",
       "suite_version": "1.0.0",
       "status": "passed",
-      "report_digest": "sha256:1313131313131313131313131313131313131313131313131313131313131313"
+      "report_digest": "sha256:1313131313131313131313131313131313131313131313131313131313131313",
+      "suite_id": "agent-runtime-provider",
+      "suite_digest": "sha256:3b950315ca1584671203c29af62d1a00eea5b22e046e498e01d39defbcdc7c18",
+      "suite_profile_id": "runtime-general-v1"
     }
   ],
-  "conformance_set_digest": "sha256:417ef187f47cf26491f61353cd121f9415a4012b9f2241156aaf01e4fede755f",
-  "governed_conformance_report_digest": "sha256:417ef187f47cf26491f61353cd121f9415a4012b9f2241156aaf01e4fede755f",
-  "created_at": "2026-07-16T09:00:10Z"
+  "conformance_set_digest": "sha256:9bc73d4474c18289fa14330f8637a6b59d4b5dc5c108a3488095d355385f953d",
+  "created_at": "2026-07-16T09:00:10Z",
+  "implementation": {
+    "implementation_id": "agent-runtime.deerflow",
+    "implementation_version": "0.8.3",
+    "distribution_type": "oci_image",
+    "distribution_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "manifest_digest": "sha256:abababababababababababababababababababababababababababababababab",
+    "provenance": {
+      "source_revision": "8d2edf0f17c4f6ab9f305932112d8d4079d63757626f36b1be096770282d802a",
+      "source_tree_digest": "sha256:98a5b8c6d0ab0a8c21090e104ecbb8e28a9d53bd3b585aa8ea26af214f13afbb",
+      "build_artifact_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "sbom_digest": "sha256:2565724a883ee313e1f92f080047b52a6e9c883382281424910a1a33cbb6cc51",
+      "provenance_statement_digest": "sha256:43b89ff26f3ad6b5b9da4823d346eaaf66fdac92ea2c60c2ab4ae39fcd2a57c6",
+      "build_system": "contract-fixture-build-v1"
+    },
+    "image_digest": "sha256:a16bf04c03595ecde5f105dfd5b98705413fe196c3faf0f4729c5e86d643403d"
+  },
+  "port": {
+    "protocol": "agent-runtime-provider",
+    "protocol_version": "v1",
+    "contract_digest": "sha256:b565c408185f41e7ecd0d25b94fad4e6ec970aabec24f110bb4e56e6aa151aaf",
+    "binding_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+  }
 }

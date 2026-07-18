@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:business-settlement-envelope:v1",
+  "title": "BusinessSettlementEnvelope",
+  "description": "Idempotent Platform-to-Business settlement, release or reconciliation request containing technical facts only.",
+  "type": "object",
+  "required": [
+    "settlement_envelope_id",
+    "settlement_envelope_digest",
+    "tenant_id",
+    "work_order_id",
+    "commercial_authorization_id",
+    "commercial_authorization_digest",
+    "quota_reservation_id",
+    "quota_reservation_digest",
+    "work_order_terminal_status",
+    "action",
+    "envelope_sequence",
+    "settlement_target_id",
+    "idempotency_key",
+    "created_at"
+  ],
+  "properties": {
+    "settlement_envelope_id": { "type": "string", "minLength": 1 },
+    "settlement_envelope_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "tenant_id": { "type": "string", "minLength": 1 },
+    "work_order_id": { "type": "string", "minLength": 1 },
+    "commercial_authorization_id": { "type": "string", "minLength": 1 },
+    "commercial_authorization_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "quota_reservation_id": { "type": "string", "minLength": 1 },
+    "quota_reservation_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "usage_report": { "$ref": "urn:agent-platform:usage-report:v1" },
+    "work_order_terminal_status": { "enum": ["completed", "partial", "failed", "cancelled"] },
+    "action": { "enum": ["settle", "release", "reconcile"] },
+    "envelope_sequence": { "type": "integer", "minimum": 1 },
+    "supersedes_settlement_envelope_id": { "type": "string", "minLength": 1 },
+    "settlement_target_id": { "type": "string", "minLength": 1 },
+    "idempotency_key": { "type": "string", "minLength": 16, "maxLength": 255 },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "action": { "enum": ["settle", "reconcile"] } }, "required": ["action"] },
+      "then": { "required": ["usage_report"] }
+    },
+    {
+      "if": { "properties": { "action": { "const": "release" } }, "required": ["action"] },
+      "then": { "not": { "required": ["usage_report"] } }
+    },
+    {
+      "if": { "properties": { "envelope_sequence": { "const": 1 } }, "required": ["envelope_sequence"] },
+      "then": { "not": { "required": ["supersedes_settlement_envelope_id"] } }
+    },
+    {
+      "if": { "properties": { "envelope_sequence": { "minimum": 2 } }, "required": ["envelope_sequence"] },
+      "then": { "required": ["supersedes_settlement_envelope_id"] }
+    },
+    {
+      "if": { "properties": { "action": { "const": "reconcile" } }, "required": ["action"] },
+      "then": {
+        "required": ["supersedes_settlement_envelope_id"],
+        "properties": {
+          "usage_report": {
+            "allOf": [
+              { "$ref": "urn:agent-platform:usage-report:v1" },
+              { "properties": { "report_status": { "const": "correction" } } }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "action": { "const": "settle" } }, "required": ["action"] },
+      "then": {
+        "properties": {
+          "usage_report": {
+            "allOf": [
+              { "$ref": "urn:agent-platform:usage-report:v1" },
+              { "properties": { "report_status": { "const": "final" } } }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "x-semantic-constraints": [
+    "settlement_envelope_digest is RFC 8785 JCS SHA-256 over the envelope excluding settlement_envelope_digest",
+    "embedded UsageReport matches tenant, WorkOrder, CommercialAuthorization and QuotaReservation bindings",
+    "settle embeds a final UsageReport; reconcile embeds a correction UsageReport and supersedes the immediately preceding envelope",
+    "envelope_sequence is contiguous per tenant, WorkOrder and QuotaReservation",
+    "Business deduplicates by tenant_id plus idempotency_key and never mutates Platform TechnicalUsage evidence",
+    "the envelope contains no price, currency, plan calculation or balance mutation"
+  ]
+}

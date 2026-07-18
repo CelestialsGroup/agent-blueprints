@@ -1,0 +1,230 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:agent-runtime-event-data:v1",
+  "title": "AgentRuntimeEventDataV1",
+  "description": "Closed payload registry for AgentRuntimeProvider core events.",
+  "$defs": {
+    "runStarted": {
+      "type": "object",
+      "required": ["agent_run_id", "run_manifest_digest", "provider_revision_id"],
+      "properties": {
+        "agent_run_id": { "type": "string", "minLength": 1 },
+        "run_manifest_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "provider_revision_id": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "messageDelta": {
+      "type": "object",
+      "required": ["message_id", "delta_sequence", "delta"],
+      "properties": {
+        "message_id": { "type": "string", "minLength": 1 },
+        "delta_sequence": { "type": "integer", "minimum": 1 },
+        "delta": { "type": "string", "maxLength": 65536 },
+        "content_type": { "enum": ["text", "markdown", "json"] }
+      },
+      "additionalProperties": false
+    },
+    "messageCompleted": {
+      "type": "object",
+      "required": ["message_id", "content_reference", "content_digest"],
+      "properties": {
+        "message_id": { "type": "string", "minLength": 1 },
+        "content_reference": { "type": "string", "minLength": 1 },
+        "content_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "planUpdated": {
+      "type": "object",
+      "required": ["plan_id", "plan_revision", "plan_reference", "item_count"],
+      "properties": {
+        "plan_id": { "type": "string", "minLength": 1 },
+        "plan_revision": { "type": "integer", "minimum": 1 },
+        "plan_reference": { "type": "string", "minLength": 1 },
+        "item_count": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "toolRequested": {
+      "type": "object",
+      "required": ["invocation_id", "capability_id", "side_effect", "policy_outcome"],
+      "properties": {
+        "invocation_id": { "type": "string", "minLength": 1 },
+        "capability_id": { "type": "string", "minLength": 1 },
+        "side_effect": { "enum": ["none", "idempotent", "non_idempotent"] },
+        "policy_outcome": { "enum": ["allow", "deny", "approval_required"] },
+        "approval_id": { "type": "string", "minLength": 1 },
+        "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "policy_outcome": { "const": "approval_required" } }, "required": ["policy_outcome"] },
+          "then": { "required": ["approval_id"] }
+        }
+      ]
+    },
+    "approvalRequested": {
+      "type": "object",
+      "required": ["approval_id", "invocation_id", "risk_level", "summary"],
+      "properties": {
+        "approval_id": { "type": "string", "minLength": 1 },
+        "invocation_id": { "type": "string", "minLength": 1 },
+        "risk_level": { "enum": ["low", "medium", "high", "critical"] },
+        "summary": { "type": "string", "minLength": 1, "maxLength": 4000 }
+      },
+      "additionalProperties": false
+    },
+    "artifactStaged": {
+      "type": "object",
+      "required": ["staging_id", "media_type", "content_digest", "size_bytes"],
+      "properties": {
+        "staging_id": { "type": "string", "minLength": 1 },
+        "media_type": { "type": "string", "minLength": 1 },
+        "content_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "size_bytes": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "checkpointCreated": {
+      "type": "object",
+      "required": ["checkpoint_id", "checkpoint_manifest_digest", "content_reference"],
+      "properties": {
+        "checkpoint_id": { "type": "string", "minLength": 1 },
+        "checkpoint_manifest_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "content_reference": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "waitingInput": {
+      "type": "object",
+      "required": ["reason", "accepted_input_modes"],
+      "properties": {
+        "reason": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "accepted_input_modes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["append", "interrupt"] }
+        }
+      },
+      "additionalProperties": false
+    },
+    "taskBase": {
+      "type": "object",
+      "required": ["task_id", "task_kind", "status", "title", "updated_at"],
+      "properties": {
+        "task_id": { "type": "string", "minLength": 1 },
+        "parent_task_id": { "type": "string", "minLength": 1 },
+        "child_agent_run_id": { "type": "string", "minLength": 1 },
+        "invocation_id": { "type": "string", "minLength": 1 },
+        "sandbox_operation_id": { "type": "string", "minLength": 1 },
+        "task_kind": { "enum": ["subagent", "background_command", "monitor", "scheduled"] },
+        "status": { "enum": ["running", "waiting", "succeeded", "failed", "cancelled"] },
+        "title": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "output_reference": { "type": "string", "minLength": 1 },
+        "exit_code": { "type": "integer" },
+        "updated_at": { "type": "string", "format": "date-time" },
+        "completed_at": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "task_kind": { "const": "subagent" } }, "required": ["task_kind"] },
+          "then": { "required": ["child_agent_run_id"] }
+        },
+        {
+          "if": { "properties": { "task_kind": { "not": { "const": "subagent" } } }, "required": ["task_kind"] },
+          "then": { "not": { "required": ["child_agent_run_id"] } }
+        }
+      ]
+    },
+    "taskStarted": {
+      "allOf": [
+        { "$ref": "#/$defs/taskBase" },
+        { "properties": { "status": { "const": "running" } } }
+      ]
+    },
+    "taskUpdated": {
+      "allOf": [
+        { "$ref": "#/$defs/taskBase" },
+        { "properties": { "status": { "enum": ["running", "waiting"] } } }
+      ]
+    },
+    "taskCompleted": {
+      "allOf": [
+        { "$ref": "#/$defs/taskBase" },
+        {
+          "properties": { "status": { "enum": ["succeeded", "failed", "cancelled"] } },
+          "required": ["completed_at"]
+        }
+      ]
+    },
+    "usageReported": {
+      "type": "object",
+      "required": ["batch_id", "batch_digest", "entries"],
+      "properties": {
+        "batch_id": { "type": "string", "minLength": 1 },
+        "batch_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "entries": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "uniqueItems": true,
+          "items": { "$ref": "urn:agent-platform:technical-usage-entry:v1" }
+        }
+      },
+      "additionalProperties": false,
+      "x-semantic-constraints": [
+        "batch_digest is RFC 8785 JCS SHA-256 over entries",
+        "entries are deduplicated by tenant_id plus idempotency_key before Platform UsageReport creation"
+      ]
+    },
+    "runCompleted": {
+      "type": "object",
+      "required": ["result_reference", "completed_at"],
+      "properties": {
+        "result_reference": { "type": "string", "minLength": 1 },
+        "completed_at": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "runFailed": {
+      "type": "object",
+      "required": ["error", "completed_at"],
+      "properties": {
+        "error": { "$ref": "urn:agent-platform:capability-error:v1" },
+        "completed_at": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "runCancelled": {
+      "type": "object",
+      "required": ["cancellation_evidence_reference", "completed_at"],
+      "properties": {
+        "cancellation_evidence_reference": { "type": "string", "minLength": 1 },
+        "completed_at": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/$defs/runStarted" },
+    { "$ref": "#/$defs/messageDelta" },
+    { "$ref": "#/$defs/messageCompleted" },
+    { "$ref": "#/$defs/planUpdated" },
+    { "$ref": "#/$defs/toolRequested" },
+    { "$ref": "#/$defs/approvalRequested" },
+    { "$ref": "#/$defs/artifactStaged" },
+    { "$ref": "#/$defs/checkpointCreated" },
+    { "$ref": "#/$defs/waitingInput" },
+    { "$ref": "#/$defs/taskStarted" },
+    { "$ref": "#/$defs/taskUpdated" },
+    { "$ref": "#/$defs/taskCompleted" },
+    { "$ref": "#/$defs/usageReported" },
+    { "$ref": "#/$defs/runCompleted" },
+    { "$ref": "#/$defs/runFailed" },
+    { "$ref": "#/$defs/runCancelled" }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:agent-runtime-invocation-token-claims:v1",
+  "title": "AgentRuntimeInvocationTokenClaims",
+  "description": "Short-lived Platform-issued authorization bound to one Agent Runtime Provider call and immutable execution context.",
+  "type": "object",
+  "required": [
+    "iss",
+    "sub",
+    "aud",
+    "jti",
+    "iat",
+    "nbf",
+    "exp",
+    "tenant_id",
+    "provider_revision_id",
+    "runtime_run_id",
+    "agent_run_id",
+    "workflow_run_id",
+    "work_order_id",
+    "run_manifest_digest",
+    "operation",
+    "invocation_id",
+    "invocation_attempt_id",
+    "fencing_token",
+    "policy_decision_digest",
+    "execution_budget_digest",
+    "effective_permissions_digest"
+  ],
+  "properties": {
+    "iss": { "type": "string", "minLength": 1 },
+    "sub": { "type": "string", "minLength": 1 },
+    "aud": { "type": "string", "minLength": 1 },
+    "jti": { "type": "string", "minLength": 16 },
+    "iat": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "nbf": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "exp": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "tenant_id": { "type": "string", "minLength": 1 },
+    "provider_revision_id": { "type": "string", "minLength": 1 },
+    "runtime_run_id": { "type": "string", "minLength": 1 },
+    "agent_run_id": { "type": "string", "minLength": 1 },
+    "workflow_run_id": { "type": "string", "minLength": 1 },
+    "work_order_id": { "type": "string", "minLength": 1 },
+    "run_manifest_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "operation": { "enum": ["start", "read_status", "submit_command", "read_events"] },
+    "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "invocation_id": { "type": "string", "minLength": 1 },
+    "invocation_attempt_id": { "type": "string", "minLength": 1 },
+    "fencing_token": { "type": "integer", "minimum": 1 },
+    "policy_decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "execution_budget_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "effective_permissions_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "operation": { "enum": ["start", "submit_command"] } }, "required": ["operation"] },
+      "then": { "required": ["request_digest"] }
+    }
+  ],
+  "x-semantic-constraints": [
+    "the token lifetime is short, nbf is not before iat, and exp is after nbf",
+    "audience and provider_revision_id identify the admitted Agent Runtime ProviderRevision",
+    "tenant, execution IDs and immutable digests match the request, RunManifest and InvocationAttempt",
+    "request_digest equals the Start request_digest or AgentRuntimeCommand command_digest for mutation operations",
+    "a stale fencing_token or replayed jti cannot authorize a mutation"
+  ]
+}

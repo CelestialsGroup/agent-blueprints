@@ -1,0 +1,23 @@
+{
+  "iss": "https://agent-platform.example.test",
+  "sub": "spn_agent_runtime_controller",
+  "aud": "agent-runtime-provider:api_deerflow_runtime",
+  "jti": "runtime-token-jti-invalid",
+  "iat": 1784192400,
+  "nbf": 1784192400,
+  "exp": 1784192700,
+  "provider_revision_id": "apr_invalid",
+  "runtime_run_id": "rtr_invalid",
+  "agent_run_id": "agr_invalid",
+  "workflow_run_id": "wfr_invalid",
+  "work_order_id": "wrk_invalid",
+  "run_manifest_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "operation": "start",
+  "request_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "invocation_id": "inv_invalid",
+  "invocation_attempt_id": "iat_invalid",
+  "fencing_token": 1,
+  "policy_decision_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "execution_budget_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "effective_permissions_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+}

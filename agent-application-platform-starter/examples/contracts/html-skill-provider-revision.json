@@ -1,14 +1,9 @@
 {
   "provider_revision_id": "hpr_01J00000000000000000000000",
-  "provider_revision_digest": "sha256:7153ba233a9846693d344b97d4cd9cfffdc4f002babba320b12765afb30bfc0a",
+  "provider_revision_digest": "sha256:46993b146168a3d19c989812600736911ffc284fe917d2d37db237c2b8ee7b75",
   "provider_instance_id": "hpi_html_anything",
-  "plugin_id": "skill-provider.html-anything",
-  "plugin_version": "1.0.0",
-  "manifest_digest": "sha256:4141414141414141414141414141414141414141414141414141414141414141",
-  "package_digest": "sha256:4242424242424242424242424242424242424242424242424242424242424242",
   "configuration_digest": "sha256:4343434343434343434343434343434343434343434343434343434343434343",
   "approved_permissions_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
-  "runtime_binding_digest": "sha256:4545454545454545454545454545454545454545454545454545454545454545",
   "credential_binding_digest": "sha256:4646464646464646464646464646464646464646464646464646464646464646",
   "provider_kind": "skill",
   "conformance": [
@@ -18,9 +13,33 @@
       "profile": "responsive",
       "suite_version": "1.0.0",
       "status": "passed",
-      "report_digest": "sha256:4747474747474747474747474747474747474747474747474747474747474747"
+      "report_digest": "sha256:4747474747474747474747474747474747474747474747474747474747474747",
+      "suite_id": "capability-provider",
+      "suite_digest": "sha256:87070d107edb785270c9e2c7b50ed775362b39e0262f319232f56093a2e1225d",
+      "suite_profile_id": "capability-core-v1"
     }
   ],
-  "conformance_set_digest": "sha256:2a357bf818dd59745f6e9215d57aa4af5da2f12e276089742e28a503f319f74b",
-  "created_at": "2026-07-16T09:00:21Z"
+  "conformance_set_digest": "sha256:9607da1f4d0c391d93035f5790c605e4d03683fb4f9785c9348b1f30a4483016",
+  "created_at": "2026-07-16T09:00:21Z",
+  "implementation": {
+    "implementation_id": "skill-provider.html-anything",
+    "implementation_version": "1.0.0",
+    "distribution_type": "package",
+    "distribution_digest": "sha256:4242424242424242424242424242424242424242424242424242424242424242",
+    "manifest_digest": "sha256:4141414141414141414141414141414141414141414141414141414141414141",
+    "provenance": {
+      "source_revision": "df83e9c63b9187bf4bfa0c110c280f5072fcbe4aaa86e34075bcf532ccac112a",
+      "source_tree_digest": "sha256:bc28e910320da8171726b3725121cd374e750905635911d045028f18e7de94d8",
+      "build_artifact_digest": "sha256:4242424242424242424242424242424242424242424242424242424242424242",
+      "sbom_digest": "sha256:dbee01f2b0e31c6766c12a9621d493f7945f2ee315387114004c948cf4ad3206",
+      "provenance_statement_digest": "sha256:881111bd110444243f20b9ed1ffcf190b866ecbeb7b965c2118facf74398eee7",
+      "build_system": "contract-fixture-build-v1"
+    }
+  },
+  "port": {
+    "protocol": "capability-provider",
+    "protocol_version": "v1",
+    "contract_digest": "sha256:343f4f6aee161db54b083204d9fe45684e77e7a69dabea7ecdc69b3688e0c0b7",
+    "binding_digest": "sha256:4545454545454545454545454545454545454545454545454545454545454545"
+  }
 }

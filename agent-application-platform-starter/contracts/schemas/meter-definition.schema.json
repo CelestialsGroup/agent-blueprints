@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:meter-definition:v1",
+  "title": "MeterDefinition",
+  "description": "Immutable technical measurement definition. Pricing and commercial conversion are intentionally excluded.",
+  "type": "object",
+  "required": [
+    "meter_id",
+    "meter_version",
+    "definition_digest",
+    "base_unit",
+    "aggregation",
+    "measurement_authority",
+    "corrections_allowed",
+    "status"
+  ],
+  "properties": {
+    "meter_id": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]{2,191}$" },
+    "meter_version": { "type": "integer", "minimum": 1 },
+    "definition_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "base_unit": {
+      "enum": ["token", "millisecond", "nanosecond", "byte", "byte_millisecond", "count"]
+    },
+    "aggregation": { "enum": ["sum", "maximum"] },
+    "measurement_authority": { "enum": ["platform", "provider", "platform_or_provider"] },
+    "corrections_allowed": { "type": "boolean" },
+    "status": { "enum": ["active", "deprecated", "retired"] }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "definition_digest is RFC 8785 JCS SHA-256 over the definition excluding definition_digest",
+    "a MeterDefinition revision is immutable and never contains price, currency or plan rules"
+  ]
+}

@@ -8,7 +8,8 @@
     "data_version",
     "data_schema",
     "classification",
-    "retention_class"
+    "retention_class",
+    "contains_user_content"
   ],
   "properties": {
     "type": {
@@ -24,7 +25,8 @@
       "required": [
         "uri",
         "digest",
-        "dialect"
+        "dialect",
+        "digest_profile"
       ],
       "properties": {
         "uri": {
@@ -37,6 +39,10 @@
         },
         "dialect": {
           "const": "https://json-schema.org/draft/2020-12/schema"
+        },
+        "digest_profile": {
+          "const": "rfc8785-schema-closure-v1",
+          "description": "JCS SHA-256 over {root, dependencies}, where dependencies are the transitive external schemas sorted by absolute $id."
         }
       },
       "additionalProperties": false
@@ -61,6 +67,7 @@
     },
     "projection_consumers": {
       "type": "array",
+      "uniqueItems": true,
       "items": {
         "type": "string"
       }

@@ -50,6 +50,8 @@ WorkOrder 流排序只使用 `work_sequence`。Conversation 创建、归档/删�
 
 核心 Projection 不消费未注册 Plugin 私有事件。
 
+AgentRuntimeProvider 的核心事件使用 `contracts/event-types/agent-runtime-core-v1.json`。Registry 自带内容摘要，RunManifest 固化 ID/Version/Digest。Chat、Plan、Tool/Approval、Artifact、Background Task、Usage 和 Runtime 终态均绑定 `agent-runtime-event-data-v1` 的闭合 Payload；新增核心类型必须发布新的 Registry Revision，不能向任意 `data` 偷渡字段。
+
 ## 写入事务
 
 1. 按 `(provider_instance_id, source_stream_id, source_cursor)` 去重。
@@ -79,5 +81,7 @@ GET /v1/work-orders/{id}/events?after_work_sequence=152
 模型 Token 不逐 Token 持久化。
 
 Delta 进行批量合并，最终 Completed Event 或 Artifact 必须可独立重建结果。
+
+Prompt Queue 和 Interjection 不新增本地 Session 事实源：用户输入先成为 ConversationMessage，再通过连续、仅追加且带请求摘要的 `append_input` 或 `interrupt` Runtime Command 传递。Sub-agent、后台命令、Monitor 和 Scheduler 统一投影为 `runtime.task.*`；Sub-agent Task 显式绑定 Child AgentRun，PID 与本地队列仍是 Runtime 私有状态。`runtime.usage.reported` 传递可去重的 TechnicalUsage Entry Batch，Platform 再形成跨来源 UsageReport。
 
 Terminal/Browser/Desktop 录制字节进入加密 Artifact chunks，CanonicalEvent 只保存 recording/chunk 引用，不保存视频或完整终端流。

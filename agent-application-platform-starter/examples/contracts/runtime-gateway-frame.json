@@ -1,0 +1,21 @@
+{
+  "protocol_version": "runtime-gateway/v1",
+  "runtime_session_id": "rts_01J00000000000000000000000",
+  "connection_generation": 2,
+  "direction": "client_to_gateway",
+  "channel": "session",
+  "frame_sequence": 1,
+  "frame_type": "connect",
+  "receive_window": 64,
+  "sent_at": "2026-07-16T09:10:00Z",
+  "resume_cursors": [
+    {
+      "channel": "terminal",
+      "sequence": 41
+    },
+    {
+      "channel": "file_delta",
+      "sequence": 7
+    }
+  ]
+}

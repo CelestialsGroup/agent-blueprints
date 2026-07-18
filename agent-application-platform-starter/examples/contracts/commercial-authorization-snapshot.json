@@ -1,6 +1,4 @@
 {
-  "authorization_id": "cauth_01J00000000000000000000000",
-  "authorization_digest": "sha256:6433ae5c1cf9444c43d9ebb4b640b9b0fd3b38854651d0510387235719105d9c",
   "entitlement_revision_id": "entitlement-pro-2026-07",
   "entitlement_revision_digest": "sha256:7272727272727272727272727272727272727272727272727272727272727272",
   "quota_reservation_id": "qres_01J00000000000000000000000",
@@ -27,5 +25,7 @@
     "max_storage_bytes": 104857600,
     "max_artifact_count": 20,
     "max_conversion_count": 3
-  }
+  },
+  "commercial_authorization_id": "cauth_01J00000000000000000000000",
+  "commercial_authorization_digest": "sha256:58fecad357ce4fe69cce9437814834bba7435d3712fc878ab9832ecc1719a20c"
 }

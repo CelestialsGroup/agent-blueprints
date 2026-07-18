@@ -43,8 +43,10 @@ compatibility:
   consumer_unknown_fields: ignore
   consumer_unknown_event_types: record-and-ignore
 conformance:
-  suite_id: converter.html-to-pptx
+  suite_id: capability-provider
   suite_version: 1.0.0
+  suite_digest: sha256:87070d107edb785270c9e2c7b50ed775362b39e0262f319232f56093a2e1225d
+  suite_profile_id: capability-core-v1
 namespace_owner: agent-platform
 lifecycle:
   status: stable

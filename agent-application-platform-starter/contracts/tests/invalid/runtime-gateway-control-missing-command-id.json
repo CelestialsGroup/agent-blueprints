@@ -1,0 +1,13 @@
+{
+  "protocol_version": "runtime-gateway/v1",
+  "runtime_session_id": "rts_invalid",
+  "connection_generation": 1,
+  "direction": "client_to_gateway",
+  "channel": "terminal",
+  "frame_sequence": 2,
+  "frame_type": "control",
+  "command": "terminal.resize",
+  "columns": 120,
+  "rows": 40,
+  "sent_at": "2026-07-16T09:10:01Z"
+}

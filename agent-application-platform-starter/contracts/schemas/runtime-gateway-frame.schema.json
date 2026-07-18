@@ -1,0 +1,240 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:runtime-gateway-frame:v1",
+  "title": "RuntimeGatewayFrameV1",
+  "description": "Typed and reconnectable frame envelope for Terminal, Browser, Desktop, Port Forward and file-delta channels. Recordable channels remain a strict subset.",
+  "$defs": {
+    "channelCursor": {
+      "type": "object",
+      "required": ["channel", "sequence"],
+      "properties": {
+        "channel": { "enum": ["terminal", "browser", "desktop", "port_forward", "file_delta"] },
+        "sequence": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "type": "object",
+  "required": [
+    "protocol_version",
+    "runtime_session_id",
+    "connection_generation",
+    "direction",
+    "channel",
+    "frame_sequence",
+    "frame_type",
+    "sent_at"
+  ],
+  "properties": {
+    "protocol_version": { "const": "runtime-gateway/v1" },
+    "runtime_session_id": { "type": "string", "minLength": 1 },
+    "connection_generation": { "type": "integer", "minimum": 1 },
+    "direction": { "enum": ["client_to_gateway", "gateway_to_client"] },
+    "channel": { "enum": ["session", "terminal", "browser", "desktop", "port_forward", "file_delta"] },
+    "frame_sequence": { "type": "integer", "minimum": 1 },
+    "frame_type": {
+      "enum": ["connect", "connected", "data", "ack", "control", "recording_checkpoint", "ping", "pong", "error", "close"]
+    },
+    "resume_cursors": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/channelCursor" }
+    },
+    "available_cursors": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/channelCursor" }
+    },
+    "ack_sequence": { "type": "integer", "minimum": 0 },
+    "receive_window": { "type": "integer", "minimum": 1, "maximum": 4096 },
+    "scopes_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "payload_encoding": { "enum": ["utf8", "base64", "json"] },
+    "payload": { "type": "string", "maxLength": 1398104 },
+    "payload_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "command_id": { "type": "string", "minLength": 1 },
+    "control_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "command": {
+      "enum": ["terminal.resize", "input.text", "input.key", "browser.navigate", "session.close"]
+    },
+    "columns": { "type": "integer", "minimum": 1, "maximum": 1000 },
+    "rows": { "type": "integer", "minimum": 1, "maximum": 1000 },
+    "text": { "type": "string", "maxLength": 65536 },
+    "key": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "url": { "type": "string", "format": "uri", "maxLength": 8192 },
+    "recording_id": { "type": "string", "minLength": 1 },
+    "chunk_sequence": { "type": "integer", "minimum": 1 },
+    "work_sequence": { "type": "integer", "minimum": 1 },
+    "recorded_through_sequence": { "type": "integer", "minimum": 1 },
+    "error_code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{2,127}$" },
+    "retryable": { "type": "boolean" },
+    "close_reason": { "type": "string", "minLength": 1, "maxLength": 1000 },
+    "sent_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "frame_type": { "const": "connect" } }, "required": ["frame_type"] },
+      "then": {
+        "properties": { "direction": { "const": "client_to_gateway" }, "channel": { "const": "session" } },
+        "required": ["resume_cursors", "receive_window"]
+      }
+    },
+    {
+      "if": { "properties": { "frame_type": { "const": "connected" } }, "required": ["frame_type"] },
+      "then": {
+        "properties": { "direction": { "const": "gateway_to_client" }, "channel": { "const": "session" } },
+        "required": ["available_cursors", "receive_window", "scopes_digest"]
+      }
+    },
+    {
+      "if": { "properties": { "frame_type": { "const": "data" } }, "required": ["frame_type"] },
+      "then": { "required": ["payload_encoding", "payload", "payload_digest"] }
+    },
+    {
+      "if": { "properties": { "frame_type": { "const": "ack" } }, "required": ["frame_type"] },
+      "then": { "required": ["ack_sequence", "receive_window"] }
+    },
+    {
+      "if": { "properties": { "frame_type": { "const": "control" } }, "required": ["frame_type"] },
+      "then": { "properties": { "direction": { "const": "client_to_gateway" } }, "required": ["command_id", "control_digest", "command"] }
+    },
+    {
+      "if": { "properties": { "command": { "const": "terminal.resize" } }, "required": ["command"] },
+      "then": {
+        "properties": { "channel": { "const": "terminal" } },
+        "required": ["columns", "rows"],
+        "not": { "anyOf": [{ "required": ["text"] }, { "required": ["key"] }, { "required": ["url"] }] }
+      }
+    },
+    {
+      "if": { "properties": { "command": { "const": "input.text" } }, "required": ["command"] },
+      "then": {
+        "required": ["text"],
+        "not": { "anyOf": [{ "required": ["columns"] }, { "required": ["rows"] }, { "required": ["key"] }, { "required": ["url"] }] }
+      }
+    },
+    {
+      "if": { "properties": { "command": { "const": "input.key" } }, "required": ["command"] },
+      "then": {
+        "required": ["key"],
+        "not": { "anyOf": [{ "required": ["columns"] }, { "required": ["rows"] }, { "required": ["text"] }, { "required": ["url"] }] }
+      }
+    },
+    {
+      "if": { "properties": { "command": { "const": "browser.navigate" } }, "required": ["command"] },
+      "then": {
+        "properties": { "channel": { "const": "browser" } },
+        "required": ["url"],
+        "not": { "anyOf": [{ "required": ["columns"] }, { "required": ["rows"] }, { "required": ["text"] }, { "required": ["key"] }] }
+      }
+    },
+    {
+      "if": { "properties": { "command": { "const": "session.close" } }, "required": ["command"] },
+      "then": {
+        "properties": { "channel": { "const": "session" } },
+        "not": {
+          "anyOf": [
+            { "required": ["columns"] },
+            { "required": ["rows"] },
+            { "required": ["text"] },
+            { "required": ["key"] },
+            { "required": ["url"] }
+          ]
+        }
+      }
+    },
+    {
+      "if": { "properties": { "frame_type": { "const": "recording_checkpoint" } }, "required": ["frame_type"] },
+      "then": {
+        "properties": { "direction": { "const": "gateway_to_client" } },
+        "required": ["recording_id", "chunk_sequence", "work_sequence", "recorded_through_sequence"]
+      }
+    },
+    {
+      "if": { "properties": { "frame_type": { "const": "error" } }, "required": ["frame_type"] },
+      "then": { "properties": { "direction": { "const": "gateway_to_client" } }, "required": ["error_code", "retryable"] }
+    },
+    {
+      "if": { "properties": { "frame_type": { "const": "close" } }, "required": ["frame_type"] },
+      "then": { "required": ["close_reason"] }
+    },
+    {
+      "if": { "properties": { "frame_type": { "not": { "const": "data" } } }, "required": ["frame_type"] },
+      "then": {
+        "not": {
+          "anyOf": [
+            { "required": ["payload_encoding"] },
+            { "required": ["payload"] },
+            { "required": ["payload_digest"] }
+          ]
+        }
+      }
+    },
+    {
+      "if": { "properties": { "frame_type": { "not": { "const": "control" } } }, "required": ["frame_type"] },
+      "then": {
+        "not": {
+          "anyOf": [
+            { "required": ["command_id"] },
+            { "required": ["control_digest"] },
+            { "required": ["command"] },
+            { "required": ["columns"] },
+            { "required": ["rows"] },
+            { "required": ["text"] },
+            { "required": ["key"] },
+            { "required": ["url"] }
+          ]
+        }
+      }
+    },
+    {
+      "if": { "properties": { "frame_type": { "not": { "const": "recording_checkpoint" } } }, "required": ["frame_type"] },
+      "then": {
+        "not": {
+          "anyOf": [
+            { "required": ["recording_id"] },
+            { "required": ["chunk_sequence"] },
+            { "required": ["work_sequence"] },
+            { "required": ["recorded_through_sequence"] }
+          ]
+        }
+      }
+    },
+    {
+      "if": { "properties": { "frame_type": { "not": { "const": "error" } } }, "required": ["frame_type"] },
+      "then": { "not": { "anyOf": [{ "required": ["error_code"] }, { "required": ["retryable"] }] } }
+    },
+    {
+      "if": { "properties": { "frame_type": { "not": { "const": "close" } } }, "required": ["frame_type"] },
+      "then": { "not": { "required": ["close_reason"] } }
+    },
+    {
+      "if": { "properties": { "frame_type": { "not": { "const": "connect" } } }, "required": ["frame_type"] },
+      "then": { "not": { "required": ["resume_cursors"] } }
+    },
+    {
+      "if": { "properties": { "frame_type": { "not": { "const": "connected" } } }, "required": ["frame_type"] },
+      "then": { "not": { "anyOf": [{ "required": ["available_cursors"] }, { "required": ["scopes_digest"] }] } }
+    },
+    {
+      "if": { "properties": { "frame_type": { "not": { "const": "ack" } } }, "required": ["frame_type"] },
+      "then": { "not": { "required": ["ack_sequence"] } }
+    },
+    {
+      "if": { "properties": { "frame_type": { "not": { "enum": ["connect", "connected", "ack"] } } }, "required": ["frame_type"] },
+      "then": { "not": { "required": ["receive_window"] } }
+    }
+  ],
+  "x-semantic-constraints": [
+    "frame_sequence is contiguous per runtime_session_id, connection_generation, direction and channel",
+    "a reconnect increments connection_generation and begins with connect; stale generations cannot send data or control",
+    "ack_sequence and receive_window provide bounded backpressure; a sender never exceeds the advertised window",
+    "resume_cursors and available_cursors contain each subscribed channel at most once",
+    "replay gaps outside the Gateway resume window fail explicitly and direct the client to immutable RuntimeRecording",
+    "control_digest is RFC 8785 JCS SHA-256 over command and command-specific fields; command_id plus digest is idempotent and digest conflicts are rejected",
+    "recording_checkpoint binds recorded_through_sequence on its channel to an immutable chunk and WorkOrder work_sequence",
+    "port_forward is live-only and never appears in RuntimeRecording channels"
+  ]
+}

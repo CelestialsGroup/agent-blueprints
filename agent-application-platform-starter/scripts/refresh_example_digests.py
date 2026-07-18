@@ -42,6 +42,37 @@ def digest_without(value: dict[str, Any], field: str) -> str:
     return digest(unsigned)
 
 
+def file_digest(relative: str) -> str:
+    return "sha256:" + hashlib.sha256((ROOT / relative).read_bytes()).hexdigest()
+
+
+suite_paths = {
+    "agent_runtime": "contracts/conformance/runtime/v1/suite.json",
+    "sandbox": "contracts/conformance/sandbox/v1/suite.json",
+    "runtime_gateway": "contracts/conformance/runtime-gateway/v1/suite.json",
+    "capability_provider": "contracts/conformance/capability/v1/suite.json",
+}
+suites: dict[str, dict[str, Any]] = {}
+for target_kind, path in suite_paths.items():
+    suite = read(path)
+    suite["suite_digest"] = digest_without(suite, "suite_digest")
+    suites[target_kind] = suite
+    write(path, suite)
+
+for path in (
+    "examples/capabilities/html.generate.yaml",
+    "examples/capabilities/converter.html-to-pptx.yaml",
+):
+    capability = read_yaml(path)
+    capability["conformance"] = {
+        "suite_id": suites["capability_provider"]["suite_id"],
+        "suite_version": suites["capability_provider"]["suite_version"],
+        "suite_digest": suites["capability_provider"]["suite_digest"],
+        "suite_profile_id": "capability-core-v1",
+    }
+    write_yaml(path, capability)
+
+
 revision_paths = [
     "examples/contracts/sandbox-provider-revision.json",
     "examples/contracts/agent-runtime-provider-revision.json",
@@ -61,11 +92,74 @@ decision_paths = [
 revisions: dict[str, dict[str, Any]] = {}
 for path in revision_paths:
     revision = read(path)
+    legacy_implementation_id = revision.pop("plugin_id", None)
+    legacy_implementation_version = revision.pop("plugin_version", None)
+    legacy_manifest_digest = revision.pop("manifest_digest", None)
+    legacy_distribution_digest = revision.pop("package_digest", None)
+    legacy_image_digest = revision.pop("image_digest", None)
+    legacy_binding_digest = revision.pop("runtime_binding_digest", None)
+    revision.pop("sandbox_conformance_report_digest", None)
+    revision.pop("governed_conformance_report_digest", None)
+    if "implementation" not in revision:
+        distribution_type = {
+            "agent_runtime": "oci_image",
+            "sandbox": "oci_image",
+            "template": "static_catalog",
+        }.get(revision["provider_kind"], "package")
+        distribution_digest = legacy_distribution_digest or digest({"distribution": revision["provider_revision_id"]})
+        implementation = {
+            "implementation_id": legacy_implementation_id or f"provider.{revision['provider_revision_id']}",
+            "implementation_version": legacy_implementation_version or "1.0.0",
+            "distribution_type": distribution_type,
+            "distribution_digest": distribution_digest,
+            "manifest_digest": legacy_manifest_digest or digest({"manifest": revision["provider_revision_id"]}),
+            "provenance": {
+                "source_revision": hashlib.sha256(revision["provider_revision_id"].encode()).hexdigest(),
+                "source_tree_digest": digest({"source_tree": revision["provider_revision_id"]}),
+                "build_artifact_digest": distribution_digest,
+                "sbom_digest": digest({"sbom": revision["provider_revision_id"]}),
+                "provenance_statement_digest": digest({"provenance": revision["provider_revision_id"]}),
+                "build_system": "contract-fixture-build-v1",
+            },
+        }
+        if distribution_type == "oci_image":
+            implementation["image_digest"] = legacy_image_digest or digest({"image": revision["provider_revision_id"]})
+        revision["implementation"] = implementation
+    if "port" not in revision:
+        protocol = {
+            "agent_runtime": "agent-runtime-provider",
+            "sandbox": "sandbox-provider",
+        }.get(revision["provider_kind"], "capability-provider")
+        contract_path = {
+            "agent_runtime": "contracts/openapi/agent-runtime-provider-v1.yaml",
+            "sandbox": "contracts/openapi/sandbox-provider-v1.yaml",
+        }.get(revision["provider_kind"], "contracts/openapi/plugin-invocation-v1.yaml")
+        revision["port"] = {
+            "protocol": protocol,
+            "protocol_version": "v1",
+            "contract_digest": file_digest(contract_path),
+            "binding_digest": legacy_binding_digest or digest({"binding": revision["provider_revision_id"]}),
+        }
+    contract_path = {
+        "agent_runtime": "contracts/openapi/agent-runtime-provider-v1.yaml",
+        "sandbox": "contracts/openapi/sandbox-provider-v1.yaml",
+    }.get(revision["provider_kind"], "contracts/openapi/plugin-invocation-v1.yaml")
+    revision["port"]["contract_digest"] = file_digest(contract_path)
+    if revision["provider_kind"] == "agent_runtime":
+        suite = suites["agent_runtime"]
+        profile_for = lambda capability: "governed-v1" if capability == "agent.runtime.execute" else "runtime-general-v1"
+    elif revision["provider_kind"] == "sandbox":
+        suite = suites["sandbox"]
+        profile_for = lambda _capability: "sandbox-core-v1"
+    else:
+        suite = suites["capability_provider"]
+        profile_for = lambda _capability: "capability-core-v1"
+    for result in revision["conformance"]:
+        result["suite_id"] = suite["suite_id"]
+        result["suite_version"] = suite["suite_version"]
+        result["suite_digest"] = suite["suite_digest"]
+        result["suite_profile_id"] = profile_for(result["capability"])
     revision["conformance_set_digest"] = digest(revision["conformance"])
-    if revision["provider_kind"] == "sandbox" and "sandbox_conformance_report_digest" in revision:
-        revision["sandbox_conformance_report_digest"] = revision["conformance_set_digest"]
-    if revision["provider_kind"] == "agent_runtime" and "governed_conformance_report_digest" in revision:
-        revision["governed_conformance_report_digest"] = revision["conformance_set_digest"]
     revision["provider_revision_digest"] = digest_without(revision, "provider_revision_digest")
     revisions[revision["provider_revision_id"]] = revision
     write(path, revision)
@@ -87,21 +181,16 @@ def snapshot(revision_id: str, decision_id: str) -> dict[str, Any]:
         "provider_revision_id": revision_id,
         "provider_revision_digest": revision["provider_revision_digest"],
         "provider_kind": revision["provider_kind"],
-        "plugin_id": revision["plugin_id"],
-        "plugin_version": revision["plugin_version"],
-        "manifest_digest": revision["manifest_digest"],
-        "package_digest": revision["package_digest"],
-        "runtime_binding_digest": revision["runtime_binding_digest"],
+        "implementation": revision["implementation"],
+        "port": revision["port"],
         "configuration_digest": revision["configuration_digest"],
         "approved_permissions_digest": revision["approved_permissions_digest"],
         "credential_binding_digest": revision["credential_binding_digest"],
-        "conformance_report_digest": revision["conformance_set_digest"],
+        "conformance_set_digest": revision["conformance_set_digest"],
         "admission_decision_id": decision_id,
         "admission_decision_digest": decision["decision_digest"],
         "admission_status": "certified",
     }
-    if "image_digest" in revision:
-        result["image_digest"] = revision["image_digest"]
     return result
 
 
@@ -181,11 +270,15 @@ grant_path = "examples/contracts/execution-grant-claims.json"
 grant = read(grant_path)
 commercial_path = "examples/contracts/commercial-authorization-snapshot.json"
 commercial = read(commercial_path)
+commercial["commercial_authorization_id"] = commercial.pop(
+    "authorization_id", commercial.get("commercial_authorization_id")
+)
+commercial.pop("authorization_digest", None)
 commercial["authorized_entitlements"] = ["experience.html.premium"]
 commercial["authorized_capabilities"] = grant["capabilities"]
 commercial["authorized_limits"] = grant["limits"]
 commercial["authorized_limits_digest"] = digest(commercial["authorized_limits"])
-commercial["authorization_digest"] = digest_without(commercial, "authorization_digest")
+commercial["commercial_authorization_digest"] = digest_without(commercial, "commercial_authorization_digest")
 write(commercial_path, commercial)
 grant["commercial_authorization"] = commercial
 write(grant_path, grant)
@@ -193,9 +286,129 @@ work_session = read("examples/contracts/work-session-request.json")
 work_session["commercial_authorization"] = commercial
 write("examples/contracts/work-session-request.json", work_session)
 
+meter_path = "examples/contracts/meter-definition.json"
+meter = read(meter_path)
+meter["definition_digest"] = digest_without(meter, "definition_digest")
+write(meter_path, meter)
+
+budget_path = "examples/contracts/execution-budget.json"
+budget = read(budget_path)
+budget["tenant_id"] = "ten_01J00000000000000000000000"
+budget["work_order_id"] = "wrk_01J00000000000000000000000"
+budget["limits"] = copy.deepcopy(commercial["authorized_limits"])
+budget["budget_digest"] = digest_without(budget, "budget_digest")
+write(budget_path, budget)
+
+usage_entry_path = "examples/contracts/technical-usage-entry.json"
+usage_entry = read(usage_entry_path)
+usage_entry["meter_id"] = meter["meter_id"]
+usage_entry["meter_version"] = meter["meter_version"]
+usage_entry["meter_definition_digest"] = meter["definition_digest"]
+usage_entry["unit"] = meter["base_unit"]
+usage_entry["producer"]["provider_revision_digest"] = revisions[
+    usage_entry["producer"]["provider_revision_id"]
+]["provider_revision_digest"]
+usage_entry["evidence_digest"] = digest({"evidence_reference": usage_entry["evidence_reference"]})
+write(usage_entry_path, usage_entry)
+
+usage_report_path = "examples/contracts/usage-report.json"
+usage_report = read(usage_report_path)
+usage_report["commercial_authorization_id"] = commercial["commercial_authorization_id"]
+usage_report["commercial_authorization_digest"] = commercial["commercial_authorization_digest"]
+usage_report["quota_reservation_id"] = commercial["quota_reservation_id"]
+usage_report["quota_reservation_digest"] = commercial["quota_reservation_digest"]
+usage_report["entries"] = [usage_entry]
+usage_report["report_sequence"] = 1
+usage_report.pop("supersedes_usage_report_id", None)
+usage_report["usage_report_digest"] = digest_without(usage_report, "usage_report_digest")
+write(usage_report_path, usage_report)
+
+first_correction = copy.deepcopy(usage_report)
+first_correction["usage_report_id"] = "usr_invalid_first_correction"
+first_correction["report_status"] = "correction"
+first_correction["report_sequence"] = 1
+first_correction["entries"][0]["measurement_status"] = "corrected"
+first_correction["entries"][0]["quantity"] = -1
+first_correction["entries"][0]["correction_of_entry_id"] = usage_entry["entry_id"]
+first_correction["entries"][0]["correction_reason"] = "Invalid first report cannot be a correction."
+first_correction["usage_report_digest"] = digest_without(first_correction, "usage_report_digest")
+write("contracts/tests/invalid/usage-report-first-correction.json", first_correction)
+
+settlement_path = "examples/contracts/business-settlement-envelope.json"
+settlement = read(settlement_path)
+settlement["commercial_authorization_id"] = commercial["commercial_authorization_id"]
+settlement["commercial_authorization_digest"] = commercial["commercial_authorization_digest"]
+settlement["quota_reservation_id"] = commercial["quota_reservation_id"]
+settlement["quota_reservation_digest"] = commercial["quota_reservation_digest"]
+settlement["settlement_target_id"] = commercial["settlement_target_id"]
+settlement.pop("usage_report_id", None)
+settlement.pop("usage_report_digest", None)
+settlement["usage_report"] = usage_report
+settlement["envelope_sequence"] = 1
+settlement.pop("supersedes_settlement_envelope_id", None)
+settlement["settlement_envelope_digest"] = digest_without(settlement, "settlement_envelope_digest")
+write(settlement_path, settlement)
+
+reconcile_with_final = copy.deepcopy(settlement)
+reconcile_with_final["settlement_envelope_id"] = "set_invalid_reconcile_final"
+reconcile_with_final["action"] = "reconcile"
+reconcile_with_final["envelope_sequence"] = 2
+reconcile_with_final["supersedes_settlement_envelope_id"] = settlement["settlement_envelope_id"]
+reconcile_with_final["settlement_envelope_digest"] = digest_without(reconcile_with_final, "settlement_envelope_digest")
+write("contracts/tests/invalid/settlement-reconcile-final-report.json", reconcile_with_final)
+
+policy_path = "examples/contracts/policy-decision.json"
+policy = read(policy_path)
+policy["decision_point"] = "run_admission"
+policy["commercial_authorization_id"] = commercial["commercial_authorization_id"]
+policy["commercial_authorization_digest"] = commercial["commercial_authorization_digest"]
+policy["execution_budget_id"] = budget["budget_id"]
+policy["execution_budget_digest"] = budget["budget_digest"]
+policy["decision_digest"] = digest_without(policy, "decision_digest")
+write(policy_path, policy)
+
+event_data_schema = read("contracts/schemas/agent-runtime-event-data.schema.json")
+event_registry_path = "contracts/event-types/agent-runtime-core-v1.json"
+event_registry = read(event_registry_path)
+event_dependencies = sorted(
+    [
+        read("contracts/schemas/capability-error.schema.json"),
+        read("contracts/schemas/technical-usage-entry.schema.json"),
+    ],
+    key=lambda schema: schema["$id"],
+)
+event_data_digest = digest({"root": event_data_schema, "dependencies": event_dependencies})
+for definition in event_registry["definitions"]:
+    definition["data_schema"]["digest"] = event_data_digest
+    definition["data_schema"]["digest_profile"] = "rfc8785-schema-closure-v1"
+event_registry["registry_digest"] = digest_without(event_registry, "registry_digest")
+write(event_registry_path, event_registry)
+
 
 manifest_path = "examples/contracts/run-manifest-v2.json"
 manifest = read(manifest_path)
+manifest["agent_run_id"] = manifest.pop("run_id", "agr_01J00000000000000000000000")
+manifest["workflow_run_id"] = "wfr_01J00000000000000000000000"
+manifest["tenant_id"] = "ten_01J00000000000000000000000"
+legacy_temporal = manifest.pop("temporal", None)
+if "orchestration_binding" not in manifest:
+    temporal_reference = legacy_temporal or {
+        "namespace": "agent-platform",
+        "workflow_id": "work-order/wrk_01J00000000000000000000000",
+        "workflow_run_id": "temporal-run-01J00000000000000000",
+    }
+    orchestration_binding = {
+        "engine_id": "temporal",
+        "engine_version": "1.27",
+        "workflow_execution_id": "wfx_01J00000000000000000000000",
+        "native_execution_reference_digest": digest(temporal_reference),
+        "worker_deployment": temporal_reference.get("worker_deployment", "agent-worker"),
+        "worker_build_id": temporal_reference.get("worker_build_id", "worker-2026-07-16.1"),
+        "versioning_behavior": "pinned",
+        "binding_digest": "sha256:" + "0" * 64,
+    }
+    orchestration_binding["binding_digest"] = digest_without(orchestration_binding, "binding_digest")
+    manifest["orchestration_binding"] = orchestration_binding
 manifest["scenario"] = scenario_identity
 manifest["capability_resolutions"] = [
     resolution(
@@ -214,10 +427,7 @@ manifest["capability_resolutions"] = [
         "2026-07-16T09:01:02Z",
     ),
 ]
-runtime_current = manifest["agent_runtime"]["provider_revision"]
-manifest["agent_runtime"]["provider_revision"] = snapshot(runtime_current["provider_revision_id"], runtime_current["admission_decision_id"])
-manifest["agent_runtime"]["provider_instance_id"] = revisions[runtime_current["provider_revision_id"]]["provider_instance_id"]
-manifest["agent_runtime"]["governed_conformance_report_digest"] = revisions[runtime_current["provider_revision_id"]]["conformance_set_digest"]
+manifest["agent_runtime"] = {"resolution_id": manifest["capability_resolutions"][0]["resolution_id"]}
 for sandbox in manifest["sandboxes"]:
     current = sandbox["provider_revision"]
     sandbox["provider_revision"] = snapshot(current["provider_revision_id"], current["admission_decision_id"])
@@ -236,9 +446,37 @@ manifest["selected_experiences"] = [
         "provider_revision": template["provider_revision"],
     }
 ]
-manifest["commercial_authorization_digest"] = commercial["authorization_digest"]
+manifest.pop("commercial_authorization_digest", None)
+manifest.pop("policy_decision_digest", None)
+manifest.pop("execution_budget_digest", None)
+manifest.pop("event_schema_version", None)
+manifest["commercial_authorization"] = {
+    "commercial_authorization_id": commercial["commercial_authorization_id"],
+    "commercial_authorization_digest": commercial["commercial_authorization_digest"],
+}
+manifest["execution_budget"] = {
+    "budget_id": budget["budget_id"],
+    "budget_digest": budget["budget_digest"],
+}
+manifest["policy_decision"] = {
+    "decision_id": policy["decision_id"],
+    "decision_digest": policy["decision_digest"],
+}
+manifest["event_registry"] = {
+    "registry_id": event_registry["registry_id"],
+    "registry_version": event_registry["registry_version"],
+    "registry_digest": event_registry["registry_digest"],
+}
 manifest["run_manifest_digest"] = digest_without(manifest, "run_manifest_digest")
 write(manifest_path, manifest)
+
+missing_sandbox_revision = copy.deepcopy(manifest)
+missing_sandbox_revision["sandboxes"][0].pop("provider_revision")
+write("contracts/tests/invalid/run-manifest-missing-sandbox-revision.json", missing_sandbox_revision)
+
+empty_execution = copy.deepcopy(manifest)
+empty_execution["capability_resolutions"] = []
+write("contracts/tests/invalid/run-manifest-empty-execution.json", empty_execution)
 
 context_path = "examples/contracts/run-admission-context.json"
 context = read(context_path)
@@ -307,11 +545,140 @@ recording_page["recordings"] = [recording]
 write("examples/contracts/runtime-recording-page.json", recording_page)
 
 runtime_start = read("examples/contracts/agent-runtime-start-request.json")
+runtime_start["tenant_id"] = manifest["tenant_id"]
+runtime_start["workflow_run_id"] = manifest["workflow_run_id"]
 runtime_start["run_manifest_digest"] = manifest["run_manifest_digest"]
+runtime_start["agent_run_id"] = manifest["agent_run_id"]
+runtime_start["request_digest"] = digest_without(runtime_start, "request_digest")
 write("examples/contracts/agent-runtime-start-request.json", runtime_start)
+
+runtime_status = read("examples/contracts/agent-runtime-run-status.json")
+runtime_status["tenant_id"] = manifest["tenant_id"]
+runtime_status["workflow_run_id"] = manifest["workflow_run_id"]
+runtime_status["agent_run_id"] = manifest["agent_run_id"]
+write("examples/contracts/agent-runtime-run-status.json", runtime_status)
+
+runtime_command = read("examples/contracts/agent-runtime-command.json")
+runtime_command["command_digest"] = digest_without(runtime_command, "command_digest")
+write("examples/contracts/agent-runtime-command.json", runtime_command)
+
+runtime_capabilities = read("examples/contracts/agent-runtime-capabilities.json")
+runtime_capabilities.pop("event_schema_versions", None)
+runtime_capabilities["event_registries"] = [{
+    "registry_id": event_registry["registry_id"],
+    "registry_version": event_registry["registry_version"],
+    "registry_digest": event_registry["registry_digest"],
+}]
+write("examples/contracts/agent-runtime-capabilities.json", runtime_capabilities)
+
+runtime_token = read("examples/contracts/agent-runtime-invocation-token-claims.json")
+runtime_token.update({
+    "tenant_id": manifest["tenant_id"],
+    "provider_revision_id": revisions["apr_01J00000000000000000000000"]["provider_revision_id"],
+    "runtime_run_id": runtime_start["runtime_run_id"],
+    "agent_run_id": manifest["agent_run_id"],
+    "workflow_run_id": manifest["workflow_run_id"],
+    "work_order_id": manifest["work_order_id"],
+    "run_manifest_digest": manifest["run_manifest_digest"],
+    "request_digest": runtime_start["request_digest"],
+    "invocation_id": runtime_start["invocation_id"],
+    "invocation_attempt_id": runtime_start["invocation_attempt_id"],
+    "fencing_token": runtime_start["fencing_token"],
+    "policy_decision_digest": policy["decision_digest"],
+    "execution_budget_digest": budget["budget_digest"],
+    "effective_permissions_digest": policy["effective_permissions_digest"],
+})
+write("examples/contracts/agent-runtime-invocation-token-claims.json", runtime_token)
+
+gateway_frame = read("examples/contracts/runtime-gateway-frame.json")
+gateway_frame.pop("resume_after_sequence", None)
+gateway_frame["resume_cursors"] = [
+    {"channel": "terminal", "sequence": 41},
+    {"channel": "file_delta", "sequence": 7},
+]
+write("examples/contracts/runtime-gateway-frame.json", gateway_frame)
+
+gateway_control = read("examples/contracts/runtime-gateway-control-frame.json")
+control_payload = {
+    field: gateway_control[field]
+    for field in ("command", "columns", "rows", "text", "key", "url")
+    if field in gateway_control
+}
+gateway_control["control_digest"] = digest(control_payload)
+write("examples/contracts/runtime-gateway-control-frame.json", gateway_control)
+
+gateway_control_extra = copy.deepcopy(gateway_control)
+gateway_control_extra["text"] = "unexpected for terminal.resize"
+write("contracts/tests/invalid/runtime-gateway-control-extra-fields.json", gateway_control_extra)
+
+port_forward_recording = read("examples/contracts/runtime-session-request.json")
+port_forward_recording["runtime_type"] = "port_forward"
+write("contracts/tests/invalid/runtime-session-port-forward-recording.json", port_forward_recording)
+
+runtime_event = read("examples/contracts/agent-runtime-event.json")
+runtime_event_page = read("examples/contracts/agent-runtime-event-page.json")
+runtime_event_page["events"] = [runtime_event]
+runtime_event_page["next_event_sequence"] = runtime_event["event_sequence"]
+write("examples/contracts/agent-runtime-event-page.json", runtime_event_page)
+
+workflow_run = {
+    "workflow_run_id": manifest["workflow_run_id"],
+    "tenant_id": manifest["tenant_id"],
+    "work_order_id": manifest["work_order_id"],
+    "root_agent_run_id": manifest["agent_run_id"],
+    "workflow": manifest["workflow"],
+    "orchestration_binding": manifest["orchestration_binding"],
+    "created_at": "2026-07-16T09:01:00Z",
+}
+write("examples/contracts/workflow-run.json", workflow_run)
+
+agent_run = {
+    "agent_run_id": manifest["agent_run_id"],
+    "tenant_id": manifest["tenant_id"],
+    "runtime_run_id": runtime_start["runtime_run_id"],
+    "workflow_run_id": manifest["workflow_run_id"],
+    "work_order_id": manifest["work_order_id"],
+    "root_agent_run_id": manifest["agent_run_id"],
+    "run_kind": "root",
+    "agent_role": "general",
+    "runtime_provider_resolution_id": manifest["agent_runtime"]["resolution_id"],
+    "run_manifest_digest": manifest["run_manifest_digest"],
+    "created_at": "2026-07-16T09:01:00Z",
+}
+write("examples/contracts/agent-run.json", agent_run)
 
 ui_extension_path = "examples/contracts/ui-extension-manifest.json"
 ui_extension = read(ui_extension_path)
+ui_provider = ui_extension["provider_revision"]
+if "conformance_report_digest" in ui_provider:
+    ui_provider["conformance_set_digest"] = ui_provider.pop("conformance_report_digest")
+if "implementation" not in ui_provider:
+    implementation_id = ui_provider.pop("plugin_id")
+    implementation_version = ui_provider.pop("plugin_version")
+    manifest_digest = ui_provider.pop("manifest_digest")
+    distribution_digest = ui_provider.pop("package_digest")
+    binding_digest = ui_provider.pop("runtime_binding_digest")
+    ui_provider["implementation"] = {
+        "implementation_id": implementation_id,
+        "implementation_version": implementation_version,
+        "distribution_type": "package",
+        "distribution_digest": distribution_digest,
+        "manifest_digest": manifest_digest,
+        "provenance": {
+            "source_revision": hashlib.sha256(ui_extension["extension_id"].encode()).hexdigest(),
+            "source_tree_digest": digest({"source_tree": ui_extension["extension_id"]}),
+            "build_artifact_digest": distribution_digest,
+            "sbom_digest": digest({"sbom": ui_extension["extension_id"]}),
+            "provenance_statement_digest": digest({"provenance": ui_extension["extension_id"]}),
+            "build_system": "contract-fixture-build-v1",
+        },
+    }
+    ui_provider["port"] = {
+        "protocol": "capability-provider",
+        "protocol_version": "v1",
+        "contract_digest": file_digest("contracts/openapi/plugin-invocation-v1.yaml"),
+        "binding_digest": binding_digest,
+    }
 ui_extension["manifest_digest"] = digest_without(ui_extension, "manifest_digest")
 write(ui_extension_path, ui_extension)
 
@@ -330,4 +697,4 @@ for case_path, manual_path in case_decision_pairs:
     manual["case_digest"] = case["case_digest"]
     manual["decision_digest"] = digest_without(manual, "decision_digest")
     write(manual_path, manual)
-print("Refreshed v0.9.0 Provider, Scenario, Experience, RunManifest, Recording and reconciliation digests.")
+print("Refreshed v0.9.0 Provider, Scenario, Experience, execution, Recording and reconciliation digests.")

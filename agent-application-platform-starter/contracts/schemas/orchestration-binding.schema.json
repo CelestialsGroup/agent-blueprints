@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:orchestration-binding:v1",
+  "title": "OrchestrationBinding",
+  "description": "Framework-neutral binding for the durable WorkOrder orchestrator. Native engine IDs and histories remain in the orchestration adapter.",
+  "type": "object",
+  "required": [
+    "engine_id",
+    "engine_version",
+    "workflow_execution_id",
+    "native_execution_reference_digest",
+    "worker_deployment",
+    "worker_build_id",
+    "versioning_behavior",
+    "binding_digest"
+  ],
+  "properties": {
+    "engine_id": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "engine_version": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "workflow_execution_id": { "type": "string", "minLength": 1 },
+    "native_execution_reference_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "worker_deployment": { "type": "string", "minLength": 1 },
+    "worker_build_id": { "type": "string", "minLength": 1 },
+    "versioning_behavior": { "enum": ["pinned", "compatible_upgrade"] },
+    "binding_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "binding_digest is RFC 8785 JCS SHA-256 over the binding excluding binding_digest",
+    "native engine namespace, endpoint and mutable worker identity are orchestration-adapter private"
+  ]
+}

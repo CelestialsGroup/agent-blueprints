@@ -5,8 +5,8 @@
   "description": "Immutable Business-owned entitlement and quota reservation evidence. The Agent Platform stores and verifies this snapshot but does not own membership, plans, orders, payments or commercial balances.",
   "type": "object",
   "required": [
-    "authorization_id",
-    "authorization_digest",
+    "commercial_authorization_id",
+    "commercial_authorization_digest",
     "entitlement_revision_id",
     "entitlement_revision_digest",
     "quota_reservation_id",
@@ -21,8 +21,8 @@
     "settlement_target_id"
   ],
   "properties": {
-    "authorization_id": { "type": "string", "minLength": 1 },
-    "authorization_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "commercial_authorization_id": { "type": "string", "minLength": 1 },
+    "commercial_authorization_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "entitlement_revision_id": { "type": "string", "minLength": 1 },
     "entitlement_revision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "quota_reservation_id": { "type": "string", "minLength": 1 },
@@ -59,7 +59,7 @@
   },
   "additionalProperties": false,
   "x-semantic-constraints": [
-    "authorization_digest is RFC 8785 JCS SHA-256 over the complete snapshot excluding authorization_digest",
+    "commercial_authorization_digest is RFC 8785 JCS SHA-256 over the complete snapshot excluding commercial_authorization_digest",
     "authorized_limits_digest is RFC 8785 JCS SHA-256 over authorized_limits",
     "the ExecutionGrant limits and capabilities must not exceed the signed commercial authorization; Catalog selections require authorized_entitlements",
     "quota reservation settle, release and reconciliation remain Business-owned idempotent operations"

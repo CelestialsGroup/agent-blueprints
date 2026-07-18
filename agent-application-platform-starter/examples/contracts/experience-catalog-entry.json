@@ -4,7 +4,7 @@
   "name": "SaaS Dark Landing",
   "description": "Dark SaaS landing-page template installed from html-anything.",
   "current_revision_id": "tmplrev_01J00000000000000000000000",
-  "current_revision_digest": "sha256:f3ffedb6bbba3ed14d227ba9ac7df4562efe6a246b093ac34522f63d5d615e5b",
+  "current_revision_digest": "sha256:aca5ca766f99dbb3a3f167b1d4c375ec929685d33697cc9fbbc5c369099c6ae8",
   "capability_id": "template.html.generate",
   "preview_artifact_id": "art_template_landing_saas_dark_preview",
   "tags": [

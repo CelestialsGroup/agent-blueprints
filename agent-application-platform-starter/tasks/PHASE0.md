@@ -17,18 +17,21 @@ Phase 0 实现一条真实、可恢复的 Manus-like Conversation 链路。目�
 
 开始产品实现前，收敛 Phase 0 实际需要的公共模型：
 
-- 明确 WorkOrder、WorkflowRun、AgentRun、AgentRuntimeRun 和 Invocation 的关系及基数；
-- 为 Chat、Plan、Tool、Approval、Artifact、Usage 和终态定义最小核心 Event Payload 与 Registry；
-- 明确 Runtime Gateway 的连接、重连、控制和录制关联协议；
-- 固化 TechnicalUsage 的 Meter、归属、幂等、更正和 Business Settlement Envelope；
-- 区分 ProviderRevision 公共字段与 Runtime、Sandbox、Plugin 等 Port-specific 字段；
+- 固化 Tenant-qualified `WorkOrder 1 -> 1 WorkflowRun -> 1 Root AgentRun + N Sub-agent AgentRun`，且一个 AgentRun 只绑定一个 RunManifest/AgentRuntimeRun；RunManifest Runtime 只引用一个 ProviderResolution；
+- 为 Chat、Plan、Tool、Approval、Artifact、Background Task、Usage 和终态定义核心 Event Payload，并由 RunManifest 绑定不可变 Registry ID/Version/Digest；
+- 固化 AgentRuntimeInvocation Token 对 Tenant、ProviderRevision、Run、Attempt、Fencing、Policy、Budget、Permissions 和请求摘要的绑定；
+- 固化 Terminal `runtime-gateway/v1` 的 Generation、按 Channel Cursor/Sequence、ACK/Window、Control ID + Digest、重连和 Recording Checkpoint；
+- 固化 TechnicalUsage 的 MeterDefinition、归属、Evidence、幂等、更正、连续 UsageReport，以及嵌入完整 Report 的 BusinessSettlementEnvelope/Callback；
+- 使用 Provider Implementation/BuildProvenance/Port Binding，禁止 Runtime 或 Sandbox 被迫伪装成 Plugin；
+- 固化 PolicyDecision `deny > ask > allow`、Approval 和独立 Sandbox/Gateway Enforcement；
+- 发布 Runtime、Sandbox、Runtime Gateway 和 Capability Provider 的内容寻址 Conformance Suite Manifest；
 - 保持 Temporal 为 Phase 0 实现选择，不把第三方私有模型提升为平台领域事实。
 
-验收证据：更新后的 Schema/OpenAPI/状态机、正反向夹具、兼容性审查和 Runtime/Sandbox Conformance 测试骨架全部通过 Gate。
+验收证据：更新后的 Schema/OpenAPI/状态机、Event Registry、Conformance Suite、正反向夹具和兼容性审查通过本地 Gate。GitHub CI 与仓库准入在实施准备阶段补齐；该证据只关闭契约，不计为产品实现或生产证明。
 
 ## 0B：持久化内核
 
-实现 PostgreSQL Migration、事务 Repository、Outbox/Inbox、Temporal Worker、对象存储和 Redis 非权威通知路径。首批聚合包括 Conversation、Message、Branch、Workspace、WorkOrder、GrantConsumption、Provider Resolution、Event、Artifact、TechnicalUsage 和 Recording Metadata。
+实现 PostgreSQL Migration、事务 Repository、Outbox/Inbox、Temporal Worker、对象存储和 Redis 非权威通知路径。首批聚合包括 Conversation、Message、Branch、Workspace、WorkOrder、WorkflowRun/AgentRun、GrantConsumption、Provider Resolution、Event、Artifact、TechnicalUsage 和 Recording Metadata；所有执行表显式携带 Tenant。
 
 验收证据：
 
@@ -63,7 +66,7 @@ PostgreSQL / Outbox
 
 主 Runtime 可以使用 DeerFlow Adapter，主 Sandbox 可以包装 DeerFlow Built-in Sandbox，但公共 API、数据库和 Event 不得出现 DeerFlow 私有 Thread、Checkpoint、Sandbox 或 Endpoint 字段。
 
-主链路必须支持 Append-input、Interrupt、Pause/Resume、Approval 和 Cancel；所有 Command 仅追加并使用 Fencing。Model、Tool、Artifact 和 Egress 必须经过受治理 Gateway。
+主链路必须支持 Append-input、Interrupt、Pause/Resume、Approval、Background Task/Sub-agent Projection 和 Cancel；所有 Command 仅追加，绑定请求摘要并使用 Fencing。Model、Tool、Artifact 和 Egress 必须经过受治理 Gateway。
 
 验收证据：Worker/Adapter 重启可恢复；Provider 响应丢失进入对账；旧 Attempt 和旧 Command 结果被拒绝；Artifact 只有通过 Staging 验证后才能 Finalize。
 
@@ -71,7 +74,7 @@ PostgreSQL / Outbox
 
 实现 Chat、Plan、Timeline、Terminal、Files 和 Artifact 的最小 Workbench。SSE 使用 `work_sequence` 续传；Terminal 通过 Runtime Gateway 建立短期 RuntimeSession。
 
-Runtime Gateway 至少 Finalize 两个不可变 Terminal Chunk 和一个与 `work_sequence` 对齐的 Recording Manifest。没有实时 Sandbox 时，Workbench 仍能回放 Chat、Plan、Timeline、Terminal、Files 和 Artifact。
+Runtime Gateway 必须通过 `runtime-gateway-terminal-v1`，验证多 Channel Cursor、ACK Window、Control Digest Conflict 和过期 Gap；至少 Finalize 两个不可变 Terminal Chunk 和一个与 `work_sequence` 对齐的 Recording Manifest。没有实时 Sandbox 时，Workbench 仍能回放 Chat、Plan、Timeline、Tasks、Terminal、Files 和 Artifact。
 
 Browser/Desktop 可以提供受控实时查看，但在 Capture、Consent、Redaction 和容量测试完成前，其录制继续由 Capability Gate 关闭。
 
@@ -121,6 +124,7 @@ Browser/Desktop 可以提供受控实时查看，但在 Capture、Consent、Reda
 ## 不提前实现
 
 - 用户上传的任意 Plugin、完整 Marketplace 或收入分成；
+- ACP 平台核心、本地 JSONL/SQLite Session 事实源或 Hook 安全边界；
 - 任意远程 JavaScript、完整 Office 编辑器或复杂 UI Extension；
 - 持久 Evaluation/Rubric 领域模型；
 - 自研 sandbox-runtime 或跨 Provider Process/Checkpoint 恢复；

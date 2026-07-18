@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:provider-port-binding:v1",
+  "title": "ProviderPortBinding",
+  "description": "Immutable binding to a stable Provider Port. Transport endpoints and infrastructure identities remain Provider-private.",
+  "type": "object",
+  "required": ["protocol", "protocol_version", "contract_digest", "binding_digest"],
+  "properties": {
+    "protocol": {
+      "enum": ["agent-runtime-provider", "sandbox-provider", "capability-provider"]
+    },
+    "protocol_version": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "contract_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "binding_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false
+}

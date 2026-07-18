@@ -24,6 +24,8 @@ def inventory() -> list[dict[str, Any]]:
         *sorted((ROOT / "examples/schemas").glob("*.json")),
         *sorted((ROOT / "contracts/openapi").glob("*.yaml")),
         *sorted((ROOT / "contracts/state-machines").glob("*.json")),
+        *sorted((ROOT / "contracts/event-types").rglob("*.json")),
+        *sorted((ROOT / "contracts/conformance").rglob("*.json")),
         *sorted((ROOT / "contracts/testdata").rglob("*")),
         ROOT / "docs/23_STATE_MACHINE_SPEC.md",
         ROOT / "docs/26_DATA_MODEL_INVARIANTS.md",

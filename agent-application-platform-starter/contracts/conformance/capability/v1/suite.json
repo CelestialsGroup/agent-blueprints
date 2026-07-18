@@ -1,0 +1,55 @@
+{
+  "suite_id": "capability-provider",
+  "suite_version": "1.0.0",
+  "suite_digest": "sha256:87070d107edb785270c9e2c7b50ed775362b39e0262f319232f56093a2e1225d",
+  "target_kind": "capability_provider",
+  "profiles": [
+    {
+      "profile_id": "capability-core-v1",
+      "tests": [
+        {
+          "test_id": "request-schema-boundaries",
+          "category": "contract",
+          "evidence_type": "artifact",
+          "description": "Valid, invalid and boundary requests match the admitted CapabilityDefinition request schema."
+        },
+        {
+          "test_id": "result-error-exclusive",
+          "category": "contract",
+          "evidence_type": "test_log",
+          "description": "Every terminal response carries exactly one admitted result or error shape."
+        },
+        {
+          "test_id": "idempotency-conflict",
+          "category": "ordering",
+          "evidence_type": "test_log",
+          "description": "Retries obey the declared idempotency scope and reject one key with a different request digest."
+        },
+        {
+          "test_id": "side-effect-policy",
+          "category": "security",
+          "evidence_type": "trace",
+          "description": "Observed side effects do not exceed the CapabilityDefinition classification or approved policy."
+        },
+        {
+          "test_id": "timeout-cancel-status",
+          "category": "lifecycle",
+          "evidence_type": "trace",
+          "description": "Timeout, cancellation and status-query behavior exactly follows the CapabilityDefinition declarations."
+        },
+        {
+          "test_id": "artifact-contract",
+          "category": "contract",
+          "evidence_type": "artifact",
+          "description": "Input and output Artifacts satisfy declared roles, media types, digests and staging rules."
+        },
+        {
+          "test_id": "budget-policy-enforced",
+          "category": "security",
+          "evidence_type": "report",
+          "description": "The Provider cannot exceed approved permissions, budget or gateway requirements."
+        }
+      ]
+    }
+  ]
+}

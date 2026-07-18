@@ -1,0 +1,73 @@
+{
+  "suite_id": "runtime-gateway",
+  "suite_version": "1.0.0",
+  "suite_digest": "sha256:7264b437b9c739dfe7f6bfd71da1e1fc6bbd53dc9212dd4d31532ebee7ca6f3a",
+  "target_kind": "runtime_gateway",
+  "profiles": [
+    {
+      "profile_id": "runtime-gateway-terminal-v1",
+      "tests": [
+        {
+          "test_id": "session-scope-enforced",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "Connection and control scopes match the authenticated RuntimeSession."
+        },
+        {
+          "test_id": "stale-generation-rejected",
+          "category": "ordering",
+          "evidence_type": "test_log",
+          "description": "Frames from an older connection generation are rejected."
+        },
+        {
+          "test_id": "resume-no-gap",
+          "category": "recovery",
+          "evidence_type": "trace",
+          "description": "Reconnect within the resume window replays frames without gaps or duplicates."
+        },
+        {
+          "test_id": "resume-expired-explicit",
+          "category": "recovery",
+          "evidence_type": "test_log",
+          "description": "Expired resume state directs the client to immutable recording playback."
+        },
+        {
+          "test_id": "ack-backpressure",
+          "category": "ordering",
+          "evidence_type": "trace",
+          "description": "Sender honors acknowledgement and receive-window limits."
+        },
+        {
+          "test_id": "control-idempotent",
+          "category": "ordering",
+          "evidence_type": "test_log",
+          "description": "Repeated control command IDs do not repeat side effects."
+        },
+        {
+          "test_id": "recording-alignment",
+          "category": "recording",
+          "evidence_type": "artifact",
+          "description": "Recording checkpoints bind channel sequence to WorkOrder work_sequence."
+        },
+        {
+          "test_id": "secret-redaction",
+          "category": "recording",
+          "evidence_type": "artifact",
+          "description": "Finalized chunks contain no token, authorization header or registered secret shape."
+        },
+        {
+          "test_id": "gateway-restart-reroute",
+          "category": "multi_node",
+          "evidence_type": "trace",
+          "description": "Gateway restart or reroute increments generation and preserves authorized recovery."
+        },
+        {
+          "test_id": "cross-tenant-route-denied",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "Route lookup cannot resolve another tenant, principal or WorkOrder."
+        }
+      ]
+    }
+  ]
+}

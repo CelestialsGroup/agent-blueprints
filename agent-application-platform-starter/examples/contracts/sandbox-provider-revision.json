@@ -1,15 +1,9 @@
 {
   "provider_revision_id": "spr_01J00000000000000000000000",
-  "provider_revision_digest": "sha256:943f78935e066a7e70cffa2cf90daa61f4e24fe02cc63f89a21b6c0718314e31",
+  "provider_revision_digest": "sha256:3d93cda252fe5977719c674d90d9d604ca77125bf7d1ef4210faf628cb2cdaca",
   "provider_instance_id": "spi_deerflow_builtin_sandbox",
-  "plugin_id": "sandbox-provider.deerflow-built-in",
-  "plugin_version": "0.8.2",
-  "manifest_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
-  "package_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-  "image_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
   "configuration_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
   "approved_permissions_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
-  "runtime_binding_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
   "credential_binding_digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
   "provider_kind": "sandbox",
   "conformance": [
@@ -19,10 +13,34 @@
       "profile": "hardened",
       "suite_version": "1.0.0",
       "status": "passed",
-      "report_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888"
+      "report_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+      "suite_id": "sandbox-provider",
+      "suite_digest": "sha256:42f7ce9cbc975ac765db65d42e4317353ac65f90e65e38c1d3efce3b69347764",
+      "suite_profile_id": "sandbox-core-v1"
     }
   ],
-  "conformance_set_digest": "sha256:9a7dee7349f74983fd26b65e8ba8fffec01539e6aa3919c34685ef1b2426a897",
-  "sandbox_conformance_report_digest": "sha256:9a7dee7349f74983fd26b65e8ba8fffec01539e6aa3919c34685ef1b2426a897",
-  "created_at": "2026-07-16T09:00:00Z"
+  "conformance_set_digest": "sha256:aaab809c47ec5d9f26b21859ce8c8a60393f94a3cdaba45f82c093c10ff21424",
+  "created_at": "2026-07-16T09:00:00Z",
+  "implementation": {
+    "implementation_id": "sandbox-provider.deerflow-built-in",
+    "implementation_version": "0.8.2",
+    "distribution_type": "oci_image",
+    "distribution_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "manifest_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "provenance": {
+      "source_revision": "9c37e975d779c58140bb5cd9f9b8392b7cbd9e983f3bb5bfa4ea82883f8cd3fc",
+      "source_tree_digest": "sha256:8f5c190d225474f8b544d443ddf4c322d8cd81d5a07ed7434bbfd98606b21cbe",
+      "build_artifact_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "sbom_digest": "sha256:98f6a838792c8dfc83f6eca3151b7c666ab0a04797519905ffdb1f9656bc1d58",
+      "provenance_statement_digest": "sha256:31905821d0c07873cd474cddb5cbd6ca9bf8fba00cc62079a8b6bda03a035c12",
+      "build_system": "contract-fixture-build-v1"
+    },
+    "image_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+  },
+  "port": {
+    "protocol": "sandbox-provider",
+    "protocol_version": "v1",
+    "contract_digest": "sha256:e03a9bad19a1a7c8bb12068fa3ead11bb50772afe1857b5a4cb5b1bda76fb4d2",
+    "binding_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666"
+  }
 }

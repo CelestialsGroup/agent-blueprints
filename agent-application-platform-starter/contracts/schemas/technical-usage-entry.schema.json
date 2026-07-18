@@ -2,46 +2,126 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:agent-platform:technical-usage-entry:v1",
   "title": "TechnicalUsageEntry",
+  "description": "Immutable, tenant-qualified technical measurement evidence. Commercial pricing and balance mutation remain Business-owned.",
   "type": "object",
   "required": [
     "entry_id",
-    "meter",
+    "tenant_id",
+    "work_order_id",
+    "meter_id",
+    "meter_version",
+    "meter_definition_digest",
     "quantity",
     "unit",
+    "producer",
+    "meter_source",
+    "measurement_status",
+    "idempotency_key",
+    "evidence_reference",
+    "evidence_digest",
     "occurred_at",
-    "meter_source"
+    "recorded_at"
   ],
   "properties": {
-    "entry_id": {
-      "type": "string"
-    },
-    "meter": {
-      "type": "string"
-    },
+    "entry_id": { "type": "string", "minLength": 1 },
+    "tenant_id": { "type": "string", "minLength": 1 },
+    "work_order_id": { "type": "string", "minLength": 1 },
+    "agent_run_id": { "type": "string", "minLength": 1 },
+    "runtime_run_id": { "type": "string", "minLength": 1 },
+    "invocation_id": { "type": "string", "minLength": 1 },
+    "sandbox_operation_id": { "type": "string", "minLength": 1 },
+    "meter_id": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]{2,191}$" },
+    "meter_version": { "type": "integer", "minimum": 1 },
+    "meter_definition_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "quantity": {
       "type": "integer",
-      "description": "Signed integer in the meter's registered base unit; corrections may be negative."
+      "description": "Signed integer in the MeterDefinition base unit. Negative values are valid only for corrections."
     },
     "unit": {
-      "type": "string"
+      "enum": ["token", "millisecond", "nanosecond", "byte", "byte_millisecond", "count"]
     },
-    "occurred_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "provider_operation_id": {
-      "type": "string"
-    },
-    "meter_source": {
-      "enum": [
-        "platform_metered",
-        "provider_reported",
-        "reconciled"
+    "producer": {
+      "type": "object",
+      "required": ["type", "id"],
+      "properties": {
+        "type": { "enum": ["platform", "provider"] },
+        "id": { "type": "string", "minLength": 1 },
+        "provider_revision_id": { "type": "string", "minLength": 1 }
+        ,"provider_revision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "provider" } }, "required": ["type"] },
+          "then": { "required": ["provider_revision_id", "provider_revision_digest"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "platform" } }, "required": ["type"] },
+          "then": {
+            "not": {
+              "anyOf": [
+                { "required": ["provider_revision_id"] },
+                { "required": ["provider_revision_digest"] }
+              ]
+            }
+          }
+        }
       ]
     },
-    "evidence_reference": {
-      "type": "string"
-    }
+    "provider_operation_id": { "type": "string", "minLength": 1 },
+    "meter_source": { "enum": ["platform_metered", "provider_reported", "reconciled"] },
+    "measurement_status": { "enum": ["confirmed", "partial", "estimated", "corrected"] },
+    "idempotency_key": { "type": "string", "minLength": 16, "maxLength": 255 },
+    "evidence_reference": { "type": "string", "format": "uri", "minLength": 1 },
+    "evidence_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "correction_of_entry_id": { "type": "string", "minLength": 1 },
+    "correction_reason": { "type": "string", "minLength": 1, "maxLength": 1000 },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "recorded_at": { "type": "string", "format": "date-time" }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "measurement_status": { "const": "corrected" } }, "required": ["measurement_status"] },
+      "then": {
+        "required": ["correction_of_entry_id", "correction_reason"],
+        "properties": { "quantity": { "not": { "const": 0 } } }
+      }
+    },
+    {
+      "if": { "required": ["correction_of_entry_id"] },
+      "then": { "properties": { "measurement_status": { "const": "corrected" } }, "required": ["correction_reason"] }
+    },
+    {
+      "if": { "properties": { "measurement_status": { "not": { "const": "corrected" } } }, "required": ["measurement_status"] },
+      "then": {
+        "properties": { "quantity": { "minimum": 0 } },
+        "not": {
+          "anyOf": [
+            { "required": ["correction_of_entry_id"] },
+            { "required": ["correction_reason"] }
+          ]
+        }
+      }
+    },
+    {
+      "if": { "properties": { "meter_source": { "const": "provider_reported" } }, "required": ["meter_source"] },
+      "then": {
+        "properties": { "producer": { "properties": { "type": { "const": "provider" } } } },
+        "required": ["provider_operation_id"]
+      }
+    },
+    {
+      "if": { "properties": { "meter_source": { "const": "platform_metered" } }, "required": ["meter_source"] },
+      "then": { "properties": { "producer": { "properties": { "type": { "const": "platform" } } } } }
+    }
+  ],
+  "x-semantic-constraints": [
+    "entry_id and idempotency_key are unique within tenant_id",
+    "meter unit equals the immutable MeterDefinition base_unit",
+    "correction chains are acyclic, preserve tenant and attribution, and never rewrite the corrected entry",
+    "partial or estimated Usage is never silently treated as confirmed or zero",
+    "evidence_reference resolves to immutable Platform-controlled evidence matching evidence_digest",
+    "recorded_at is not earlier than occurred_at"
+  ]
 }

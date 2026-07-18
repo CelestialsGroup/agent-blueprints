@@ -4,7 +4,7 @@
 >
 > 状态：契约验证已通过，产品尚未实现，生产可靠性尚未证明
 >
-> 更新日期：2026-07-17
+> 更新日期：2026-07-18
 
 ## 项目目标
 
@@ -21,7 +21,7 @@ Agent Application Platform 的目标是构建一个类似 Manus 的通用、多�
 - Business 自有的 User、Organization、Membership、Product、Order、Payment、Entitlement 和 Quota 系统
 - 多租户安全、可观测性、可靠恢复、容量治理和长期升级能力
 
-平台可以借鉴 DeerFlow、OpenHands、Magentic-UI、Open Deep Research、OpenManus、AutoGPT、browser-use、E2B、Daytona、Quicksand、Letta Code 和 LLM Space，但任何参考项目都不能成为平台唯一 Runtime 或稳定事实源。
+平台可以借鉴 DeerFlow、OpenHands、Magentic-UI、Open Deep Research、OpenManus、AutoGPT、Grok Build、browser-use、E2B、Daytona、Quicksand、Letta Code 和 LLM Space，但任何参考项目都不能成为平台唯一 Runtime 或稳定事实源。
 
 LLM Space 只用于 Agent Engineering Workbench、Trace 调试、Run 对比和 Evaluation UX 参考，不作为生产 Runtime、最终用户 Workbench 或权威数据源。
 
@@ -30,7 +30,7 @@ LLM Space 只用于 Agent Engineering Workbench、Trace 调试、Run 对比和 E
 | 层级 | 状态 | 说明 |
 |---|---|---|
 | 产品边界 | 候选完成 | Business/Platform 所有权、Conversation、Provider、Sandbox、Artifact、Recording 等边界已有设计 |
-| 可执行契约 | 本地通过 | 271 JSON、22 YAML、5 OpenAPI、46 Markdown、143 Schema、79 有效夹具、16 无效夹具和 60 语义负例 |
+| 可执行契约 | 本地通过 | 309 JSON、22 YAML、5 OpenAPI、46 Markdown、157 Schema、95 有效夹具、23 无效夹具和 70 语义负例 |
 | 产品实现 | 未完成 | 当前仓库主要是文档、Schema、OpenAPI、状态机、示例和验证脚本 |
 | Phase 0 | 未完成 | Business 纵向链路、Temporal、Runtime/Sandbox Adapter、Gateway、Recording 和 nexu Provider 尚待实现 |
 | 生产可靠性 | 未证明 | 故障注入、隔离、容量、SLO、备份恢复和生产运行证据尚未完成 |
@@ -52,7 +52,8 @@ LLM Space 只用于 Agent Engineering Workbench、Trace 调试、Run 对比和 E
 │ Agent Access 与稳定内核                                             │
 │                                                                     │
 │ Access / Tenant / Conversation / Message / Branch / Workspace       │
-│ WorkOrder / Workflow / Invocation / Event / Artifact / Usage        │
+│ WorkOrder / WorkflowRun / AgentRun / Invocation / Event / Artifact  │
+│ Budget / Policy / Usage / Recording / Provider Admission / Audit    │
 │ Provider Admission / Sandbox Registry / Recording / Delivery / Audit│
 └──────────────┬─────────────────────┬───────────────────┬────────────┘
                │                     │                   │
@@ -76,7 +77,7 @@ LLM Space 只用于 Agent Engineering Workbench、Trace 调试、Run 对比和 E
        Native/Future Runtime  sandbox-runtime      Editor/Converter
 ```
 
-Redis 只用于 Cache、Presence、Rate Limit 和持久化后的 Event Wakeup，不保存授权、账本、游标或运行终态。
+Redis 只用于 Cache、Presence 和持久化后的 Event Wakeup，不保存授权、账本、游标或运行终态。
 
 ## 数据所有权
 
@@ -88,7 +89,7 @@ Redis 只用于 Cache、Presence、Rate Limit 和持久化后的 Event Wakeup，
 | Sandbox Provider | Pod/VM/Container、内部 Endpoint、后端状态、Snapshot Payload 和底层指标 | 用户授权、WorkOrder 终态和 Artifact Metadata |
 | Workbench | 用户交互和短期客户端状态 | 任何服务端权威事实 |
 
-Business 与 Agent Platform 使用独立数据库，只通过版本化契约交换 CommercialAuthorization、ExecutionGrant、TechnicalUsage 和 Delivery 结果。
+Business 与 Agent Platform 使用独立数据库，只通过版本化契约交换 CommercialAuthorization、ExecutionGrant、BusinessSettlementEnvelope 和 Delivery 结果；TechnicalUsage 原始事实仍由 Platform 拥有。
 
 ## 稳定内核
 
@@ -96,10 +97,10 @@ Business 与 Agent Platform 使用独立数据库，只通过版本化契约交�
 
 - ClientApplication、ServicePrincipal、Tenant 和 Principal 映射
 - AgentConversation、ConversationMessage、ConversationBranch 和 Workspace
-- WorkOrder、ExecutionGrant 消费、Workflow 和 Approval
+- WorkOrder、ExecutionGrant 消费、WorkflowRun、AgentRun、ExecutionBudget、Policy 和 Approval
 - Invocation/SandboxOperation Ledger、Attempt、Fencing 和 Reconciliation
 - CanonicalEvent、ArtifactVersion、TechnicalUsage 和 Delivery
-- CapabilityDefinition、ProviderRevision、ProviderAdmissionDecision 和 ProviderResolution
+- CapabilityDefinition、ProviderRevision、ProviderAdmissionDecision、ProviderResolution、Event Registry 和 Conformance Suite
 - RuntimeSession 授权、RuntimeRecording Metadata、Chunk Manifest 和 Audit
 
 稳定内核禁止保存 Kubernetes Pod、Namespace、Container、VM、Node、原始 Runtime Endpoint、框架私有 Thread/Checkpoint 或第三方 Trace 作为领域事实。
@@ -115,7 +116,7 @@ Scenario
  -> Runtime / Sandbox / Model / Tool / Skill / Template / Converter Provider
 ```
 
-每次 Run 在准入时锁定精确的 ProviderRevision、AdmissionDecision、Scenario、Experience Revision、Sandbox Slot、授权摘要和 RunManifest。运行中的 Run 不允许因成本、健康状态或偏好变化静默切换 Provider。
+每次 Run 在准入时锁定精确的 Tenant、ProviderResolution、ProviderRevision、AdmissionDecision、Scenario、Event Registry、Experience Revision、Sandbox Slot、授权/预算/策略摘要和 RunManifest。Runtime 选择只保存一个 ProviderResolution 引用，不复制第二份 Revision/Conformance 快照。运行中的 Run 不允许因成本、健康状态或偏好变化静默切换 Provider。
 
 Provider 原生 Checkpoint 默认只在同一 Revision 或明确声明并通过测试的兼容范围内恢复，不承诺跨框架可移植。
 
@@ -137,7 +138,9 @@ Business 评估 Entitlement 并预留 Quota
  -> Business Settlement / Release / Reconciliation
 ```
 
-后续输入、Interrupt、Pause/Resume、Approval 和 Cancel 都是新的、仅追加的 Runtime Command。取消请求只表示意图，不等于 Provider 已停止执行。
+后续输入、Interrupt、Pause/Resume、Approval 和 Cancel 都是新的、仅追加且带摘要的 Runtime Command。每次 Runtime 调用使用短期 Token 绑定 Tenant、ProviderRevision、Run、InvocationAttempt、Fencing、Policy、Budget 和 Permissions。取消请求只表示意图，不等于 Provider 已停止执行。
+
+Grok Build 的 Session Core/Presentation Adapter、Prompt Queue/Interjection、Background Task、Workspace Adapter、权限分层和 Telemetry Redaction 可用于 Runtime Harness。ACP、本地 JSONL/SQLite、宿主机 Bash、Hook 和私有 Checkpoint 仍是边缘或 Provider 私有实现，不进入平台事实源。
 
 ## Workbench
 
@@ -165,6 +168,8 @@ Business 评估 Entitlement 并预留 Quota
 ArtifactVersion 内容不可变。Provider 只能写入 Artifact Staging，平台完成摘要、类型、大小、恶意内容、Tenant 和 Capability 校验后才能创建正式 ArtifactVersion。
 
 RuntimeSession 是短期实时连接；RuntimeRecording 是 Platform 拥有的不可变历史资源；Sandbox Snapshot 捕获状态，不等于录制。
+
+Runtime Gateway 使用按 Channel Cursor/Sequence、Connection Generation、ACK Window 和 Control ID + Digest；Port Forward 仅实时使用。窗口过期必须显式切换到只读 Recording，不能伪造无缝连续流。
 
 ```text
 RuntimeRecording
@@ -213,6 +218,7 @@ Phase 0 的关键验收包括：
 - 第二个最小 Runtime Adapter，通过 `runtime-core-v1`
 - 同一 Workbench 消费两个 Runtime 的标准 Event、Artifact 和 Usage
 - html-anything Template 和至少一个 Converter Provider
+- 完整 TechnicalUsage -> UsageReport -> 签名 Business Settlement Callback 链路，价格与余额仍只在 Business
 - Terminal RuntimeSession、两个不可变 Recording Chunk 和离线回放
 - 重复请求、响应丢失、旧 Fencing、Redis 丢失和 Adapter 重启测试
 - NetworkPolicy、RBAC、Pod Security、容量和最小备份恢复证据

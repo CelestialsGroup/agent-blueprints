@@ -1,5 +1,5 @@
-.PHONY: bootstrap-contracts prepare-openapi validate-contracts validate-compatibility \
-	validate-jcs validate-supply-chain bundle-openapi validate-all clean-contracts
+.PHONY: bootstrap-contracts prepare-openapi validate-static validate-contracts validate-compatibility \
+	validate-jcs validate-supply-chain validate-architecture bundle-openapi validate-all clean-contracts
 
 PYTHON ?= .venv/bin/python
 
@@ -32,6 +32,11 @@ validate-contracts: prepare-openapi
 bundle-openapi: prepare-openapi
 	mkdir -p build
 	npm run bundle:openapi
+
+validate-architecture: validate-static validate-contracts validate-compatibility validate-jcs bundle-openapi
+	$(PYTHON) scripts/verify_contract_manifest.py
+	node scripts/verify_contract_manifest.mjs
+	@echo "Architecture contract, semantic, compatibility-comparator, JCS and OpenAPI gates passed."
 
 validate-all:
 	./scripts/validate_all.sh

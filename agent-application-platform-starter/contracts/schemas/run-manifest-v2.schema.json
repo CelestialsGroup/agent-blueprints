@@ -4,14 +4,16 @@
   "title": "RunManifestV2",
   "type": "object",
   "required": [
-    "run_id", "work_order_id", "scenario", "workflow", "capability_resolutions",
-    "sandboxes", "location", "request_digest", "execution_budget_digest",
-    "policy_decision_digest", "event_schema_version", "agent_runtime",
-    "run_manifest_digest", "temporal", "primary_sandbox_slot_key",
-    "conversation", "selected_experiences", "commercial_authorization_digest"
+    "agent_run_id", "workflow_run_id", "tenant_id", "work_order_id", "scenario", "workflow", "capability_resolutions",
+    "sandboxes", "location", "request_digest", "execution_budget",
+    "policy_decision", "event_registry", "agent_runtime",
+    "run_manifest_digest", "orchestration_binding", "primary_sandbox_slot_key",
+    "conversation", "selected_experiences", "commercial_authorization"
   ],
   "properties": {
-    "run_id": { "type": "string", "minLength": 1 },
+    "agent_run_id": { "type": "string", "minLength": 1 },
+    "workflow_run_id": { "type": "string", "minLength": 1 },
+    "tenant_id": { "type": "string", "minLength": 1 },
     "work_order_id": { "type": "string", "minLength": 1 },
     "conversation": {
       "type": "object",
@@ -57,20 +59,9 @@
     },
     "agent_runtime": {
       "type": "object",
-      "required": [
-        "provider_instance_id", "provider_revision", "runtime_version",
-        "governed_conformance_report_digest"
-      ],
+      "required": ["resolution_id"],
       "properties": {
-        "provider_instance_id": { "type": "string", "minLength": 1 },
-        "provider_revision": { "$ref": "urn:agent-platform:provider-revision-snapshot:v1" },
-        "runtime_version": { "type": "string", "minLength": 1 },
-        "commit": { "type": "string" },
-        "governed_conformance_report_digest": {
-          "type": "string",
-          "pattern": "^sha256:[0-9a-f]{64}$",
-          "description": "Must equal the verified Agent Runtime ProviderRevision conformance_set_digest."
-        }
+        "resolution_id": { "type": "string", "minLength": 1 }
       },
       "additionalProperties": false
     },
@@ -100,28 +91,45 @@
       "additionalProperties": false
     },
     "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
-    "execution_budget_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
-    "policy_decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
-    "commercial_authorization_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
-    "event_schema_version": { "type": "integer", "minimum": 1 },
-    "run_manifest_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
-    "temporal": {
+    "execution_budget": {
       "type": "object",
-      "required": [
-        "namespace", "workflow_id", "workflow_run_id", "workflow_type",
-        "worker_deployment", "worker_build_id", "versioning_behavior"
-      ],
+      "required": ["budget_id", "budget_digest"],
       "properties": {
-        "namespace": { "type": "string", "minLength": 1 },
-        "workflow_id": { "type": "string", "minLength": 1 },
-        "workflow_run_id": { "type": "string", "minLength": 1 },
-        "workflow_type": { "type": "string", "minLength": 1 },
-        "worker_deployment": { "type": "string", "minLength": 1 },
-        "worker_build_id": { "type": "string", "minLength": 1 },
-        "versioning_behavior": { "enum": ["pinned", "auto_upgrade"] }
+        "budget_id": { "type": "string", "minLength": 1 },
+        "budget_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
       },
       "additionalProperties": false
     },
+    "policy_decision": {
+      "type": "object",
+      "required": ["decision_id", "decision_digest"],
+      "properties": {
+        "decision_id": { "type": "string", "minLength": 1 },
+        "decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "commercial_authorization": {
+      "type": "object",
+      "required": ["commercial_authorization_id", "commercial_authorization_digest"],
+      "properties": {
+        "commercial_authorization_id": { "type": "string", "minLength": 1 },
+        "commercial_authorization_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "event_registry": {
+      "type": "object",
+      "required": ["registry_id", "registry_version", "registry_digest"],
+      "properties": {
+        "registry_id": { "type": "string", "minLength": 1 },
+        "registry_version": { "type": "integer", "minimum": 1 },
+        "registry_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "run_manifest_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "orchestration_binding": { "$ref": "urn:agent-platform:orchestration-binding:v1" },
     "sandboxes": {
       "type": "array",
       "minItems": 1,
@@ -176,11 +184,16 @@
     "every Sandbox required_capabilities entry is covered by its Sandbox ProviderRevision conformance",
     "all selected ProviderRevisions have a latest certified admission decision at admission",
     "run_manifest_digest is RFC 8785 JCS SHA-256 over the manifest excluding run_manifest_digest",
-    "agent_runtime and all Sandbox revisions remain immutable for the Run",
+    "agent_runtime.resolution_id references exactly one capability_resolution whose admitted ProviderRevision kind is agent_runtime",
+    "the AgentRun runtime_provider_resolution_id equals agent_runtime.resolution_id",
+    "all selected Agent Runtime, Sandbox and Experience revisions remain immutable for the Run",
     "sandbox_slot_key is unique within the sandboxes array",
     "primary_sandbox_slot_key references exactly one sandboxes item"
     ,"selected_experiences exactly match the admitted WorkOrder selections and immutable Catalog revisions"
     ,"every selected experience ProviderRevision is certified and conformant for its capability"
-    ,"conversation binding matches the WorkOrder, input message and ExecutionGrant"
+    ,"tenant_id and conversation binding match the WorkOrder, input message and ExecutionGrant"
+    ,"agent_run_id and workflow_run_id match the immutable AgentRun and WorkflowRun records"
+    ,"execution_budget, policy_decision, commercial_authorization and event_registry bind exact immutable IDs and digests"
+    ,"orchestration_binding equals the WorkflowRun binding and contains no engine-native endpoint or mutable infrastructure identity"
   ]
 }

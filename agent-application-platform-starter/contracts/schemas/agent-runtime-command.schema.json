@@ -5,6 +5,7 @@
   "type": "object",
   "required": [
     "command_id",
+    "command_digest",
     "runtime_run_id",
     "command_sequence",
     "type",
@@ -15,12 +16,14 @@
   ],
   "properties": {
     "command_id": { "type": "string", "minLength": 1 },
+    "command_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "runtime_run_id": { "type": "string", "minLength": 1 },
     "command_sequence": { "type": "integer", "minimum": 1 },
     "type": { "enum": ["append_input", "interrupt", "pause", "resume", "cancel", "approval_decision", "checkpoint"] },
     "message_id": { "type": "string", "minLength": 1 },
     "approval_id": { "type": "string", "minLength": 1 },
-    "payload": { "type": "object" },
+    "decision": { "$ref": "urn:agent-platform:approval-decision:v1" },
+    "reason": { "type": "string", "minLength": 1, "maxLength": 1000 },
     "invocation_attempt_id": { "type": "string", "minLength": 1 },
     "fencing_token": { "type": "integer", "minimum": 1 },
     "idempotency_key": { "type": "string", "minLength": 16 },
@@ -30,16 +33,44 @@
   "allOf": [
     {
       "if": { "properties": { "type": { "const": "append_input" } }, "required": ["type"] },
-      "then": { "required": ["message_id"] }
+      "then": {
+        "required": ["message_id"],
+        "not": { "anyOf": [{ "required": ["approval_id"] }, { "required": ["decision"] }] }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "interrupt" } }, "required": ["type"] },
+      "then": {
+        "required": ["message_id"],
+        "not": { "anyOf": [{ "required": ["approval_id"] }, { "required": ["decision"] }] }
+      }
     },
     {
       "if": { "properties": { "type": { "const": "approval_decision" } }, "required": ["type"] },
-      "then": { "required": ["approval_id", "payload"] }
+      "then": {
+        "required": ["approval_id", "decision"],
+        "not": { "required": ["message_id"] }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "enum": ["pause", "resume", "cancel", "checkpoint"] } }, "required": ["type"] },
+      "then": {
+        "not": {
+          "anyOf": [
+            { "required": ["message_id"] },
+            { "required": ["approval_id"] },
+            { "required": ["decision"] }
+          ]
+        }
+      }
     }
   ],
   "x-semantic-constraints": [
+    "command_digest is RFC 8785 JCS SHA-256 over the command excluding command_digest",
     "command_sequence is contiguous per runtime_run_id",
     "commands are append-only and repeated command_id plus digest is idempotent",
-    "a stale fencing_token cannot mutate runtime state"
+    "a stale fencing_token cannot mutate runtime state",
+    "append_input queues a durable ConversationMessage; interrupt requests immediate delivery but cannot bypass ordering, authorization or Provider capability checks",
+    "the RuntimeInvocation token request_digest equals command_digest"
   ]
 }

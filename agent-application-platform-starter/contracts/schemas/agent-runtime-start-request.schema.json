@@ -6,9 +6,11 @@
   "required": [
     "protocol_version",
     "runtime_run_id",
+    "tenant_id",
     "conversation_id",
     "branch_id",
     "work_order_id",
+    "workflow_run_id",
     "agent_run_id",
     "invocation_id",
     "invocation_attempt_id",
@@ -23,9 +25,11 @@
   "properties": {
     "protocol_version": { "const": "v1" },
     "runtime_run_id": { "type": "string", "minLength": 1 },
+    "tenant_id": { "type": "string", "minLength": 1 },
     "conversation_id": { "type": "string", "minLength": 1 },
     "branch_id": { "type": "string", "minLength": 1 },
     "work_order_id": { "type": "string", "minLength": 1 },
+    "workflow_run_id": { "type": "string", "minLength": 1 },
     "agent_run_id": { "type": "string", "minLength": 1 },
     "invocation_id": { "type": "string", "minLength": 1 },
     "invocation_attempt_id": { "type": "string", "minLength": 1 },
@@ -51,5 +55,10 @@
       }
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "tenant_id, workflow_run_id, work_order_id, agent_run_id and runtime_run_id match the immutable execution topology",
+    "request_digest is RFC 8785 JCS SHA-256 over the request excluding request_digest",
+    "the bearer token claims match the request, ProviderRevision, RunManifest, InvocationAttempt and fencing_token"
+  ]
 }

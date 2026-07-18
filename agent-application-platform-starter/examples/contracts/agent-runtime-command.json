@@ -4,9 +4,9 @@
   "command_sequence": 2,
   "type": "append_input",
   "message_id": "msg_01J00000000000000000000001",
-  "payload": { "mode": "follow_up" },
   "invocation_attempt_id": "iat_runtime_01J0000000000000001",
   "fencing_token": 2,
   "idempotency_key": "runtime-command-key-0002",
-  "deadline_at": "2026-07-15T10:30:00Z"
+  "deadline_at": "2026-07-15T10:30:00Z",
+  "command_digest": "sha256:8efa8c2425c05e72b8c0767e65f8098690489f8df003a9e6f9205eaee881d8b8"
 }

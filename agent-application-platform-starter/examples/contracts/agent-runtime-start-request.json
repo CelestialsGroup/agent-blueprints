@@ -9,14 +9,16 @@
   "invocation_attempt_id": "iat_runtime_01J0000000000000000",
   "fencing_token": 1,
   "idempotency_key": "runtime-start-key-0001",
-  "request_digest": "sha256:b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+  "request_digest": "sha256:e637cf5c11bc357d76dccef8d8739cfc13b7cc42311ea1dd1940b8dc2a14bc60",
   "deadline_at": "2026-07-15T10:30:00Z",
-  "run_manifest_digest": "sha256:7066f1ed4f6d5a9a11d102af3fbc240e047a3021243b9283f843c6171f711661",
+  "run_manifest_digest": "sha256:08c56ea2885457a426684ffa5c4d4fcd530a76d061967805378ae25f4da0f898",
   "input_message_id": "msg_01J00000000000000000000000",
   "sandbox_bindings": [
     {
       "sandbox_slot_key": "primary-code",
       "sandbox_id": "sbx_01J00000000000000000000000"
     }
-  ]
+  ],
+  "tenant_id": "ten_01J00000000000000000000000",
+  "workflow_run_id": "wfr_01J00000000000000000000000"
 }

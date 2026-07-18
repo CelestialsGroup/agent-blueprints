@@ -1,6 +1,8 @@
 {
   "runtime_session_id": "rts_01J00000000000000000000000",
   "runtime_type": "terminal",
+  "gateway_protocol_version": "runtime-gateway/v1",
+  "connection_generation": 1,
   "connect_url": "https://runtime-gateway.example.test/sessions/rts_01J00000000000000000000000",
   "expires_at": "2026-07-15T10:30:00Z",
   "scopes": ["view", "control", "input"],
@@ -8,5 +10,10 @@
   "recording": {
     "status": "recording",
     "recording_id": "rec_01J00000000000000000000000"
+  },
+  "reconnect": {
+    "resume_window_seconds": 300,
+    "heartbeat_interval_seconds": 15,
+    "max_frame_bytes": 1048576
   }
 }

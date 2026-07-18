@@ -9,6 +9,7 @@ Business 拥有 User/Membership/Product/Order/Payment/Entitlement/Commercial Quo
 ```text
 Scenario -> CapabilityDefinition -> ProviderResolution
          -> 不可变 ProviderRevision + ProviderAdmissionDecision
+         -> 内容寻址 Conformance Suite / Event Registry
          -> Plugin / Runtime / Sandbox Provider
 ```
 
@@ -20,7 +21,7 @@ DeerFlow Built-in Sandbox 可作为首个参考 SandboxProvider，但不是平�
 
 ```bash
 ./scripts/bootstrap_contracts.sh
-make validate-all
+make validate-architecture
 ```
 
-当前是已完成本地契约验证的产品边界候选版本，覆盖 Conversation/Branch、Agent Runtime、RuntimeRecording、Experience Catalog 和 Business Entitlement 交接；公共准入前不冻结，也不代表生产就绪。详情从 `START_HERE.md` 开始。
+当前是已完成本地契约验证的产品边界候选版本，覆盖 Tenant-qualified WorkflowRun/AgentRun、Conversation/Branch、框架中立 Agent Runtime、Runtime Gateway/Recording、Experience Catalog，以及可执行 TechnicalUsage/Business Settlement 交接；公共准入前不冻结，也不代表产品实现完成或生产就绪。详情从 `START_HERE.md` 开始。

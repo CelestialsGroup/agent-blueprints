@@ -5,17 +5,30 @@
   "type": "object",
   "required": [
     "budget_id",
+    "budget_digest",
+    "tenant_id",
     "work_order_id",
     "limits",
     "policies",
+    "created_at",
     "expires_at"
   ],
   "properties": {
     "budget_id": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1
+    },
+    "budget_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "tenant_id": {
+      "type": "string",
+      "minLength": 1
     },
     "work_order_id": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1
     },
     "limits": {
       "type": "object",
@@ -92,10 +105,18 @@
       },
       "additionalProperties": false
     },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
     "expires_at": {
       "type": "string",
       "format": "date-time"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "budget_digest is RFC 8785 JCS SHA-256 over the budget excluding budget_digest",
+    "the budget is immutable, tenant-qualified and expires after created_at"
+  ]
 }

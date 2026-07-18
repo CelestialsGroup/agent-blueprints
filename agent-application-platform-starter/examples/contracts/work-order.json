@@ -15,7 +15,7 @@
         "kind": "template",
         "catalog_entry_id": "html-anything/landing-saas-dark",
         "revision_id": "tmplrev_01J00000000000000000000000",
-        "revision_digest": "sha256:f3ffedb6bbba3ed14d227ba9ac7df4562efe6a246b093ac34522f63d5d615e5b",
+        "revision_digest": "sha256:aca5ca766f99dbb3a3f167b1d4c375ec929685d33697cc9fbbc5c369099c6ae8",
         "capability_id": "template.html.generate",
         "parameter_values": {
           "theme": "dark"

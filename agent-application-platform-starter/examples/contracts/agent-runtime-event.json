@@ -7,7 +7,8 @@
   "data_version": 1,
   "data": {
     "message_id": "msg_01J00000000000000000000002",
-    "content_reference": "artifact://art_message/ver_01"
+    "content_reference": "artifact://art_message/ver_01",
+    "content_digest": "sha256:9191919191919191919191919191919191919191919191919191919191919191"
   },
   "source_cursor": "deerflow-event-42"
 }

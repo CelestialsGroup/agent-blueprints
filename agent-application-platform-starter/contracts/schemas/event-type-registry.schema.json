@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:event-type-registry:v1",
+  "title": "EventTypeRegistry",
+  "description": "Immutable registry revision for typed CanonicalEvent or Provider event payloads.",
+  "type": "object",
+  "required": ["registry_id", "registry_version", "registry_digest", "definitions"],
+  "properties": {
+    "registry_id": { "type": "string", "minLength": 1 },
+    "registry_version": { "type": "integer", "minimum": 1 },
+    "registry_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "urn:agent-platform:event-type-definition:v1" }
+    }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "registry_digest is RFC 8785 JCS SHA-256 over the registry excluding registry_digest",
+    "type plus data_version is unique within one Registry revision",
+    "a published Registry revision is immutable and every data_schema digest resolves before admission"
+  ]
+}

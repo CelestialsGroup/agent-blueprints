@@ -33,8 +33,11 @@ Scenario
 ```
 
 - ProviderRevision 创建后按摘要不可变。
+- ProviderRevision 的公共 Envelope 只包含 Provider kind、Implementation、Port、配置、权限、凭据和 Conformance；Runtime、Sandbox 和 Capability Provider 不得被强制包装成 Plugin。
+- Implementation 必须绑定不可变 BuildProvenance，包括 Source Revision、Source Tree、Build Artifact、SBOM 和 Provenance Statement 摘要。
 - 认证/撤销使用仅追加的 ProviderAdmissionDecision，不得回写 Revision。
 - RunManifest 固化 Revision 与当时有效准入决策的摘要快照。
+- Conformance 结果必须绑定不可变 Suite ID/Version/Digest/Profile 和 Evidence；README 或 Provider 自报通过不构成认证。
 - html-anything、html-to-pptx、模型、工具、Runtime、Sandbox 均通过 Capability/Provider Port 解析，不得写死在稳定内核。
 - Template/Skill/Design System 等用户可见 Experience 必须绑定不可变 Catalog Revision + ProviderRevision；不得只保存可变 `template_id`。
 
@@ -42,10 +45,15 @@ Scenario
 
 - Conversation 拥有一个持久 Workspace 和仅追加的 Message 序列；WorkOrder 表示一个可执行 Turn。
 - WorkOrder、ExecutionGrant、RunManifest 与 Event 必须绑定 Conversation/Turn/Branch/Input Message。
+- 一个 WorkOrder 拥有一个平台 WorkflowRun；一个 WorkflowRun 拥有一个根 AgentRun 和零到多个显式父子关系的 Sub-agent AgentRun。一个 AgentRun 只绑定一个 RunManifest 和一个 AgentRuntimeRun；传输重试属于同一 Invocation 的 Attempt，不创建第二个逻辑 Run。
+- WorkflowRun、AgentRun、RunManifest 和 Runtime Start 显式携带同一 `tenant_id`；RunManifest 的 `agent_runtime` 只引用一个已固化的 ProviderResolution，不复制第二份 Revision/Conformance 事实。
 - 所有 Agent Runtime（包括 DeerFlow、LangGraph、OpenAI Agents SDK 或 Native Runtime）都只能通过 AgentRuntimeProvider v1 接入；框架原生 Agent/Thread/Run/Checkpoint/Event 原始载荷属于 Adapter 私有模型。
 - 不得把任何单一 Agent 框架设为稳定内核的编译时依赖、领域事实源或唯一合法实现。
 - 每个 Run 在准入时锁定 Agent Runtime ProviderRevision；运行中不得自动切换框架。Provider 原生 Checkpoint 只能在明确声明并通过测试的兼容范围内恢复。
 - 每个可执行后续输入都需要新的 Business ExecutionGrant；WorkSession 不能扩大商业授权。
+- Runtime Command 与核心 Runtime Event Payload 必须使用类型化 Schema；Provider 私有 Event 不能直接驱动 Chat、Plan、Task、Usage 或终态 Projection。
+- Runtime 调用使用短期 AgentRuntimeInvocation Token，绑定 Tenant、ProviderRevision、WorkflowRun/AgentRun/RuntimeRun、RunManifest、InvocationAttempt、Fencing、Policy、Budget、Permissions 和请求摘要。
+- RunManifest 绑定 EventTypeRegistry 的 ID/Version/Digest；只有该 Registry 准入的 Payload 可以进入核心 Projection。
 
 ## 可靠性
 
@@ -75,6 +83,16 @@ Workspace 通过 `sandboxes[]` 和唯一 `sandbox_slot_key` 支持 `primary-code
 
 RuntimeRecording 与实时 RuntimeSession 分离，由 Runtime Gateway 生成不可变 Artifact Chunk 和回放 Manifest。录制字节不得进入 PostgreSQL Event Payload 或 Temporal History。
 
+Runtime Gateway 使用 `runtime-gateway/v1` 类型化帧、Connection Generation、按 Channel 连续 Sequence、ACK/Window 背压和带摘要的幂等 Control Command。重连携带每个订阅 Channel 的 Cursor；窗口失效必须显式转入只读 Recording 回放，不能伪造连续实时流。`port_forward` 只允许实时传输，不进入 Recording。
+
+## Policy、Usage 与一致性
+
+- PolicyDecision 合并 Business、Platform、Tenant、Client、Scenario 和 Runtime Profile 规则，固定使用 `deny > ask > allow`；`ask` 规范化为 Approval，任何 Allow 都不能覆盖 Deny。
+- Policy Allow 不替代 OS Sandbox、NetworkPolicy、Gateway 或 Invocation Ledger，Hook、Prompt 和 Provider 自报权限都不是安全边界。
+- TechnicalUsage 必须绑定 Tenant、WorkOrder、不可变 MeterDefinition、Producer/ProviderRevision 摘要、幂等键和 Evidence 摘要。Partial/Estimated 不得作为 Confirmed 或零用量结算；更正使用仅追加 Correction Entry。
+- UsageReport 与 BusinessSettlementEnvelope 按 Reservation 连续编号并只追加；Settlement Envelope 嵌入完整 Final/Correction UsageReport，Business 才能依据自己的价格事实结算。价格、余额、Settlement 决策和商业 Reconciliation 仍由 Business 拥有。
+- 冻结 AgentRuntimeProvider 前，两个 Adapter 必须执行机器可读 `runtime-core-v1`；主 Runtime 还必须通过 `runtime-general-v1 + governed-v1`。Sandbox 与 Runtime Gateway 使用各自 Suite Manifest 和不可变证据。
+
 ## 契约规则
 
 - JSON：Draft 2020-12、绝对 `$id`、Registry 解析、Strict I-JSON、RFC 8785 JCS。
@@ -86,11 +104,11 @@ RuntimeRecording 与实时 RuntimeSession 分离，由 Runtime Gateway 生成不
 
 ## 准入与生产声明
 
-必须运行：
+架构设计阶段必须运行：
 
 ```bash
 ./scripts/bootstrap_contracts.sh
-make validate-all
+make validate-architecture
 ```
 
-公共 CI 全绿前不得冻结、不得进入 Phase 1。即使 Contract Gate 全绿，也只证明契约可接纳，不证明生产可靠性。
+`make validate-all` 额外包含仓库供应链与 Monorepo/CI 准入，在实施准备阶段启用。公共 CI 全绿前不得正式冻结、不得进入 Phase 1。即使 Architecture Contract Gate 全绿，也只证明候选契约可接纳，不证明产品实现或生产可靠性。

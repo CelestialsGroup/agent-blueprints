@@ -19,6 +19,8 @@ const paths = [
   ...walk(path.join(root, "examples/schemas")).filter((item) => item.endsWith(".json")),
   ...walk(path.join(root, "contracts/openapi")).filter((item) => item.endsWith(".yaml")),
   ...walk(path.join(root, "contracts/state-machines")).filter((item) => item.endsWith(".json")),
+  ...walk(path.join(root, "contracts/event-types")).filter((item) => item.endsWith(".json")),
+  ...walk(path.join(root, "contracts/conformance")).filter((item) => item.endsWith(".json")),
   ...walk(path.join(root, "contracts/testdata")),
   path.join(root, "docs/23_STATE_MACHINE_SPEC.md"),
   path.join(root, "docs/26_DATA_MODEL_INVARIANTS.md"),

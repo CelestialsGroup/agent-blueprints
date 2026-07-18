@@ -1,0 +1,173 @@
+{
+  "suite_id": "agent-runtime-provider",
+  "suite_version": "1.0.0",
+  "suite_digest": "sha256:3b950315ca1584671203c29af62d1a00eea5b22e046e498e01d39defbcdc7c18",
+  "target_kind": "agent_runtime",
+  "profiles": [
+    {
+      "profile_id": "runtime-core-v1",
+      "tests": [
+        {
+          "test_id": "capabilities-immutable",
+          "category": "contract",
+          "evidence_type": "report",
+          "description": "Capabilities are immutable for one ProviderRevision and match its certified conformance."
+        },
+        {
+          "test_id": "start-idempotent",
+          "category": "lifecycle",
+          "evidence_type": "test_log",
+          "description": "Repeated start with the same idempotency key and digest returns the same runtime run."
+        },
+        {
+          "test_id": "start-digest-conflict",
+          "category": "contract",
+          "evidence_type": "test_log",
+          "description": "Reusing an idempotency key with a different request digest is rejected."
+        },
+        {
+          "test_id": "command-contiguous",
+          "category": "ordering",
+          "evidence_type": "test_log",
+          "description": "Command sequence is contiguous and duplicate command IDs are idempotent."
+        },
+        {
+          "test_id": "stale-fencing-rejected",
+          "category": "ordering",
+          "evidence_type": "test_log",
+          "description": "Commands and late responses carrying stale fencing tokens cannot mutate state."
+        },
+        {
+          "test_id": "typed-event-payloads",
+          "category": "contract",
+          "evidence_type": "artifact",
+          "description": "Every core event payload validates against the admitted EventTypeRegistry revision."
+        },
+        {
+          "test_id": "cursor-resume",
+          "category": "recovery",
+          "evidence_type": "test_log",
+          "description": "Event reads resume after the exact durable cursor without gaps or duplicates."
+        },
+        {
+          "test_id": "cursor-expired-explicit",
+          "category": "recovery",
+          "evidence_type": "test_log",
+          "description": "Expired cursors fail explicitly and identify the checkpoint or Platform recovery path."
+        },
+        {
+          "test_id": "cancel-confirmed",
+          "category": "lifecycle",
+          "evidence_type": "trace",
+          "description": "Cancellation becomes terminal only after provider or reconciliation evidence."
+        },
+        {
+          "test_id": "checkpoint-compatibility",
+          "category": "recovery",
+          "evidence_type": "artifact",
+          "description": "Checkpoint restore is accepted only within the declared and tested compatibility profile."
+        },
+        {
+          "test_id": "adapter-restart-resume",
+          "category": "recovery",
+          "evidence_type": "trace",
+          "description": "Adapter restart preserves or reconciles the same runtime_run_id."
+        },
+        {
+          "test_id": "outcome-unknown-reconcile",
+          "category": "recovery",
+          "evidence_type": "trace",
+          "description": "Lost provider responses enter outcome_unknown and resolve from durable evidence."
+        }
+      ]
+    },
+    {
+      "profile_id": "runtime-general-v1",
+      "depends_on": [
+        "runtime-core-v1"
+      ],
+      "tests": [
+        {
+          "test_id": "append-input-queue",
+          "category": "ordering",
+          "evidence_type": "trace",
+          "description": "Append input preserves ConversationMessage and command ordering."
+        },
+        {
+          "test_id": "interrupt-capability",
+          "category": "ordering",
+          "evidence_type": "trace",
+          "description": "Interjection is immediate only when supported and never bypasses authorization or ordering."
+        },
+        {
+          "test_id": "plan-projection",
+          "category": "contract",
+          "evidence_type": "artifact",
+          "description": "Plan updates use typed references consumable by the shared Workbench."
+        },
+        {
+          "test_id": "tool-approval-ledger",
+          "category": "security",
+          "evidence_type": "trace",
+          "description": "Tool requests bind Invocation, policy outcome and Approval without direct execution bypass."
+        },
+        {
+          "test_id": "artifact-staging-only",
+          "category": "security",
+          "evidence_type": "artifact",
+          "description": "Runtime writes only to Artifact Staging and cannot create formal ArtifactVersions."
+        },
+        {
+          "test_id": "usage-completeness",
+          "category": "usage",
+          "evidence_type": "report",
+          "description": "Confirmed, partial, estimated and corrected usage remain distinguishable."
+        },
+        {
+          "test_id": "background-task-projection",
+          "category": "contract",
+          "evidence_type": "trace",
+          "description": "Subagents and background tasks emit typed lifecycle events without exposing private process IDs."
+        }
+      ]
+    },
+    {
+      "profile_id": "governed-v1",
+      "depends_on": [
+        "runtime-general-v1"
+      ],
+      "tests": [
+        {
+          "test_id": "model-gateway-enforced",
+          "category": "security",
+          "evidence_type": "trace",
+          "description": "Model traffic cannot bypass the governed Model Gateway."
+        },
+        {
+          "test_id": "tool-gateway-enforced",
+          "category": "security",
+          "evidence_type": "trace",
+          "description": "Tool and MCP traffic cannot bypass Invocation mediation."
+        },
+        {
+          "test_id": "egress-gateway-enforced",
+          "category": "security",
+          "evidence_type": "trace",
+          "description": "External network traffic is denied unless admitted through Egress policy."
+        },
+        {
+          "test_id": "no-long-lived-platform-secret",
+          "category": "security",
+          "evidence_type": "report",
+          "description": "Runtime receives no long-lived Platform or Business credential."
+        },
+        {
+          "test_id": "tenant-binding-enforced",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "Runtime requests and outputs cannot cross tenant, WorkOrder or Artifact boundaries."
+        }
+      ]
+    }
+  ]
+}

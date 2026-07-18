@@ -7,6 +7,8 @@ Scenario
  -> CapabilityDefinition
  -> ProviderResolution
  -> immutable ProviderRevision
+    -> ProviderImplementation + BuildProvenance
+    -> ProviderPortBinding
  -> ProviderAdmissionDecision
  -> Plugin / Runtime / Sandbox Provider
 ```
@@ -54,6 +56,17 @@ runtime.recording.playback
 
 Capability Registry 维护 Owner，禁止名称抢占。
 
+## Provider Implementation 与 Plugin
+
+ProviderRevision 的公共部分不使用 `plugin_id/plugin_version`。它统一固化：
+
+- `ProviderImplementation`：实现 ID/版本、分发类型与摘要；
+- `BuildProvenance`：Source Revision、Source Tree、Build Artifact、SBOM 和 Provenance Statement 摘要；
+- `ProviderPortBinding`：稳定协议、版本、契约摘要和部署绑定摘要；
+- 配置、权限、凭据和 Conformance 摘要。
+
+Plugin 只是 Tool、Skill、Template 等实现的一种打包方式，PluginManifest 不得污染 Agent Runtime、Sandbox、内置 Bundle 或远程服务的公共 Revision。
+
 ## Plugin 实现声明
 
 Plugin 只声明：
@@ -98,11 +111,12 @@ ProviderResolution 必须固化：
 
 - CapabilityDefinition 摘要
 - ProviderRevision ID
-- Plugin 版本
-- Manifest 摘要
-- Image 摘要
+- Implementation ID/版本和分发摘要
+- BuildProvenance 与 Manifest 摘要
+- 适用时的 Image 摘要
+- Port Contract/Binding 摘要
 - Configuration 摘要
-- Conformance Report 摘要
+- Conformance Suite ID/Version/Digest/Profile 与 Report 摘要
 
 用户可见的 Experience 在 Provider Resolution 之上增加不可变 Catalog Revision。只有可变 `template_id` 绝不足以支持 WorkOrder 准入或 Run 回放。
 
@@ -117,3 +131,5 @@ Agent Runtime 使用同一 Revision/Admission/Conformance 治理，但不能按�
 每个新 Run 解析并锁定一个 Agent Runtime ProviderRevision。运行中的 Run 不允许因健康、成本或偏好变化自动切换框架；Provider Fallback 只适用于尚未开始的新 Run。框架原生 Checkpoint 只有在源和目标 Revision 明确声明兼容且对应测试通过时才能恢复。
 
 冻结 AgentRuntimeProvider v1 前，至少两个 Adapter 必须通过 `runtime-core-v1`，承担通用 Agent 主链路的 Provider 还必须通过 `runtime-general-v1 + governed-v1`。这用于证明 CapabilityDefinition、ProviderResolution、RunManifest、Workbench Event 和 Artifact/Usage 契约没有按 DeerFlow 或其他单一框架定制。
+
+Profile 与 Test ID 以 `contracts/conformance/` 下的机器可读 Suite 为准。Suite 自带内容摘要；测试结果必须绑定 Suite ID/Version/Digest/Profile、ProviderRevision、环境和不可变 Evidence。Runtime、Sandbox、Runtime Gateway 和通用 Capability Provider 使用各自 Suite；README 中的测试名称或人工声明不能构成认证。

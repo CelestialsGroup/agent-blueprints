@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:policy-decision:v1",
+  "title": "PolicyDecision",
+  "description": "Immutable admission or execution policy result. Rules from all scopes resolve by deny, then ask, then allow.",
+  "type": "object",
+  "required": [
+    "decision_id",
+    "decision_digest",
+    "tenant_id",
+    "work_order_id",
+    "decision_point",
+    "policy_bundle_digest",
+    "commercial_authorization_id",
+    "commercial_authorization_digest",
+    "execution_budget_id",
+    "execution_budget_digest",
+    "evaluations",
+    "outcome",
+    "effective_permissions_digest",
+    "decided_at",
+    "expires_at"
+  ],
+  "properties": {
+    "decision_id": { "type": "string", "minLength": 1 },
+    "decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "tenant_id": { "type": "string", "minLength": 1 },
+    "work_order_id": { "type": "string", "minLength": 1 },
+    "decision_point": { "enum": ["run_admission", "runtime_command", "invocation", "runtime_session", "artifact", "delivery"] },
+    "policy_bundle_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "commercial_authorization_id": { "type": "string", "minLength": 1 },
+    "commercial_authorization_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "execution_budget_id": { "type": "string", "minLength": 1 },
+    "execution_budget_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "evaluations": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": ["subject_kind", "subject_id", "action", "source", "rule_digest"],
+        "properties": {
+          "subject_kind": { "enum": ["capability", "runtime", "sandbox", "model", "tool", "egress", "artifact"] },
+          "subject_id": { "type": "string", "minLength": 1 },
+          "action": { "enum": ["deny", "ask", "allow"] },
+          "source": { "enum": ["commercial", "platform", "tenant", "client_application", "scenario", "runtime_profile"] },
+          "rule_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "outcome": { "enum": ["allow", "deny", "approval_required"] },
+    "required_approval_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "reason_codes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{2,127}$" }
+    },
+    "effective_permissions_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "decided_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "outcome": { "const": "approval_required" } }, "required": ["outcome"] },
+      "then": { "required": ["required_approval_ids"] }
+    },
+    {
+      "if": { "properties": { "outcome": { "const": "deny" } }, "required": ["outcome"] },
+      "then": { "required": ["reason_codes"] }
+    },
+    {
+      "if": { "properties": { "outcome": { "enum": ["allow", "deny"] } }, "required": ["outcome"] },
+      "then": { "not": { "required": ["required_approval_ids"] } }
+    }
+  ],
+  "x-semantic-constraints": [
+    "decision_digest is RFC 8785 JCS SHA-256 over the decision excluding decision_digest",
+    "matching rules resolve order-independently as deny greater than ask greater than allow",
+    "approval_required is the normalized outcome of ask and cannot override any matching deny",
+    "all evaluations belong to the declared decision_point and the complete admitted requirement set",
+    "expires_at is later than decided_at",
+    "OS Sandbox and Gateway enforcement remain independent security boundaries after policy allow"
+  ]
+}

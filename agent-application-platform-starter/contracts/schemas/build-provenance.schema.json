@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:build-provenance:v1",
+  "title": "BuildProvenance",
+  "description": "Immutable, content-addressed provenance for one Provider implementation build. Repository URLs and mutable branch names are intentionally excluded.",
+  "type": "object",
+  "required": [
+    "source_revision",
+    "source_tree_digest",
+    "build_artifact_digest",
+    "sbom_digest",
+    "provenance_statement_digest",
+    "build_system"
+  ],
+  "properties": {
+    "source_revision": {
+      "type": "string",
+      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$",
+      "description": "Immutable source commit or source snapshot revision. Mutable tags and branch names are forbidden."
+    },
+    "source_tree_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "build_artifact_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "sbom_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "provenance_statement_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "build_system": { "type": "string", "minLength": 1, "maxLength": 128 }
+  },
+  "additionalProperties": false
+}

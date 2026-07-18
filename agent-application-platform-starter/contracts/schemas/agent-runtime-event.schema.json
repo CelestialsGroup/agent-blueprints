@@ -27,15 +27,37 @@
         "runtime.artifact.staged",
         "runtime.checkpoint.created",
         "runtime.waiting.input",
+        "runtime.task.started",
+        "runtime.task.updated",
+        "runtime.task.completed",
+        "runtime.usage.reported",
         "runtime.run.completed",
         "runtime.run.failed",
         "runtime.run.cancelled"
       ]
     },
     "occurred_at": { "type": "string", "format": "date-time" },
-    "data_version": { "type": "integer", "minimum": 1 },
+    "data_version": { "const": 1 },
     "data": { "type": "object" },
     "source_cursor": { "type": "string", "minLength": 1 }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    { "if": { "properties": { "type": { "const": "runtime.run.started" } }, "required": ["type"] }, "then": { "properties": { "data": { "$ref": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/runStarted" } } } },
+    { "if": { "properties": { "type": { "const": "runtime.message.delta" } }, "required": ["type"] }, "then": { "properties": { "data": { "$ref": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/messageDelta" } } } },
+    { "if": { "properties": { "type": { "const": "runtime.message.completed" } }, "required": ["type"] }, "then": { "properties": { "data": { "$ref": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/messageCompleted" } } } },
+    { "if": { "properties": { "type": { "const": "runtime.plan.updated" } }, "required": ["type"] }, "then": { "properties": { "data": { "$ref": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/planUpdated" } } } },
+    { "if": { "properties": { "type": { "const": "runtime.tool.requested" } }, "required": ["type"] }, "then": { "properties": { "data": { "$ref": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/toolRequested" } } } },
+    { "if": { "properties": { "type": { "const": "runtime.approval.requested" } }, "required": ["type"] }, "then": { "properties": { "data": { "$ref": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/approvalRequested" } } } },
+    { "if": { "properties": { "type": { "const": "runtime.artifact.staged" } }, "required": ["type"] }, "then": { "properties": { "data": { "$ref": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/artifactStaged" } } } },
+    { "if": { "properties": { "type": { "const": "runtime.checkpoint.created" } }, "required": ["type"] }, "then": { "properties": { "data": { "$ref": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/checkpointCreated" } } } },
+    { "if": { "properties": { "type": { "const": "runtime.waiting.input" } }, "required": ["type"] }, "then": { "properties": { "data": { "$ref": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/waitingInput" } } } },
+    { "if": { "properties": { "type": { "const": "runtime.task.started" } }, "required": ["type"] }, "then": { "properties": { "data": { "$ref": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/taskStarted" } } } },
+    { "if": { "properties": { "type": { "const": "runtime.task.updated" } }, "required": ["type"] }, "then": { "properties": { "data": { "$ref": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/taskUpdated" } } } },
+    { "if": { "properties": { "type": { "const": "runtime.task.completed" } }, "required": ["type"] }, "then": { "properties": { "data": { "$ref": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/taskCompleted" } } } },
+    { "if": { "properties": { "type": { "const": "runtime.usage.reported" } }, "required": ["type"] }, "then": { "properties": { "data": { "$ref": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/usageReported" } } } },
+    { "if": { "properties": { "type": { "const": "runtime.run.completed" } }, "required": ["type"] }, "then": { "properties": { "data": { "$ref": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/runCompleted" } } } },
+    { "if": { "properties": { "type": { "const": "runtime.run.failed" } }, "required": ["type"] }, "then": { "properties": { "data": { "$ref": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/runFailed" } } } },
+    { "if": { "properties": { "type": { "const": "runtime.run.cancelled" } }, "required": ["type"] }, "then": { "properties": { "data": { "$ref": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/runCancelled" } } } }
+  ]
 }

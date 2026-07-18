@@ -1,0 +1,10 @@
+{
+  "meter_id": "model.input_tokens",
+  "meter_version": 1,
+  "definition_digest": "sha256:5fb9469a79d57e8867f640bd6d1e30fa3d74dfc56b630897fd3599b677dac841",
+  "base_unit": "token",
+  "aggregation": "sum",
+  "measurement_authority": "platform_or_provider",
+  "corrections_allowed": true,
+  "status": "active"
+}

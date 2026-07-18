@@ -1,0 +1,56 @@
+{
+  "cases": [
+    {
+      "id": "provider-runtime-wrong-port",
+      "mutation": "provider_runtime_wrong_port"
+    },
+    {
+      "id": "orchestration-binding-digest-mismatch",
+      "mutation": "orchestration_digest_mismatch"
+    },
+    {
+      "id": "agent-run-manifest-mismatch",
+      "mutation": "agent_run_manifest_mismatch"
+    },
+    {
+      "id": "event-registry-duplicate-type-version",
+      "mutation": "event_registry_duplicate"
+    },
+    {
+      "id": "usage-final-contains-partial-entry",
+      "mutation": "usage_final_partial"
+    },
+    {
+      "id": "policy-deny-overridden-by-allow",
+      "mutation": "policy_deny_overridden"
+    },
+    {
+      "id": "conformance-profile-unknown-dependency",
+      "mutation": "conformance_unknown_dependency"
+    },
+    {
+      "id": "execution-topology-cross-tenant",
+      "mutation": "execution_topology_cross_tenant"
+    },
+    {
+      "id": "workflow-root-agent-mismatch",
+      "mutation": "workflow_root_mismatch"
+    },
+    {
+      "id": "provider-conformance-suite-digest-mismatch",
+      "mutation": "provider_suite_digest_mismatch"
+    },
+    {
+      "id": "settlement-usage-binding-mismatch",
+      "mutation": "settlement_usage_binding_mismatch"
+    },
+    {
+      "id": "gateway-duplicate-resume-channel",
+      "mutation": "gateway_duplicate_resume_channel"
+    },
+    {
+      "id": "runtime-token-request-digest-mismatch",
+      "mutation": "runtime_token_request_digest_mismatch"
+    }
+  ]
+}
