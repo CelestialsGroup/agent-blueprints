@@ -13,7 +13,7 @@ Agent Application Platform 的目标是构建一个类似 Manus 的通用、多�
 平台需要支持：
 
 - 研究、编码、浏览器操作、文件处理和内容生成等通用任务
-- 多轮 Conversation、分支、持久 Workspace 和长任务恢复
+- 多轮 Conversation、分支隔离的 WorkspaceRevision 和长任务恢复
 - Chat、Plan、Timeline、Terminal、Browser、Desktop、Files 和 Artifact Workbench
 - 实时 Sandbox 查看、Runtime Recording 和历史回放
 - 可替换的 Agent Runtime、Sandbox、Model、Tool、Template、Renderer、Editor 和 Converter Provider
@@ -30,7 +30,7 @@ LLM Space 只用于 Agent Engineering Workbench、Trace 调试、Run 对比和 E
 | 层级 | 状态 | 说明 |
 |---|---|---|
 | 产品边界 | 候选完成 | Business/Platform 所有权、Conversation、Provider、Sandbox、Artifact、Recording 等边界已有设计 |
-| 可执行契约 | 本地通过 | 309 JSON、22 YAML、5 OpenAPI、46 Markdown、157 Schema、95 有效夹具、23 无效夹具和 70 语义负例 |
+| 可执行契约 | 本地通过 | 316 JSON、22 YAML、5 OpenAPI、46 Markdown、158 Schema、100 有效夹具、23 无效夹具和 80 语义负例 |
 | 产品实现 | 未完成 | 当前仓库主要是文档、Schema、OpenAPI、状态机、示例和验证脚本 |
 | Phase 0 | 未完成 | Business 纵向链路、Temporal、Runtime/Sandbox Adapter、Gateway、Recording 和 nexu Provider 尚待实现 |
 | 生产可靠性 | 未证明 | 故障注入、隔离、容量、SLO、备份恢复和生产运行证据尚未完成 |
@@ -51,10 +51,10 @@ LLM Space 只用于 Agent Engineering Workbench、Trace 调试、Run 对比和 E
 ┌─────────────────────────────────────────────────────────────────────┐
 │ Agent Access 与稳定内核                                             │
 │                                                                     │
-│ Access / Tenant / Conversation / Message / Branch / Workspace       │
+│ Access / Tenant / Conversation / Message / Branch / WorkspaceRevision│
 │ WorkOrder / WorkflowRun / AgentRun / Invocation / Event / Artifact  │
-│ Budget / Policy / Usage / Recording / Provider Admission / Audit    │
-│ Provider Admission / Sandbox Registry / Recording / Delivery / Audit│
+│ Budget / Policy / Provider Resolution / Usage / Audit               │
+│ Sandbox Registry / Runtime Recording / Delivery                     │
 └──────────────┬─────────────────────┬───────────────────┬────────────┘
                │                     │                   │
                ▼                     ▼                   ▼
@@ -84,7 +84,7 @@ Redis 只用于 Cache、Presence 和持久化后的 Event Wakeup，不保存授�
 | 所有者 | 权威数据 | 不得拥有 |
 |---|---|---|
 | Business Application | User、Organization、Membership、Product、Order、Payment、Refund、Invoice、Entitlement、商业余额与额度 | WorkOrder、Run、Event、Artifact、TechnicalUsage |
-| Agent Platform | Conversation、Message、Branch、Workspace、WorkOrder、Workflow、Invocation、Event、Artifact、TechnicalUsage、Delivery、Provider、Sandbox、Recording、Audit | 价格、支付、会员和商业余额 |
+| Agent Platform | Conversation、Message、Branch、WorkspaceRevision、WorkOrder、Workflow、Invocation、Event、Artifact、TechnicalUsage、Delivery、Provider、Sandbox、Recording、Audit | 价格、支付、会员和商业余额 |
 | Runtime Provider | 私有 Agent、Thread、Run、Checkpoint、Context 和原始 Event | Business 授权、Platform 终态和正式 ArtifactVersion |
 | Sandbox Provider | Pod/VM/Container、内部 Endpoint、后端状态、Snapshot Payload 和底层指标 | 用户授权、WorkOrder 终态和 Artifact Metadata |
 | Workbench | 用户交互和短期客户端状态 | 任何服务端权威事实 |
@@ -96,11 +96,11 @@ Business 与 Agent Platform 使用独立数据库，只通过版本化契约交�
 稳定内核负责不可被 Provider 替换的治理和技术事实：
 
 - ClientApplication、ServicePrincipal、Tenant 和 Principal 映射
-- AgentConversation、ConversationMessage、ConversationBranch 和 Workspace
+- AgentConversation、ConversationMessage、ConversationBranch、Workspace 和不可变 WorkspaceRevision
 - WorkOrder、ExecutionGrant 消费、WorkflowRun、AgentRun、ExecutionBudget、Policy 和 Approval
 - Invocation/SandboxOperation Ledger、Attempt、Fencing 和 Reconciliation
 - CanonicalEvent、ArtifactVersion、TechnicalUsage 和 Delivery
-- CapabilityDefinition、ProviderRevision、ProviderAdmissionDecision、ProviderResolution、Event Registry 和 Conformance Suite
+- CapabilityDefinition、ProviderRevision、ProviderAdmissionDecision、带 Resolver/Input/Candidate/Evidence 的 ProviderResolution、Event Registry 和 Conformance Suite
 - RuntimeSession 授权、RuntimeRecording Metadata、Chunk Manifest 和 Audit
 
 稳定内核禁止保存 Kubernetes Pod、Namespace、Container、VM、Node、原始 Runtime Endpoint、框架私有 Thread/Checkpoint 或第三方 Trace 作为领域事实。
@@ -116,13 +116,13 @@ Scenario
  -> Runtime / Sandbox / Model / Tool / Skill / Template / Converter Provider
 ```
 
-每次 Run 在准入时锁定精确的 Tenant、ProviderResolution、ProviderRevision、AdmissionDecision、Scenario、Event Registry、Experience Revision、Sandbox Slot、授权/预算/策略摘要和 RunManifest。Runtime 选择只保存一个 ProviderResolution 引用，不复制第二份 Revision/Conformance 快照。运行中的 Run 不允许因成本、健康状态或偏好变化静默切换 Provider。
+每次 Run 在准入时锁定精确的 Tenant、Branch WorkspaceRevision、ProviderResolution、ProviderRevision、AdmissionDecision、Scenario、Event Registry、Experience Revision、按需 Sandbox Slot、授权/预算/策略摘要和 RunManifest。Runtime 与 Sandbox Slot 只引用统一 ProviderResolution，不复制第二份 Revision/Conformance 快照。运行中的 Run 不允许因成本、健康状态或偏好变化静默切换 Provider。
 
 Provider 原生 Checkpoint 默认只在同一 Revision 或明确声明并通过测试的兼容范围内恢复，不承诺跨框架可移植。
 
 ## Conversation 与执行链
 
-Conversation 是多轮交互的长期聚合，拥有一个持久 Workspace 和仅追加 Message 序列。每个可执行 Turn 创建一个 WorkOrder。
+Conversation 是多轮交互的长期聚合，拥有一个持久 Workspace、Branch WorkspaceRevision Head 和仅追加 Message 序列。每个可执行 Turn 创建一个 WorkOrder；并行 Branch 不共享可变文件头。
 
 ```text
 Business 评估 Entitlement 并预留 Quota
@@ -130,8 +130,10 @@ Business 评估 Entitlement 并预留 Quota
  -> 创建或恢复 Conversation / Workspace
  -> 原子追加 Message、消费 Grant、创建 WorkOrder 和 Outbox
  -> Temporal 启动 WorkOrder Workflow
- -> ProviderResolution + RunManifest
- -> AgentRuntimeProvider + SandboxProvider
+ -> ProviderResolution + Resolution Evidence
+ -> 按 Capability 可选创建 SandboxProvider/Sandbox
+ -> 固化 RunManifest
+ -> AgentRuntimeProvider
  -> Model/Tool/Artifact/Egress Gateway
  -> CanonicalEvent + Artifact Staging + TechnicalUsage
  -> Artifact Finalize + RuntimeRecording + Delivery
@@ -179,7 +181,7 @@ RuntimeRecording
  -> work_sequence 对齐的历史回放
 ```
 
-Terminal、Browser、Desktop 和文件增量的大块字节只进入加密对象存储，不进入 PostgreSQL Event Payload 或 Temporal History。
+Terminal、Browser、Desktop 和文件增量的大块字节只有在 Emit-time Scrub/Schema Gate 通过后才能进入加密对象存储；未脱敏 Frame 只存在于有界内存，不进入 PostgreSQL、持久队列、Temporal History 或对象存储。
 
 ## 可靠性与安全
 
@@ -201,7 +203,7 @@ Terminal、Browser、Desktop 和文件增量的大块字节只进入加密对象
 
 ```text
 0A 最小契约闭合
- -> 0B 持久化内核
+ -> 0B 持久化脊柱与 Native Runtime Probe
  -> 0C Business 到 Conversation
  -> 0D 主 Runtime 与 Sandbox
  -> 0E Workbench 与 Recording
@@ -214,8 +216,9 @@ Phase 0 的关键验收包括：
 
 - Business 授权到 Conversation Turn 的真实纵向链路
 - PostgreSQL Migration、Temporal Replay 和 Outbox/Inbox
+- 主 Runtime 前完成无 Sandbox 的 Native Minimal Runtime Probe，并通过 `runtime-core-v1`
 - 主 AgentRuntimeProvider 和 SandboxProvider Adapter
-- 第二个最小 Runtime Adapter，通过 `runtime-core-v1`
+- 将 Native Probe 或另一框架提升为第二个可部署 Runtime Adapter
 - 同一 Workbench 消费两个 Runtime 的标准 Event、Artifact 和 Usage
 - html-anything Template 和至少一个 Converter Provider
 - 完整 TechnicalUsage -> UsageReport -> 签名 Business Settlement Callback 链路，价格与余额仍只在 Business

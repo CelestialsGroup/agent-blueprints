@@ -353,8 +353,7 @@
         }
       ],
       "sandbox_slot_key": "primary-code",
-      "sandbox_id": "sbx_01J00000000000000000000000",
-      "resolution_id": "res_sandbox_exec_01J0000000000000"
+      "sandbox_id": "sbx_01J00000000000000000000000"
     }
   ],
   "primary_sandbox_slot_key": "primary-code",

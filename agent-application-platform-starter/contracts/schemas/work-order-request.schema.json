@@ -35,7 +35,7 @@
         "conversation_id",
         "turn_id",
         "branch_id",
-        "input_message_id",
+        "client_message_id",
         "experience_selections",
         "input"
       ],
@@ -55,9 +55,10 @@
           "type": "string",
           "minLength": 1
         },
-        "input_message_id": {
+        "client_message_id": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "maxLength": 200
         },
         "experience_selections": {
           "type": "array",
@@ -210,7 +211,7 @@
   },
   "additionalProperties": false,
   "x-semantic-constraints": [
-    "conversation_id, turn_id, branch_id and input_message_id bind one immutable Conversation turn",
+    "conversation_id, turn_id, branch_id and client_message_id bind one immutable Conversation turn; the Platform allocates the internal input_message_id atomically",
     "experience_selections exactly match the catalog revisions authorized by the Scenario and ExecutionGrant",
     "a one-shot request creates an implicit Conversation before this WorkOrder transaction commits"
   ]

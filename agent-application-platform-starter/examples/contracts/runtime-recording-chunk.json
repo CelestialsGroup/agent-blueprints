@@ -12,5 +12,7 @@
   "digest": "sha256:a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3",
   "media_type": "application/x-asciicast",
   "size_bytes": 4096,
-  "redaction_profile": "terminal-default-v1"
+  "redaction_profile": "terminal-default-v1",
+  "redaction_profile_digest": "sha256:9494949494949494949494949494949494949494949494949494949494949494",
+  "redaction_evidence_digest": "sha256:9595959595959595959595959595959595959595959595959595959595959595"
 }

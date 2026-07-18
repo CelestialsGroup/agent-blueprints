@@ -7,12 +7,12 @@
 | 聚合 | 负责 | 不负责 |
 |---|---|---|
 | Access | ClientApplication、ServicePrincipal、WorkSession、Tenant/Principal Mapping | Business User、Membership、登录会话 |
-| Conversation | AgentConversation、Message、Branch、持久 Workspace 绑定 | Agent 框架 Thread、Checkpoint |
+| Conversation | AgentConversation、Message、Branch、持久 Workspace 与不可变 WorkspaceRevision Head | Agent 框架 Thread、Checkpoint、共享可变分支文件头 |
 | WorkOrder | 一个可执行 Turn、ExecutionGrant 消费、ExecutionBudget、PolicyDecision、Approval | 商业 Reservation 与余额 |
 | Invocation | 逻辑外部调用、Attempt、Fencing、结果未知与 Reconciliation | Provider 内部重试状态 |
 | Sandbox | Registry、Spec、Lease、Operation、Snapshot Metadata、RuntimeSession Endpoint 引用 | Pod、VM、Node、原始 Endpoint |
 | Artifact | Artifact、Version、Relation、Staging、Ingest、Preview/Edit/Conversion Session | Provider 临时文件系统 |
-| Provider | Instance、Revision、Implementation/Provenance、Port、Admission、Resolution、Conformance | Plugin Marketplace 和框架内部注册表 |
+| Provider | Instance、Revision、Implementation/Provenance、Port、Admission、带解析证据的 Resolution、Conformance | Plugin Marketplace 和框架内部注册表 |
 | Recording | RuntimeSession 授权、RuntimeRecording、Chunk、Manifest | 实时 Sandbox 生命周期、视频字节数据库存储 |
 | Usage/Delivery | MeterDefinition、TechnicalUsage、UsageReport、Delivery Package/Attempt、Settlement Envelope | 价格、货币、商业余额和 Settlement 结论 |
 
@@ -40,7 +40,8 @@ Conversation Turn
 ## 不可变值与注册表
 
 - ScenarioDefinition、CapabilityDefinition、SchemaReference
-- ProviderRevision、BuildProvenance、ProviderAdmissionDecision、ProviderResolution、ConformanceSuiteManifest
+- ProviderRevision、BuildProvenance、ProviderAdmissionDecision、ProviderResolution/Resolver Evidence、ConformanceSuiteManifest
+- WorkspaceRevision、Branch Workspace Head
 - RunManifest、OrchestrationBinding、CommercialAuthorizationSnapshot
 - EventTypeDefinition、EventTypeRegistry、MeterDefinition、ExecutionBudget、PolicyDecision
 - ExperienceCatalogEntry、TemplateRevision、UiExtensionManifest

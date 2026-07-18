@@ -7,7 +7,7 @@
     "agent_run_id", "workflow_run_id", "tenant_id", "work_order_id", "scenario", "workflow", "capability_resolutions",
     "sandboxes", "location", "request_digest", "execution_budget",
     "policy_decision", "event_registry", "agent_runtime",
-    "run_manifest_digest", "orchestration_binding", "primary_sandbox_slot_key",
+    "run_manifest_digest", "orchestration_binding",
     "conversation", "selected_experiences", "commercial_authorization"
   ],
   "properties": {
@@ -17,12 +17,17 @@
     "work_order_id": { "type": "string", "minLength": 1 },
     "conversation": {
       "type": "object",
-      "required": ["conversation_id", "turn_id", "branch_id", "input_message_id"],
+      "required": [
+        "conversation_id", "turn_id", "branch_id", "input_message_id",
+        "workspace_revision_id", "workspace_revision_digest"
+      ],
       "properties": {
         "conversation_id": { "type": "string", "minLength": 1 },
         "turn_id": { "type": "string", "minLength": 1 },
         "branch_id": { "type": "string", "minLength": 1 },
-        "input_message_id": { "type": "string", "minLength": 1 }
+        "input_message_id": { "type": "string", "minLength": 1 },
+        "workspace_revision_id": { "type": "string", "minLength": 1 },
+        "workspace_revision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
       },
       "additionalProperties": false
     },
@@ -132,18 +137,16 @@
     "orchestration_binding": { "$ref": "urn:agent-platform:orchestration-binding:v1" },
     "sandboxes": {
       "type": "array",
-      "minItems": 1,
       "uniqueItems": true,
       "items": {
         "type": "object",
         "required": [
-          "provider_instance_id", "provider_revision", "provider_api_version",
+          "resolution_id", "provider_api_version",
           "runtime_profile", "sandbox_spec_digest", "required_capabilities",
           "sandbox_slot_key", "sandbox_id"
         ],
         "properties": {
-          "provider_instance_id": { "type": "string", "minLength": 1 },
-          "provider_revision": { "$ref": "urn:agent-platform:provider-revision-snapshot:v1" },
+          "resolution_id": { "type": "string", "minLength": 1 },
           "provider_api_version": { "const": "v1" },
           "runtime_profile": { "type": "string", "minLength": 1 },
           "sandbox_spec_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
@@ -177,6 +180,16 @@
     }
   },
   "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": { "sandboxes": { "minItems": 1 } },
+        "required": ["sandboxes"]
+      },
+      "then": { "required": ["primary_sandbox_slot_key"] },
+      "else": { "not": { "required": ["primary_sandbox_slot_key"] } }
+    }
+  ],
   "x-semantic-constraints": [
     "every Scenario required capability has exactly one compatible capability_resolution",
     "every capability_definition_digest binds the admitted CapabilityDefinition",
@@ -187,11 +200,13 @@
     "agent_runtime.resolution_id references exactly one capability_resolution whose admitted ProviderRevision kind is agent_runtime",
     "the AgentRun runtime_provider_resolution_id equals agent_runtime.resolution_id",
     "all selected Agent Runtime, Sandbox and Experience revisions remain immutable for the Run",
+    "each Sandbox resolution_id references exactly one capability_resolution whose selected ProviderRevision kind is sandbox",
     "sandbox_slot_key is unique within the sandboxes array",
-    "primary_sandbox_slot_key references exactly one sandboxes item"
+    "primary_sandbox_slot_key is absent when sandboxes is empty and otherwise references exactly one sandboxes item"
     ,"selected_experiences exactly match the admitted WorkOrder selections and immutable Catalog revisions"
     ,"every selected experience ProviderRevision is certified and conformant for its capability"
     ,"tenant_id and conversation binding match the WorkOrder, input message and ExecutionGrant"
+    ,"conversation WorkspaceRevision matches the admitted branch head captured for this Run"
     ,"agent_run_id and workflow_run_id match the immutable AgentRun and WorkflowRun records"
     ,"execution_budget, policy_decision, commercial_authorization and event_registry bind exact immutable IDs and digests"
     ,"orchestration_binding equals the WorkflowRun binding and contains no engine-native endpoint or mutable infrastructure identity"

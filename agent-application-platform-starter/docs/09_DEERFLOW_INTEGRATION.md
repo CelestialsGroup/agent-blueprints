@@ -39,7 +39,7 @@ Temporal 管理 WorkOrder 编排、审批等待、重试、交付、结算和跨
 
 ## Provider 解析与运行锁定
 
-ProviderResolution 综合以下输入选择已认证 Revision：
+ProviderResolution 综合以下输入选择已认证 Revision，并固化 Resolver Revision、输入摘要、逐候选结论、Evidence 与 Decision Digest：
 
 - Scenario 所需 Capability 和 Profile；
 - Tenant 与 ClientApplication Binding；
@@ -47,7 +47,7 @@ ProviderResolution 综合以下输入选择已认证 Revision：
 - 受治理能力、成本、容量和健康状态；
 - 显式且安全的 Fallback Policy。
 
-RunManifest 在准入时通过唯一 ProviderResolution 锁定 Agent Runtime ProviderRevision、配置摘要和一致性证据，不复制第二份 Runtime 快照。运行中禁止静默切换框架；Fallback 只适用于未开始的新 Run。Provider 原生 Checkpoint 默认只在同一 Revision 或明确声明并验证的兼容范围内恢复。
+RunManifest 在准入时通过唯一 ProviderResolution 锁定 Agent Runtime ProviderRevision、配置摘要和一致性证据，不复制第二份 Runtime 快照。Sandbox Slot 同样只引用 Resolution。运行中禁止静默切换框架；Fallback 只适用于未开始的新 Run。Provider 原生 Checkpoint 默认只在同一 Revision 或明确声明并验证的兼容范围内恢复。
 
 ## 一致性 Profile
 

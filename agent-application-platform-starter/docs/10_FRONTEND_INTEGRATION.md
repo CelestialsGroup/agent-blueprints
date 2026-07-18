@@ -33,7 +33,7 @@ Business UI
 | Terminal | RuntimeSession、RuntimeRecording | Runtime Gateway、历史 Chunk |
 | Browser | RuntimeSession、RuntimeRecording | Runtime Gateway、受 Capability Gate 控制的录制 |
 | Desktop | RuntimeSession、RuntimeRecording | Runtime Gateway、受 Capability Gate 控制的录制 |
-| Files | Workspace、Artifact、文件增量 Recording | Artifact API、受控 Workspace Projection |
+| Files | Branch WorkspaceRevision、Artifact、文件增量 Recording | Artifact API、受控 Workspace Projection；分支间不共享可变 Head |
 | Artifact | ArtifactVersion、Preview/Edit/Conversion Session | Agent Access API |
 | History | Conversation、Branch、Recording Manifest | REST + 回放投影 |
 | Tasks | 标准 `runtime.task.*` Event | Task Projection；不暴露 Provider PID/本地队列 |
@@ -62,6 +62,8 @@ Terminal、Browser、Desktop、Port Forward 和 File Delta 共用 `runtime-gatew
 - Port Forward 只允许短期实时传输，不进入 RuntimeRecording。
 
 Phase 0 只冻结 Terminal Profile。Browser/Desktop 可以复用 Envelope，但录制在 Capture、Consent、Redaction 和容量 Conformance 完成前保持关闭。
+
+Terminal Recording 也只能持久化经过 Emit-time Scrub/Schema Gate 的 Chunk；Workbench 不得访问临时未脱敏缓冲或把部分失败显示为完整回放。
 
 Workbench、Headless SDK 和未来 IDE/ACP 都是 Presentation Adapter；它们消费相同 Conversation、Command、Event、Artifact 和 Usage，不拥有独立 Session 事实。
 

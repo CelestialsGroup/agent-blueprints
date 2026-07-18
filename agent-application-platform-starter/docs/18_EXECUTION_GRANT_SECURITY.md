@@ -48,6 +48,8 @@ JWKS 或公钥只能来自管理员预注册的 ClientApplication 配置。
 - client_message_id
 - scenario_id
 - scenario_version 与 scenario_definition_digest
+- request_contract_id
+- request_digest_profile=`rfc8785-request-excluding-execution-grant-v1`
 - request_digest
 - idempotency_key_digest
 - usage=single
@@ -70,13 +72,15 @@ clock_skew = 30 seconds
 
 不能使用 `json.dumps(sort_keys=True)`、普通 Map 排序或语言默认序列化代替。
 
-摘要覆盖完整 WorkOrder JSON，唯一排除字段：
+`request_contract_id` 必须是实际提交的 `work-order-request:v1` 或 `conversation-turn-request:v1`。摘要覆盖该精确请求 JSON，唯一排除字段：
 
 ```text
 execution_grant
 ```
 
-包括：
+WorkOrderRequest 包括 `source`、`work`、`delivery`、`placement_constraints` 和 `metadata`；ConversationTurnRequest 包括 Message、Branch、Scenario、Experience、Delivery 和 Metadata。不能先把两种请求映射成含混的内部对象再计算摘要。
+
+WorkOrderRequest 包括：
 
 - source
 - work
@@ -84,7 +88,7 @@ execution_grant
 - placement_constraints
 - metadata
 
-`work` 中的 Conversation/Turn/Message 绑定和 Experience revision 选择属于摘要覆盖范围，不能在 Grant 签发后替换模板、分支或父消息。
+请求中的 Conversation/Turn/ClientMessage 绑定和 Experience Revision 选择属于摘要覆盖范围，不能在 Grant 签发后替换模板、分支、父消息或请求类型。ConversationTurn 的 `turn_id` 从已验证 Grant 创建，内部 `input_message_id` 由平台原子分配。
 
 因此 metadata 不得绕过授权改变行为。
 
@@ -104,7 +108,7 @@ execution_grant
 
 1. Upsert 并锁定 IdempotencyRecord。
 2. 比较 request_digest。
-3. 校验 Token Profile、签名、时间、issuer、audience。
+3. 校验 `request_contract_id`、Digest Profile、Token Profile、签名、时间、issuer、audience。
 4. 校验 authenticated client 与 Grant client。
 5. 校验 idempotency digest。
 6. 唯一插入 GrantConsumption。

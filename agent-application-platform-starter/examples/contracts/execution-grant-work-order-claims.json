@@ -1,5 +1,5 @@
 {
-  "jti": "grant_01J00000000000000000000000",
+  "jti": "grant_work_order_01J0000000000000000",
   "iss": "business-a",
   "aud": "agent-platform",
   "sub": "user-123",
@@ -14,10 +14,10 @@
   "branch_id": "main",
   "client_message_id": "client-msg-0001",
   "scenario_id": "html-generation",
-  "request_digest": "sha256:3daec38d8e8c0ddd11a19ed117a5f77dbf2ec0ae12506f7aa5ea0a9615a2ba62",
+  "request_digest": "sha256:9c1b063d4bbe5b4064644c430a2319e9b38d988a3fa78ba23b22db72ba4c1d9a",
   "idempotency_key_digest": "sha256:6bf53ca6b162632ebe7a477b424bedb41cae0759b08b27970fe9dbc7199ff87c",
   "usage": "single",
-  "nonce": "nonce-0123456789abcdef",
+  "nonce": "nonce-work-order-0123456789",
   "capabilities": [
     "agent.general",
     "html.generate",
@@ -73,6 +73,6 @@
   },
   "scenario_version": "1.0.0",
   "scenario_definition_digest": "sha256:2ef129bc2277d1927147c533a18bcc5500db43e4c36ef12313b904fe80bb709c",
-  "request_contract_id": "urn:agent-platform:conversation-turn-request:v1",
+  "request_contract_id": "urn:agent-platform:work-order-request:v1",
   "request_digest_profile": "rfc8785-request-excluding-execution-grant-v1"
 }

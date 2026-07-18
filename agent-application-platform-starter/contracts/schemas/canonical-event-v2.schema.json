@@ -71,6 +71,7 @@
             "conversation",
             "conversation_branch",
             "conversation_message",
+            "workspace_revision",
             "workflow_run",
             "agent_run",
             "invocation",

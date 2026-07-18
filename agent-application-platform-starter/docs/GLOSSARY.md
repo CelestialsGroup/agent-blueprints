@@ -6,17 +6,18 @@
 - **Agent Platform**：Conversation、执行账本、Artifact、Provider、Sandbox、Technical Usage 和 Delivery 的事实源。
 - **ClientApplication / ServicePrincipal**：使用 OAuth2 Client Credentials 调用平台的业务后端。
 - **CommercialAuthorizationSnapshot**：Business 签发的 Entitlement、Capability、Limit 和 Quota Reservation 快照。
-- **ExecutionGrant**：绑定 Conversation Turn、请求摘要和商业授权的短期单次 JWS。
+- **ExecutionGrant**：绑定精确请求 Contract/Digest Profile、Conversation Turn 和商业授权的短期单次 JWS。
 - **WorkSession**：绑定一个 Conversation、可选缩窄到一个 WorkOrder 的短期浏览器/SDK Session。
 
 ## Conversation 与执行
 
 - **Conversation**：多轮 Agent 会话，拥有一个持久 Workspace。
-- **ConversationBranch**：分支头、派生点、CAS 版本和分支内活动 WorkOrder 投影。
+- **ConversationBranch**：Message Head、WorkspaceRevision Head、派生点、CAS 版本和分支内活动 WorkOrder 投影。
 - **ConversationMessage**：Conversation 内按 `message_sequence` 追加的不可变消息。
 - **Turn**：一次可执行输入；原子创建 Message、GrantConsumption 和 WorkOrder。
 - **WorkOrder**：一个 Turn 的异步执行与总状态，不承担无限期 Conversation。
 - **Workspace**：Conversation 范围的 Artifact、文件和 Sandbox 工作空间。
+- **WorkspaceRevision**：Branch 范围的不可变文件 Manifest Revision；Sandbox 挂载精确 Revision，提交以 CAS 推进 Branch Head。
 - **WorkflowRun**：一个 WorkOrder 的平台级持久编排身份；Temporal 或未来编排器的原生执行分段属于 Orchestration Adapter 私有历史。
 - **AgentRun**：一个不可变、受治理的 Root 或 Sub-agent 执行身份，绑定一个 RunManifest 和一个 AgentRuntimeRun。
 - **BuildProvenance**：Provider Implementation 的 Source Revision、Source Tree、Build Artifact、SBOM 与 Provenance Statement 摘要。
@@ -42,7 +43,7 @@
 - **ProviderInstance**：可变的逻辑 Provider 配置容器。
 - **ProviderRevision**：Provider Implementation/BuildProvenance、Port、配置、权限、凭据和 Conformance 的不可变快照；不要求包装成 Plugin。
 - **ProviderAdmissionDecision**：对 ProviderRevision 的仅追加 `certified`/`revoked` 决策。
-- **ProviderResolution**：为精确 Capability/Profile 选择并锁定 Revision 的结果。
+- **ProviderResolution**：为精确 Capability/Profile 选择并锁定 Revision 的不可变决策，包含 Resolver、输入、逐候选结论和证据摘要。
 - **ConformanceSuiteManifest**：内容寻址的机器可读测试清单；认证结果绑定 Suite ID/Version/Digest/Profile 和 Evidence。
 - **ExperienceCatalogEntry**：用户可发现的 Template、Skill、Design System 或 Editor 条目。
 - **TemplateRevision / SelectedExperience**：不可变 Experience 内容及 Run 中的精确选择。

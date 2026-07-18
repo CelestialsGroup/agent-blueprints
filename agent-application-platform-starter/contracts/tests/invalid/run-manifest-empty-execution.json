@@ -4,7 +4,9 @@
     "conversation_id": "conv_01J00000000000000000000000",
     "turn_id": "turn_01J00000000000000000000000",
     "branch_id": "main",
-    "input_message_id": "msg_01J00000000000000000000000"
+    "input_message_id": "msg_01J00000000000000000000000",
+    "workspace_revision_id": "wsr_01J00000000000000000000000",
+    "workspace_revision_digest": "sha256:a46a321d81d58bc756a5a53ade99f768962998eab038a055f57838f4d33065aa"
   },
   "scenario": {
     "id": "html-generation",
@@ -77,41 +79,6 @@
   "request_digest": "sha256:4040404040404040404040404040404040404040404040404040404040404040",
   "sandboxes": [
     {
-      "provider_instance_id": "spi_deerflow_builtin_sandbox",
-      "provider_revision": {
-        "provider_revision_id": "spr_01J00000000000000000000000",
-        "provider_revision_digest": "sha256:3d93cda252fe5977719c674d90d9d604ca77125bf7d1ef4210faf628cb2cdaca",
-        "provider_kind": "sandbox",
-        "implementation": {
-          "implementation_id": "sandbox-provider.deerflow-built-in",
-          "implementation_version": "0.8.2",
-          "distribution_type": "oci_image",
-          "distribution_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-          "manifest_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
-          "provenance": {
-            "source_revision": "9c37e975d779c58140bb5cd9f9b8392b7cbd9e983f3bb5bfa4ea82883f8cd3fc",
-            "source_tree_digest": "sha256:8f5c190d225474f8b544d443ddf4c322d8cd81d5a07ed7434bbfd98606b21cbe",
-            "build_artifact_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-            "sbom_digest": "sha256:98f6a838792c8dfc83f6eca3151b7c666ab0a04797519905ffdb1f9656bc1d58",
-            "provenance_statement_digest": "sha256:31905821d0c07873cd474cddb5cbd6ca9bf8fba00cc62079a8b6bda03a035c12",
-            "build_system": "contract-fixture-build-v1"
-          },
-          "image_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
-        },
-        "port": {
-          "protocol": "sandbox-provider",
-          "protocol_version": "v1",
-          "contract_digest": "sha256:e03a9bad19a1a7c8bb12068fa3ead11bb50772afe1857b5a4cb5b1bda76fb4d2",
-          "binding_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666"
-        },
-        "configuration_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
-        "approved_permissions_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
-        "credential_binding_digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
-        "conformance_set_digest": "sha256:aaab809c47ec5d9f26b21859ce8c8a60393f94a3cdaba45f82c093c10ff21424",
-        "admission_decision_id": "pad_01J00000000000000000000000",
-        "admission_decision_digest": "sha256:154128051aa234cc7547ba4e8fe88a378b97e3b8bb0b430c98194694392974bb",
-        "admission_status": "certified"
-      },
       "provider_api_version": "v1",
       "runtime_profile": "hardened",
       "sandbox_spec_digest": "sha256:7070707070707070707070707070707070707070707070707070707070707070",
@@ -123,11 +90,12 @@
         }
       ],
       "sandbox_slot_key": "primary-code",
-      "sandbox_id": "sbx_01J00000000000000000000000"
+      "sandbox_id": "sbx_01J00000000000000000000000",
+      "resolution_id": "res_sandbox_exec_01J0000000000000"
     }
   ],
   "primary_sandbox_slot_key": "primary-code",
-  "run_manifest_digest": "sha256:08c56ea2885457a426684ffa5c4d4fcd530a76d061967805378ae25f4da0f898",
+  "run_manifest_digest": "sha256:6a14898b14a21e07fc9cfe02804d6ce0b71a99ea2b3abd3b6054ee093b76a527",
   "agent_run_id": "agr_01J00000000000000000000000",
   "workflow_run_id": "wfr_01J00000000000000000000000",
   "orchestration_binding": {

@@ -16,7 +16,9 @@
     "artifact_version_id",
     "digest",
     "media_type",
-    "size_bytes"
+    "size_bytes",
+    "redaction_profile_digest",
+    "redaction_evidence_digest"
   ],
   "properties": {
     "chunk_id": { "type": "string", "minLength": 1 },
@@ -32,12 +34,15 @@
     "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "media_type": { "type": "string", "minLength": 1 },
     "size_bytes": { "type": "integer", "minimum": 0 },
-    "redaction_profile": { "type": "string", "minLength": 1 }
+    "redaction_profile": { "type": "string", "minLength": 1 },
+    "redaction_profile_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "redaction_evidence_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
   },
   "additionalProperties": false,
   "x-semantic-constraints": [
     "chunk_sequence is contiguous per recording channel",
     "started_at <= ended_at and start_work_sequence <= end_work_sequence",
-    "chunk ArtifactVersion is immutable, encrypted according to classification and inaccessible without recording:read"
+    "chunk ArtifactVersion is immutable, encrypted according to classification and inaccessible without recording:read",
+    "redaction evidence proves emit-time scrubbing and schema validation occurred before any persistent ArtifactVersion was created"
   ]
 }

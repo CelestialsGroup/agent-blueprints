@@ -3,7 +3,7 @@
   "attempt_id": "sat_restore_01",
   "fencing_token": 12,
   "idempotency_key": "sop_restore_01-idempotency-0001",
-  "request_digest": "sha256:70e98cec11f711b6feaa2ae36ec899b6bbf1440489cd92fe8198fdb1ee717dc5",
+  "request_digest": "sha256:f7f8affde5c165bc63b115e0bf4c8ac6e2f6f440dc220f34c3f4128d3a8f9172",
   "deadline_at": "2026-07-16T10:30:00Z",
   "protocol_version": "v1",
   "spec": {
@@ -62,7 +62,11 @@
     "workspace": {
       "mode": "persistent",
       "mount_path": "/workspace",
-      "snapshot_reference": "ssn_01J00000000000000000000000"
+      "snapshot_reference": "ssn_01J00000000000000000000000",
+      "base_revision_id": "wsr_01J00000000000000000000000",
+      "base_revision_digest": "sha256:a46a321d81d58bc756a5a53ade99f768962998eab038a055f57838f4d33065aa",
+      "commit_mode": "cas_new_revision",
+      "base_branch_version": 2
     },
     "lease": {
       "expires_at": "2026-07-16T12:00:00Z",
@@ -84,7 +88,9 @@
     "labels": {
       "scenario": "coding"
     },
-    "sandbox_slot_key": "restored-code"
+    "sandbox_slot_key": "restored-code",
+    "branch_id": "main",
+    "provider_resolution_id": "res_sandbox_exec_01J0000000000000"
   },
   "snapshot": {
     "snapshot_id": "ssn_01J00000000000000000000000",

@@ -6,6 +6,10 @@
     { "id": "branch-zero-sequence-with-head", "mutation": "zero_sequence_with_head" },
     { "id": "branch-positive-sequence-without-head", "mutation": "positive_sequence_without_head" },
     { "id": "branch-head-from-another-conversation", "mutation": "cross_conversation_message" },
-    { "id": "branch-active-work-order-mismatch", "mutation": "active_work_order_branch_mismatch" }
+    { "id": "branch-active-work-order-mismatch", "mutation": "active_work_order_branch_mismatch" },
+    { "id": "branch-workspace-head-digest-mismatch", "mutation": "workspace_head_digest_mismatch" },
+    { "id": "branch-workspace-revision-from-another-branch", "mutation": "workspace_revision_cross_branch" },
+    { "id": "workspace-first-revision-has-parent", "mutation": "workspace_first_revision_has_parent" },
+    { "id": "workspace-later-revision-missing-parent", "mutation": "workspace_later_revision_missing_parent" }
   ]
 }

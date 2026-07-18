@@ -109,6 +109,10 @@ Run 不能只保存 ProviderInstance ID。
 
 ProviderResolution 必须固化：
 
+- Resolver ID/Version/Digest；
+- 完整解析输入摘要，包括 Capability、Policy、Placement、Health 和 Capacity；
+- 每个候选的 Revision、结论、Reason Code 与 Evidence Digest；
+- 不可变 Resolution Evidence Reference/Digest 和 Decision Digest；
 - CapabilityDefinition 摘要
 - ProviderRevision ID
 - Implementation ID/版本和分发摘要
@@ -120,9 +124,9 @@ ProviderResolution 必须固化：
 
 用户可见的 Experience 在 Provider Resolution 之上增加不可变 Catalog Revision。只有可变 `template_id` 绝不足以支持 WorkOrder 准入或 Run 回放。
 
-Resolver 优先级是 Tenant Binding、ClientApplication Binding、Scenario Requirement、Platform Default、显式安全 Fallback。Fallback 只有在 Capability 与 side-effect policy 允许时才能发生；非幂等外部操作禁止自动切换 Provider。
+Resolver 优先级是 Tenant Binding、ClientApplication Binding、Scenario Requirement、Platform Default、显式安全 Fallback。ProviderHealth 必须绑定精确 ProviderRevision 和 Health Generation；只保存可变 Instance 状态不能作为历史解析证据。Fallback 只有在 Capability 与 side-effect policy 允许时才能发生；非幂等外部操作禁止自动切换 Provider。
 
-Sandbox 使用独立 Provider Contract 表达 Desired/Observed State、Lease、Exec、RuntimeSession 和 Snapshot，不能用普通 Plugin Invocation 代替；它仍使用同一 ProviderRevision/Admission/Conformance 治理模型。
+Sandbox 使用独立 Provider Contract 表达 Desired/Observed State、Lease、Exec、RuntimeSession 和 Snapshot，不能用普通 Plugin Invocation 代替；它仍使用同一 ProviderRevision/Admission/Conformance/Resolution 治理模型。RunManifest 的 Sandbox Slot 只引用 `resolution_id`，不得再复制 Revision Snapshot。
 
 ## Agent Runtime Provider 解析
 

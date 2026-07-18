@@ -35,13 +35,13 @@ Agent Workbench 只访问 Agent Access API、SSE 和 Runtime Gateway。Agent Eng
 | 所有者 | 权威数据 | 禁止拥有 |
 |---|---|---|
 | Business | User、Organization、Membership、Product、Order、Payment、Entitlement、Commercial Quota | WorkOrder、Run、Event、Artifact、TechnicalUsage |
-| Agent Platform | Conversation、Workspace、WorkOrder、Workflow、Event、Artifact、TechnicalUsage、Provider、Sandbox、Recording、Audit | 价格、商业余额、支付和会员事实 |
+| Agent Platform | Conversation、Branch WorkspaceRevision、WorkOrder、Workflow、Event、Artifact、TechnicalUsage、Provider、Sandbox、Recording、Audit | 价格、商业余额、支付和会员事实 |
 | Runtime/Sandbox Provider | 私有 Run、Checkpoint、Pod/VM、内部 Endpoint、后端观测状态 | Business 授权、Platform 终态和正式 ArtifactVersion |
 | Workbench | 用户交互和短期客户端状态 | 任何服务端权威事实 |
 
 ## 稳定内核与 Provider
 
-稳定内核只保存可复现、可审计且与执行后端无关的标识和状态。Agent Runtime、Sandbox、Model、Tool、Template、Renderer、Editor 和 Converter 都通过不可变 ProviderRevision、仅追加 AdmissionDecision 和 ProviderResolution 接入。
+稳定内核只保存可复现、可审计且与执行后端无关的标识和状态。Agent Runtime、Sandbox、Model、Tool、Template、Renderer、Editor 和 Converter 都通过不可变 ProviderRevision、仅追加 AdmissionDecision 和 ProviderResolution 接入。Resolution 绑定 Resolver Revision、完整输入摘要、逐候选结论和不可变证据。
 
 ProviderRevision 由通用 Implementation、BuildProvenance、稳定 Port Binding、配置、权限和 Conformance 组成，不要求 Runtime 或 Sandbox 伪装成 Plugin。
 
@@ -52,7 +52,7 @@ AgentRun 1 -> 1 RunManifest + 1 AgentRuntimeRun
 AgentRuntimeRun mutation -> Invocation 1 -> N Attempt
 ```
 
-每个 AgentRun 由 Tenant/Conversation 绑定、授权/预算/策略摘要、ProviderResolution、AdmissionDecision、Event Registry、Experience Revision、Sandbox Slot 和 RunManifest 固化。RunManifest 的 Runtime 选择只引用一个 ProviderResolution，避免重复快照产生冲突。运行中的 Run 不得静默切换 Provider；Provider 原生 Checkpoint 默认不具备跨框架可移植性。
+每个 AgentRun 由 Tenant/Conversation/Branch WorkspaceRevision、授权/预算/策略摘要、ProviderResolution、AdmissionDecision、Event Registry、Experience Revision、按需 Sandbox Slot 和 RunManifest 固化。Runtime 与 Sandbox Slot 只引用 ProviderResolution，避免重复快照产生冲突。没有 Sandbox Capability 的 Run 可以使用空 `sandboxes[]`；运行中的 Run 不得静默切换 Provider。
 
 ## 可靠性边界
 

@@ -2,7 +2,15 @@
 
 ## Workspace
 
-v1：一个 AgentConversation 对应一个内部持久 Workspace；Conversation 的多个 WorkOrder/AgentRun 共享该 Workspace 的版本化 Artifact 视图。一次性调用创建隐式 Conversation/Workspace。
+v1：一个 AgentConversation 对应一个内部持久 Workspace；每个 ConversationBranch 保存不可变 WorkspaceRevision Head。多个 WorkOrder/AgentRun 共享版本化 Artifact 集合，但不共享可变文件头。一次性调用创建隐式 Conversation/Workspace/Main Branch/初始 Revision。
+
+```text
+Workspace
+ -> Branch A -> WorkspaceRevision 1 -> 2 -> 3
+ -> Branch B -> forked_from Revision 2 -> WorkspaceRevision 1 -> 2
+```
+
+WorkOrder 准入时固化 Branch Head Revision；Sandbox 只挂载该 Revision。成功提交生成新 Revision，并用 `branch_version` CAS 推进 Head；冲突必须显式合并、重试或创建新 Branch，不能覆盖另一分支的文件状态。
 
 负责：
 
@@ -94,6 +102,6 @@ Office/PDF/Image/Video 先扫描，宏和主动内容默认不执行。
 /tmp         ephemeral
 ```
 
-Workspace Snapshot 是 Sandbox 与 Artifact Workspace 的连接点。
+WorkspaceRevision 的内容 Manifest Artifact 是平台版本事实；Workspace Snapshot 是 Sandbox Provider 对该 Revision 的可移植或 Provider 私有恢复表示。两者通过摘要绑定，但 Snapshot 不能取代 Branch Head。
 
 Sandbox Provider 不直接创建 ArtifactVersion；平台验证 `/outputs` 或 Staging Manifest 后提交。

@@ -13,7 +13,7 @@
   "classification": "internal",
   "retention_until": "2026-08-14T10:30:00Z",
   "chunk_count": 1,
-  "manifest_digest": "sha256:cad6ff06b883f4eea799b1a4bc1a586125fe26a10008dee21e6dbd573e45fc7b",
+  "manifest_digest": "sha256:ee0b1d3eb968c432ce6c609d65972389a619c04c4e82bd7283e33077144d2aa6",
   "created_at": "2026-07-15T10:00:00Z",
   "updated_at": "2026-07-15T10:30:00Z",
   "completed_at": "2026-07-15T10:30:00Z"

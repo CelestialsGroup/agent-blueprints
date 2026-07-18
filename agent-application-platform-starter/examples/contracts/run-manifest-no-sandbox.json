@@ -4,7 +4,9 @@
     "conversation_id": "conv_01J00000000000000000000000",
     "turn_id": "turn_01J00000000000000000000000",
     "branch_id": "main",
-    "input_message_id": "msg_01J00000000000000000000000"
+    "input_message_id": "msg_01J00000000000000000000000",
+    "workspace_revision_id": "wsr_01J00000000000000000000000",
+    "workspace_revision_digest": "sha256:a46a321d81d58bc756a5a53ade99f768962998eab038a055f57838f4d33065aa"
   },
   "scenario": {
     "id": "html-generation",
@@ -27,9 +29,25 @@
       },
       "selected_provider_instance_id": "api_deerflow_runtime",
       "routing_reason": "scenario_requirement",
-      "candidates_considered": [
-        "api_deerflow_runtime"
+      "resolver_revision": {
+        "id": "provider-resolver",
+        "version": "1.0.0",
+        "digest": "sha256:ef30b70a32f4eb10c1ff2f9b68b5adaaeabe078ee9901362ff227bca163492d0"
+      },
+      "resolution_input_digest": "sha256:290684dacfaa91e0bb09b6d900f4c2467ad737d77fcbe84deade964005c99dad",
+      "candidate_evaluations": [
+        {
+          "provider_instance_id": "api_deerflow_runtime",
+          "provider_revision_id": "apr_01J00000000000000000000000",
+          "outcome": "selected",
+          "reason_codes": [
+            "scenario_match"
+          ],
+          "evidence_digest": "sha256:9db5c5ff12ece4c8e3499e78ae88a3f953f6f6e7ba1e4eb12289a8dfd2671f00"
+        }
       ],
+      "resolution_evidence_reference": "resolution-evidence/res_agent_general_01J00000000000000",
+      "resolution_evidence_digest": "sha256:9bc1af50fc2bb1160dbc0fe21b9070b3a80bafdd85d55d55a3af95d3b505c9ce",
       "resolved_at": "2026-07-16T09:01:00Z",
       "capability_definition_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
       "selected_provider_revision": {
@@ -65,7 +83,8 @@
         "admission_decision_id": "pad_runtime_01J00000000000000000",
         "admission_decision_digest": "sha256:e06705d9cce2209925f8dacd7e38b2130cfcb94a0165f289f354a6f0f72bb1e6",
         "admission_status": "certified"
-      }
+      },
+      "decision_digest": "sha256:f92b6c12a20b4285705032b91e7a09a7dbf9b982f25882ef674543b37f07edd2"
     },
     {
       "resolution_id": "res_html_generate_01J0000000000000",
@@ -76,9 +95,25 @@
       },
       "selected_provider_instance_id": "hpi_html_anything",
       "routing_reason": "scenario_requirement",
-      "candidates_considered": [
-        "hpi_html_anything"
+      "resolver_revision": {
+        "id": "provider-resolver",
+        "version": "1.0.0",
+        "digest": "sha256:ef30b70a32f4eb10c1ff2f9b68b5adaaeabe078ee9901362ff227bca163492d0"
+      },
+      "resolution_input_digest": "sha256:14ab947770927e27de8ab743e9a876d4568f4e26b4abba009251ace64f722638",
+      "candidate_evaluations": [
+        {
+          "provider_instance_id": "hpi_html_anything",
+          "provider_revision_id": "hpr_01J00000000000000000000000",
+          "outcome": "selected",
+          "reason_codes": [
+            "scenario_match"
+          ],
+          "evidence_digest": "sha256:19418873311153fdefa2f70dddb73d27e56fd9190494d4ae624b3f04187da84c"
+        }
       ],
+      "resolution_evidence_reference": "resolution-evidence/res_html_generate_01J0000000000000",
+      "resolution_evidence_digest": "sha256:40a931853e85a7b7a557e9d21afe5c6798e97bc1669610821a574f4f2e853d2d",
       "resolved_at": "2026-07-16T09:01:01Z",
       "capability_definition_digest": "sha256:3434343434343434343434343434343434343434343434343434343434343434",
       "selected_provider_revision": {
@@ -113,7 +148,8 @@
         "admission_decision_id": "pad_html_skill_01J000000000000000",
         "admission_decision_digest": "sha256:c749348436cc2f6a3beaa3dc2df91d3297185cddabdf7d4284143927d713d494",
         "admission_status": "certified"
-      }
+      },
+      "decision_digest": "sha256:2c1d2eb642c951eec1e34bfcfd9e02df0aef71a3497e4fe71e89e3212ac63907"
     },
     {
       "resolution_id": "res_html_preview_01J00000000000000",
@@ -124,9 +160,25 @@
       },
       "selected_provider_instance_id": "rpi_html_preview",
       "routing_reason": "scenario_requirement",
-      "candidates_considered": [
-        "rpi_html_preview"
+      "resolver_revision": {
+        "id": "provider-resolver",
+        "version": "1.0.0",
+        "digest": "sha256:ef30b70a32f4eb10c1ff2f9b68b5adaaeabe078ee9901362ff227bca163492d0"
+      },
+      "resolution_input_digest": "sha256:66124d4ab730d5a00120b841093a99b6eacea12b97d955eab80c8edfc954d588",
+      "candidate_evaluations": [
+        {
+          "provider_instance_id": "rpi_html_preview",
+          "provider_revision_id": "rpr_01J00000000000000000000000",
+          "outcome": "selected",
+          "reason_codes": [
+            "scenario_match"
+          ],
+          "evidence_digest": "sha256:395769166307c3bf7c94bbce00ffb722b2fb4364de0f8fbabfd1ae0e1000d473"
+        }
       ],
+      "resolution_evidence_reference": "resolution-evidence/res_html_preview_01J00000000000000",
+      "resolution_evidence_digest": "sha256:52bd53d30a90b52983c7f882a514ca4ee04b51352b4c3da54eb80e0daee160bf",
       "resolved_at": "2026-07-16T09:01:02Z",
       "capability_definition_digest": "sha256:3535353535353535353535353535353535353535353535353535353535353535",
       "selected_provider_revision": {
@@ -161,7 +213,8 @@
         "admission_decision_id": "pad_renderer_01J0000000000000000",
         "admission_decision_digest": "sha256:087f41c500b529147c23ebabd26ddce169fe8fd4431681b122c10ea5342bb92b",
         "admission_status": "certified"
-      }
+      },
+      "decision_digest": "sha256:44aef2451cf1f7881c5188a0d702807b629fc12214d0729b91767b0eb94deada"
     }
   ],
   "agent_runtime": {
@@ -221,25 +274,8 @@
     "cell_id": "cell-1"
   },
   "request_digest": "sha256:4040404040404040404040404040404040404040404040404040404040404040",
-  "sandboxes": [
-    {
-      "provider_instance_id": "spi_deerflow_builtin_sandbox",
-      "provider_api_version": "v1",
-      "runtime_profile": "hardened",
-      "sandbox_spec_digest": "sha256:7070707070707070707070707070707070707070707070707070707070707070",
-      "required_capabilities": [
-        {
-          "id": "sandbox.exec",
-          "version": "1.0",
-          "profile": "hardened"
-        }
-      ],
-      "sandbox_slot_key": "primary-code",
-      "sandbox_id": "sbx_01J00000000000000000000000"
-    }
-  ],
-  "primary_sandbox_slot_key": "primary-code",
-  "run_manifest_digest": "sha256:08c56ea2885457a426684ffa5c4d4fcd530a76d061967805378ae25f4da0f898",
+  "sandboxes": [],
+  "run_manifest_digest": "sha256:a7f5eddfc3dafc68b0e5ef45af286835e7693933b19780720a0a7236446798dd",
   "agent_run_id": "agr_01J00000000000000000000000",
   "workflow_run_id": "wfr_01J00000000000000000000000",
   "orchestration_binding": {

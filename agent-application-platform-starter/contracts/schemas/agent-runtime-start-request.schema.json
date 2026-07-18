@@ -20,6 +20,8 @@
     "deadline_at",
     "run_manifest_digest",
     "input_message_id",
+    "workspace_revision_id",
+    "workspace_revision_digest",
     "sandbox_bindings"
   ],
   "properties": {
@@ -39,10 +41,11 @@
     "deadline_at": { "type": "string", "format": "date-time" },
     "run_manifest_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "input_message_id": { "type": "string", "minLength": 1 },
+    "workspace_revision_id": { "type": "string", "minLength": 1 },
+    "workspace_revision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "checkpoint": { "$ref": "urn:agent-platform:agent-runtime-checkpoint-manifest:v1" },
     "sandbox_bindings": {
       "type": "array",
-      "minItems": 1,
       "uniqueItems": true,
       "items": {
         "type": "object",
@@ -58,6 +61,8 @@
   "additionalProperties": false,
   "x-semantic-constraints": [
     "tenant_id, workflow_run_id, work_order_id, agent_run_id and runtime_run_id match the immutable execution topology",
+    "workspace_revision_id and workspace_revision_digest match the RunManifest branch Workspace head",
+    "sandbox_bindings exactly match the RunManifest Sandbox slots and may be empty when the Scenario does not require a Sandbox",
     "request_digest is RFC 8785 JCS SHA-256 over the request excluding request_digest",
     "the bearer token claims match the request, ProviderRevision, RunManifest, InvocationAttempt and fencing_token"
   ]

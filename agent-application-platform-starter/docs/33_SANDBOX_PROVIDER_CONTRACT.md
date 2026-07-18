@@ -184,6 +184,8 @@ Provider 对 Agent 暴露固定语义：
 
 宿主机、平台数据库、业务存储不通过文件系统暴露。
 
+`/workspace` 不是 Conversation 级共享可变目录。SandboxSpec 固化 ProviderResolution、Branch WorkspaceRevision ID/Digest 和 Branch Version；只读任务不提交，写任务以 `cas_new_revision` 创建新 Revision，并通过 Branch Version CAS 推进 Head。
+
 ## OCI 与底层 Runtime
 
 - Sandbox Image 必须兼容 OCI Image 规范。
@@ -216,9 +218,9 @@ Provider 对 Agent 暴露固定语义：
 
 ## 多 Sandbox 与 Slot
 
-一个 Conversation Workspace 可以拥有多个 Sandbox；每个 WorkOrder 的 RunManifest 只绑定本次 Turn 实际使用的 Slot。
+一个 Conversation Workspace 可以拥有多个 Sandbox；每个 WorkOrder 的 RunManifest 只绑定本次 Turn 实际使用的 Slot。Sandbox 由 Scenario/Runtime Capability 按需创建，纯聊天、远程 Tool 或不需要文件系统的 Run 可以使用空 `sandboxes[]`。
 
-平台使用 `sandbox_slot_key` 表达逻辑用途，而不是把 Sandbox 与 WorkOrder 一对一绑定：
+平台使用 `sandbox_slot_key` 表达 WorkOrder 内的逻辑用途；唯一约束是 `(work_order_id, sandbox_slot_key)`，因此不同 Branch 可以并行使用同名 `primary-code`：
 
 ```text
 primary-code
@@ -252,8 +254,7 @@ runtime_endpoint_reference
 实际的 Pod、VM、Container 和 Endpoint 数据保存在 Adapter 私有存储，
 不得进入 CanonicalEvent、RunManifest、用户 API 或稳定内核表。
 
-RunManifest 使用 `sandboxes[]` 锁定多个 Sandbox Slot，并用
-`primary_sandbox_slot_key` 标识默认工作环境。禁止重新收缩为单一 Sandbox 字段。
+RunManifest 使用 `sandboxes[]` 锁定多个 Sandbox Slot。每个 Slot 只引用一个 Sandbox ProviderResolution，不复制 ProviderRevision；数组非空时用 `primary_sandbox_slot_key` 标识默认工作环境，为空时该字段必须不存在。禁止重新收缩为单一 Sandbox 字段或强制所有 Runtime 创建 Sandbox。
 
 ## 生命周期、Lease 与 Snapshot
 

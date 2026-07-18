@@ -37,6 +37,66 @@ def validate_self_digest(value: dict[str, Any], field: str) -> None:
         raise AssertionError(f"{field} mismatch: expected {actual}, got {expected}")
 
 
+def validate_execution_grant_request(
+    grant: dict[str, Any], request: dict[str, Any], *, authenticated_conversation_id: str,
+) -> None:
+    if grant["request_digest_profile"] != "rfc8785-request-excluding-execution-grant-v1":
+        raise AssertionError("ExecutionGrant uses an unsupported request digest profile")
+    unsigned = copy.deepcopy(request)
+    unsigned.pop("execution_grant", None)
+    if grant["request_digest"] != canonical_digest(unsigned):
+        raise AssertionError("ExecutionGrant request_digest does not bind the submitted request")
+    contract_id = grant["request_contract_id"]
+    if contract_id == "urn:agent-platform:conversation-turn-request:v1":
+        if not {"branch_id", "client_message_id", "scenario"} <= set(request):
+            raise AssertionError("ExecutionGrant request_contract_id does not match the submitted request shape")
+        if authenticated_conversation_id != grant["conversation_id"]:
+            raise AssertionError("ConversationTurn path and ExecutionGrant bind different Conversations")
+        bindings = {
+            "branch_id": request["branch_id"],
+            "client_message_id": request["client_message_id"],
+            "scenario_id": request["scenario"]["id"],
+            "scenario_version": request["scenario"]["version"],
+            "scenario_definition_digest": request["scenario"]["definition_digest"],
+        }
+    elif contract_id == "urn:agent-platform:work-order-request:v1":
+        if "work" not in request:
+            raise AssertionError("ExecutionGrant request_contract_id does not match the submitted request shape")
+        work = request["work"]
+        bindings = {
+            "conversation_id": work["conversation_id"],
+            "turn_id": work["turn_id"],
+            "branch_id": work["branch_id"],
+            "client_message_id": work["client_message_id"],
+            "scenario_id": work["scenario_id"],
+            "scenario_version": work["scenario_version"],
+            "scenario_definition_digest": work["scenario_definition_digest"],
+        }
+    else:
+        raise AssertionError("ExecutionGrant request_contract_id is unsupported")
+    if any(grant[field] != value for field, value in bindings.items()):
+        raise AssertionError("ExecutionGrant identity bindings differ from the submitted request")
+
+
+def validate_provider_resolution(resolution: dict[str, Any]) -> None:
+    validate_self_digest(resolution, "decision_digest")
+    evaluations = resolution["candidate_evaluations"]
+    candidate_keys = [
+        (item["provider_instance_id"], item["provider_revision_id"])
+        for item in evaluations
+    ]
+    if len(candidate_keys) != len(set(candidate_keys)):
+        raise AssertionError("ProviderResolution contains duplicate candidate evaluations")
+    selected = [item for item in evaluations if item["outcome"] == "selected"]
+    if len(selected) != 1:
+        raise AssertionError("ProviderResolution must contain exactly one selected candidate")
+    snapshot = resolution["selected_provider_revision"]
+    if selected[0]["provider_instance_id"] != resolution["selected_provider_instance_id"]:
+        raise AssertionError("ProviderResolution selected instance conflicts with candidate evidence")
+    if selected[0]["provider_revision_id"] != snapshot["provider_revision_id"]:
+        raise AssertionError("ProviderResolution selected revision conflicts with candidate evidence")
+
+
 def validate_provider_architecture(context: dict[str, Any], suites: list[dict[str, Any]]) -> None:
     protocol_by_kind = {
         "agent_runtime": "agent-runtime-provider",
@@ -91,6 +151,19 @@ def validate_execution_topology(
         raise AssertionError("Runtime start belongs to a different WorkflowRun")
     if agent_run["runtime_provider_resolution_id"] != manifest["agent_runtime"]["resolution_id"]:
         raise AssertionError("AgentRun and RunManifest bind different Runtime Provider resolutions")
+    for field in ("workspace_revision_id", "workspace_revision_digest"):
+        if runtime_start[field] != manifest["conversation"][field]:
+            raise AssertionError(f"Runtime start and RunManifest differ on {field}")
+    expected_sandboxes = {
+        (item["sandbox_slot_key"], item["sandbox_id"])
+        for item in manifest["sandboxes"]
+    }
+    actual_sandboxes = {
+        (item["sandbox_slot_key"], item["sandbox_id"])
+        for item in runtime_start["sandbox_bindings"]
+    }
+    if len(actual_sandboxes) != len(runtime_start["sandbox_bindings"]) or actual_sandboxes != expected_sandboxes:
+        raise AssertionError("Runtime start Sandbox bindings do not exactly match RunManifest")
 
 
 def validate_runtime_token(
@@ -252,7 +325,6 @@ def snapshot_fields(revision: dict[str, Any], decision: dict[str, Any]) -> dict[
 
 def provider_snapshot_bindings(manifest: dict[str, Any]) -> list[tuple[dict[str, Any], str]]:
     bindings = [(item["selected_provider_revision"], item["selected_provider_instance_id"]) for item in manifest["capability_resolutions"]]
-    bindings.extend((item["provider_revision"], item["provider_instance_id"]) for item in manifest["sandboxes"])
     bindings.extend((item["provider_revision"], item["provider_instance_id"]) for item in manifest["selected_experiences"])
     return bindings
 
@@ -302,8 +374,8 @@ def validate_run_admission(manifest: dict[str, Any], context: dict[str, Any]) ->
     required, resolved = set(required_items), set(resolved_items)
     if len(required_items) != len(required) or len(resolved_items) != len(resolved):
         raise AssertionError("Scenario requirements and CapabilityResolution entries must be unique by id/version/profile")
-    if resolved != required:
-        raise AssertionError(f"Capability resolution must exactly cover Scenario requirements: required={required}, resolved={resolved}")
+    if not required <= resolved:
+        raise AssertionError(f"Capability resolution must cover every Scenario requirement: required={required}, resolved={resolved}")
 
     definitions: dict[tuple[str, str, str | None], dict[str, Any]] = {}
     for definition in context["capability_definitions"]:
@@ -381,6 +453,7 @@ def validate_run_admission(manifest: dict[str, Any], context: dict[str, Any]) ->
             raise AssertionError(f"Conflicting snapshots for ProviderRevision {revision_id}")
 
     for resolution in manifest["capability_resolutions"]:
+        validate_provider_resolution(resolution)
         key = capability_key(resolution["capability"])
         definition = definitions.get(key)
         revision = revisions[resolution["selected_provider_revision"]["provider_revision_id"]]
@@ -390,6 +463,15 @@ def validate_run_admission(manifest: dict[str, Any], context: dict[str, Any]) ->
             raise AssertionError(f"Provider kind {revision['provider_kind']} is not allowed for {key}")
         if not revision_supports(revision, key):
             raise AssertionError(f"ProviderRevision conformance does not cover selected capability: {key}")
+
+    referenced_resolution_ids = {
+        manifest["agent_runtime"]["resolution_id"],
+        *(sandbox["resolution_id"] for sandbox in manifest["sandboxes"]),
+    }
+    for resolution in manifest["capability_resolutions"]:
+        key = capability_key(resolution["capability"])
+        if key not in required and resolution["resolution_id"] not in referenced_resolution_ids:
+            raise AssertionError("RunManifest contains an unreferenced non-Scenario ProviderResolution")
 
     runtime_resolutions = [
         resolution for resolution in manifest["capability_resolutions"]
@@ -405,9 +487,19 @@ def validate_run_admission(manifest: dict[str, Any], context: dict[str, Any]) ->
         raise AssertionError("Agent Runtime Provider conformance does not cover its governed execution capability")
 
     for sandbox in manifest["sandboxes"]:
-        revision = revisions[sandbox["provider_revision"]["provider_revision_id"]]
+        sandbox_resolutions = [
+            resolution for resolution in manifest["capability_resolutions"]
+            if resolution["resolution_id"] == sandbox["resolution_id"]
+        ]
+        if len(sandbox_resolutions) != 1:
+            raise AssertionError("Sandbox slot must reference exactly one ProviderResolution")
+        sandbox_resolution = sandbox_resolutions[0]
+        revision = revisions[sandbox_resolution["selected_provider_revision"]["provider_revision_id"]]
         if revision["provider_kind"] != "sandbox":
             raise AssertionError("Sandbox slot must bind a Sandbox ProviderRevision")
+        required_keys = {capability_key(item) for item in sandbox["required_capabilities"]}
+        if capability_key(sandbox_resolution["capability"]) not in required_keys:
+            raise AssertionError("Sandbox ProviderResolution does not select one of the slot's required capabilities")
         for required_capability in sandbox["required_capabilities"]:
             key = capability_key(required_capability)
             definition = definitions.get(key)
@@ -460,8 +552,11 @@ def validate_run_admission(manifest: dict[str, Any], context: dict[str, Any]) ->
     slots = [sandbox["sandbox_slot_key"] for sandbox in manifest["sandboxes"]]
     if len(slots) != len(set(slots)):
         raise AssertionError("sandbox_slot_key must be unique")
-    if slots.count(manifest["primary_sandbox_slot_key"]) != 1:
-        raise AssertionError("primary_sandbox_slot_key must reference exactly one Sandbox")
+    if slots:
+        if slots.count(manifest.get("primary_sandbox_slot_key")) != 1:
+            raise AssertionError("primary_sandbox_slot_key must reference exactly one Sandbox")
+    elif "primary_sandbox_slot_key" in manifest:
+        raise AssertionError("A Sandbox-free RunManifest cannot declare primary_sandbox_slot_key")
 
 
 def validate_state_machine(machine: dict[str, Any], allowed_states: set[str]) -> None:
@@ -532,6 +627,7 @@ else:
 
 context = load("examples/contracts/run-admission-context.json")
 manifest = load("examples/contracts/run-manifest-v2.json")
+no_sandbox_manifest = load("examples/contracts/run-manifest-no-sandbox.json")
 workflow_run = load("examples/contracts/workflow-run.json")
 agent_run = load("examples/contracts/agent-run.json")
 runtime_start = load("examples/contracts/agent-runtime-start-request.json")
@@ -567,7 +663,22 @@ validate_policy_decision(policy_decision)
 for conformance_suite in conformance_suites:
     validate_conformance_suite(conformance_suite)
 validate_run_admission(manifest, context)
+validate_run_admission(no_sandbox_manifest, context)
 grant = load("examples/contracts/execution-grant-claims.json")
+work_order_grant = load("examples/contracts/execution-grant-work-order-claims.json")
+conversation_turn_request = load("examples/contracts/conversation-turn-request.json")
+work_order_request = load("examples/contracts/work-order.json")
+conversation = load("examples/contracts/conversation.json")
+validate_execution_grant_request(
+    grant,
+    conversation_turn_request,
+    authenticated_conversation_id=conversation["conversation_id"],
+)
+validate_execution_grant_request(
+    work_order_grant,
+    work_order_request,
+    authenticated_conversation_id=work_order_grant["conversation_id"],
+)
 commercial = grant["commercial_authorization"]
 validate_self_digest(commercial, "commercial_authorization_digest")
 validate_self_digest(execution_budget, "budget_digest")
@@ -593,6 +704,33 @@ manual = load("examples/contracts/sandbox-manual-review-decision.json")
 validate_self_digest(manual, "decision_digest")
 invocation_manual = load("examples/contracts/invocation-manual-review-decision.json")
 validate_self_digest(invocation_manual, "decision_digest")
+
+grant_binding_negative = load("contracts/tests/semantic-invalid/execution-grant-request-binding-cases.json")
+for case in grant_binding_negative["cases"]:
+    candidate_grant = copy.deepcopy(grant)
+    candidate_request = copy.deepcopy(conversation_turn_request)
+    authenticated_conversation_id = conversation["conversation_id"]
+    if case["mutation"] == "request_digest_mismatch":
+        candidate_grant["request_digest"] = "sha256:" + "f" * 64
+    elif case["mutation"] == "request_contract_mismatch":
+        candidate_grant["request_contract_id"] = "urn:agent-platform:work-order-request:v1"
+    elif case["mutation"] == "client_message_mismatch":
+        candidate_request["client_message_id"] = "client-msg-other"
+        candidate_grant["request_digest"] = canonical_digest({
+            key: value for key, value in candidate_request.items() if key != "execution_grant"
+        })
+    else:
+        raise AssertionError(f"Unknown ExecutionGrant binding mutation: {case['mutation']}")
+    try:
+        validate_execution_grant_request(
+            candidate_grant,
+            candidate_request,
+            authenticated_conversation_id=authenticated_conversation_id,
+        )
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError(f"Expected ExecutionGrant binding fixture to fail: {case['id']}")
 
 architecture_negative = load("contracts/tests/semantic-invalid/architecture-closure-cases.json")
 for case in architecture_negative["cases"]:
@@ -660,6 +798,21 @@ for case in architecture_negative["cases"]:
             candidate = copy.deepcopy(runtime_token)
             candidate["request_digest"] = "sha256:" + "f" * 64
             validate_runtime_token(candidate, manifest, agent_run, runtime_start, policy_decision, execution_budget)
+        elif mutation == "provider_resolution_decision_digest_mismatch":
+            candidate = copy.deepcopy(manifest["capability_resolutions"][0])
+            candidate["decision_digest"] = "sha256:" + "f" * 64
+            validate_provider_resolution(candidate)
+        elif mutation == "provider_resolution_multiple_selected":
+            candidate = copy.deepcopy(manifest["capability_resolutions"][0])
+            duplicate = copy.deepcopy(candidate["candidate_evaluations"][0])
+            duplicate["provider_instance_id"] = "provider-other"
+            duplicate["provider_revision_id"] = "revision-other"
+            duplicate["evidence_digest"] = "sha256:" + "e" * 64
+            candidate["candidate_evaluations"].append(duplicate)
+            candidate["decision_digest"] = canonical_digest({
+                key: value for key, value in candidate.items() if key != "decision_digest"
+            })
+            validate_provider_resolution(candidate)
         else:
             raise AssertionError(f"Unknown architecture closure mutation: {mutation}")
     except AssertionError:
@@ -679,7 +832,11 @@ for case in negative["cases"]:
     elif mutation == "wrong_run_manifest_digest":
         value["run_manifest_digest"] = "sha256:" + "0" * 64
     elif mutation == "conflicting_revision_snapshot":
-        value["sandboxes"][0]["provider_revision"]["configuration_digest"] = "sha256:" + "f" * 64
+        sandbox_resolution = next(
+            item for item in value["capability_resolutions"]
+            if item["resolution_id"] == value["sandboxes"][0]["resolution_id"]
+        )
+        sandbox_resolution["selected_provider_revision"]["configuration_digest"] = "sha256:" + "f" * 64
     elif mutation == "unadmitted_experience":
         value["selected_experiences"] = [{
             "selection": {
@@ -706,6 +863,10 @@ for case in negative["cases"]:
     else:
         raise AssertionError(f"Unknown mutation: {mutation}")
     if mutation != "wrong_run_manifest_digest":
+        for resolution in value["capability_resolutions"]:
+            resolution["decision_digest"] = canonical_digest({
+                key: item for key, item in resolution.items() if key != "decision_digest"
+            })
         value["run_manifest_digest"] = canonical_digest({key: item for key, item in value.items() if key != "run_manifest_digest"})
     try:
         validate_run_admission(value, registry)
@@ -725,7 +886,11 @@ for case in admission_negative["cases"]:
     elif mutation == "extraneous_capability_resolution":
         extra = copy.deepcopy(value["capability_resolutions"][0]); extra["resolution_id"] = "res_extra"; extra["capability"] = {"id": "scenario.unrequested", "version": "1.0", "profile": None}; value["capability_resolutions"].append(extra)
     elif mutation == "forged_admission_decision_digest":
-        value["sandboxes"][0]["provider_revision"]["admission_decision_digest"] = "sha256:" + "e" * 64
+        sandbox_resolution = next(
+            item for item in value["capability_resolutions"]
+            if item["resolution_id"] == value["sandboxes"][0]["resolution_id"]
+        )
+        sandbox_resolution["selected_provider_revision"]["admission_decision_digest"] = "sha256:" + "e" * 64
     elif mutation == "stale_admission_decision":
         previous = registry["admission_decisions"][0]
         revoked = {"decision_id": "pad_revoked_later", "provider_revision_id": previous["provider_revision_id"], "provider_revision_digest": previous["provider_revision_digest"], "decision_sequence": 2, "decision": "revoked", "reason": "Test revocation", "evidence_digest": "sha256:" + "9" * 64, "decided_by": "principal:test", "decided_at": "2026-07-16T09:30:00Z", "supersedes_decision_id": previous["decision_id"], "decision_digest": "sha256:" + "0" * 64}
@@ -745,8 +910,27 @@ for case in admission_negative["cases"]:
         forged.update({"decision_id": "pad_sequence_gap", "decision_sequence": 3, "supersedes_decision_id": "pad_missing", "decided_at": "2026-07-16T09:30:00Z"})
         forged["decision_digest"] = canonical_digest({key: item for key, item in forged.items() if key != "decision_digest"})
         registry["admission_decisions"].append(forged)
+    elif mutation == "sandbox_resolution_wrong_kind":
+        sandbox_resolution = next(
+            item for item in value["capability_resolutions"]
+            if item["resolution_id"] == value["sandboxes"][0]["resolution_id"]
+        )
+        runtime_resolution = next(
+            item for item in value["capability_resolutions"]
+            if item["resolution_id"] == value["agent_runtime"]["resolution_id"]
+        )
+        sandbox_resolution["selected_provider_instance_id"] = runtime_resolution["selected_provider_instance_id"]
+        sandbox_resolution["selected_provider_revision"] = copy.deepcopy(runtime_resolution["selected_provider_revision"])
+        sandbox_resolution["candidate_evaluations"] = copy.deepcopy(runtime_resolution["candidate_evaluations"])
+        sandbox_resolution["decision_digest"] = canonical_digest({
+            key: item for key, item in sandbox_resolution.items() if key != "decision_digest"
+        })
     else:
         raise AssertionError(f"Unknown admission mutation: {mutation}")
+    for resolution in value["capability_resolutions"]:
+        resolution["decision_digest"] = canonical_digest({
+            key: item for key, item in resolution.items() if key != "decision_digest"
+        })
     value["run_manifest_digest"] = canonical_digest({key: item for key, item in value.items() if key != "run_manifest_digest"})
     try:
         validate_run_admission(value, registry)
@@ -1096,8 +1280,17 @@ for case in runtime_command_fixture["cases"]:
         raise AssertionError(f"Expected Agent Runtime command semantic fixture to fail: {case['id']}")
 
 
+def validate_workspace_revision(workspace_revision: dict[str, Any]) -> None:
+    validate_self_digest(workspace_revision, "revision_digest")
+    if workspace_revision["revision_number"] == 1 and workspace_revision["parent_revision_id"] is not None:
+        raise AssertionError("Initial WorkspaceRevision cannot have a parent")
+    if workspace_revision["revision_number"] > 1 and workspace_revision["parent_revision_id"] is None:
+        raise AssertionError("Later WorkspaceRevision must reference its immediate predecessor")
+
+
 def validate_conversation_branch(
     branch: dict[str, Any], message: dict[str, Any], work_order: dict[str, Any],
+    workspace_revision: dict[str, Any],
 ) -> None:
     if (branch["head_message_id"] is None) != (branch["head_message_sequence"] == 0):
         raise AssertionError("ConversationBranch head ID and sequence do not represent the same head")
@@ -1110,17 +1303,26 @@ def validate_conversation_branch(
         work = work_order["work"]
         if work["conversation_id"] != branch["conversation_id"] or work["branch_id"] != branch["branch_id"]:
             raise AssertionError("ConversationBranch active WorkOrder belongs to another Conversation or branch")
+    validate_workspace_revision(workspace_revision)
+    if workspace_revision["workspace_revision_id"] != branch["workspace_head_revision_id"]:
+        raise AssertionError("ConversationBranch references a different WorkspaceRevision")
+    if workspace_revision["revision_digest"] != branch["workspace_head_revision_digest"]:
+        raise AssertionError("ConversationBranch Workspace head digest is stale or forged")
+    if workspace_revision["branch_id"] != branch["branch_id"]:
+        raise AssertionError("ConversationBranch WorkspaceRevision belongs to another branch")
 
 
 branch_fixture = load("contracts/tests/semantic-invalid/conversation-branch-cases.json")
 branch = load(branch_fixture["branch"])
 branch_message = load(branch_fixture["message"])
 branch_work_order = load(branch_fixture["work_order"])
-validate_conversation_branch(branch, branch_message, branch_work_order)
+branch_workspace_revision = load("examples/contracts/workspace-revision.json")
+validate_conversation_branch(branch, branch_message, branch_work_order, branch_workspace_revision)
 for case in branch_fixture["cases"]:
     candidate_branch = copy.deepcopy(branch)
     candidate_message = copy.deepcopy(branch_message)
     candidate_work_order = copy.deepcopy(branch_work_order)
+    candidate_workspace_revision = copy.deepcopy(branch_workspace_revision)
     if case["mutation"] == "zero_sequence_with_head":
         candidate_branch["head_message_sequence"] = 0
     elif case["mutation"] == "positive_sequence_without_head":
@@ -1129,10 +1331,36 @@ for case in branch_fixture["cases"]:
         candidate_message["conversation_id"] = "conv_other"
     elif case["mutation"] == "active_work_order_branch_mismatch":
         candidate_work_order["work"]["branch_id"] = "other-branch"
+    elif case["mutation"] == "workspace_head_digest_mismatch":
+        candidate_branch["workspace_head_revision_digest"] = "sha256:" + "f" * 64
+    elif case["mutation"] == "workspace_revision_cross_branch":
+        candidate_workspace_revision["branch_id"] = "other-branch"
+        candidate_workspace_revision["revision_digest"] = canonical_digest({
+            key: item for key, item in candidate_workspace_revision.items() if key != "revision_digest"
+        })
+        candidate_branch["workspace_head_revision_digest"] = candidate_workspace_revision["revision_digest"]
+    elif case["mutation"] == "workspace_first_revision_has_parent":
+        candidate_workspace_revision["parent_revision_id"] = "wsr_parent"
+        candidate_workspace_revision["revision_digest"] = canonical_digest({
+            key: item for key, item in candidate_workspace_revision.items() if key != "revision_digest"
+        })
+        candidate_branch["workspace_head_revision_digest"] = candidate_workspace_revision["revision_digest"]
+    elif case["mutation"] == "workspace_later_revision_missing_parent":
+        candidate_workspace_revision["revision_number"] = 2
+        candidate_workspace_revision["parent_revision_id"] = None
+        candidate_workspace_revision["revision_digest"] = canonical_digest({
+            key: item for key, item in candidate_workspace_revision.items() if key != "revision_digest"
+        })
+        candidate_branch["workspace_head_revision_digest"] = candidate_workspace_revision["revision_digest"]
     else:
         raise AssertionError(f"Unknown ConversationBranch mutation: {case['mutation']}")
     try:
-        validate_conversation_branch(candidate_branch, candidate_message, candidate_work_order)
+        validate_conversation_branch(
+            candidate_branch,
+            candidate_message,
+            candidate_work_order,
+            candidate_workspace_revision,
+        )
     except AssertionError:
         pass
     else:

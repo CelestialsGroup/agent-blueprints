@@ -9,7 +9,7 @@
     "conversation_id": "conv_01J00000000000000000000000",
     "turn_id": "turn_01J00000000000000000000000",
     "branch_id": "main",
-    "input_message_id": "msg_01J00000000000000000000000",
+    "client_message_id": "client-msg-0001",
     "experience_selections": [
       {
         "kind": "template",

@@ -83,7 +83,7 @@ Capability Timeout 映射到：
 
 ## Sandbox Workflow
 
-Sandbox 创建、Lease、Exec、Snapshot、Restore、Terminate 都是异步 Operation。
+Sandbox 创建、Lease、Exec、Snapshot、Restore、Terminate 都是异步 Operation。只有 Scenario/Runtime Capability 要求 Sandbox 时才进入该子流程；`sandboxes=[]` 的 Runtime 直接跳过，不能为了统一流程制造空 Sandbox。
 
 Workflow 必须：
 
@@ -93,3 +93,5 @@ Workflow 必须：
 - 等待持久 Sandbox Event 或查询 Operation
 - 在取消时先阻止新 Exec，再取消活动 Operation，最后终止 Sandbox
 - Lease 续期必须受 ExecutionBudget 限制
+
+需要 Sandbox 的 AgentRun 按以下顺序执行：ProviderResolution 与证据固化 → 从 Branch WorkspaceRevision 创建 Sandbox → 固化含实际 Sandbox ID 的 RunManifest → Start Runtime。不得在 Sandbox 身份尚未知时伪造完整 RunManifest。

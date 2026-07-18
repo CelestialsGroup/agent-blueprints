@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:workspace-revision:v1",
+  "title": "WorkspaceRevision",
+  "description": "Immutable branch-scoped Workspace filesystem head. Sandboxes mount one exact revision and commits create a new revision by compare-and-swap.",
+  "type": "object",
+  "required": [
+    "workspace_revision_id",
+    "tenant_id",
+    "workspace_id",
+    "branch_id",
+    "revision_number",
+    "parent_revision_id",
+    "content_manifest_artifact",
+    "revision_digest",
+    "created_at"
+  ],
+  "properties": {
+    "workspace_revision_id": { "type": "string", "minLength": 1 },
+    "tenant_id": { "type": "string", "minLength": 1 },
+    "workspace_id": { "type": "string", "minLength": 1 },
+    "branch_id": { "type": "string", "minLength": 1 },
+    "revision_number": { "type": "integer", "minimum": 1 },
+    "parent_revision_id": { "type": ["string", "null"] },
+    "forked_from_revision_id": { "type": "string", "minLength": 1 },
+    "content_manifest_artifact": { "$ref": "urn:agent-platform:artifact-reference:v1" },
+    "produced_by_work_order_id": { "type": "string", "minLength": 1 },
+    "revision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "revision_digest is RFC 8785 JCS SHA-256 over the revision excluding revision_digest",
+    "revision_number is contiguous per workspace_id plus branch_id",
+    "revision_number one has null parent_revision_id; later revisions reference the immediate predecessor on the same branch",
+    "a fork may bind forked_from_revision_id from the source branch while creating revision one on the new branch",
+    "content_manifest_artifact is immutable and contains the complete path, mode and content-digest manifest"
+  ]
+}

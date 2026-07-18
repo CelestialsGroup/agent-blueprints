@@ -21,6 +21,7 @@
 work_order.*
 conversation.*
 message.*
+workspace.*
 workflow.*
 agent.*
 invocation.*

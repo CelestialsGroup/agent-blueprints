@@ -1,0 +1,16 @@
+{
+  "cases": [
+    {
+      "id": "execution-grant-request-digest-mismatch",
+      "mutation": "request_digest_mismatch"
+    },
+    {
+      "id": "execution-grant-request-contract-mismatch",
+      "mutation": "request_contract_mismatch"
+    },
+    {
+      "id": "execution-grant-client-message-mismatch",
+      "mutation": "client_message_mismatch"
+    }
+  ]
+}

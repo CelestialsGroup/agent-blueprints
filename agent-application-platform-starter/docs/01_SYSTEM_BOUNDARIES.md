@@ -20,7 +20,7 @@
 - ClientApplication
 - InternalTenant/Principal 映射
 - AgentConversation/ConversationBranch/ConversationMessage
-- Conversation Workspace/WorkOrder
+- Conversation Workspace/Branch WorkspaceRevision/WorkOrder
 - GrantConsumption
 - WorkflowRun/AgentRun
 - Invocation

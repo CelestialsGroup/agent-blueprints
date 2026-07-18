@@ -28,7 +28,9 @@ Schema、OpenAPI、状态机、数据库不变量和验证 Gate 高于叙述性�
 
 - Business Application 拥有 User、Organization、Membership、Product、Order、Payment、Entitlement 和商业额度。
 - Agent Platform 拥有 Conversation、WorkOrder、Workflow、Event、Artifact、Technical Usage、Provider、Sandbox、RuntimeRecording 和 Experience Catalog。
-- Agent Runtime 和 Sandbox 只能通过 Provider Port 接入，框架或基础设施私有模型不得进入稳定内核。
+- Agent Runtime 和 Sandbox 只能通过带解析证据的 Provider Port/Resolution 接入，框架或基础设施私有模型不得进入稳定内核。
+- ExecutionGrant 精确绑定请求 Contract/Digest Profile；Conversation Branch 精确绑定 WorkspaceRevision Head。
+- Sandbox 由 Capability 按需创建；轻量 Run 可以没有 Sandbox，非空 Slot 只引用统一 ProviderResolution。
 - RuntimeRecording 原始证据只读；调试和重跑必须创建新的授权与执行链路。
 - 系统只承诺至少一次投递、幂等、Fencing、对账、事务 Outbox 和不可变版本，不承诺全局 Exactly-once。
 
@@ -39,8 +41,8 @@ Schema、OpenAPI、状态机、数据库不变量和验证 Gate 高于叙述性�
 make validate-architecture
 ```
 
-支持 CPython 3.11-3.13、Node 22.16 和 Go 1.23.2。`make validate-all` 的仓库供应链与 CI 准入留到实施准备阶段；实际结果与计数见 `CONTRACT_VALIDATION_REPORT.md`。
+支持 CPython 3.11-3.13、Node 22.16 和 Go 1.23.2。`make validate-all` 的仓库供应链与 CI 准入留到正式冻结准备阶段；实际结果与计数见 `CONTRACT_VALIDATION_REPORT.md`。
 
 ## 下一里程碑
 
-进入 Phase 1 前必须完成 `tasks/PHASE0.md` 中的真实纵向链路、两个 Agent Runtime Adapter、Sandbox Adapter、Runtime Gateway/Recording、nexu Provider、故障注入和最小恢复证据。
+先按 `tasks/PHASE0.md` 实现持久化脊柱和 Native Minimal Runtime Probe，再进入 Business 纵向链、主 Runtime/Sandbox、Runtime Gateway/Recording、nexu Provider、第二可部署 Runtime、故障注入和最小恢复证据。GitHub CI 只在正式冻结前补齐。

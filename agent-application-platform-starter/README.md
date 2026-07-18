@@ -2,12 +2,12 @@
 
 面向多个 Business Application 的 Manus-like 多轮 Agent Conversation、Workflow、Sandbox、Artifact、录制与交付平台。
 
-Business 拥有 User/Membership/Product/Order/Payment/Entitlement/Commercial Quota；Agent Platform 拥有 Conversation/Message/WorkOrder/Workflow/Invocation/Event/Artifact/Technical Usage/Delivery/Provider/Sandbox/RuntimeRecording/Experience Catalog。双方通过版本化契约解耦。
+Business 拥有 User/Membership/Product/Order/Payment/Entitlement/Commercial Quota；Agent Platform 拥有 Conversation/Message/Branch WorkspaceRevision/WorkOrder/Workflow/Invocation/Event/Artifact/Technical Usage/Delivery/Provider/Sandbox/RuntimeRecording/Experience Catalog。双方通过版本化契约解耦。
 
 扩展模型：
 
 ```text
-Scenario -> CapabilityDefinition -> ProviderResolution
+Scenario -> CapabilityDefinition -> ProviderResolution + Resolver Evidence
          -> 不可变 ProviderRevision + ProviderAdmissionDecision
          -> 内容寻址 Conformance Suite / Event Registry
          -> Plugin / Runtime / Sandbox Provider
@@ -24,4 +24,4 @@ DeerFlow Built-in Sandbox 可作为首个参考 SandboxProvider，但不是平�
 make validate-architecture
 ```
 
-当前是已完成本地契约验证的产品边界候选版本，覆盖 Tenant-qualified WorkflowRun/AgentRun、Conversation/Branch、框架中立 Agent Runtime、Runtime Gateway/Recording、Experience Catalog，以及可执行 TechnicalUsage/Business Settlement 交接；公共准入前不冻结，也不代表产品实现完成或生产就绪。详情从 `START_HERE.md` 开始。
+当前是已完成本地契约验证的产品边界候选版本，覆盖精确 ExecutionGrant 请求绑定、Branch WorkspaceRevision、Tenant-qualified WorkflowRun/AgentRun、框架中立 Agent Runtime、按需 Sandbox、可审计 ProviderResolution、Runtime Gateway/Recording、Experience Catalog，以及 TechnicalUsage/Business Settlement 交接；正式冻结前仍需独立 CI/兼容性准入，也不代表产品实现完成或生产就绪。详情从 `START_HERE.md` 开始。

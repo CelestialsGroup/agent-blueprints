@@ -85,7 +85,8 @@ paths:
       description: |
         client_app_id is derived from the sender-constrained Service Access Token.
         The single-use ExecutionGrant is consumed atomically with WorkOrder creation.
-        The request digest covers the complete JSON request except execution_grant.
+        ExecutionGrant request_contract_id MUST identify work-order-request:v1. Its
+        request digest covers the complete JSON request except execution_grant.
       security:
         - ServiceOAuth:
             - work:create
@@ -1121,7 +1122,11 @@ paths:
       tags: [Conversations]
       operationId: createConversationTurn
       summary: Append a user message and atomically create its WorkOrder
-      description: A fresh Business-issued ExecutionGrant is required for every executable turn.
+      description: |
+        A fresh Business-issued ExecutionGrant is required for every executable turn.
+        request_contract_id MUST identify conversation-turn-request:v1 and its digest
+        covers the complete request body except execution_grant. turn_id comes from the
+        verified Grant; the Platform atomically allocates the internal input_message_id.
       x-required-work-session-scopes: [conversation:write]
       x-cookie-csrf-required: true
       security:

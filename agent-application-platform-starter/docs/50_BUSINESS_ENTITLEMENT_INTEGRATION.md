@@ -17,7 +17,7 @@ Membership / Plan
 
 ## 准入
 
-在执行 Turn 前，Business 评估会员资格并预留商业额度。它签发 ExecutionGrant，其中包含 CommercialAuthorizationSnapshot 摘要、已授权 Capability、Policy 和硬限制。Agent Platform 验证签名，并随 WorkOrder/RunManifest 保存快照；执行热路径绝不查询 Business 会员数据库。
+在执行 Turn 前，Business 评估会员资格并预留商业额度。它签发 ExecutionGrant，其中包含精确请求 Contract/Digest Profile、CommercialAuthorizationSnapshot 摘要、已授权 Capability、Policy 和硬限制。Agent Platform 先验证签名与请求摘要，再随 WorkOrder/RunManifest 保存快照；执行热路径绝不查询 Business 会员数据库。
 
 除摘要外，该快照还携带显式授权的 Entitlement ID、Capability 和最大限制。这是本地 Catalog 过滤和准入比较的必要条件；只有摘要而没有受治理值，不能作为可执行授权证据。
 

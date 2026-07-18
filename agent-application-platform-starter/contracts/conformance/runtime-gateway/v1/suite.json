@@ -1,7 +1,7 @@
 {
   "suite_id": "runtime-gateway",
   "suite_version": "1.0.0",
-  "suite_digest": "sha256:7264b437b9c739dfe7f6bfd71da1e1fc6bbd53dc9212dd4d31532ebee7ca6f3a",
+  "suite_digest": "sha256:268894bbca3ffed42344366799aa481ac18e2bb546bf549a3f6e920f26609abe",
   "target_kind": "runtime_gateway",
   "profiles": [
     {
@@ -54,6 +54,12 @@
           "category": "recording",
           "evidence_type": "artifact",
           "description": "Finalized chunks contain no token, authorization header or registered secret shape."
+        },
+        {
+          "test_id": "raw-persistence-denied",
+          "category": "recording",
+          "evidence_type": "trace",
+          "description": "Unredacted live frames remain memory-bounded and cannot become an ArtifactVersion, database payload or durable queue record."
         },
         {
           "test_id": "gateway-restart-reroute",

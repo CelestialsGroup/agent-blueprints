@@ -33,11 +33,22 @@ RuntimeRecording
 ## 安全与生命周期
 
 - 捕获前固定录制策略、数据分类、保留期限和用户同意。
-- Runtime Gateway 在 Finalize 前对 Secret 和授权材料脱敏。
+- 未脱敏 Frame 只存在于 Runtime Gateway 的有界内存缓冲，不进入数据库、持久消息、Temporal History 或对象存储。
+- Runtime Gateway 先执行 Emit-time Secret/Home Path Scrub、长度限制和闭合 Schema 校验；失败时丢弃 Frame 并将 Recording 标记为部分失败或失败，不能 Fail-open。
+- 只有脱敏验证成功的字节才能进入 Artifact Staging 并创建不可变 Chunk ArtifactVersion；Chunk 固化 Redaction Profile/Evidence Digest。
 - Chunk 使用加密 Artifact Storage 和对象级 Grant。
 - `recording:read` 与 `runtime:view` 权限相互独立。
 - 删除和法律保留遵循 Artifact Policy；Audit 保留决策，不保留已删除内容。
 - 部分失败或 Finalize 失败必须可见，不得表现为完整录制。
+
+```text
+Live Frame
+ -> bounded memory buffer
+ -> emit-time scrub + schema validation
+ -> encrypted Artifact Staging
+ -> immutable sanitized Chunk ArtifactVersion
+ -> Recording Manifest
+```
 
 ## 调试副本与重新运行
 

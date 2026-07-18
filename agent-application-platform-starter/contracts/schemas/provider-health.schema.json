@@ -5,6 +5,8 @@
   "type": "object",
   "required": [
     "provider_instance_id",
+    "provider_revision_id",
+    "health_generation",
     "status",
     "observed_at",
     "cluster_id",
@@ -14,6 +16,8 @@
     "provider_instance_id": {
       "type": "string"
     },
+    "provider_revision_id": { "type": "string", "minLength": 1 },
+    "health_generation": { "type": "integer", "minimum": 1 },
     "status": {
       "enum": [
         "healthy",

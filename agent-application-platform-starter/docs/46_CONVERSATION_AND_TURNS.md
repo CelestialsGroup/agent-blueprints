@@ -8,8 +8,8 @@ Agent Platform 拥有 AgentConversation、ConversationMessage、分支身份、C
 Business 用户
  -> AgentConversation
     -> 不可变 ConversationMessage[]
-    -> ConversationBranch[]（分支头、派生点、活动 WorkOrder、CAS 版本）
     -> 持久 Workspace
+       -> ConversationBranch[]（Message Head、WorkspaceRevision Head、活动 WorkOrder、CAS 版本）
     -> WorkOrder[]（每个对应一个可执行 Turn）
        -> AgentRun / Invocation / Artifact / Recording
 ```
@@ -23,7 +23,7 @@ Conversation 生命周期由 `contracts/state-machines/conversation-v1.json` 治
 `POST /v1/conversations/{id}/turns` 原子执行：
 
 1. 锁定 Conversation，并验证 WorkSession、新签发的 ExecutionGrant 和 CommercialAuthorizationSnapshot；
-2. 验证 `client_message_id`、父消息、分支和 Experience 选择；
+2. 验证 `request_contract_id`/请求摘要、`client_message_id`、父消息、分支 WorkspaceRevision Head 和 Experience 选择；
 3. 追加不可变的用户 Message，并分配 `message_sequence`；
 4. 创建一个引用同一 Conversation/Turn/Message 的 WorkOrder；
 5. 写入 Workflow Start Outbox 和 CanonicalEvent；
@@ -34,11 +34,12 @@ Conversation 生命周期由 `contracts/state-machines/conversation-v1.json` 治
 ## 分支与并发
 
 - `parent_message_id` 始终引用先前的不可变 Message。
-- 分支可以从某个 Message 派生，无需复制之前的消息。
+- 分支从某个 Message 和当时的 WorkspaceRevision 派生，无需复制消息或文件内容。
 - `ConversationBranch` 是可查询的分支头投影；Conversation 聚合不保存单一的全局活动 WorkOrder。
 - 默认每个 Conversation 分支最多只有一个执行变更的活动 WorkOrder。
 - `interrupt_and_enqueue` 记录活动 WorkOrder 的取消意图；不得把意图视为取消证明。
-- 并行分支使用独立的 WorkOrder 和 Sandbox Slot，但共享不可变的 Conversation 历史。
+- 并行分支使用独立的 WorkOrder、WorkspaceRevision Head 和 Sandbox Slot；只共享不可变的 Conversation/Artifact 历史。
+- Sandbox 完成后只能以创建 Run 时的 Workspace Head/`branch_version` 为 CAS 前提提交新 Revision；CAS 失败不得覆盖当前 Head。
 
 ## 上下文与记忆
 

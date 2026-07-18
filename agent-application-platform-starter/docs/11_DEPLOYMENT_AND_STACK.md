@@ -21,8 +21,9 @@
 ### Runtime 与治理组件
 
 - 一个或多个独立 Agent Runtime Provider 服务
+- Native Minimal Runtime Contract Probe（主 Runtime 前验证公共 Port）
 - DeerFlow Runtime 服务（可选参考 Adapter）
-- 第二个最小 Runtime 服务（冻结前可替换性验证）
+- Native Probe 的可部署版本或第二个 Runtime 服务（冻结前可替换性验证）
 - Model Gateway
 - Tool/MCP Gateway
 - Sandbox 出站 Gateway
@@ -39,15 +40,10 @@ model-gateway Deployment
 tool-gateway Deployment
 egress-gateway Deployment
 
-agent-worker-orchestration Deployment
-agent-worker-runtime Deployment
-agent-worker-sandbox-provision Deployment
-agent-worker-preview Deployment
-agent-worker-conversion Deployment
-agent-worker-delivery Deployment
-agent-worker-maintenance Deployment
+agent-worker Deployment（Phase 0 可承载多个逻辑 Task Queue）
 
 agent-runtime-provider-* Deployment
+agent-runtime-native-probe Deployment（Phase 0 早期）
 deerflow-runtime Deployment（可选参考实现）
 agent-runtime-secondary Deployment（冻结前一致性验证）
 html-anything Deployment
@@ -56,7 +52,7 @@ sandbox Pod / Job
 migration Job
 ```
 
-Agent API 和普通 Worker 不保存权威 WorkOrder、Event 序列、Session、Provider 健康状态或 Sandbox 路由；这些状态位于 PostgreSQL、Temporal 和 Object Storage。Redis 只用于缓存、限流、在线状态和持久化后的 Event 唤醒，丢失 Redis 不影响正确性。
+Orchestration、Runtime、Sandbox Provision、Preview、Conversion、Delivery 和 Maintenance 是逻辑 Worker/Task Queue 边界，不要求 Phase 0 立即拆成七个 Deployment。只有独立扩缩容、权限、故障域或资源类别出现实际需求时才拆分。Agent API 和普通 Worker 不保存权威 WorkOrder、Event 序列、Session、Provider 健康状态或 Sandbox 路由；这些状态位于 PostgreSQL、Temporal 和 Object Storage。Redis 只用于缓存、限流、在线状态和持久化后的 Event 唤醒，丢失 Redis 不影响正确性。
 
 Runtime Gateway 通过不透明 Provider 路由代理 Terminal/Browser/Desktop，禁止向前端返回 Pod/VM/原始 Endpoint，也不依赖粘性 Session。只有独立 Sandbox Provisioner/Controller 拥有最小范围 Kubernetes API 权限。
 

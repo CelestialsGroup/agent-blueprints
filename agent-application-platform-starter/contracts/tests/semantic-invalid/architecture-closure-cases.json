@@ -51,6 +51,14 @@
     {
       "id": "runtime-token-request-digest-mismatch",
       "mutation": "runtime_token_request_digest_mismatch"
+    },
+    {
+      "id": "provider-resolution-decision-digest-mismatch",
+      "mutation": "provider_resolution_decision_digest_mismatch"
+    },
+    {
+      "id": "provider-resolution-multiple-selected-candidates",
+      "mutation": "provider_resolution_multiple_selected"
     }
   ]
 }

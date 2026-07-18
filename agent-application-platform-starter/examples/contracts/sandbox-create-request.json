@@ -4,13 +4,15 @@
   "attempt_id": "sat_01J00000000000000000000000",
   "fencing_token": 1,
   "idempotency_key": "sandbox-create-example-0001",
-  "request_digest": "sha256:90746ff906112498392c3678b6d67f292e71da468378f57ba367d7b1570e67e3",
+  "request_digest": "sha256:165779ddfdd328456073a09261cf7936b45bbf316654c7af6c975e8324e5cf7b",
   "deadline_at": "2026-07-16T10:05:00Z",
   "spec": {
     "sandbox_id": "sbx_01J00000000000000000000000",
     "tenant_id": "ten_01J00000000000000000000000",
     "work_order_id": "wrk_01J00000000000000000000000",
     "workspace_id": "wsp_01J00000000000000000000000",
+    "branch_id": "main",
+    "provider_resolution_id": "res_sandbox_exec_01J0000000000000",
     "provider_revision_id": "spr_01J00000000000000000000000",
     "image": {
       "reference": "registry.example.com/agent/base",
@@ -61,6 +63,10 @@
     },
     "workspace": {
       "mode": "persistent",
+      "base_revision_id": "wsr_01J00000000000000000000000",
+      "base_revision_digest": "sha256:a46a321d81d58bc756a5a53ade99f768962998eab038a055f57838f4d33065aa",
+      "base_branch_version": 2,
+      "commit_mode": "cas_new_revision",
       "mount_path": "/workspace"
     },
     "lease": {

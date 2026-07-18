@@ -10,6 +10,7 @@
     { "id": "sandbox-unsupported-capability", "mutation": "sandbox_unsupported_capability" },
     { "id": "missing-agent-runtime-resolution", "mutation": "agent_runtime_resolution_missing" },
     { "id": "capability-bound-to-incompatible-provider-kind", "mutation": "capability_incompatible_provider_kind" },
-    { "id": "admission-decision-missing-predecessor", "mutation": "missing_admission_predecessor" }
+    { "id": "admission-decision-missing-predecessor", "mutation": "missing_admission_predecessor" },
+    { "id": "sandbox-resolution-wrong-provider-kind", "mutation": "sandbox_resolution_wrong_kind" }
   ]
 }

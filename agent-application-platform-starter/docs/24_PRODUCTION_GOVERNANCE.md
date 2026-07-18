@@ -82,6 +82,8 @@
 
 TechnicalUsage、CanonicalEvent、RuntimeRecording 和第三方 Trace 与 OTEL 指标是不同证据层；Telemetry 丢失不得改变执行终态或结算事实。
 
+RuntimeRecording 使用同样的 Fail-closed 原则，但不属于 Telemetry：未脱敏实时 Frame 只能驻留在有界内存，Scrub/Schema Gate 通过后才能持久化为 Chunk ArtifactVersion。Redaction 失败必须产生可见的 Recording Failure，不得保存原始字节后异步补救。
+
 ## Webhook 与 Connector
 
 - 注册制 Endpoint

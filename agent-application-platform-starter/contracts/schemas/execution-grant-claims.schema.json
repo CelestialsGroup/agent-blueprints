@@ -20,6 +20,8 @@
     "client_message_id",
     "scenario_id",
     "scenario_version",
+    "request_contract_id",
+    "request_digest_profile",
     "request_digest",
     "idempotency_key_digest",
     "usage",
@@ -89,6 +91,15 @@
     "scenario_id": {
       "type": "string",
       "minLength": 1
+    },
+    "request_contract_id": {
+      "enum": [
+        "urn:agent-platform:work-order-request:v1",
+        "urn:agent-platform:conversation-turn-request:v1"
+      ]
+    },
+    "request_digest_profile": {
+      "const": "rfc8785-request-excluding-execution-grant-v1"
     },
     "request_digest": {
       "type": "string",
@@ -195,7 +206,8 @@
     "nbf <= iat + 30",
     "iat < exp",
     "exp - iat <= 300",
-    "conversation, turn, branch and client_message bindings match the submitted WorkOrder or ConversationTurn",
+    "request_contract_id identifies the exact submitted request schema and request_digest is RFC 8785 JCS SHA-256 over that request excluding only execution_grant",
+    "conversation, turn, branch and client_message bindings match the submitted request and authenticated path context",
     "limits and capabilities do not exceed commercial_authorization"
   ]
 }

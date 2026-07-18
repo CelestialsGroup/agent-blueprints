@@ -245,16 +245,54 @@ def resolution(
     decision_id: str, resolved_at: str,
 ) -> dict[str, Any]:
     revision = revisions[revision_id]
-    return {
+    resolution_input = {
+        "capability": capability,
+        "capability_definition_digest": definition_by_capability[capability["id"]]["definition_digest"],
+        "provider_revision_id": revision_id,
+        "routing_precedence": [
+            "tenant_binding", "client_binding", "scenario_requirement", "platform_default", "explicit_fallback",
+        ],
+    }
+    candidate_evidence = {
+        "provider_instance_id": revision["provider_instance_id"],
+        "provider_revision_id": revision_id,
+        "admission_decision_id": decision_id,
+        "operational_health": "healthy",
+        "capacity": "available",
+        "placement": "compatible",
+    }
+    evidence = {
+        "resolution_id": resolution_id,
+        "input": resolution_input,
+        "candidates": [candidate_evidence],
+    }
+    value = {
         "resolution_id": resolution_id,
         "capability": capability,
         "selected_provider_instance_id": revision["provider_instance_id"],
         "routing_reason": "scenario_requirement",
-        "candidates_considered": [revision["provider_instance_id"]],
+        "resolver_revision": {
+            "id": "provider-resolver",
+            "version": "1.0.0",
+            "digest": digest({"resolver": "provider-resolver", "version": "1.0.0"}),
+        },
+        "resolution_input_digest": digest(resolution_input),
+        "candidate_evaluations": [{
+            "provider_instance_id": revision["provider_instance_id"],
+            "provider_revision_id": revision_id,
+            "outcome": "selected",
+            "reason_codes": ["scenario_match"],
+            "evidence_digest": digest(candidate_evidence),
+        }],
+        "resolution_evidence_reference": f"resolution-evidence/{resolution_id}",
+        "resolution_evidence_digest": digest(evidence),
         "resolved_at": resolved_at,
         "capability_definition_digest": definition_by_capability[capability["id"]]["definition_digest"],
         "selected_provider_revision": snapshot(revision_id, decision_id),
+        "decision_digest": "sha256:" + "0" * 64,
     }
+    value["decision_digest"] = digest_without(value, "decision_digest")
+    return value
 
 
 template_path = "examples/contracts/template-revision.json"
@@ -268,6 +306,8 @@ write(template_path, template)
 
 grant_path = "examples/contracts/execution-grant-claims.json"
 grant = read(grant_path)
+grant["request_contract_id"] = "urn:agent-platform:conversation-turn-request:v1"
+grant["request_digest_profile"] = "rfc8785-request-excluding-execution-grant-v1"
 commercial_path = "examples/contracts/commercial-authorization-snapshot.json"
 commercial = read(commercial_path)
 commercial["commercial_authorization_id"] = commercial.pop(
@@ -282,6 +322,41 @@ commercial["commercial_authorization_digest"] = digest_without(commercial, "comm
 write(commercial_path, commercial)
 grant["commercial_authorization"] = commercial
 write(grant_path, grant)
+
+workspace_revision_path = "examples/contracts/workspace-revision.json"
+workspace_revision = read(workspace_revision_path)
+workspace_revision["revision_digest"] = digest_without(workspace_revision, "revision_digest")
+write(workspace_revision_path, workspace_revision)
+
+conversation_branch = read("examples/contracts/conversation-branch.json")
+conversation_branch["workspace_head_revision_id"] = workspace_revision["workspace_revision_id"]
+conversation_branch["workspace_head_revision_digest"] = workspace_revision["revision_digest"]
+write("examples/contracts/conversation-branch.json", conversation_branch)
+conversation_branch_page = read("examples/contracts/conversation-branch-page.json")
+conversation_branch_page["branches"] = [copy.deepcopy(conversation_branch)]
+write("examples/contracts/conversation-branch-page.json", conversation_branch_page)
+
+sandbox_spec = read("examples/contracts/sandbox-spec.json")
+sandbox_spec["branch_id"] = workspace_revision["branch_id"]
+sandbox_spec["provider_resolution_id"] = "res_sandbox_exec_01J0000000000000"
+sandbox_spec["workspace"]["base_revision_id"] = workspace_revision["workspace_revision_id"]
+sandbox_spec["workspace"]["base_revision_digest"] = workspace_revision["revision_digest"]
+sandbox_spec["workspace"]["base_branch_version"] = conversation_branch["branch_version"]
+sandbox_spec["workspace"]["commit_mode"] = "cas_new_revision"
+write("examples/contracts/sandbox-spec.json", sandbox_spec)
+sandbox_create = read("examples/contracts/sandbox-create-request.json")
+sandbox_create["spec"] = copy.deepcopy(sandbox_spec)
+sandbox_create["request_digest"] = digest_without(sandbox_create, "request_digest")
+write("examples/contracts/sandbox-create-request.json", sandbox_create)
+sandbox_restore = read("examples/contracts/sandbox-restore-request.json")
+sandbox_restore["spec"]["branch_id"] = workspace_revision["branch_id"]
+sandbox_restore["spec"]["provider_resolution_id"] = "res_sandbox_exec_01J0000000000000"
+sandbox_restore["spec"]["workspace"]["base_revision_id"] = workspace_revision["workspace_revision_id"]
+sandbox_restore["spec"]["workspace"]["base_revision_digest"] = workspace_revision["revision_digest"]
+sandbox_restore["spec"]["workspace"]["base_branch_version"] = conversation_branch["branch_version"]
+sandbox_restore["spec"]["workspace"]["commit_mode"] = "cas_new_revision"
+sandbox_restore["request_digest"] = digest_without(sandbox_restore, "request_digest")
+write("examples/contracts/sandbox-restore-request.json", sandbox_restore)
 work_session = read("examples/contracts/work-session-request.json")
 work_session["commercial_authorization"] = commercial
 write("examples/contracts/work-session-request.json", work_session)
@@ -426,12 +501,18 @@ manifest["capability_resolutions"] = [
         "rpr_01J00000000000000000000000", "pad_renderer_01J0000000000000000",
         "2026-07-16T09:01:02Z",
     ),
+    resolution(
+        "res_sandbox_exec_01J0000000000000",
+        {"id": "sandbox.exec", "version": "1.0", "profile": "hardened"},
+        "spr_01J00000000000000000000000", "pad_01J00000000000000000000000",
+        "2026-07-16T09:01:03Z",
+    ),
 ]
 manifest["agent_runtime"] = {"resolution_id": manifest["capability_resolutions"][0]["resolution_id"]}
 for sandbox in manifest["sandboxes"]:
-    current = sandbox["provider_revision"]
-    sandbox["provider_revision"] = snapshot(current["provider_revision_id"], current["admission_decision_id"])
-    sandbox["provider_instance_id"] = revisions[current["provider_revision_id"]]["provider_instance_id"]
+    sandbox.pop("provider_revision", None)
+    sandbox.pop("provider_instance_id", None)
+    sandbox["resolution_id"] = "res_sandbox_exec_01J0000000000000"
 manifest["selected_experiences"] = [
     {
         "selection": {
@@ -467,16 +548,28 @@ manifest["event_registry"] = {
     "registry_version": event_registry["registry_version"],
     "registry_digest": event_registry["registry_digest"],
 }
+manifest["conversation"]["workspace_revision_id"] = workspace_revision["workspace_revision_id"]
+manifest["conversation"]["workspace_revision_digest"] = workspace_revision["revision_digest"]
 manifest["run_manifest_digest"] = digest_without(manifest, "run_manifest_digest")
 write(manifest_path, manifest)
 
-missing_sandbox_revision = copy.deepcopy(manifest)
-missing_sandbox_revision["sandboxes"][0].pop("provider_revision")
-write("contracts/tests/invalid/run-manifest-missing-sandbox-revision.json", missing_sandbox_revision)
+missing_sandbox_resolution = copy.deepcopy(manifest)
+missing_sandbox_resolution["sandboxes"][0].pop("resolution_id")
+write("contracts/tests/invalid/run-manifest-missing-sandbox-resolution.json", missing_sandbox_resolution)
 
 empty_execution = copy.deepcopy(manifest)
 empty_execution["capability_resolutions"] = []
 write("contracts/tests/invalid/run-manifest-empty-execution.json", empty_execution)
+
+no_sandbox_manifest = copy.deepcopy(manifest)
+no_sandbox_manifest["capability_resolutions"] = [
+    item for item in no_sandbox_manifest["capability_resolutions"]
+    if item["resolution_id"] != "res_sandbox_exec_01J0000000000000"
+]
+no_sandbox_manifest["sandboxes"] = []
+no_sandbox_manifest.pop("primary_sandbox_slot_key", None)
+no_sandbox_manifest["run_manifest_digest"] = digest_without(no_sandbox_manifest, "run_manifest_digest")
+write("examples/contracts/run-manifest-no-sandbox.json", no_sandbox_manifest)
 
 context_path = "examples/contracts/run-admission-context.json"
 context = read(context_path)
@@ -522,6 +615,20 @@ for path, keys in template_reference_paths:
     target[keys[-1]] = template["revision_digest"]
     write(path, value)
 
+grant = read(grant_path)
+conversation_turn_request = read("examples/contracts/conversation-turn-request.json")
+grant["request_contract_id"] = "urn:agent-platform:conversation-turn-request:v1"
+grant["request_digest_profile"] = "rfc8785-request-excluding-execution-grant-v1"
+grant["request_digest"] = digest_without(conversation_turn_request, "execution_grant")
+write(grant_path, grant)
+
+work_order_grant = copy.deepcopy(grant)
+work_order_grant["jti"] = "grant_work_order_01J0000000000000000"
+work_order_grant["nonce"] = "nonce-work-order-0123456789"
+work_order_grant["request_contract_id"] = "urn:agent-platform:work-order-request:v1"
+work_order_grant["request_digest"] = digest_without(read("examples/contracts/work-order.json"), "execution_grant")
+write("examples/contracts/execution-grant-work-order-claims.json", work_order_grant)
+
 recording_path = "examples/contracts/runtime-recording.json"
 recording = read(recording_path)
 recording_chunk = read("examples/contracts/runtime-recording-chunk.json")
@@ -549,8 +656,16 @@ runtime_start["tenant_id"] = manifest["tenant_id"]
 runtime_start["workflow_run_id"] = manifest["workflow_run_id"]
 runtime_start["run_manifest_digest"] = manifest["run_manifest_digest"]
 runtime_start["agent_run_id"] = manifest["agent_run_id"]
+runtime_start["workspace_revision_id"] = workspace_revision["workspace_revision_id"]
+runtime_start["workspace_revision_digest"] = workspace_revision["revision_digest"]
 runtime_start["request_digest"] = digest_without(runtime_start, "request_digest")
 write("examples/contracts/agent-runtime-start-request.json", runtime_start)
+
+no_sandbox_runtime_start = copy.deepcopy(runtime_start)
+no_sandbox_runtime_start["run_manifest_digest"] = no_sandbox_manifest["run_manifest_digest"]
+no_sandbox_runtime_start["sandbox_bindings"] = []
+no_sandbox_runtime_start["request_digest"] = digest_without(no_sandbox_runtime_start, "request_digest")
+write("examples/contracts/agent-runtime-start-no-sandbox.json", no_sandbox_runtime_start)
 
 runtime_status = read("examples/contracts/agent-runtime-run-status.json")
 runtime_status["tenant_id"] = manifest["tenant_id"]

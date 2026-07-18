@@ -31,5 +31,5 @@
 
 - 查边界先读架构入口，查字段和迁移直接读 `contracts/`。
 - `09_DEERFLOW_INTEGRATION.md` 中的参考项目只用于选型，不构成平台依赖或准入结论。
-- `13_ARCHITECTURE_ACCEPTANCE.md` 同时包含契约、实现和生产证据，验收时不得混用。
+- `13_ARCHITECTURE_ACCEPTANCE.md` 将本地架构候选、Phase 0 实现、正式冻结和生产批准拆成四个独立层级，验收时不得混用。
 - `CONTRACT_VALIDATION_REPORT.md` 和 `VALIDATION.json` 是某次验证结果，不是可替代契约的事实源。

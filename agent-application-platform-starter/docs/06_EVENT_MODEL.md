@@ -33,7 +33,7 @@ aggregate.sequence
 
 用于 WorkflowRun、AgentRun、Invocation、Artifact 等局部顺序。
 
-ConversationMessage 另有严格递增 `message_sequence`；RuntimeRecordingChunk 以 channel-local sequence 存储并用 `work_sequence` 与 Timeline 对齐。Canonical Aggregate 明确支持 conversation、conversation_branch、conversation_message、sandbox、sandbox_operation、runtime_session 和 runtime_recording。
+ConversationMessage 另有严格递增 `message_sequence`；WorkspaceRevision 按 Branch `revision_number` 递增并通过 Branch CAS 推进；RuntimeRecordingChunk 以 channel-local sequence 存储并用 `work_sequence` 与 Timeline 对齐。Canonical Aggregate 明确支持 conversation、conversation_branch、conversation_message、workspace_revision、sandbox、sandbox_operation、runtime_session 和 runtime_recording。
 
 文档中统一使用 Schema 字段名 `aggregate.sequence`，不再使用不存在的平铺字段。
 

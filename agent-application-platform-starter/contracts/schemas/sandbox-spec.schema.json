@@ -8,6 +8,8 @@
     "tenant_id",
     "work_order_id",
     "workspace_id",
+    "branch_id",
+    "provider_resolution_id",
     "provider_revision_id",
     "image",
     "runtime_profile",
@@ -32,6 +34,8 @@
     "workspace_id": {
       "type": "string"
     },
+    "branch_id": { "type": "string", "minLength": 1 },
+    "provider_resolution_id": { "type": "string", "minLength": 1 },
     "provider_revision_id": {
       "type": "string"
     },
@@ -169,7 +173,11 @@
     "workspace": {
       "type": "object",
       "required": [
-        "mode"
+        "mode",
+        "base_revision_id",
+        "base_revision_digest",
+        "base_branch_version",
+        "commit_mode"
       ],
       "properties": {
         "mode": {
@@ -178,9 +186,11 @@
             "persistent"
           ]
         },
-        "snapshot_reference": {
-          "type": "string"
-        },
+        "base_revision_id": { "type": "string", "minLength": 1 },
+        "base_revision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "base_branch_version": { "type": "integer", "minimum": 1 },
+        "commit_mode": { "enum": ["read_only", "cas_new_revision"] },
+        "snapshot_reference": { "type": "string" },
         "mount_path": {
           "const": "/workspace"
         }
@@ -294,6 +304,8 @@
   "x-semantic-constraints": [
     "restricted network requires policy_reference and egress_gateway_required=true",
     "full network requires explicit platform policy approval",
-    "resources and lease must not exceed provider capabilities or ExecutionBudget"
+    "resources and lease must not exceed provider capabilities or ExecutionBudget",
+    "workspace base revision matches the WorkOrder branch head admitted into RunManifest",
+    "cas_new_revision creates a new immutable WorkspaceRevision and advances the branch head only by compare-and-swap"
   ]
 }

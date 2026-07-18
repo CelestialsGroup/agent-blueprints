@@ -14,7 +14,7 @@
     "classification": "internal",
     "retention_until": "2026-08-14T10:30:00Z",
     "chunk_count": 1,
-    "manifest_digest": "sha256:cad6ff06b883f4eea799b1a4bc1a586125fe26a10008dee21e6dbd573e45fc7b",
+    "manifest_digest": "sha256:ee0b1d3eb968c432ce6c609d65972389a619c04c4e82bd7283e33077144d2aa6",
     "created_at": "2026-07-15T10:00:00Z",
     "updated_at": "2026-07-15T10:30:00Z",
     "completed_at": "2026-07-15T10:30:00Z"
@@ -34,9 +34,11 @@
       "digest": "sha256:a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3",
       "media_type": "application/x-asciicast",
       "size_bytes": 4096,
-      "redaction_profile": "terminal-default-v1"
+      "redaction_profile": "terminal-default-v1",
+      "redaction_profile_digest": "sha256:9494949494949494949494949494949494949494949494949494949494949494",
+      "redaction_evidence_digest": "sha256:9595959595959595959595959595959595959595959595959595959595959595"
     }
   ],
   "timeline_origin": "2026-07-15T10:00:00Z",
-  "manifest_digest": "sha256:cad6ff06b883f4eea799b1a4bc1a586125fe26a10008dee21e6dbd573e45fc7b"
+  "manifest_digest": "sha256:ee0b1d3eb968c432ce6c609d65972389a619c04c4e82bd7283e33077144d2aa6"
 }
