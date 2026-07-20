@@ -1,28 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:agent-platform:event-data:artifact-version-created:v1",
-  "title": "ArtifactVersionCreatedEventData",
-  "type": "object",
-  "required": [
-    "artifact_id",
-    "version_id",
-    "media_type",
-    "digest"
-  ],
-  "properties": {
-    "artifact_id": {
-      "type": "string"
-    },
-    "version_id": {
-      "type": "string"
-    },
-    "media_type": {
-      "type": "string"
-    },
-    "digest": {
-      "type": "string",
-      "pattern": "^sha256:[0-9a-f]{64}$"
-    }
-  },
-  "additionalProperties": false
+  "title": "ArtifactVersionCreatedEventDataCompatibilityAlias",
+  "description": "Compatibility alias. New Platform Core Registry revisions use platform-core-event-data:v1#/$defs/artifactVersionCreated.",
+  "deprecated": true,
+  "$ref": "urn:agent-platform:platform-core-event-data:v1#/$defs/artifactVersionCreated"
 }

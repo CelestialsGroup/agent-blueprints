@@ -1,7 +1,7 @@
 {
   "suite_id": "capability-provider",
   "suite_version": "1.0.0",
-  "suite_digest": "sha256:9ca84761cf924f8f0f6b03bc1943dc6722fb1b54fccc1dd6d125d52004afdd90",
+  "suite_digest": "sha256:f5906e48557a9cbe53c8424b570269a19339db7524b79f2d1fc11a814bfdb037",
   "target_kind": "capability_provider",
   "profiles": [
     {
@@ -59,7 +59,13 @@
           "test_id": "artifact-contract",
           "category": "contract",
           "evidence_type": "artifact",
-          "description": "Input and output Artifacts satisfy declared roles, media types, digests and staging rules."
+          "description": "Input ArtifactGrants bind the Capability Tenant, WorkOrder and InvocationAttempt and cannot outlive the request deadline or bearer token; output bytes remain in Staging, and the Provider cannot finalize ArtifactVersions."
+        },
+        {
+          "test_id": "usage-observation-boundary",
+          "category": "usage",
+          "evidence_type": "report",
+          "description": "Provider results contain bounded UsageObservation evidence; Platform assigns TechnicalUsageEntry identity, attribution, idempotency and recorded_at."
         },
         {
           "test_id": "budget-policy-enforced",

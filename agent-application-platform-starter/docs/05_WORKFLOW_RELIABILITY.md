@@ -98,4 +98,4 @@ Workflow 必须：
 
 需要 Sandbox 的 AgentRun 按以下顺序执行：ProviderResolution 与证据固化 → 从 Branch WorkspaceRevision 创建 Sandbox → 固化含实际 Sandbox ID 的 RunManifest → Start Runtime。不得在 Sandbox 身份尚未知时伪造完整 RunManifest。
 
-RunManifest 与 Start Runtime 同时固化实际有界输入或不可变输入引用、ContextPackage、ArtifactGrant、完整 ExecutionBudget/PolicyDecision/EffectivePermissions 以及 Model/Tool/Artifact/Egress Gateway Binding。Temporal History 只传内容寻址引用和必要控制字段，不复制大 Payload；Provider 收到摘要占位但拿不到执行值必须 fail-closed。
+RunManifest 固化实际有界输入或不可变输入引用、ContextPackage、ArtifactAccessRequirement、初始 ExecutionBudget/PolicyDecision/EffectivePermissions 上限、CommercialAuthorizationBinding（ID/Digest/`expires_at`）、授权续期规则以及 Model/Tool/Artifact/Egress Gateway Binding。Start Runtime 携带本 InvocationAttempt 的短期 RuntimeAuthorization 和 ArtifactGrant；Authorization 的内部 Tenant/WorkOrder/Commercial 绑定必须闭合，且自身与 ArtifactGrant 均不得越过商业授权期限。到期、Adapter 重启或 Resume 时以连续前驱摘要创建等价/缩权 Revision，扩权必须新建 WorkOrder。Temporal History 只传内容寻址引用和必要控制字段，不复制大 Payload；Provider 收到摘要占位但拿不到执行值必须 fail-closed。

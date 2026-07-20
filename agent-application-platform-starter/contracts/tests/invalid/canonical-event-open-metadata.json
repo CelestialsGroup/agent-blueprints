@@ -47,6 +47,7 @@
   "event_registry": {
     "registry_id": "platform-core",
     "registry_version": 1,
-    "registry_digest": "sha256:5e5b658d485ae9df45c8e0639e757145954c0d28e01c2e2cdcf31faadda55cde"
-  }
+    "registry_digest": "sha256:20572ff2e89d1eedd836dbacce87cd5802c9d34c14286fa188ab4d29e6c24fe3"
+  },
+  "producer_kind": "platform"
 }

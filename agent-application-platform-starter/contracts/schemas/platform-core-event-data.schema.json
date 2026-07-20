@@ -1,0 +1,229 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:platform-core-event-data:v1",
+  "title": "PlatformCoreEventDataV1",
+  "description": "Closed payload registry for Agent Platform-owned CanonicalEvent types.",
+  "$defs": {
+    "conversationCreated": {
+      "type": "object",
+      "required": ["conversation_id", "workspace_id", "main_branch_id", "created_at"],
+      "properties": {
+        "conversation_id": { "type": "string", "minLength": 1 },
+        "workspace_id": { "type": "string", "minLength": 1 },
+        "main_branch_id": { "type": "string", "minLength": 1 },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "messageAppended": {
+      "type": "object",
+      "required": ["message_id", "message_sequence", "role", "content_digest"],
+      "properties": {
+        "message_id": { "type": "string", "minLength": 1 },
+        "client_message_id": { "type": "string", "minLength": 1 },
+        "message_sequence": { "type": "integer", "minimum": 1 },
+        "role": { "enum": ["user", "assistant", "system", "tool"] },
+        "content_reference": { "type": "string", "minLength": 1 },
+        "content_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "workOrderAccepted": {
+      "type": "object",
+      "required": ["work_order_id", "turn_id", "input_message_id", "state"],
+      "properties": {
+        "work_order_id": { "type": "string", "minLength": 1 },
+        "turn_id": { "type": "string", "minLength": 1 },
+        "input_message_id": { "type": "string", "minLength": 1 },
+        "state": { "const": "accepted" }
+      },
+      "additionalProperties": false
+    },
+    "workOrderControlAccepted": {
+      "type": "object",
+      "required": ["control_request_id", "action", "active_work_version"],
+      "properties": {
+        "control_request_id": { "type": "string", "minLength": 1 },
+        "action": { "enum": ["append_input", "interrupt", "pause", "resume", "cancel", "approval_decision"] },
+        "active_work_version": { "type": "integer", "minimum": 1 },
+        "input_id": { "type": "string", "minLength": 1 },
+        "input_message_id": { "type": "string", "minLength": 1 },
+        "input_content_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "action": { "enum": ["append_input", "interrupt"] } }, "required": ["action"] },
+          "then": { "required": ["input_id", "input_message_id", "input_content_digest"] },
+          "else": { "not": { "anyOf": [{ "required": ["input_id"] }, { "required": ["input_message_id"] }, { "required": ["input_content_digest"] }] } }
+        }
+      ]
+    },
+    "workOrderStateChanged": {
+      "type": "object",
+      "required": ["previous_state", "state", "transition", "state_version"],
+      "properties": {
+        "previous_state": { "$ref": "urn:agent-platform:work-order-state:v1" },
+        "state": { "$ref": "urn:agent-platform:work-order-state:v1" },
+        "transition": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "state_version": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "workflowRunStarted": {
+      "type": "object",
+      "required": ["workflow_run_id", "root_agent_run_id", "orchestration_binding_digest"],
+      "properties": {
+        "workflow_run_id": { "type": "string", "minLength": 1 },
+        "root_agent_run_id": { "type": "string", "minLength": 1 },
+        "orchestration_binding_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "agentRunStarted": {
+      "type": "object",
+      "required": ["agent_run_id", "workflow_run_id", "runtime_run_id", "run_manifest_digest", "runtime_provider_resolution_id"],
+      "properties": {
+        "agent_run_id": { "type": "string", "minLength": 1 },
+        "workflow_run_id": { "type": "string", "minLength": 1 },
+        "runtime_run_id": { "type": "string", "minLength": 1 },
+        "run_manifest_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "runtime_provider_resolution_id": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "grantConsumed": {
+      "type": "object",
+      "required": ["grant_consumption_id", "grant_jti_digest", "request_contract_id", "request_digest"],
+      "properties": {
+        "grant_consumption_id": { "type": "string", "minLength": 1 },
+        "grant_jti_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "request_contract_id": { "type": "string", "minLength": 1 },
+        "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "approvalRequested": {
+      "type": "object",
+      "required": ["approval_id", "subject_kind", "subject_id", "policy_decision_digest", "requested_at"],
+      "properties": {
+        "approval_id": { "type": "string", "minLength": 1 },
+        "subject_kind": { "enum": ["invocation", "runtime_command", "delivery", "artifact"] },
+        "subject_id": { "type": "string", "minLength": 1 },
+        "policy_decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "requested_at": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "approvalResolved": {
+      "type": "object",
+      "required": ["approval_id", "decision", "decision_id", "decided_at"],
+      "properties": {
+        "approval_id": { "type": "string", "minLength": 1 },
+        "decision": { "enum": ["approved", "denied"] },
+        "decision_id": { "type": "string", "minLength": 1 },
+        "decided_at": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "invocationStateChanged": {
+      "type": "object",
+      "required": ["invocation_id", "invocation_attempt_id", "state", "fencing_token"],
+      "properties": {
+        "invocation_id": { "type": "string", "minLength": 1 },
+        "invocation_attempt_id": { "type": "string", "minLength": 1 },
+        "state": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "fencing_token": { "type": "integer", "minimum": 1 },
+        "outcome_evidence_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "artifactVersionCreated": {
+      "type": "object",
+      "required": ["artifact_id", "version_id", "media_type", "digest"],
+      "properties": {
+        "artifact_id": { "type": "string", "minLength": 1 },
+        "version_id": { "type": "string", "minLength": 1 },
+        "media_type": { "type": "string", "minLength": 1 },
+        "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "usageRecorded": {
+      "type": "object",
+      "required": ["entry_id", "meter_id", "meter_version", "quantity", "unit", "measurement_status"],
+      "properties": {
+        "entry_id": { "type": "string", "minLength": 1 },
+        "meter_id": { "type": "string", "minLength": 1 },
+        "meter_version": { "type": "integer", "minimum": 1 },
+        "quantity": { "type": "integer" },
+        "unit": { "enum": ["token", "millisecond", "nanosecond", "byte", "byte_millisecond", "count"] },
+        "measurement_status": { "enum": ["confirmed", "partial", "estimated", "corrected"] }
+      },
+      "additionalProperties": false
+    },
+    "workspaceRevisionCommitted": {
+      "type": "object",
+      "required": ["workspace_revision_id", "workspace_revision_digest", "previous_revision_id", "workspace_head_version"],
+      "properties": {
+        "workspace_revision_id": { "type": "string", "minLength": 1 },
+        "workspace_revision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "previous_revision_id": { "type": ["string", "null"] },
+        "workspace_head_version": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "runtimeSessionOpened": {
+      "type": "object",
+      "required": ["runtime_session_id", "runtime_type", "sandbox_slot_key", "expires_at"],
+      "properties": {
+        "runtime_session_id": { "type": "string", "minLength": 1 },
+        "runtime_type": { "enum": ["terminal", "browser", "desktop", "port_forward"] },
+        "sandbox_slot_key": { "type": "string", "minLength": 1 },
+        "expires_at": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "runtimeRecordingReady": {
+      "type": "object",
+      "required": ["runtime_recording_id", "manifest_artifact_id", "manifest_version_id", "manifest_digest"],
+      "properties": {
+        "runtime_recording_id": { "type": "string", "minLength": 1 },
+        "manifest_artifact_id": { "type": "string", "minLength": 1 },
+        "manifest_version_id": { "type": "string", "minLength": 1 },
+        "manifest_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "deliveryStateChanged": {
+      "type": "object",
+      "required": ["delivery_id", "state", "attempt_number"],
+      "properties": {
+        "delivery_id": { "type": "string", "minLength": 1 },
+        "state": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "attempt_number": { "type": "integer", "minimum": 1 },
+        "receipt_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/$defs/conversationCreated" },
+    { "$ref": "#/$defs/messageAppended" },
+    { "$ref": "#/$defs/workOrderAccepted" },
+    { "$ref": "#/$defs/workOrderControlAccepted" },
+    { "$ref": "#/$defs/workOrderStateChanged" },
+    { "$ref": "#/$defs/workflowRunStarted" },
+    { "$ref": "#/$defs/agentRunStarted" },
+    { "$ref": "#/$defs/grantConsumed" },
+    { "$ref": "#/$defs/approvalRequested" },
+    { "$ref": "#/$defs/approvalResolved" },
+    { "$ref": "#/$defs/invocationStateChanged" },
+    { "$ref": "#/$defs/artifactVersionCreated" },
+    { "$ref": "#/$defs/usageRecorded" },
+    { "$ref": "#/$defs/workspaceRevisionCommitted" },
+    { "$ref": "#/$defs/runtimeSessionOpened" },
+    { "$ref": "#/$defs/runtimeRecordingReady" },
+    { "$ref": "#/$defs/deliveryStateChanged" }
+  ]
+}

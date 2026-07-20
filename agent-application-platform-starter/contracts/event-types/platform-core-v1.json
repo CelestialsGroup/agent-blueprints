@@ -1,14 +1,201 @@
 {
   "registry_id": "platform-core",
   "registry_version": 1,
-  "registry_digest": "sha256:5e5b658d485ae9df45c8e0639e757145954c0d28e01c2e2cdcf31faadda55cde",
+  "registry_digest": "sha256:20572ff2e89d1eedd836dbacce87cd5802c9d34c14286fa188ab4d29e6c24fe3",
   "definitions": [
+    {
+      "type": "conversation.created",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/conversationCreated",
+        "digest": "sha256:b49b3d5754cbe7116f9c8adc43be203e95465b9effa0e54e2aae42d3efab82b5",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "internal",
+      "retention_class": "audit",
+      "contains_user_content": false,
+      "projection_consumers": [
+        "conversation-projection",
+        "timeline-projection"
+      ]
+    },
+    {
+      "type": "message.appended",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/messageAppended",
+        "digest": "sha256:b49b3d5754cbe7116f9c8adc43be203e95465b9effa0e54e2aae42d3efab82b5",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "confidential",
+      "retention_class": "operational",
+      "contains_user_content": true,
+      "projection_consumers": [
+        "chat-projection",
+        "timeline-projection"
+      ]
+    },
+    {
+      "type": "work_order.accepted",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/workOrderAccepted",
+        "digest": "sha256:b49b3d5754cbe7116f9c8adc43be203e95465b9effa0e54e2aae42d3efab82b5",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "internal",
+      "retention_class": "audit",
+      "contains_user_content": false,
+      "projection_consumers": [
+        "work-order-projection",
+        "timeline-projection"
+      ]
+    },
+    {
+      "type": "work_order.control.accepted",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/workOrderControlAccepted",
+        "digest": "sha256:b49b3d5754cbe7116f9c8adc43be203e95465b9effa0e54e2aae42d3efab82b5",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "confidential",
+      "retention_class": "audit",
+      "contains_user_content": true,
+      "projection_consumers": [
+        "work-order-projection",
+        "timeline-projection"
+      ]
+    },
+    {
+      "type": "work_order.state.changed",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/workOrderStateChanged",
+        "digest": "sha256:b49b3d5754cbe7116f9c8adc43be203e95465b9effa0e54e2aae42d3efab82b5",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "internal",
+      "retention_class": "audit",
+      "contains_user_content": false,
+      "projection_consumers": [
+        "work-order-projection",
+        "timeline-projection"
+      ]
+    },
+    {
+      "type": "workflow.run.started",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/workflowRunStarted",
+        "digest": "sha256:b49b3d5754cbe7116f9c8adc43be203e95465b9effa0e54e2aae42d3efab82b5",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "internal",
+      "retention_class": "audit",
+      "contains_user_content": false,
+      "projection_consumers": [
+        "workflow-projection",
+        "timeline-projection"
+      ]
+    },
+    {
+      "type": "agent.run.started",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/agentRunStarted",
+        "digest": "sha256:b49b3d5754cbe7116f9c8adc43be203e95465b9effa0e54e2aae42d3efab82b5",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "internal",
+      "retention_class": "audit",
+      "contains_user_content": false,
+      "projection_consumers": [
+        "agent-run-projection",
+        "timeline-projection"
+      ]
+    },
+    {
+      "type": "grant.consumed",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/grantConsumed",
+        "digest": "sha256:b49b3d5754cbe7116f9c8adc43be203e95465b9effa0e54e2aae42d3efab82b5",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "internal",
+      "retention_class": "audit",
+      "contains_user_content": false,
+      "projection_consumers": [
+        "grant-ledger",
+        "audit-projection"
+      ]
+    },
+    {
+      "type": "approval.requested",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/approvalRequested",
+        "digest": "sha256:b49b3d5754cbe7116f9c8adc43be203e95465b9effa0e54e2aae42d3efab82b5",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "confidential",
+      "retention_class": "audit",
+      "contains_user_content": false,
+      "projection_consumers": [
+        "approval-projection",
+        "timeline-projection"
+      ]
+    },
+    {
+      "type": "approval.resolved",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/approvalResolved",
+        "digest": "sha256:b49b3d5754cbe7116f9c8adc43be203e95465b9effa0e54e2aae42d3efab82b5",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "internal",
+      "retention_class": "audit",
+      "contains_user_content": false,
+      "projection_consumers": [
+        "approval-projection",
+        "timeline-projection"
+      ]
+    },
+    {
+      "type": "invocation.state.changed",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/invocationStateChanged",
+        "digest": "sha256:b49b3d5754cbe7116f9c8adc43be203e95465b9effa0e54e2aae42d3efab82b5",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "internal",
+      "retention_class": "audit",
+      "contains_user_content": false,
+      "projection_consumers": [
+        "invocation-projection",
+        "timeline-projection"
+      ]
+    },
     {
       "type": "artifact.version.created",
       "data_version": 1,
       "data_schema": {
-        "uri": "urn:agent-platform:event-data:artifact-version-created:v1",
-        "digest": "sha256:5838f167ff942a4e9f0d5d3744362601586d6c9d9a00ea34101e4ecc729151b9",
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/artifactVersionCreated",
+        "digest": "sha256:b49b3d5754cbe7116f9c8adc43be203e95465b9effa0e54e2aae42d3efab82b5",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -17,6 +204,91 @@
       "contains_user_content": false,
       "projection_consumers": [
         "artifact-projection",
+        "timeline-projection"
+      ]
+    },
+    {
+      "type": "usage.recorded",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/usageRecorded",
+        "digest": "sha256:b49b3d5754cbe7116f9c8adc43be203e95465b9effa0e54e2aae42d3efab82b5",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "internal",
+      "retention_class": "audit",
+      "contains_user_content": false,
+      "projection_consumers": [
+        "usage-projection",
+        "audit-projection"
+      ]
+    },
+    {
+      "type": "workspace.revision.committed",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/workspaceRevisionCommitted",
+        "digest": "sha256:b49b3d5754cbe7116f9c8adc43be203e95465b9effa0e54e2aae42d3efab82b5",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "internal",
+      "retention_class": "operational",
+      "contains_user_content": false,
+      "projection_consumers": [
+        "workspace-projection",
+        "timeline-projection"
+      ]
+    },
+    {
+      "type": "runtime_session.opened",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/runtimeSessionOpened",
+        "digest": "sha256:b49b3d5754cbe7116f9c8adc43be203e95465b9effa0e54e2aae42d3efab82b5",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "internal",
+      "retention_class": "audit",
+      "contains_user_content": false,
+      "projection_consumers": [
+        "runtime-session-projection",
+        "timeline-projection"
+      ]
+    },
+    {
+      "type": "runtime_recording.ready",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/runtimeRecordingReady",
+        "digest": "sha256:b49b3d5754cbe7116f9c8adc43be203e95465b9effa0e54e2aae42d3efab82b5",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "internal",
+      "retention_class": "operational",
+      "contains_user_content": false,
+      "projection_consumers": [
+        "runtime-recording-projection",
+        "timeline-projection"
+      ]
+    },
+    {
+      "type": "delivery.state.changed",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/deliveryStateChanged",
+        "digest": "sha256:b49b3d5754cbe7116f9c8adc43be203e95465b9effa0e54e2aae42d3efab82b5",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "internal",
+      "retention_class": "audit",
+      "contains_user_content": false,
+      "projection_consumers": [
+        "delivery-projection",
         "timeline-projection"
       ]
     }

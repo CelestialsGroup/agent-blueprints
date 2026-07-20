@@ -9,15 +9,15 @@
   "invocation_attempt_id": "iat_runtime_01J0000000000000000",
   "fencing_token": 1,
   "idempotency_key": "runtime-start-key-0001",
-  "request_digest": "sha256:b95ec6d5f5f1a30c299d10c8befdae8126b562ab6404e3ad40bbac16de1f89f2",
-  "deadline_at": "2026-07-15T10:30:00Z",
-  "run_manifest_digest": "sha256:9cf4be48fffe5f7b7b9a097ca21faaa8a37d47fce194e5917b40a5fed90d8ce0",
+  "request_digest": "sha256:8f74502b57a4d680b05198bdf9f84f4a8342c547d411fab1e1a033387b63d8fb",
+  "deadline_at": "2026-07-16T09:15:00Z",
+  "run_manifest_digest": "sha256:6af3fa5c10bf40f1064f6d606ebdf3f192b58c5dbacda21f347323f8f6f88403",
   "input_message_id": "msg_01J00000000000000000000000",
   "sandbox_bindings": [],
   "tenant_id": "ten_01J00000000000000000000000",
   "workflow_run_id": "wfr_01J00000000000000000000000",
   "workspace_revision_id": "wsr_01J00000000000000000000000",
-  "workspace_revision_digest": "sha256:366b5c58b91f28f19b73b1287cc13488b6055b5a7d57bbd21f065e3340b5bde1",
+  "workspace_revision_digest": "sha256:b8e661287a6861876e0e28cf94cc7f638653ea3b023367bfe046f54481381291",
   "input": {
     "input_id": "rin_01J00000000000000000000000",
     "input_message_id": "msg_01J00000000000000000000000",
@@ -31,123 +31,16 @@
   },
   "context_package": {
     "context_package_id": "ctx_01J00000000000000000000000",
-    "context_package_digest": "sha256:b1de85e947e2180045d38425524e9a66bd1ea06e2bd452ad0759dc62b389e95c",
+    "context_package_digest": "sha256:b6abd86538d61118ea40e023fc3564389f9fbc41d4420b6878d9c4b932d2c3f8",
     "items": [
       {
         "kind": "workspace_manifest",
         "reference_id": "artifact:art_workspace_manifest_01J000000000000000/version:ver_workspace_manifest_01J00000000000000",
-        "digest": "sha256:8dfcb5bb6d9d98edc1bf5b8f6a24beb60267e13635bf31190eac7a1c8a612098",
-        "size_bytes": 601,
+        "digest": "sha256:ef0e25f8c192d97c4c99db13fba26569c7f78ca505e6b0db999c86398e4d86f5",
+        "size_bytes": 641,
         "media_type": "application/vnd.agent.workspace-manifest+json"
       }
     ]
-  },
-  "artifact_grants": [
-    {
-      "grant_id": "artg_01J0000000000000000000000",
-      "tenant_id": "ten_01J00000000000000000000000",
-      "work_order_id": "wrk_01J00000000000000000000000",
-      "runtime_run_id": "rtr_01J00000000000000000000000",
-      "artifact_id": "art_workspace_manifest_01J000000000000000",
-      "version_id": "ver_workspace_manifest_01J00000000000000",
-      "artifact_digest": "sha256:8dfcb5bb6d9d98edc1bf5b8f6a24beb60267e13635bf31190eac7a1c8a612098",
-      "permissions": [
-        "read"
-      ],
-      "gateway_route_id": "artifact-route-workspace-manifest",
-      "issued_at": "2026-07-16T09:01:00Z",
-      "expires_at": "2026-07-16T09:30:00Z"
-    }
-  ],
-  "execution_budget": {
-    "budget_id": "bud_01J00000000000000000000000",
-    "budget_digest": "sha256:4e8aac35b4943db25ecbb3ea6fa2259cdb2f3c144bb837f1cc6c97b0b6f94096",
-    "tenant_id": "ten_01J00000000000000000000000",
-    "work_order_id": "wrk_01J00000000000000000000000",
-    "limits": {
-      "max_input_tokens": 100000,
-      "max_output_tokens": 20000,
-      "max_model_requests": 200,
-      "max_sandbox_seconds": 1800,
-      "max_network_bytes": 104857600,
-      "max_storage_bytes": 104857600,
-      "max_artifact_count": 20,
-      "max_conversion_count": 3
-    },
-    "policies": {
-      "model_gateway_required": true,
-      "tool_gateway_required": true,
-      "egress_gateway_required": true,
-      "external_communication": false,
-      "require_approval_for": [
-        "external_communication"
-      ],
-      "data_classification": "confidential"
-    },
-    "created_at": "2026-07-16T09:00:30Z",
-    "expires_at": "2026-07-16T09:30:00Z"
-  },
-  "policy_decision": {
-    "decision_id": "pol_01J00000000000000000000000",
-    "decision_digest": "sha256:2ee9489a8c9ff3bceec9377e590a5c8ae47781133455ad03340659203095f176",
-    "tenant_id": "ten_01J00000000000000000000000",
-    "work_order_id": "wrk_01J00000000000000000000000",
-    "policy_bundle_digest": "sha256:6161616161616161616161616161616161616161616161616161616161616161",
-    "commercial_authorization_digest": "sha256:7e0df7d1f12c15fa7b37f829cbbd7faf5dd927ae121e1d963d6205d71ff505ed",
-    "execution_budget_digest": "sha256:4e8aac35b4943db25ecbb3ea6fa2259cdb2f3c144bb837f1cc6c97b0b6f94096",
-    "evaluations": [
-      {
-        "subject_kind": "runtime",
-        "subject_id": "agent.general",
-        "action": "allow",
-        "source": "commercial",
-        "rule_digest": "sha256:6262626262626262626262626262626262626262626262626262626262626262"
-      },
-      {
-        "subject_kind": "egress",
-        "subject_id": "default-deny",
-        "action": "allow",
-        "source": "runtime_profile",
-        "rule_digest": "sha256:6363636363636363636363636363636363636363636363636363636363636363"
-      }
-    ],
-    "outcome": "allow",
-    "effective_permissions_digest": "sha256:7ddbd6feb906ff08a110d78b1d18a1f1ffe3b45e9e25ef02c1f3d15048a878a6",
-    "decided_at": "2026-07-16T09:00:59Z",
-    "expires_at": "2026-07-16T09:30:00Z",
-    "decision_point": "run_admission",
-    "commercial_authorization_id": "cauth_01J00000000000000000000000",
-    "execution_budget_id": "bud_01J00000000000000000000000"
-  },
-  "effective_permissions": {
-    "permissions_id": "perm_01J00000000000000000000000",
-    "permissions_digest": "sha256:7ddbd6feb906ff08a110d78b1d18a1f1ffe3b45e9e25ef02c1f3d15048a878a6",
-    "tenant_id": "ten_01J00000000000000000000000",
-    "work_order_id": "wrk_01J00000000000000000000000",
-    "model": {
-      "allowed_model_profiles": [
-        "general-balanced"
-      ]
-    },
-    "tool": {
-      "allowed_capabilities": [
-        "html.generate",
-        "artifact.preview.html"
-      ]
-    },
-    "artifact": {
-      "read": true,
-      "write": true,
-      "finalize": true
-    },
-    "egress": {
-      "mode": "restricted",
-      "allowed_destination_classes": [
-        "model_gateway",
-        "artifact_gateway"
-      ]
-    },
-    "sandbox_slots": []
   },
   "gateway_bindings": {
     "model": {
@@ -156,7 +49,8 @@
       "route_id": "model-route-general-balanced",
       "protocol_version": "v1",
       "binding_digest": "sha256:7171717171717171717171717171717171717171717171717171717171717171",
-      "audience": "agent-model-gateway"
+      "audience": "agent-model-gateway",
+      "mode": "enabled"
     },
     "tool": {
       "kind": "tool",
@@ -164,7 +58,8 @@
       "route_id": "tool-route-work-order",
       "protocol_version": "v1",
       "binding_digest": "sha256:7272727272727272727272727272727272727272727272727272727272727272",
-      "audience": "agent-tool-gateway"
+      "audience": "agent-tool-gateway",
+      "mode": "enabled"
     },
     "artifact": {
       "kind": "artifact",
@@ -172,7 +67,8 @@
       "route_id": "artifact-route-work-order",
       "protocol_version": "v1",
       "binding_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
-      "audience": "agent-artifact-gateway"
+      "audience": "agent-artifact-gateway",
+      "mode": "enabled"
     },
     "egress": {
       "kind": "egress",
@@ -180,7 +76,8 @@
       "route_id": "egress-route-restricted",
       "protocol_version": "v1",
       "binding_digest": "sha256:7474747474747474747474747474747474747474747474747474747474747474",
-      "audience": "agent-egress-gateway"
+      "audience": "agent-egress-gateway",
+      "mode": "enabled"
     }
   },
   "admission_limits": {
@@ -188,5 +85,134 @@
     "max_inline_input_bytes": 262144,
     "max_context_items": 512,
     "max_artifact_grants": 256
+  },
+  "runtime_authorization": {
+    "authorization_id": "rauth_no_sandbox_01J000000000000000",
+    "authorization_sequence": 1,
+    "predecessor_authorization_digest": null,
+    "renewal_reason": "initial_dispatch",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "work_order_id": "wrk_01J00000000000000000000000",
+    "runtime_run_id": "rtr_01J00000000000000000000000",
+    "run_manifest_digest": "sha256:6af3fa5c10bf40f1064f6d606ebdf3f192b58c5dbacda21f347323f8f6f88403",
+    "commercial_authorization": {
+      "commercial_authorization_id": "cauth_01J00000000000000000000000",
+      "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7",
+      "expires_at": "2026-07-16T09:30:00Z"
+    },
+    "execution_budget": {
+      "budget_id": "bud_01J00000000000000000000000",
+      "budget_digest": "sha256:4e8aac35b4943db25ecbb3ea6fa2259cdb2f3c144bb837f1cc6c97b0b6f94096",
+      "tenant_id": "ten_01J00000000000000000000000",
+      "work_order_id": "wrk_01J00000000000000000000000",
+      "limits": {
+        "max_input_tokens": 100000,
+        "max_output_tokens": 20000,
+        "max_model_requests": 200,
+        "max_sandbox_seconds": 1800,
+        "max_network_bytes": 104857600,
+        "max_storage_bytes": 104857600,
+        "max_artifact_count": 20,
+        "max_conversion_count": 3
+      },
+      "policies": {
+        "model_gateway_required": true,
+        "tool_gateway_required": true,
+        "egress_gateway_required": true,
+        "external_communication": false,
+        "require_approval_for": [
+          "external_communication"
+        ],
+        "data_classification": "confidential"
+      },
+      "created_at": "2026-07-16T09:00:30Z",
+      "expires_at": "2026-07-16T09:30:00Z"
+    },
+    "policy_decision": {
+      "decision_id": "pol_01J00000000000000000000000",
+      "decision_digest": "sha256:c4b3dd89f6a9ee317fbae803cdfa6cc236d920e9c94508de6847469cc3b9c6ae",
+      "tenant_id": "ten_01J00000000000000000000000",
+      "work_order_id": "wrk_01J00000000000000000000000",
+      "policy_bundle_digest": "sha256:6161616161616161616161616161616161616161616161616161616161616161",
+      "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7",
+      "execution_budget_digest": "sha256:4e8aac35b4943db25ecbb3ea6fa2259cdb2f3c144bb837f1cc6c97b0b6f94096",
+      "evaluations": [
+        {
+          "subject_kind": "runtime",
+          "subject_id": "agent.general",
+          "action": "allow",
+          "source": "commercial",
+          "rule_digest": "sha256:6262626262626262626262626262626262626262626262626262626262626262"
+        },
+        {
+          "subject_kind": "egress",
+          "subject_id": "default-deny",
+          "action": "allow",
+          "source": "runtime_profile",
+          "rule_digest": "sha256:6363636363636363636363636363636363636363636363636363636363636363"
+        }
+      ],
+      "outcome": "allow",
+      "effective_permissions_digest": "sha256:5375e066f65c68283787a4cd581f1413865b4ae87a65c7882d063b07b25abcf4",
+      "decided_at": "2026-07-16T09:00:59Z",
+      "expires_at": "2026-07-16T09:30:00Z",
+      "decision_point": "run_admission",
+      "commercial_authorization_id": "cauth_01J00000000000000000000000",
+      "execution_budget_id": "bud_01J00000000000000000000000"
+    },
+    "effective_permissions": {
+      "permissions_id": "perm_01J00000000000000000000000",
+      "permissions_digest": "sha256:5375e066f65c68283787a4cd581f1413865b4ae87a65c7882d063b07b25abcf4",
+      "tenant_id": "ten_01J00000000000000000000000",
+      "work_order_id": "wrk_01J00000000000000000000000",
+      "model": {
+        "allowed_model_profiles": [
+          "general-balanced"
+        ]
+      },
+      "tool": {
+        "allowed_capabilities": [
+          "html.generate",
+          "artifact.preview.html"
+        ]
+      },
+      "artifact": {
+        "read": true,
+        "stage_new_version": true
+      },
+      "egress": {
+        "mode": "restricted",
+        "allowed_destination_classes": [
+          "model_gateway",
+          "artifact_gateway"
+        ]
+      },
+      "sandbox_slots": []
+    },
+    "artifact_grants": [
+      {
+        "grant_id": "artg_01J0000000000000000000000",
+        "tenant_id": "ten_01J00000000000000000000000",
+        "work_order_id": "wrk_01J00000000000000000000000",
+        "artifact_id": "art_workspace_manifest_01J000000000000000",
+        "version_id": "ver_workspace_manifest_01J00000000000000",
+        "artifact_digest": "sha256:ef0e25f8c192d97c4c99db13fba26569c7f78ca505e6b0db999c86398e4d86f5",
+        "permissions": [
+          "read"
+        ],
+        "gateway_route_id": "artifact-route-workspace-manifest",
+        "issued_at": "2026-07-16T09:01:00Z",
+        "expires_at": "2026-07-16T09:15:00Z",
+        "execution_scope": {
+          "kind": "runtime_invocation",
+          "runtime_run_id": "rtr_01J00000000000000000000000",
+          "invocation_id": "inv_runtime_01J000000000000000000",
+          "invocation_attempt_id": "iat_runtime_01J0000000000000000"
+        }
+      }
+    ],
+    "issued_at": "2026-07-16T09:01:00Z",
+    "expires_at": "2026-07-16T09:15:00Z",
+    "authorization_digest": "sha256:05b32377f9163f3698ae50617a286054c419138d2a5ed287d1eab50284994fbf"
   }
 }

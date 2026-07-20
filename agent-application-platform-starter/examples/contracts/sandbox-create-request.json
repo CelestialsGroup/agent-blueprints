@@ -4,7 +4,7 @@
   "attempt_id": "sat_01J00000000000000000000000",
   "fencing_token": 1,
   "idempotency_key": "sandbox-create-example-0001",
-  "request_digest": "sha256:6c0d93d56d8cea17949c4accc0d5a4dd29704f18e8b283108acf672e0b51577f",
+  "request_digest": "sha256:61e4c770352d13503b11277d9ea7913c2448188a8ffe517a21e40c1711d8bfa5",
   "deadline_at": "2026-07-16T10:05:00Z",
   "spec": {
     "sandbox_id": "sbx_01J00000000000000000000000",
@@ -64,7 +64,7 @@
     "workspace": {
       "mode": "persistent",
       "base_revision_id": "wsr_01J00000000000000000000000",
-      "base_revision_digest": "sha256:366b5c58b91f28f19b73b1287cc13488b6055b5a7d57bbd21f065e3340b5bde1",
+      "base_revision_digest": "sha256:b8e661287a6861876e0e28cf94cc7f638653ea3b023367bfe046f54481381291",
       "commit_mode": "cas_new_revision",
       "mount_path": "/workspace",
       "base_workspace_head_version": 1

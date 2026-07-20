@@ -172,13 +172,13 @@
           "minItems": 1,
           "maxItems": 1000,
           "uniqueItems": true,
-          "items": { "$ref": "urn:agent-platform:technical-usage-entry:v1" }
+          "items": { "$ref": "urn:agent-platform:usage-observation:v1" }
         }
       },
       "additionalProperties": false,
       "x-semantic-constraints": [
         "batch_digest is RFC 8785 JCS SHA-256 over entries",
-        "entries are deduplicated by tenant_id plus idempotency_key before Platform UsageReport creation"
+        "observations are deduplicated by ProviderRevision, RuntimeRun, InvocationAttempt and observation_id before Platform TechnicalUsage creation"
       ]
     },
     "runCompleted": {

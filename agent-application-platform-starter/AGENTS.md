@@ -34,7 +34,7 @@ Scenario
 
 - ProviderRevision 创建后按摘要不可变。
 - ProviderResolution 必须绑定 Resolver Revision、完整输入摘要、逐候选结论、不可变证据和 Decision Digest；只保存“选了谁”不构成可审计解析。
-- ProviderResolution 必须显式绑定 `tenant_id + client_app_id + work_order_id`；身份参与路由时必须绑定 Principal Context Digest。幂等记录唯一范围固定为 Tenant + ClientApplication + Operation + Key Digest。
+- ProviderResolution 必须显式绑定 `tenant_id + client_app_id + work_order_id`，通过 `identity_dependency` 声明解析是否依赖身份；依赖身份时必须绑定 PrincipalContextSnapshot Digest。幂等记录唯一范围固定为 Tenant + ClientApplication + Operation + Key Digest。
 - ProviderRevision 的公共 Envelope 只包含 Provider kind、Implementation、Port、配置、权限、凭据和 Conformance；Runtime、Sandbox 和 Capability Provider 不得被强制包装成 Plugin。
 - Implementation 必须绑定不可变 BuildProvenance，包括 Source Revision、Source Tree、Build Artifact、SBOM 和 Provenance Statement 摘要。
 - 认证/撤销使用仅追加的 ProviderAdmissionDecision，不得回写 Revision。
@@ -54,12 +54,14 @@ Scenario
 - 每个 Run 在准入时锁定 Agent Runtime ProviderRevision；运行中不得自动切换框架。Provider 原生 Checkpoint 只能在明确声明并通过测试的兼容范围内恢复。
 - 每个可执行后续输入都需要新的 Business ExecutionGrant；WorkSession 不能扩大商业授权。
 - `ConversationTurnRequest` 只创建新 Turn/WorkOrder；`WorkOrderControlRequest` 只控制现有 WorkOrder。`interrupt_and_enqueue` 先记录当前 WorkOrder 取消意图，再创建独立后继 WorkOrder；不得把 Append/Interrupt 偷换成新 Turn。
-- ExecutionGrant 必须声明 `request_contract_id` 与固定 Digest Profile，并绑定该精确请求去除 `execution_grant` 后的 JCS 摘要；WorkOrder 与 ConversationTurn 不得共享含混的摘要解释。
+- ExecutionGrant 必须声明 `request_contract_id` 与固定 Digest Profile，并绑定该精确请求去除 `execution_grant` 后的 JCS 摘要；Turn Grant 绑定 Turn/Message/Scenario，Control Grant 只绑定现有 WorkOrder/ControlRequest，不得携带陈旧 Turn 字段。Grant 内嵌有界 PrincipalContextSnapshot 并校验其摘要。
 - Runtime Command 与核心 Runtime Event Payload 必须使用类型化 Schema；Provider 私有 Event 不能直接驱动 Chat、Plan、Task、Usage 或终态 Projection。
-- Runtime Start 必须携带实际有界输入或不可变引用、ContextPackage、ArtifactGrant、完整 ExecutionBudget/PolicyDecision/EffectivePermissions 和类型化 Model/Tool/Artifact/Egress Gateway Binding；只有摘要或 Message ID 不构成可执行请求。
-- Runtime 调用使用短期 AgentRuntimeInvocation Token，绑定 Tenant、ProviderRevision、WorkflowRun/AgentRun/RuntimeRun、RunManifest、InvocationAttempt、Fencing、Policy、Budget、Permissions 和请求摘要。
+- RunManifest 固化实际有界输入或不可变引用、ContextPackage、ArtifactAccessRequirement、初始 Budget/Policy/Permissions 上限、授权续期规则和类型化 Model/Tool/Artifact/Egress Gateway Binding；不保存会过期的 bearer Grant。
+- Runtime Start 携带与 Manifest 一致的 Input/Context/Gateway，以及本 Attempt 的短期 RuntimeAuthorization。Authorization 以摘要和前驱链仅追加，内部 Budget/Policy/Permissions 必须绑定同一 Tenant/WorkOrder/CommercialAuthorization，且不能越过 RunManifest 固化的商业授权到期上限；Token 过期、Adapter 重启或 Resume 时只能等价/缩权续期并刷新同一授权时间窗内的 ArtifactGrant，扩权必须新建 WorkOrder、ExecutionGrant、ProviderResolution 和 RunManifest。
+- Runtime 调用使用短期 AgentRuntimeInvocation Token，绑定 Tenant、ProviderRevision、WorkflowRun/AgentRun/RuntimeRun、RunManifest、RuntimeAuthorization、InvocationAttempt、Fencing、Policy、Budget、Permissions 和请求摘要。
 - 通用 Capability 调用只使用 `capability-provider-v1`，独立 Token 绑定 Tenant、ClientApplication、Principal Context、WorkOrder、ProviderRevision、InvocationAttempt、Fencing、Request Digest、Policy、Budget、Permissions 和 Staging；不得要求 `plugin_id`。Plugin Invocation 只保留为实现适配层。
 - RunManifest 绑定 EventTypeRegistry 的 ID/Version/Digest；只有该 Registry 准入的 Payload 可以进入核心 Projection。
+- Platform Core Registry 必须覆盖 Conversation、Message、WorkOrder/Control、WorkflowRun、AgentRun、GrantConsumption、Approval、Invocation、Artifact、Usage、Workspace、RuntimeSession/Recording 和 Delivery；Runtime Registry 只承载 Adapter 标准事件。
 
 ## 可靠性
 
@@ -100,6 +102,8 @@ Runtime Gateway 使用 `runtime-gateway/v1` 类型化帧、Connection Generation
 - PolicyDecision 合并 Business、Platform、Tenant、Client、Scenario 和 Runtime Profile 规则，固定使用 `deny > ask > allow`；`ask` 规范化为 Approval，任何 Allow 都不能覆盖 Deny。
 - Policy Allow 不替代 OS Sandbox、NetworkPolicy、Gateway 或 Invocation Ledger，Hook、Prompt 和 Provider 自报权限都不是安全边界。
 - TechnicalUsage 必须绑定 Tenant、WorkOrder、不可变 MeterDefinition、Producer/ProviderRevision 摘要、幂等键和 Evidence 摘要。Partial/Estimated 不得作为 Confirmed 或零用量结算；更正使用仅追加 Correction Entry。
+- Provider 只返回 UsageObservation；`entry_id`、Platform Idempotency Key、归属和 `recorded_at` 由 Platform 校验后创建 TechnicalUsageEntry。
+- Provider 只允许读取已准入 ArtifactVersion 或写 Artifact Staging；正式 ArtifactVersion Finalize 是 Platform 内部事务，不能出现在 Provider Grant 或 EffectivePermissions 中。
 - UsageReport 与 BusinessSettlementEnvelope 按 Reservation 连续编号并只追加；Settlement Envelope 嵌入完整 Final/Correction UsageReport，Business 才能依据自己的价格事实结算。价格、余额、Settlement 决策和商业 Reconciliation 仍由 Business 拥有。
 - 冻结 AgentRuntimeProvider 前，两个 Adapter 必须执行机器可读 `runtime-core-v1`；主 Runtime 还必须通过 `runtime-general-v1 + governed-v1`。Sandbox 与 Runtime Gateway 使用各自 Suite Manifest 和不可变证据。
 
@@ -108,11 +112,11 @@ Runtime Gateway 使用 `runtime-gateway/v1` 类型化帧、Connection Generation
 - JSON：Draft 2020-12、绝对 `$id`、Registry 解析、Strict I-JSON、RFC 8785 JCS。
 - 复用：SandboxSpec、ProviderRevisionSnapshot 等必须通过 `$ref` 复用，禁止复制展开。
 - 语义约束：由 `validate_semantics.py` 与反向 Fixture 执行。
-- 关键 `x-semantic-constraints` 必须进入 `contracts/semantic-constraints-v1.json`，明确映射当前 Validator 和待实现的 DDL/Conformance 责任；追踪缺失必须使 Gate 失败。
+- 关键 `x-semantic-constraints` 必须进入 `contracts/semantic-constraints-v1.json`。每个 `contract_gate` Check ID 必须由当前 Validator 注册并在本次 Gate 真实执行；无法在契约阶段证明的 DDL/Conformance 责任必须明确标为 `phase0_implementation_required`，不得伪装成通过。
 - 空 `limits: {}` 没有合法语义；EffectiveExecutionLimits 全字段必填且缺失即拒绝。HTTP 操作必须声明并执行 encoded-body 上限，超限在解析前返回 413。
 - OpenAPI：原始契约保留绝对 URN；Redocly 只对 Registry 投影生成的 `build/openapi-src` 执行 Lint/Bundle，结果必须为 0 个错误、0 个警告。
 - 兼容性：CI 只与受保护变量指定的冻结基线比较且缺失时 fail-closed；首个冻结基线前必须由受保护变量显式允许 N/A，不得写成 pass。
-- 供应链：Python 摘要锁、npm 完整性校验、Actions 完整 SHA；Git 跟踪文件不得包含 Bytecode/`.DS_Store`，Monorepo 必须提交 Git 根 Workflow。
+- 供应链：当前候选工具链固定 CPython 3.14.6、Node 24.18.0 Active LTS、pnpm 11.15.1 和 Go 1.26.5；Python 摘要锁、pnpm lock 完整性校验、Go toolchain、生产 OCI Digest 与 Actions 完整 SHA 都不得漂移或使用 `latest`。Git 跟踪文件不得包含 Bytecode/`.DS_Store`，Monorepo 必须提交 Git 根 Workflow。
 
 ## 准入与生产声明
 

@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.13"]
+        python-version: ["3.13", "3.14"]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -29,16 +29,14 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
-          cache-dependency-path: ${{ env.CONTRACT_ROOT }}/requirements-contracts-v0.8.6.txt
+          cache-dependency-path: ${{ env.CONTRACT_ROOT }}/requirements-contracts-v0.9.0.txt
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: "22.16.0"
+          node-version: "24.18.0"
           registry-url: https://registry.npmjs.org/
-          cache: npm
-          cache-dependency-path: ${{ env.CONTRACT_ROOT }}/package-lock.json
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32
         with:
-          go-version: "1.23.2"
+          go-version: "1.26.5"
           cache-dependency-path: ${{ env.CONTRACT_ROOT }}/scripts/jcs/go/go.mod
       - name: Bootstrap contract toolchain
         working-directory: ${{ env.CONTRACT_ROOT }}

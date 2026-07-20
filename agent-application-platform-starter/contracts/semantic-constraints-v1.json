@@ -13,7 +13,13 @@
     "urn:agent-platform:runtime-session-request:v1",
     "urn:agent-platform:canonical-event:v2",
     "urn:agent-platform:idempotency-record:v1",
-    "urn:agent-platform:execution-grant-claims:v1"
+    "urn:agent-platform:execution-grant-claims:v1",
+    "urn:agent-platform:runtime-authorization:v1",
+    "urn:agent-platform:artifact-grant:v1",
+    "urn:agent-platform:principal-context-snapshot:v1",
+    "urn:agent-platform:runtime-gateway-bindings:v1",
+    "urn:agent-platform:capability-invocation-result:v1",
+    "urn:agent-platform:usage-observation:v1"
   ],
   "constraints": [
     {
@@ -25,20 +31,8 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_execution_topology",
+          "check_id": "runtime_start.execution_topology",
           "status": "contract_gate"
-        },
-        {
-          "kind": "openapi_gate",
-          "artifact": "contracts/openapi/agent-runtime-provider-v1.yaml",
-          "check_id": "startAgentRuntimeRun",
-          "status": "contract_gate"
-        },
-        {
-          "kind": "conformance_test",
-          "artifact": "contracts/conformance/runtime/v1/suite.json",
-          "check_id": "runtime-core-v1",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -51,20 +45,8 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_execution_topology",
+          "check_id": "runtime_start.workspace_binding",
           "status": "contract_gate"
-        },
-        {
-          "kind": "openapi_gate",
-          "artifact": "contracts/openapi/agent-runtime-provider-v1.yaml",
-          "check_id": "startAgentRuntimeRun",
-          "status": "contract_gate"
-        },
-        {
-          "kind": "conformance_test",
-          "artifact": "contracts/conformance/runtime/v1/suite.json",
-          "check_id": "runtime-core-v1",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -77,20 +59,8 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_execution_topology",
+          "check_id": "runtime_start.sandbox_binding",
           "status": "contract_gate"
-        },
-        {
-          "kind": "openapi_gate",
-          "artifact": "contracts/openapi/agent-runtime-provider-v1.yaml",
-          "check_id": "startAgentRuntimeRun",
-          "status": "contract_gate"
-        },
-        {
-          "kind": "conformance_test",
-          "artifact": "contracts/conformance/runtime/v1/suite.json",
-          "check_id": "runtime-core-v1",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -103,20 +73,8 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_execution_topology",
+          "check_id": "runtime_start.request_digest",
           "status": "contract_gate"
-        },
-        {
-          "kind": "openapi_gate",
-          "artifact": "contracts/openapi/agent-runtime-provider-v1.yaml",
-          "check_id": "startAgentRuntimeRun",
-          "status": "contract_gate"
-        },
-        {
-          "kind": "conformance_test",
-          "artifact": "contracts/conformance/runtime/v1/suite.json",
-          "check_id": "runtime-core-v1",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -129,98 +87,82 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_execution_topology",
+          "check_id": "runtime_start.input_binding",
           "status": "contract_gate"
-        },
-        {
-          "kind": "openapi_gate",
-          "artifact": "contracts/openapi/agent-runtime-provider-v1.yaml",
-          "check_id": "startAgentRuntimeRun",
-          "status": "contract_gate"
-        },
-        {
-          "kind": "conformance_test",
-          "artifact": "contracts/conformance/runtime/v1/suite.json",
-          "check_id": "runtime-core-v1",
-          "status": "phase0_implementation_required"
         }
       ]
     },
     {
-      "constraint_id": "sem-f0d1d4d5df296426",
+      "constraint_id": "sem-72fa2e1f2d3ebf17",
       "schema_id": "urn:agent-platform:agent-runtime-start-request:v1",
       "constraint_index": 5,
-      "statement": "context_package, artifact_grants, execution_budget, policy_decision, effective_permissions and gateway_bindings exactly match the RunManifest admission snapshot",
+      "statement": "context_package and gateway_bindings exactly match the RunManifest while runtime_authorization binds fresh ArtifactGrants and values equal to or narrower than the immutable admission ceilings",
       "enforcements": [
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_execution_topology",
+          "check_id": "runtime_start.immutable_context_binding",
           "status": "contract_gate"
         },
         {
-          "kind": "openapi_gate",
-          "artifact": "contracts/openapi/agent-runtime-provider-v1.yaml",
-          "check_id": "startAgentRuntimeRun",
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "runtime_authorization.ceiling",
           "status": "contract_gate"
-        },
-        {
-          "kind": "conformance_test",
-          "artifact": "contracts/conformance/runtime/v1/suite.json",
-          "check_id": "runtime-core-v1",
-          "status": "phase0_implementation_required"
         }
       ]
     },
     {
-      "constraint_id": "sem-b833003dc500b28b",
+      "constraint_id": "sem-41be298a872a6563",
       "schema_id": "urn:agent-platform:agent-runtime-start-request:v1",
       "constraint_index": 6,
+      "statement": "runtime_authorization is unexpired, belongs to this RuntimeRun, RunManifest and InvocationAttempt, and covers every ArtifactAccessRequirement",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "runtime_authorization.scope",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "runtime_authorization.expiry",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "runtime_authorization.artifact_coverage",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-8b7085376c95be28",
+      "schema_id": "urn:agent-platform:agent-runtime-start-request:v1",
+      "constraint_index": 7,
       "statement": "the Provider rejects an encoded body above admission_limits.max_encoded_request_bytes before parsing with HTTP 413",
       "enforcements": [
         {
-          "kind": "semantic_validator",
-          "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_execution_topology",
-          "status": "contract_gate"
-        },
-        {
-          "kind": "openapi_gate",
-          "artifact": "contracts/openapi/agent-runtime-provider-v1.yaml",
-          "check_id": "startAgentRuntimeRun",
-          "status": "contract_gate"
-        },
-        {
           "kind": "conformance_test",
           "artifact": "contracts/conformance/runtime/v1/suite.json",
-          "check_id": "runtime-core-v1",
+          "check_id": "start-encoded-body-limit",
           "status": "phase0_implementation_required"
         }
       ]
     },
     {
-      "constraint_id": "sem-56bbc6e39bc8bf8b",
+      "constraint_id": "sem-ab43ab506e86281b",
       "schema_id": "urn:agent-platform:agent-runtime-start-request:v1",
-      "constraint_index": 7,
-      "statement": "the bearer token claims match the request, ProviderRevision, RunManifest, InvocationAttempt and fencing_token",
+      "constraint_index": 8,
+      "statement": "the bearer token claims match the request, ProviderRevision, RunManifest, RuntimeAuthorization, InvocationAttempt and fencing_token",
       "enforcements": [
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_execution_topology",
+          "check_id": "runtime_token.binding",
           "status": "contract_gate"
-        },
-        {
-          "kind": "openapi_gate",
-          "artifact": "contracts/openapi/agent-runtime-provider-v1.yaml",
-          "check_id": "startAgentRuntimeRun",
-          "status": "contract_gate"
-        },
-        {
-          "kind": "conformance_test",
-          "artifact": "contracts/conformance/runtime/v1/suite.json",
-          "check_id": "runtime-core-v1",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -233,53 +175,35 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_execution_grant_request",
+          "check_id": "work_order_control.grant_binding",
           "status": "contract_gate"
-        },
-        {
-          "kind": "ddl_responsibility",
-          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "work_order_control_input_and_split_cas",
-          "status": "phase0_implementation_required"
         }
       ]
     },
     {
-      "constraint_id": "sem-63fdb09b05282e27",
+      "constraint_id": "sem-18c0386a936033d8",
       "schema_id": "urn:agent-platform:work-order-control-request:v1",
       "constraint_index": 1,
-      "statement": "expected_message_head_sequence protects message ordering and expected_active_work_version protects active WorkOrder control; neither participates in WorkspaceRevision CAS",
+      "statement": "append_input and interrupt compare expected_message_head_version while every action compares expected_active_work_version; neither participates in WorkspaceRevision CAS",
       "enforcements": [
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_execution_grant_request",
+          "check_id": "work_order_control.conditional_cas",
           "status": "contract_gate"
-        },
-        {
-          "kind": "ddl_responsibility",
-          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "work_order_control_input_and_split_cas",
-          "status": "phase0_implementation_required"
         }
       ]
     },
     {
-      "constraint_id": "sem-4a8dd01668d92e37",
+      "constraint_id": "sem-06c4799bf3bdbef5",
       "schema_id": "urn:agent-platform:work-order-control-request:v1",
       "constraint_index": 2,
-      "statement": "append_input and interrupt persist an immutable authorized control input before an AgentRuntime command is emitted",
+      "statement": "append_input and interrupt allocate platform input_id and input_message_id and persist an immutable authorized control input before an AgentRuntime command is emitted",
       "enforcements": [
-        {
-          "kind": "semantic_validator",
-          "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_execution_grant_request",
-          "status": "contract_gate"
-        },
         {
           "kind": "ddl_responsibility",
           "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "work_order_control_input_and_split_cas",
+          "check_id": "work_order_control_input_allocation_and_outbox",
           "status": "phase0_implementation_required"
         }
       ]
@@ -293,14 +217,8 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_conversation_branch",
+          "check_id": "conversation_branch.head_consistency",
           "status": "contract_gate"
-        },
-        {
-          "kind": "ddl_responsibility",
-          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "message_workspace_active_work_cas",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -311,15 +229,9 @@
       "statement": "forked_from_message_id references an immutable prior message on forked_from_branch_id",
       "enforcements": [
         {
-          "kind": "semantic_validator",
-          "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_conversation_branch",
-          "status": "contract_gate"
-        },
-        {
           "kind": "ddl_responsibility",
           "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "message_workspace_active_work_cas",
+          "check_id": "branch_fork_prior_message_fk",
           "status": "phase0_implementation_required"
         }
       ]
@@ -331,15 +243,9 @@
       "statement": "active_work_order_id references at most one non-terminal WorkOrder for the Branch",
       "enforcements": [
         {
-          "kind": "semantic_validator",
-          "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_conversation_branch",
-          "status": "contract_gate"
-        },
-        {
           "kind": "ddl_responsibility",
           "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "message_workspace_active_work_cas",
+          "check_id": "branch_one_active_work_order",
           "status": "phase0_implementation_required"
         }
       ]
@@ -351,15 +257,9 @@
       "statement": "message appends compare-and-swap message_head_version, Workspace commits compare-and-swap workspace_head_version, and WorkOrder steering compares active_work_version",
       "enforcements": [
         {
-          "kind": "semantic_validator",
-          "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_conversation_branch",
-          "status": "contract_gate"
-        },
-        {
           "kind": "ddl_responsibility",
           "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "message_workspace_active_work_cas",
+          "check_id": "message_workspace_active_work_split_cas",
           "status": "phase0_implementation_required"
         }
       ]
@@ -371,15 +271,9 @@
       "statement": "branch_version is a read-model ETag only and is not a substitute for the three ownership-specific CAS versions",
       "enforcements": [
         {
-          "kind": "semantic_validator",
-          "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_conversation_branch",
-          "status": "contract_gate"
-        },
-        {
           "kind": "ddl_responsibility",
           "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "message_workspace_active_work_cas",
+          "check_id": "branch_etag_not_write_cas",
           "status": "phase0_implementation_required"
         }
       ]
@@ -393,13 +287,13 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_conversation_branch",
+          "check_id": "conversation_branch.workspace_binding",
           "status": "contract_gate"
         },
         {
           "kind": "ddl_responsibility",
           "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "message_workspace_active_work_cas",
+          "check_id": "branch_workspace_revision_fk",
           "status": "phase0_implementation_required"
         }
       ]
@@ -413,14 +307,8 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_provider_resolution",
+          "check_id": "provider_resolution.decision_digest",
           "status": "contract_gate"
-        },
-        {
-          "kind": "ddl_responsibility",
-          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "tenant_client_work_order_provider_resolution",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -431,15 +319,9 @@
       "statement": "resolution_input_digest binds the complete requirements, policy, placement, health and capacity inputs evaluated by resolver_revision",
       "enforcements": [
         {
-          "kind": "semantic_validator",
-          "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_provider_resolution",
-          "status": "contract_gate"
-        },
-        {
           "kind": "ddl_responsibility",
           "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "tenant_client_work_order_provider_resolution",
+          "check_id": "provider_resolution_complete_input_evidence",
           "status": "phase0_implementation_required"
         }
       ]
@@ -453,7 +335,7 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_provider_resolution",
+          "check_id": "provider_resolution.execution_scope",
           "status": "contract_gate"
         },
         {
@@ -465,22 +347,16 @@
       ]
     },
     {
-      "constraint_id": "sem-8238fb86e20f444b",
+      "constraint_id": "sem-9ad19162a3735224",
       "schema_id": "urn:agent-platform:provider-resolution:v1",
       "constraint_index": 3,
-      "statement": "principal_context_digest is non-null when principal attributes affect candidate evaluation and null only when resolver_revision declares identity-independent selection",
+      "statement": "identity_dependency explicitly declares whether principal attributes affect selection and principal_context_digest is non-null exactly for principal_context mode",
       "enforcements": [
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_provider_resolution",
+          "check_id": "provider_resolution.identity_dependency",
           "status": "contract_gate"
-        },
-        {
-          "kind": "ddl_responsibility",
-          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "tenant_client_work_order_provider_resolution",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -493,14 +369,8 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_provider_resolution",
+          "check_id": "provider_resolution.selected_candidate",
           "status": "contract_gate"
-        },
-        {
-          "kind": "ddl_responsibility",
-          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "tenant_client_work_order_provider_resolution",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -511,15 +381,9 @@
       "statement": "resolution_evidence_reference resolves to immutable evidence whose digest equals resolution_evidence_digest",
       "enforcements": [
         {
-          "kind": "semantic_validator",
-          "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_provider_resolution",
-          "status": "contract_gate"
-        },
-        {
           "kind": "ddl_responsibility",
           "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "tenant_client_work_order_provider_resolution",
+          "check_id": "provider_resolution_immutable_evidence_lookup",
           "status": "phase0_implementation_required"
         }
       ]
@@ -533,14 +397,8 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_capability_invocation",
+          "check_id": "capability_invocation.request_digest",
           "status": "contract_gate"
-        },
-        {
-          "kind": "conformance_test",
-          "artifact": "contracts/conformance/capability/v1/suite.json",
-          "check_id": "capability-core-v1",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -551,15 +409,9 @@
       "statement": "input validates against the immutable admitted CapabilityDefinition input schema digest before dispatch",
       "enforcements": [
         {
-          "kind": "semantic_validator",
-          "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_capability_invocation",
-          "status": "contract_gate"
-        },
-        {
           "kind": "conformance_test",
           "artifact": "contracts/conformance/capability/v1/suite.json",
-          "check_id": "capability-core-v1",
+          "check_id": "request-schema-boundaries",
           "status": "phase0_implementation_required"
         }
       ]
@@ -573,13 +425,33 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_capability_invocation",
+          "check_id": "capability_invocation.token_binding",
           "status": "contract_gate"
         },
         {
           "kind": "conformance_test",
           "artifact": "contracts/conformance/capability/v1/suite.json",
-          "check_id": "capability-core-v1",
+          "check_id": "token-binding",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-de5bc747e1f15a84",
+      "schema_id": "urn:agent-platform:capability-invocation-request:v1",
+      "constraint_index": 3,
+      "statement": "every input ArtifactGrant binds the same Tenant, WorkOrder and InvocationAttempt and expires no later than the request deadline or bearer-token expiration",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "capability_invocation.artifact_grant_expiry",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "conformance_test",
+          "artifact": "contracts/conformance/capability/v1/suite.json",
+          "check_id": "artifact-contract",
           "status": "phase0_implementation_required"
         }
       ]
@@ -593,14 +465,8 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_capability_invocation",
+          "check_id": "capability_invocation.token_lifetime",
           "status": "contract_gate"
-        },
-        {
-          "kind": "conformance_test",
-          "artifact": "contracts/conformance/capability/v1/suite.json",
-          "check_id": "token_binding",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -613,14 +479,8 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_capability_invocation",
+          "check_id": "capability_invocation.token_binding",
           "status": "contract_gate"
-        },
-        {
-          "kind": "conformance_test",
-          "artifact": "contracts/conformance/capability/v1/suite.json",
-          "check_id": "token_binding",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -633,14 +493,8 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_workspace_content_manifest",
+          "check_id": "workspace_manifest.digest",
           "status": "contract_gate"
-        },
-        {
-          "kind": "ddl_responsibility",
-          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "workspace_manifest_admission",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -653,14 +507,8 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_workspace_content_manifest",
+          "check_id": "workspace_manifest.path_policy",
           "status": "contract_gate"
-        },
-        {
-          "kind": "ddl_responsibility",
-          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "workspace_manifest_admission",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -673,14 +521,8 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_workspace_content_manifest",
+          "check_id": "workspace_manifest.counts",
           "status": "contract_gate"
-        },
-        {
-          "kind": "ddl_responsibility",
-          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "workspace_manifest_admission",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -693,14 +535,8 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_workspace_content_manifest",
+          "check_id": "workspace_manifest.symlink_policy",
           "status": "contract_gate"
-        },
-        {
-          "kind": "ddl_responsibility",
-          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "workspace_manifest_admission",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -711,15 +547,15 @@
       "statement": "requested scopes must be a subset of the authenticated WorkSession and WorkOrder policy",
       "enforcements": [
         {
-          "kind": "json_schema",
-          "artifact": "contracts/schemas/runtime-session-request.schema.json",
-          "check_id": "sandbox_slot_key_and_recording_mode",
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "runtime_session.requested_scope_subset",
           "status": "contract_gate"
         },
         {
           "kind": "conformance_test",
           "artifact": "contracts/conformance/runtime-gateway/v1/suite.json",
-          "check_id": "slot_scoped_runtime_session",
+          "check_id": "session-scope-enforced",
           "status": "phase0_implementation_required"
         }
       ]
@@ -731,15 +567,15 @@
       "statement": "sandbox_slot_key selects exactly one Sandbox slot from the admitted RunManifest and cannot resolve a provider-native Sandbox identity",
       "enforcements": [
         {
-          "kind": "json_schema",
-          "artifact": "contracts/schemas/runtime-session-request.schema.json",
-          "check_id": "sandbox_slot_key_and_recording_mode",
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "runtime_session.sandbox_slot_binding",
           "status": "contract_gate"
         },
         {
           "kind": "conformance_test",
           "artifact": "contracts/conformance/runtime-gateway/v1/suite.json",
-          "check_id": "slot_scoped_runtime_session",
+          "check_id": "slot-scoped-runtime-session",
           "status": "phase0_implementation_required"
         }
       ]
@@ -751,16 +587,10 @@
       "statement": "control, input, clipboard, or file-transfer requires runtime:control; view-only requires runtime:view",
       "enforcements": [
         {
-          "kind": "json_schema",
-          "artifact": "contracts/schemas/runtime-session-request.schema.json",
-          "check_id": "sandbox_slot_key_and_recording_mode",
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "runtime_session.scope_class",
           "status": "contract_gate"
-        },
-        {
-          "kind": "conformance_test",
-          "artifact": "contracts/conformance/runtime-gateway/v1/suite.json",
-          "check_id": "slot_scoped_runtime_session",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -771,15 +601,9 @@
       "statement": "platform_managed recording is created by Runtime Gateway and never delegated to the Sandbox Provider as an authorization decision",
       "enforcements": [
         {
-          "kind": "json_schema",
-          "artifact": "contracts/schemas/runtime-session-request.schema.json",
-          "check_id": "sandbox_slot_key_and_recording_mode",
-          "status": "contract_gate"
-        },
-        {
           "kind": "conformance_test",
           "artifact": "contracts/conformance/runtime-gateway/v1/suite.json",
-          "check_id": "slot_scoped_runtime_session",
+          "check_id": "platform-managed-recording-authority",
           "status": "phase0_implementation_required"
         }
       ]
@@ -791,16 +615,10 @@
       "statement": "recording channels are compatible with runtime_type; port_forward is live-only and requires disabled recording",
       "enforcements": [
         {
-          "kind": "json_schema",
-          "artifact": "contracts/schemas/runtime-session-request.schema.json",
-          "check_id": "sandbox_slot_key_and_recording_mode",
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "runtime_session.channel_policy",
           "status": "contract_gate"
-        },
-        {
-          "kind": "conformance_test",
-          "artifact": "contracts/conformance/runtime-gateway/v1/suite.json",
-          "check_id": "slot_scoped_runtime_session",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -811,15 +629,9 @@
       "statement": "Conversation lifecycle events omit the complete Work context group",
       "enforcements": [
         {
-          "kind": "semantic_validator",
-          "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_canonical_event_source",
-          "status": "contract_gate"
-        },
-        {
           "kind": "ddl_responsibility",
           "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "canonical_event_inbox_source_uniqueness",
+          "check_id": "conversation_event_omits_work_scope",
           "status": "phase0_implementation_required"
         }
       ]
@@ -833,14 +645,8 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_canonical_event_source",
+          "check_id": "canonical_event.work_binding",
           "status": "contract_gate"
-        },
-        {
-          "kind": "ddl_responsibility",
-          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "canonical_event_inbox_source_uniqueness",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -851,15 +657,9 @@
       "statement": "aggregate sequence and WorkOrder work_sequence are independent monotonic ledgers",
       "enforcements": [
         {
-          "kind": "semantic_validator",
-          "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_canonical_event_source",
-          "status": "contract_gate"
-        },
-        {
           "kind": "ddl_responsibility",
           "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "canonical_event_inbox_source_uniqueness",
+          "check_id": "aggregate_and_work_sequence_ledgers",
           "status": "phase0_implementation_required"
         }
       ]
@@ -873,14 +673,8 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_canonical_event_source",
+          "check_id": "canonical_event.source_dedupe",
           "status": "contract_gate"
-        },
-        {
-          "kind": "ddl_responsibility",
-          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "canonical_event_inbox_source_uniqueness",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -891,12 +685,6 @@
       "statement": "Inbox uniqueness on tenant_id plus producer_id plus source_stream_id plus source_event_id rejects source retries before Projection",
       "enforcements": [
         {
-          "kind": "semantic_validator",
-          "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_canonical_event_source",
-          "status": "contract_gate"
-        },
-        {
           "kind": "ddl_responsibility",
           "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
           "check_id": "canonical_event_inbox_source_uniqueness",
@@ -905,22 +693,16 @@
       ]
     },
     {
-      "constraint_id": "sem-cf7c7748a4222496",
+      "constraint_id": "sem-b3705c3de60fcc0f",
       "schema_id": "urn:agent-platform:canonical-event:v2",
       "constraint_index": 5,
-      "statement": "provider_revision_id is required for Provider-originated events and null only for a platform-owned producer",
+      "statement": "producer_kind explicitly determines whether provider_revision_id and provider_instance_id are required or forbidden",
       "enforcements": [
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_canonical_event_source",
+          "check_id": "canonical_event.producer_binding",
           "status": "contract_gate"
-        },
-        {
-          "kind": "ddl_responsibility",
-          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "canonical_event_inbox_source_uniqueness",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -933,14 +715,8 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_canonical_event_source",
+          "check_id": "canonical_event.registry_binding",
           "status": "contract_gate"
-        },
-        {
-          "kind": "ddl_responsibility",
-          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "canonical_event_inbox_source_uniqueness",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -950,12 +726,6 @@
       "constraint_index": 0,
       "statement": "the unique idempotency scope is tenant_id plus client_app_id plus operation_id plus idempotency_key_digest",
       "enforcements": [
-        {
-          "kind": "json_schema",
-          "artifact": "contracts/schemas/idempotency-record.schema.json",
-          "check_id": "tenant_client_operation_key_scope",
-          "status": "contract_gate"
-        },
         {
           "kind": "ddl_responsibility",
           "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
@@ -971,15 +741,9 @@
       "statement": "the same scoped key with a different request_digest is rejected as a conflict and never re-executed",
       "enforcements": [
         {
-          "kind": "json_schema",
-          "artifact": "contracts/schemas/idempotency-record.schema.json",
-          "check_id": "tenant_client_operation_key_scope",
-          "status": "contract_gate"
-        },
-        {
           "kind": "ddl_responsibility",
           "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "idempotency_scope_unique_index",
+          "check_id": "idempotency_digest_conflict",
           "status": "phase0_implementation_required"
         }
       ]
@@ -993,14 +757,8 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_execution_grant_request",
+          "check_id": "execution_grant.clock_skew",
           "status": "contract_gate"
-        },
-        {
-          "kind": "ddl_responsibility",
-          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "grant_consumption_and_request_binding",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -1013,14 +771,8 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_execution_grant_request",
+          "check_id": "execution_grant.expiration_order",
           "status": "contract_gate"
-        },
-        {
-          "kind": "ddl_responsibility",
-          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "grant_consumption_and_request_binding",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -1033,14 +785,8 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_execution_grant_request",
+          "check_id": "execution_grant.max_ttl",
           "status": "contract_gate"
-        },
-        {
-          "kind": "ddl_responsibility",
-          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "grant_consumption_and_request_binding",
-          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -1053,54 +799,364 @@
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_execution_grant_request",
+          "check_id": "execution_grant.request_digest",
           "status": "contract_gate"
-        },
-        {
-          "kind": "ddl_responsibility",
-          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "grant_consumption_and_request_binding",
-          "status": "phase0_implementation_required"
         }
       ]
     },
     {
-      "constraint_id": "sem-11acc1e6de661e1d",
+      "constraint_id": "sem-20e5191b3e99fe03",
       "schema_id": "urn:agent-platform:execution-grant-claims:v1",
       "constraint_index": 4,
-      "statement": "conversation, turn, branch, client_message, principal context and optional WorkOrder control bindings match the submitted request and authenticated path context",
+      "statement": "principal_context_digest matches principal_context, whose Tenant, Principal and ClientApplication fields match the Grant claims",
       "enforcements": [
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_execution_grant_request",
+          "check_id": "execution_grant.principal_context",
           "status": "contract_gate"
-        },
-        {
-          "kind": "ddl_responsibility",
-          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "grant_consumption_and_request_binding",
-          "status": "phase0_implementation_required"
         }
       ]
     },
     {
-      "constraint_id": "sem-a00c541d951924e1",
+      "constraint_id": "sem-53873c9da74a286d",
       "schema_id": "urn:agent-platform:execution-grant-claims:v1",
       "constraint_index": 5,
+      "statement": "turn requests bind conversation, turn, branch, client_message and scenario while control requests bind only conversation, branch, WorkOrder and control_request to the submitted request and authenticated path context",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "execution_grant.request_identity",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-8191089b03aa68d1",
+      "schema_id": "urn:agent-platform:execution-grant-claims:v1",
+      "constraint_index": 6,
       "statement": "limits and capabilities do not exceed commercial_authorization",
       "enforcements": [
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
-          "check_id": "validate_execution_grant_request",
+          "check_id": "execution_grant.commercial_limits",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-7e931cbae861adb5",
+      "schema_id": "urn:agent-platform:execution-grant-claims:v1",
+      "constraint_index": 7,
+      "statement": "the Grant validity window is fully covered by principal_context and commercial_authorization validity windows",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "execution_grant.snapshot_validity",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-1174bed8faaaee8c",
+      "schema_id": "urn:agent-platform:runtime-authorization:v1",
+      "constraint_index": 0,
+      "statement": "authorization_digest is RFC 8785 JCS SHA-256 over the authorization excluding authorization_digest",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "runtime_authorization.digest",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-806e36fb2808be94",
+      "schema_id": "urn:agent-platform:runtime-authorization:v1",
+      "constraint_index": 1,
+      "statement": "authorization revisions are append-only, sequence without gaps and bind the exact predecessor digest",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "runtime_authorization.lineage",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-6ab84b3c561fd456",
+      "schema_id": "urn:agent-platform:runtime-authorization:v1",
+      "constraint_index": 2,
+      "statement": "the first authorization equals the RunManifest budget, policy and permission ceilings; later revisions may only remain equal or narrow them",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "runtime_authorization.ceiling",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-17bc2c1678b98df5",
+      "schema_id": "urn:agent-platform:runtime-authorization:v1",
+      "constraint_index": 3,
+      "statement": "the embedded budget, policy and permissions bind the same Tenant and WorkOrder, and the policy binds the same CommercialAuthorization, budget and permissions digests",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "runtime_authorization.internal_binding",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-3be051eb0f23e1b3",
+      "schema_id": "urn:agent-platform:runtime-authorization:v1",
+      "constraint_index": 4,
+      "statement": "commercial authorization, Tenant, WorkOrder, RuntimeRun and RunManifest bindings never change across renewal",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "runtime_authorization.scope",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-31d3590e930e259b",
+      "schema_id": "urn:agent-platform:runtime-authorization:v1",
+      "constraint_index": 5,
+      "statement": "expires_at is later than issued_at and no later than the CommercialAuthorization, budget, policy and every ArtifactGrant expiry; no ArtifactGrant predates authorization issuance or outlives it",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "runtime_authorization.expiry",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-5e6c63676f81aeef",
+      "schema_id": "urn:agent-platform:runtime-authorization:v1",
+      "constraint_index": 6,
+      "statement": "fresh ArtifactGrants exactly cover admitted ArtifactAccessRequirements without granting finalize authority",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "runtime_authorization.artifact_coverage",
           "status": "contract_gate"
         },
         {
-          "kind": "ddl_responsibility",
-          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
-          "check_id": "grant_consumption_and_request_binding",
+          "kind": "conformance_test",
+          "artifact": "contracts/conformance/runtime/v1/suite.json",
+          "check_id": "authorization-renewal",
           "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-6cf640544c5415f1",
+      "schema_id": "urn:agent-platform:artifact-grant:v1",
+      "constraint_index": 0,
+      "statement": "expires_at is later than issued_at; a Runtime grant is issued no earlier than and expires no later than its RuntimeAuthorization, while a Capability grant expires no later than its request deadline and bearer-token expiration",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "artifact_grant.expiry",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-08d2db657e43a024",
+      "schema_id": "urn:agent-platform:artifact-grant:v1",
+      "constraint_index": 1,
+      "statement": "the grant is Tenant, WorkOrder, InvocationAttempt, immutable ArtifactVersion and Artifact Gateway route bound",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "artifact_grant.scope",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-2c209f4f96a21b57",
+      "schema_id": "urn:agent-platform:artifact-grant:v1",
+      "constraint_index": 2,
+      "statement": "Providers may read admitted versions or write staging content but never finalize an ArtifactVersion",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "artifact_grant.provider_permissions",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-15bbf5c1e18c0063",
+      "schema_id": "urn:agent-platform:principal-context-snapshot:v1",
+      "constraint_index": 0,
+      "statement": "principal_context_digest is RFC 8785 JCS SHA-256 over the snapshot excluding principal_context_digest",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "principal_context.digest",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-0758d098e8849fdf",
+      "schema_id": "urn:agent-platform:principal-context-snapshot:v1",
+      "constraint_index": 1,
+      "statement": "expires_at is later than issued_at and the snapshot is immutable once referenced by a Grant, WorkOrder or ProviderResolution",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "principal_context.time_window",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-38aaff99fa140b81",
+      "schema_id": "urn:agent-platform:principal-context-snapshot:v1",
+      "constraint_index": 2,
+      "statement": "credentials, secrets and mutable display-profile fields are forbidden from the snapshot",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "principal_context.closed_attributes",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-48f0d817b31f8781",
+      "schema_id": "urn:agent-platform:runtime-gateway-bindings:v1",
+      "constraint_index": 0,
+      "statement": "an enabled binding carries a typed route and audience while a disabled binding carries no routable identity",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "gateway_binding.closed_modes",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-379a3e2acc6f5203",
+      "schema_id": "urn:agent-platform:runtime-gateway-bindings:v1",
+      "constraint_index": 1,
+      "statement": "a gateway required by ExecutionBudget or EffectivePermissions is enabled; disabled bindings are fail-closed and cannot be bypassed by a Provider",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "gateway_binding.policy_alignment",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-82af36f0132f90fd",
+      "schema_id": "urn:agent-platform:capability-invocation-result:v1",
+      "constraint_index": 0,
+      "statement": "output validates against the request-bound output_schema_digest before platform acceptance",
+      "enforcements": [
+        {
+          "kind": "conformance_test",
+          "artifact": "contracts/conformance/capability/v1/suite.json",
+          "check_id": "request-schema-boundaries",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-37ac1141039b7b6e",
+      "schema_id": "urn:agent-platform:capability-invocation-result:v1",
+      "constraint_index": 1,
+      "statement": "staged artifacts are quarantined until digest, size, media policy and InvocationAttempt bindings pass finalize checks",
+      "enforcements": [
+        {
+          "kind": "conformance_test",
+          "artifact": "contracts/conformance/capability/v1/suite.json",
+          "check_id": "artifact-contract",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-0a45be660ce8a869",
+      "schema_id": "urn:agent-platform:capability-invocation-result:v1",
+      "constraint_index": 2,
+      "statement": "Provider usage contains UsageObservation only; Platform creates immutable TechnicalUsageEntry ledger rows after validation",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "usage_observation.provider_boundary",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-ee905d5f65306fd6",
+      "schema_id": "urn:agent-platform:usage-observation:v1",
+      "constraint_index": 0,
+      "statement": "observation_id is idempotent within one ProviderRevision and InvocationAttempt",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "usage_observation.observation_identity",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-ae7081d61eb0e846",
+      "schema_id": "urn:agent-platform:usage-observation:v1",
+      "constraint_index": 1,
+      "statement": "meter unit matches the admitted MeterDefinition and evidence_reference resolves to bytes matching evidence_digest",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "usage_observation.meter_and_evidence",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-832c349fc6f90c0f",
+      "schema_id": "urn:agent-platform:usage-observation:v1",
+      "constraint_index": 2,
+      "statement": "partial or estimated observations remain explicitly incomplete when normalized into Platform TechnicalUsage",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "usage_observation.incomplete_status",
+          "status": "contract_gate"
         }
       ]
     }

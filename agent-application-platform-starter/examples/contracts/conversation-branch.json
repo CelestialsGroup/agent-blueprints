@@ -5,7 +5,7 @@
   "head_message_sequence": 1,
   "active_work_order_id": "wrk_01J00000000000000000000000",
   "workspace_head_revision_id": "wsr_01J00000000000000000000000",
-  "workspace_head_revision_digest": "sha256:366b5c58b91f28f19b73b1287cc13488b6055b5a7d57bbd21f065e3340b5bde1",
+  "workspace_head_revision_digest": "sha256:b8e661287a6861876e0e28cf94cc7f638653ea3b023367bfe046f54481381291",
   "message_head_version": 2,
   "workspace_head_version": 1,
   "active_work_version": 2,

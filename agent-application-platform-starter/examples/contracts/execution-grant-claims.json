@@ -3,19 +3,19 @@
   "iss": "business-a",
   "aud": "agent-platform",
   "sub": "user-123",
-  "iat": 1784100000,
-  "nbf": 1784100000,
-  "exp": 1784100300,
+  "iat": 1784192400,
+  "nbf": 1784192400,
+  "exp": 1784192700,
   "client_app_id": "html-product",
   "external_tenant_id": "org-456",
   "external_principal_id": "user-123",
-  "principal_context_digest": "sha256:5151515151515151515151515151515151515151515151515151515151515151",
+  "principal_context_digest": "sha256:bfb1d517260890b1df9744f3b1420dda3865f1a382e9735ecbeb895bbc8e5862",
   "conversation_id": "conv_01J00000000000000000000000",
   "turn_id": "turn_01J00000000000000000000000",
   "branch_id": "main",
   "client_message_id": "client-msg-0001",
   "scenario_id": "html-generation",
-  "request_digest": "sha256:4e9cf510ed74cfe825451ea9bbad7524952289bdeb42a7775fe6744848bd8810",
+  "request_digest": "sha256:cb4665679ac09023901ce087a2d31859ed7ce14d358c2b625b4f53530e364df6",
   "idempotency_key_digest": "sha256:6bf53ca6b162632ebe7a477b424bedb41cae0759b08b27970fe9dbc7199ff87c",
   "usage": "single",
   "nonce": "nonce-0123456789abcdef",
@@ -51,8 +51,8 @@
     "business_account_id": "account-456",
     "plan_reference": "pro",
     "authorized_limits_digest": "sha256:36b5a673a7d6b2636626f04ad6e28c5d43e54ee4510dfbba604692d0da028380",
-    "issued_at": "2026-07-15T09:59:30Z",
-    "expires_at": "2026-07-15T10:30:00Z",
+    "issued_at": "2026-07-16T08:59:30Z",
+    "expires_at": "2026-07-16T09:30:00Z",
     "settlement_target_id": "business-usage-settlement-v1",
     "authorized_entitlements": [
       "experience.html.premium"
@@ -74,10 +74,31 @@
       "max_conversion_count": 3
     },
     "commercial_authorization_id": "cauth_01J00000000000000000000000",
-    "commercial_authorization_digest": "sha256:7e0df7d1f12c15fa7b37f829cbbd7faf5dd927ae121e1d963d6205d71ff505ed"
+    "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7"
   },
   "scenario_version": "1.0.0",
   "scenario_definition_digest": "sha256:2ef129bc2277d1927147c533a18bcc5500db43e4c36ef12313b904fe80bb709c",
   "request_contract_id": "urn:agent-platform:conversation-turn-request:v1",
-  "request_digest_profile": "rfc8785-request-excluding-execution-grant-v1"
+  "request_digest_profile": "rfc8785-request-excluding-execution-grant-v1",
+  "principal_context": {
+    "snapshot_version": 1,
+    "client_app_id": "html-product",
+    "external_tenant_id": "org-456",
+    "external_principal_id": "user-123",
+    "principal_type": "user",
+    "roles": [
+      "member"
+    ],
+    "groups": [
+      "design-team"
+    ],
+    "attributes": {
+      "data_classification": "internal",
+      "region": "cn"
+    },
+    "issued_at": "2026-07-16T08:59:30Z",
+    "expires_at": "2026-07-16T09:30:00Z",
+    "digest_profile": "rfc8785-principal-context-excluding-digest-v1",
+    "principal_context_digest": "sha256:bfb1d517260890b1df9744f3b1420dda3865f1a382e9735ecbeb895bbc8e5862"
+  }
 }

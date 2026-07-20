@@ -1,7 +1,7 @@
 {
   "suite_id": "agent-runtime-provider",
   "suite_version": "1.0.0",
-  "suite_digest": "sha256:8fee6bdb88e49df4c28b39989f1141e3b1d89006e7a7511269fb641161dbf449",
+  "suite_digest": "sha256:9523bc839ccb04e303e8879080835ee32d2128e262de7d6d09bedf2c32087ac8",
   "target_kind": "agent_runtime",
   "profiles": [
     {
@@ -84,6 +84,12 @@
           "category": "recovery",
           "evidence_type": "trace",
           "description": "Adapter restart preserves or reconciles the same runtime_run_id."
+        },
+        {
+          "test_id": "authorization-renewal",
+          "category": "security",
+          "evidence_type": "trace",
+          "description": "Token expiry, Adapter restart and resume use a fresh append-only RuntimeAuthorization and ArtifactGrants for the same RunManifest; commercial expiry, internal Tenant/WorkOrder bindings, grant time windows and widening are enforced."
         },
         {
           "test_id": "outcome-unknown-reconcile",

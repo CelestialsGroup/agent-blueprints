@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:commercial-authorization-binding:v1",
+  "title": "CommercialAuthorizationBinding",
+  "description": "Immutable hot-path binding to a signed CommercialAuthorizationSnapshot, including the expiration ceiling needed for local authorization checks.",
+  "type": "object",
+  "required": [
+    "commercial_authorization_id",
+    "commercial_authorization_digest",
+    "expires_at"
+  ],
+  "properties": {
+    "commercial_authorization_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "commercial_authorization_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

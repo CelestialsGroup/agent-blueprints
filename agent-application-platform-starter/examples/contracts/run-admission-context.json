@@ -37,10 +37,10 @@
       "template_revision_id": "tmplrev_01J00000000000000000000000",
       "template_id": "html-anything/landing-saas-dark",
       "version": "1.0.0",
-      "revision_digest": "sha256:c4fba5c22c7be1e1f13eb3129999f198b0d6b32bf54741c82e8297b4f9e7db22",
+      "revision_digest": "sha256:20017f0bfa23b5eb5d2b957a8f22a7ed481e5d21fbd728d69efc15f46fd57c34",
       "provider_revision": {
         "provider_revision_id": "tplpr_01J0000000000000000000000",
-        "provider_revision_digest": "sha256:dc4cde002de443b8d3d4335c5c13fec5bb8ded2c32f403b086e82bd468a4d2d3",
+        "provider_revision_digest": "sha256:8324669a083e9c43c8cb0064e25e7bb34435a9a1a5fadbe9da3de31c397a470f",
         "provider_kind": "template",
         "implementation": {
           "implementation_id": "template-provider.html-anything",
@@ -66,9 +66,9 @@
         "configuration_digest": "sha256:8383838383838383838383838383838383838383838383838383838383838383",
         "approved_permissions_digest": "sha256:8484848484848484848484848484848484848484848484848484848484848484",
         "credential_binding_digest": "sha256:8686868686868686868686868686868686868686868686868686868686868686",
-        "conformance_set_digest": "sha256:bc30eaabf9114765300856d750ed8ae1beb9d8b47bac47613974f970fa6d8fc1",
+        "conformance_set_digest": "sha256:717cddea2f0cbb8fd11afe436b4f3b6eb428f152e62039354643679cb1ad2e5d",
         "admission_decision_id": "tplad_01J0000000000000000000000",
-        "admission_decision_digest": "sha256:bbcf62d7cd2ab3bf01147415d183994f1c33168f31cfe0cbcd754ebe4e3aa8e7",
+        "admission_decision_digest": "sha256:b7a5fe55bbd4a4f64f090adcb4cec3642f9cd3d5811558c68a8158ef8738dab6",
         "admission_status": "certified"
       },
       "capability": {
@@ -213,7 +213,7 @@
     },
     {
       "provider_revision_id": "apr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:688b9d7abe86270fc898deb57995c42737067526dfcd7967c5512a5f3b8be9ab",
+      "provider_revision_digest": "sha256:9c35dcaee06dd5d56bdf3297c493f9752c16f752b6ddc323e5f7dfcc49f7c252",
       "provider_instance_id": "api_deerflow_runtime",
       "configuration_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
       "approved_permissions_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
@@ -228,7 +228,7 @@
           "status": "passed",
           "report_digest": "sha256:1212121212121212121212121212121212121212121212121212121212121212",
           "suite_id": "agent-runtime-provider",
-          "suite_digest": "sha256:8fee6bdb88e49df4c28b39989f1141e3b1d89006e7a7511269fb641161dbf449",
+          "suite_digest": "sha256:9523bc839ccb04e303e8879080835ee32d2128e262de7d6d09bedf2c32087ac8",
           "suite_profile_id": "governed-v1"
         },
         {
@@ -239,11 +239,11 @@
           "status": "passed",
           "report_digest": "sha256:1313131313131313131313131313131313131313131313131313131313131313",
           "suite_id": "agent-runtime-provider",
-          "suite_digest": "sha256:8fee6bdb88e49df4c28b39989f1141e3b1d89006e7a7511269fb641161dbf449",
+          "suite_digest": "sha256:9523bc839ccb04e303e8879080835ee32d2128e262de7d6d09bedf2c32087ac8",
           "suite_profile_id": "runtime-general-v1"
         }
       ],
-      "conformance_set_digest": "sha256:d7be924ec1f6771f55a6e04c5d21c0556e112cdc4b0c6558e460bbf4a6c5dc4c",
+      "conformance_set_digest": "sha256:746724cd96890e564d2c5a1ce6ba3091015888b207eaa179f93b6428b5ec4597",
       "created_at": "2026-07-16T09:00:10Z",
       "implementation": {
         "implementation_id": "agent-runtime.deerflow",
@@ -270,7 +270,7 @@
     },
     {
       "provider_revision_id": "tpr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:aac2e6e5837401672b7266d5b01baaf3ea5a46a25bdc59a09016744984074dff",
+      "provider_revision_digest": "sha256:095db7c909c92e04d76604ec72115c6e47beeb28aa406d4a473ae8de186b1b67",
       "provider_instance_id": "tpi_echo",
       "configuration_digest": "sha256:2323232323232323232323232323232323232323232323232323232323232323",
       "approved_permissions_digest": "sha256:2424242424242424242424242424242424242424242424242424242424242424",
@@ -285,11 +285,11 @@
           "status": "passed",
           "report_digest": "sha256:2727272727272727272727272727272727272727272727272727272727272727",
           "suite_id": "capability-provider",
-          "suite_digest": "sha256:9ca84761cf924f8f0f6b03bc1943dc6722fb1b54fccc1dd6d125d52004afdd90",
+          "suite_digest": "sha256:f5906e48557a9cbe53c8424b570269a19339db7524b79f2d1fc11a814bfdb037",
           "suite_profile_id": "capability-core-v1"
         }
       ],
-      "conformance_set_digest": "sha256:f84d219b19bcf13aed19d1df91757fec362bcfbb0221dc85125640fe84bf5785",
+      "conformance_set_digest": "sha256:1b8db273b8f33ec7cc654bdaf41f775047e4e088b97aaf7d9e8d06a42d0d430f",
       "created_at": "2026-07-16T09:00:20Z",
       "implementation": {
         "implementation_id": "tool-provider.echo",
@@ -315,7 +315,7 @@
     },
     {
       "provider_revision_id": "hpr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:b5aa8488ab02e963c9dc6bedab71683309b4526662c660db5811fce1e4c9d0c4",
+      "provider_revision_digest": "sha256:461bd865248862fe13ef3f831295ebbfb6e6b830e83e2fa75cea45211f2f76c8",
       "provider_instance_id": "hpi_html_anything",
       "configuration_digest": "sha256:4343434343434343434343434343434343434343434343434343434343434343",
       "approved_permissions_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
@@ -330,11 +330,11 @@
           "status": "passed",
           "report_digest": "sha256:4747474747474747474747474747474747474747474747474747474747474747",
           "suite_id": "capability-provider",
-          "suite_digest": "sha256:9ca84761cf924f8f0f6b03bc1943dc6722fb1b54fccc1dd6d125d52004afdd90",
+          "suite_digest": "sha256:f5906e48557a9cbe53c8424b570269a19339db7524b79f2d1fc11a814bfdb037",
           "suite_profile_id": "capability-core-v1"
         }
       ],
-      "conformance_set_digest": "sha256:a7af942d46413cbbd2d76ba10f2d852b9a7d26db98f6f9d083319659e9abdffe",
+      "conformance_set_digest": "sha256:57b7c1b5d781e7fab81aeae59b9ee6c82b866ee186629b44e2edc0fa32851352",
       "created_at": "2026-07-16T09:00:21Z",
       "implementation": {
         "implementation_id": "skill-provider.html-anything",
@@ -360,7 +360,7 @@
     },
     {
       "provider_revision_id": "rpr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:22202069681233773cf41d807cbd431e6a29177e94de5303fb21a5da4e60e222",
+      "provider_revision_digest": "sha256:a1bf035a29dbb36190cbd84c795fcb385b40c95f65a4b7ef6dadad0d83772732",
       "provider_instance_id": "rpi_html_preview",
       "configuration_digest": "sha256:3838383838383838383838383838383838383838383838383838383838383838",
       "approved_permissions_digest": "sha256:3939393939393939393939393939393939393939393939393939393939393939",
@@ -375,11 +375,11 @@
           "status": "passed",
           "report_digest": "sha256:3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c",
           "suite_id": "capability-provider",
-          "suite_digest": "sha256:9ca84761cf924f8f0f6b03bc1943dc6722fb1b54fccc1dd6d125d52004afdd90",
+          "suite_digest": "sha256:f5906e48557a9cbe53c8424b570269a19339db7524b79f2d1fc11a814bfdb037",
           "suite_profile_id": "capability-core-v1"
         }
       ],
-      "conformance_set_digest": "sha256:6a917cbb4d1fc2d3fc384506e8ef732c6eacf7f8e8410dce0446289bab281f27",
+      "conformance_set_digest": "sha256:7fe9d23b104e2ad89666acb51693599dbcf4b70cab640654f12cd278158745ca",
       "created_at": "2026-07-16T09:00:22Z",
       "implementation": {
         "implementation_id": "renderer-provider.html-preview",
@@ -405,7 +405,7 @@
     },
     {
       "provider_revision_id": "tplpr_01J0000000000000000000000",
-      "provider_revision_digest": "sha256:dc4cde002de443b8d3d4335c5c13fec5bb8ded2c32f403b086e82bd468a4d2d3",
+      "provider_revision_digest": "sha256:8324669a083e9c43c8cb0064e25e7bb34435a9a1a5fadbe9da3de31c397a470f",
       "provider_instance_id": "tpli_html_anything",
       "configuration_digest": "sha256:8383838383838383838383838383838383838383838383838383838383838383",
       "approved_permissions_digest": "sha256:8484848484848484848484848484848484848484848484848484848484848484",
@@ -420,11 +420,11 @@
           "status": "passed",
           "report_digest": "sha256:8787878787878787878787878787878787878787878787878787878787878787",
           "suite_id": "capability-provider",
-          "suite_digest": "sha256:9ca84761cf924f8f0f6b03bc1943dc6722fb1b54fccc1dd6d125d52004afdd90",
+          "suite_digest": "sha256:f5906e48557a9cbe53c8424b570269a19339db7524b79f2d1fc11a814bfdb037",
           "suite_profile_id": "capability-core-v1"
         }
       ],
-      "conformance_set_digest": "sha256:bc30eaabf9114765300856d750ed8ae1beb9d8b47bac47613974f970fa6d8fc1",
+      "conformance_set_digest": "sha256:717cddea2f0cbb8fd11afe436b4f3b6eb428f152e62039354643679cb1ad2e5d",
       "created_at": "2026-07-16T09:00:25Z",
       "implementation": {
         "implementation_id": "template-provider.html-anything",
@@ -464,57 +464,57 @@
     {
       "decision_id": "pad_runtime_01J00000000000000000",
       "provider_revision_id": "apr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:688b9d7abe86270fc898deb57995c42737067526dfcd7967c5512a5f3b8be9ab",
+      "provider_revision_digest": "sha256:9c35dcaee06dd5d56bdf3297c493f9752c16f752b6ddc323e5f7dfcc49f7c252",
       "decision_sequence": 1,
       "decision": "certified",
       "evidence_digest": "sha256:1414141414141414141414141414141414141414141414141414141414141414",
       "decided_by": "principal:platform-provider-certifier",
       "decided_at": "2026-07-16T09:00:40Z",
-      "decision_digest": "sha256:b3817f83cd8faa0095f77ff2f10e43dd3fe88f69f552aee9d3ea02ec276ca935"
+      "decision_digest": "sha256:835372b205ccccdc9185838bea600fb5bdb14de5cfc6b7d5689a137abb283d0a"
     },
     {
       "decision_id": "pad_tool_01J000000000000000000",
       "provider_revision_id": "tpr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:aac2e6e5837401672b7266d5b01baaf3ea5a46a25bdc59a09016744984074dff",
+      "provider_revision_digest": "sha256:095db7c909c92e04d76604ec72115c6e47beeb28aa406d4a473ae8de186b1b67",
       "decision_sequence": 1,
       "decision": "certified",
       "evidence_digest": "sha256:2828282828282828282828282828282828282828282828282828282828282828",
       "decided_by": "principal:platform-provider-certifier",
       "decided_at": "2026-07-16T09:00:50Z",
-      "decision_digest": "sha256:c7e7b2c1d2f5c5568b5a1fe28379606fed98327719ebf2bb9eef9761aef53934"
+      "decision_digest": "sha256:0bfaad69d91297599d038b3d3337e1c68ff7af5d6d3c95774ae1f75bc184cacd"
     },
     {
       "decision_id": "pad_html_skill_01J000000000000000",
       "provider_revision_id": "hpr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:b5aa8488ab02e963c9dc6bedab71683309b4526662c660db5811fce1e4c9d0c4",
+      "provider_revision_digest": "sha256:461bd865248862fe13ef3f831295ebbfb6e6b830e83e2fa75cea45211f2f76c8",
       "decision_sequence": 1,
       "decision": "certified",
       "evidence_digest": "sha256:4848484848484848484848484848484848484848484848484848484848484848",
       "decided_by": "principal:platform-provider-certifier",
       "decided_at": "2026-07-16T09:00:51Z",
-      "decision_digest": "sha256:85374bc0ec4cc0428d2b656357157de38fc8204634026844bad7c3f716cede1c"
+      "decision_digest": "sha256:bd27f283d71da4ee4af8a58c5fb83a96910c79fd4ba22e0e376ccb1b5a4dc65d"
     },
     {
       "decision_id": "pad_renderer_01J0000000000000000",
       "provider_revision_id": "rpr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:22202069681233773cf41d807cbd431e6a29177e94de5303fb21a5da4e60e222",
+      "provider_revision_digest": "sha256:a1bf035a29dbb36190cbd84c795fcb385b40c95f65a4b7ef6dadad0d83772732",
       "decision_sequence": 1,
       "decision": "certified",
       "evidence_digest": "sha256:3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d",
       "decided_by": "principal:platform-provider-certifier",
       "decided_at": "2026-07-16T09:00:52Z",
-      "decision_digest": "sha256:cf3be0fa815d1a67c5577e772cec0c129bee200b2fc4946038af3ac3784889fb"
+      "decision_digest": "sha256:6fcb26b3fa1304e339ec760a7cb0d3ca32c59a6f997a702a5b02ca02167f0d5c"
     },
     {
       "decision_id": "tplad_01J0000000000000000000000",
       "provider_revision_id": "tplpr_01J0000000000000000000000",
-      "provider_revision_digest": "sha256:dc4cde002de443b8d3d4335c5c13fec5bb8ded2c32f403b086e82bd468a4d2d3",
+      "provider_revision_digest": "sha256:8324669a083e9c43c8cb0064e25e7bb34435a9a1a5fadbe9da3de31c397a470f",
       "decision_sequence": 1,
       "decision": "certified",
       "evidence_digest": "sha256:8989898989898989898989898989898989898989898989898989898989898989",
       "decided_by": "principal:platform-provider-certifier",
       "decided_at": "2026-07-16T09:00:55Z",
-      "decision_digest": "sha256:bbcf62d7cd2ab3bf01147415d183994f1c33168f31cfe0cbcd754ebe4e3aa8e7"
+      "decision_digest": "sha256:b7a5fe55bbd4a4f64f090adcb4cec3642f9cd3d5811558c68a8158ef8738dab6"
     }
   ],
   "commercial_authorization": {
@@ -525,8 +525,8 @@
     "business_account_id": "account-456",
     "plan_reference": "pro",
     "authorized_limits_digest": "sha256:36b5a673a7d6b2636626f04ad6e28c5d43e54ee4510dfbba604692d0da028380",
-    "issued_at": "2026-07-15T09:59:30Z",
-    "expires_at": "2026-07-15T10:30:00Z",
+    "issued_at": "2026-07-16T08:59:30Z",
+    "expires_at": "2026-07-16T09:30:00Z",
     "settlement_target_id": "business-usage-settlement-v1",
     "authorized_entitlements": [
       "experience.html.premium"
@@ -548,7 +548,7 @@
       "max_conversion_count": 3
     },
     "commercial_authorization_id": "cauth_01J00000000000000000000000",
-    "commercial_authorization_digest": "sha256:7e0df7d1f12c15fa7b37f829cbbd7faf5dd927ae121e1d963d6205d71ff505ed"
+    "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7"
   },
   "scenario_definition": {
     "api_version": "agent-platform/scenario/v1",

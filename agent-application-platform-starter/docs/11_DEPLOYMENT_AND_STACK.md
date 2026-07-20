@@ -2,6 +2,22 @@
 
 ## 技术基线
 
+### 语言运行时基线
+
+截至 2026-07-20，默认开发、构建和生产基线固定为以下官方稳定版本；“最新稳定”是受审查的精确版本，不使用浮动 `latest` 标签：
+
+| 组件边界 | 固定基线 | 选择规则 |
+|---|---:|---|
+| Go 平台内核、API、Worker、Gateway、Controller | Go 1.26.5 | 最新 Go 正式稳定版 |
+| Agent Workbench、Business Reference、契约工具 | Node.js 24.18.0 Active LTS（Krypton）+ pnpm 11.15.1 | 生产采用最新 Active LTS，不采用短生命周期 Current；包管理统一使用 pnpm |
+| DeerFlow/Python Runtime Adapter、评测与契约工具 | CPython 3.14.6 | 最新 CPython 正式稳定版；3.13 仅作 CI 回滚兼容通道 |
+
+精确开发版本记录在 `.tool-versions`，`package.json`/`pnpm-lock.yaml` 和 `go.mod`/`toolchain` 分别约束 Node/pnpm 与 Go，Python 依赖继续使用带摘要的锁文件。生产镜像在实现阶段进一步固定 OCI Digest，并将编译器/解释器版本、依赖锁摘要、SBOM 和镜像摘要写入 BuildProvenance。
+
+补丁升级先通过契约 Gate、历史载荷/Temporal Replay、Provider Conformance 和安全扫描，再 Canary；语言大版本或 Node LTS 切换必须双版本并行并保留旧镜像、Worker Build ID 与 ProviderRevision 的回滚窗口。升级只改变实现 Revision，不能原地改写已准入 ProviderRevision、RunManifest 或历史 Workflow。
+
+版本核对来源：[Python 3.14.6](https://www.python.org/downloads/release/python-3146/)、[Node.js 24.18.0](https://nodejs.org/en/blog/release/v24.18.0)、[pnpm 11.15.1](https://github.com/pnpm/pnpm/releases/tag/v11.15.1)、[Go 1.26.5](https://go.dev/dl/#go1.26.5)。
+
 ### Agent Platform 技术栈
 
 - Go

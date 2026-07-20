@@ -11,12 +11,12 @@
 - ExecutionGrant 精确绑定 WorkOrderRequest/ConversationTurnRequest/WorkOrderControlRequest Contract ID、Digest Profile 和请求摘要；
 - ConversationBranch 绑定不可变 WorkspaceRevision Head，Fork/CAS/并行 Branch 不共享可变文件头；
 - Runtime 与 Sandbox Slot 只引用带 Resolver/Input/Candidate/Evidence/Decision 的 ProviderResolution；
-- Resolution 显式绑定 Tenant/ClientApplication/WorkOrder，身份路由绑定 Principal Context Digest；
-- Runtime Start 与 RunManifest 携带逐值一致的实际输入、ContextPackage、ArtifactGrant、完整 Budget/Policy/Permissions 和四类 Gateway Binding；
+- Resolution 显式绑定 Tenant/ClientApplication/WorkOrder，通过 identity_dependency 声明并绑定 PrincipalContextSnapshot；
+- RunManifest 携带实际输入、ContextPackage、ArtifactAccessRequirement、初始 Budget/Policy/Permissions 上限、商业授权 ID/Digest/到期上限、续期规则和四类 Gateway Binding；Runtime Start 携带本 Attempt 的等价/缩权 RuntimeAuthorization/ArtifactGrant，并拒绝内部作用域不闭合或越过商业/ArtifactGrant 时间窗的授权；
 - Conversation Turn 与 WorkOrder Control 分离，三个 CAS 所有权域分离，WorkOrder 可从 accepted 直接请求取消；
 - 通用 Capability Provider Port/Token 不要求 `plugin_id`，调用绑定 Request Digest、Fencing、Policy、Budget、Permissions 和 Staging；
 - WorkspaceContentManifest、Sandbox Slot 选择、Event 来源 Inbox 去重、闭合 Metadata 和 HTTP encoded-body 上限均有可执行契约；
-- `contracts/semantic-constraints-v1.json` 覆盖全部关键语义，并区分当前 Contract Gate 与待实现 DDL/Conformance 责任；
+- `contracts/semantic-constraints-v1.json` 覆盖全部关键语义；每个 Contract Gate Check ID 在当前运行中真实执行，并与待实现 DDL/Conformance 责任明确分离；
 - RunManifest 支持 Capability 驱动的零或多个 Sandbox，主 Slot 条件闭合；
 - 状态机、JCS、Schema、语义负例与 Python/Node 契约清单一致。
 

@@ -7,7 +7,7 @@
     "protocol_version", "tenant_id", "client_app_id", "principal_context_digest", "work_order_id",
     "invocation_id", "invocation_attempt_id", "fencing_token", "idempotency_key", "request_digest",
     "provider_revision_id", "capability", "deadline_at", "input", "input_artifact_grants",
-    "output_staging_session_id", "policy_decision_digest", "execution_budget_digest", "trace_context"
+    "output_staging_session_id", "policy_decision_digest", "execution_budget_digest", "permissions_digest", "trace_context"
   ],
   "properties": {
     "protocol_version": { "const": "v1" },
@@ -44,6 +44,7 @@
     "output_staging_session_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "policy_decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "execution_budget_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "permissions_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "trace_context": {
       "type": "object",
       "required": ["traceparent"],
@@ -58,6 +59,7 @@
   "x-semantic-constraints": [
     "request_digest is RFC 8785 JCS SHA-256 over the request excluding request_digest",
     "input validates against the immutable admitted CapabilityDefinition input schema digest before dispatch",
-    "the Capability Invocation Token matches Tenant, ClientApplication, Principal context, WorkOrder, ProviderRevision, InvocationAttempt, Fencing, request digest, policy, budget and staging bindings"
+    "the Capability Invocation Token matches Tenant, ClientApplication, Principal context, WorkOrder, ProviderRevision, InvocationAttempt, Fencing, request digest, policy, budget and staging bindings",
+    "every input ArtifactGrant binds the same Tenant, WorkOrder and InvocationAttempt and expires no later than the request deadline or bearer-token expiration"
   ]
 }

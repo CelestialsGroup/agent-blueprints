@@ -7,7 +7,7 @@
   "exp": 1784192770,
   "tenant_id": "ten_01J00000000000000000000000",
   "client_app_id": "html-product",
-  "principal_context_digest": "sha256:5151515151515151515151515151515151515151515151515151515151515151",
+  "principal_context_digest": "sha256:bfb1d517260890b1df9744f3b1420dda3865f1a382e9735ecbeb895bbc8e5862",
   "work_order_id": "wrk_01J00000000000000000000000",
   "provider_revision_id": "hpr_01J00000000000000000000000",
   "capability_id": "html.generate",
@@ -15,9 +15,9 @@
   "invocation_id": "inv_cap_01J000000000000000000000",
   "invocation_attempt_id": "iat_cap_01J00000000000000000000",
   "fencing_token": 1,
-  "request_digest": "sha256:6d45786aff2d5cfb2379e16d365bede7cf6236ca0e27203b0863505f987411db",
-  "policy_decision_digest": "sha256:d5cd511225fb525c6c6ec7dab6ddb47157717e1292d1110e1e6792adf05205b7",
+  "request_digest": "sha256:39a377b5ed1faf5b11f38cc08a8cc0c4c1201504af22a7dfe410be1414422f66",
+  "policy_decision_digest": "sha256:2040f3ac261711f1c60fe68af1d678fb0fd26c25b410f28d7d315a7bf42fe2e0",
   "execution_budget_digest": "sha256:4e8aac35b4943db25ecbb3ea6fa2259cdb2f3c144bb837f1cc6c97b0b6f94096",
-  "permissions_digest": "sha256:5b103637f08ba7dd7fbabb1b1840dcc0780cb1dd335043475f30433c51397a67",
+  "permissions_digest": "sha256:fe357a824dfa4d264229e0ad365e23a1305a6ee51480b14098994bc4d0ce9439",
   "staging_session_id": "stg_01J00000000000000000000000"
 }

@@ -7,6 +7,7 @@
     "event_id",
     "schema_version",
     "tenant_id",
+    "producer_kind",
     "producer_id",
     "provider_revision_id",
     "source_stream_id",
@@ -42,6 +43,9 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 200
+    },
+    "producer_kind": {
+      "enum": ["platform", "provider"]
     },
     "provider_revision_id": {
       "type": ["string", "null"],
@@ -202,7 +206,7 @@
             "principal",
             "agent",
             "system",
-            "plugin"
+            "provider"
           ]
         },
         "id": {
@@ -261,6 +265,24 @@
     }
   },
   "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "producer_kind": { "const": "provider" } }, "required": ["producer_kind"] },
+      "then": {
+        "required": ["provider_revision_id"],
+        "properties": {
+          "provider_revision_id": { "type": "string" },
+          "metadata": { "required": ["provider_instance_id"] }
+        }
+      },
+      "else": {
+        "properties": {
+          "provider_revision_id": { "type": "null" },
+          "metadata": { "not": { "required": ["provider_instance_id"] } }
+        }
+      }
+    }
+  ],
   "dependentRequired": {
     "work_order_id": ["turn_id", "branch_id", "input_message_id", "work_sequence"],
     "turn_id": ["work_order_id", "branch_id", "input_message_id", "work_sequence"],
@@ -274,7 +296,7 @@
     "aggregate sequence and WorkOrder work_sequence are independent monotonic ledgers",
     "dedupe_key is RFC 8785 JCS SHA-256 over tenant_id, producer_id, source_stream_id and source_event_id",
     "Inbox uniqueness on tenant_id plus producer_id plus source_stream_id plus source_event_id rejects source retries before Projection",
-    "provider_revision_id is required for Provider-originated events and null only for a platform-owned producer"
+    "producer_kind explicitly determines whether provider_revision_id and provider_instance_id are required or forbidden"
     ,"event_registry identifies the immutable Platform Core Event Registry revision that admits type and data_version"
   ]
 }

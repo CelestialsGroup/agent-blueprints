@@ -10,11 +10,11 @@ JSON Schema、OpenAPI、状态机、JCS/I-JSON 向量、数据不变量和契约
 |---|---|
 | Strict I-JSON/JCS | Python、Node、Go 共用全部正反向向量 |
 | Schema | Draft 2020-12 元验证、绝对 `$id`、Registry `$ref`、正反向 Fixture |
-| 语义 | Conversation/Runtime/Recording 序列、RunManifest、Experience 准入、CapabilityDefinition/Provider Kind/Conformance、Provider/Decision 摘要、Slot、Snapshot、Fencing、状态可达性 |
+| 语义 | 每条 contract_gate 约束映射注册 Check ID，且 Check 必须在当前运行真实执行；Conversation/Runtime/Recording 序列、可续期授权、Provider/Decision 摘要、Slot、Snapshot、Fencing、状态可达性均有反向夹具 |
 | OpenAPI | Registry 投影后 Redocly Lint 为 0 个错误、0 个警告，6 个确定性 Bundle |
 | 完整性 | v0.9.0 契约清单自摘要和全资源摘要 |
 | 兼容性 | 与受保护变量指定的冻结基线比较删除/收窄；CI 缺基线时默认失败 |
-| 供应链 | 摘要锁、npm 完整性校验、Action SHA、公开 Registry、Git 跟踪文件无 Bytecode/`.DS_Store`、Git 根 Workflow 已激活 |
+| 供应链 | 摘要锁、pnpm lock 完整性校验、Action SHA、公开 Registry、Git 跟踪文件无 Bytecode/`.DS_Store`、Git 根 Workflow 已激活 |
 
 ## URN 与 OpenAPI
 
@@ -22,13 +22,13 @@ JSON Schema、OpenAPI、状态机、JCS/I-JSON 向量、数据不变量和契约
 
 ## 可复现工具链
 
-- CPython 3.11–3.13，依赖使用精确版本/摘要锁；
-- Node 22.16 与 npm 锁文件完整性校验；
-- Go 1.23.2；
+- 主基线 CPython 3.14.6，3.13 仅作 CI 回滚兼容通道，依赖使用精确版本/摘要锁；
+- Node 24.18.0 Active LTS（Krypton）与 pnpm 11.15.1，使用 `packageManager`、package engine、frozen lockfile 和完整性校验；
+- Go 1.26.5，`go.mod` 固定语言版本并由 `toolchain` 固定补丁版本；
 - Redocly CLI 2.39.0；
 - 第三方 CI Action 使用完整 Commit SHA。
 
-验证报告必须记录真实工具版本、命令、计数和未运行项。公共准入前不能写“已冻结”；契约 Gate 也不能证明生产就绪。
+验证报告必须记录真实工具版本、命令、计数和未运行项。`.tool-versions` 的精确版本是当前候选基线，但生产仍须固定 OCI Digest 并在 BuildProvenance 记录工具链、依赖锁、SBOM 和镜像摘要；不得使用浮动 `latest`。DDL 唯一性、HTTP 解析前 413、跨进程恢复等无法由静态契约证明的责任必须标记 `phase0_implementation_required`，不得借文件存在或函数名写成通过。公共准入前不能写“已冻结”；契约 Gate 也不能证明生产就绪。
 
 ## 兼容性策略
 

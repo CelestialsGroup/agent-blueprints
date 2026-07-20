@@ -52,7 +52,7 @@ AgentRun 1 -> 1 RunManifest + 1 AgentRuntimeRun
 AgentRuntimeRun mutation -> Invocation 1 -> N Attempt
 ```
 
-每个 AgentRun 由 Tenant/Conversation/Branch WorkspaceRevision、实际有界输入、ContextPackage、ArtifactGrant、完整有效预算/策略/权限、四类 Gateway Binding、ProviderResolution、AdmissionDecision、Event Registry、Experience Revision、按需 Sandbox Slot 和 RunManifest 固化。Runtime 与 Sandbox Slot 只引用 ProviderResolution，避免重复快照产生冲突。没有 Sandbox Capability 的 Run 可以使用空 `sandboxes[]`；运行中的 Run 不得静默切换 Provider。
+每个 AgentRun 由 Tenant/Conversation/Branch WorkspaceRevision、实际有界输入、ContextPackage、ArtifactAccessRequirement、初始预算/策略/权限上限、商业授权 ID/Digest/到期上限、授权续期规则、四类 Gateway Binding、ProviderResolution、AdmissionDecision、Event Registry、Experience Revision、按需 Sandbox Slot 和 RunManifest 固化。短期 RuntimeAuthorization/ArtifactGrant 属于 InvocationAttempt，只能在同一 Manifest 与商业有效期内等价或缩权续期；其 Budget/Policy/Permissions 必须绑定同一 Tenant/WorkOrder/CommercialAuthorization，ArtifactGrant 不得早于 Authorization 签发或晚于其到期。Runtime 与 Sandbox Slot 只引用 ProviderResolution，避免重复快照产生冲突。没有 Sandbox Capability 的 Run 可以使用空 `sandboxes[]`；运行中的 Run 不得静默切换 Provider。
 
 ## 可靠性边界
 

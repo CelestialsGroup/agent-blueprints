@@ -17,7 +17,7 @@ Membership / Plan
 
 ## 准入
 
-在执行 Turn 或向现有 WorkOrder 发送可执行控制输入前，Business 评估会员资格并预留商业额度。它签发 ExecutionGrant，其中包含精确请求 Contract/Digest Profile、Principal Context Digest、CommercialAuthorizationSnapshot、已授权 Capability、Policy 和全字段硬限制。Agent Platform 先验证签名与请求摘要，再随 WorkOrder/RunManifest 保存快照；执行热路径绝不查询 Business 会员数据库。
+在执行 Turn 或向现有 WorkOrder 发送可执行控制输入前，Business 评估会员资格并预留商业额度。它签发 ExecutionGrant，其中包含精确请求 Contract/Digest Profile、有界 PrincipalContextSnapshot 及其 Digest、CommercialAuthorizationSnapshot、已授权 Capability、Policy 和全字段硬限制。Agent Platform 先验证签名、Snapshot、请求摘要以及 Grant 时间窗完全落在两个 Snapshot 有效期内，再随 WorkOrder 保存完整快照，并在 RunManifest 固化 CommercialAuthorizationBinding 的 ID/Digest/`expires_at`；执行热路径绝不查询 Business 会员数据库，但任何 RuntimeAuthorization 都不能越过该到期上限。
 
 除摘要外，该快照还携带显式授权的 Entitlement ID、Capability 和最大限制。这是本地 Catalog 过滤和准入比较的必要条件；只有摘要而没有受治理值，不能作为可执行授权证据。
 
@@ -34,7 +34,7 @@ Agent Platform 通过已注册的 Settlement Target 和签名 Business Callback 
 
 Platform 无权修改商业余额或推断价格。Business 无权改写 TechnicalUsage 证据。
 
-MeterDefinition 只定义技术单位、聚合方式、测量权威和更正规则，不包含 Price、Currency 或 Plan。TechnicalUsage 绑定 Producer Revision 和不可变 Evidence 摘要，并明确区分 Confirmed、Partial、Estimated 和 Corrected；Final UsageReport 不得把不完整测量伪装为零或已确认。Business 可以拒绝、延迟或对账 Envelope，但只能追加自身结算事实，不能回写 Platform Usage。HTTP 接收成功只证明 Envelope 已持久接纳，不等于商业结算成功。
+MeterDefinition 只定义技术单位、聚合方式、测量权威和更正规则，不包含 Price、Currency 或 Plan。Provider 返回 UsageObservation；Platform 校验 Observation/Meter/Evidence/Attempt 后分配 TechnicalUsage identity、归属、幂等键和 `recorded_at`。TechnicalUsage 明确区分 Confirmed、Partial、Estimated 和 Corrected；Final UsageReport 不得把不完整测量伪装为零或已确认。Business 可以拒绝、延迟或对账 Envelope，但只能追加自身结算事实，不能回写 Platform Usage。HTTP 接收成功只证明 Envelope 已持久接纳，不等于商业结算成功。
 
 ## 参考应用模块
 

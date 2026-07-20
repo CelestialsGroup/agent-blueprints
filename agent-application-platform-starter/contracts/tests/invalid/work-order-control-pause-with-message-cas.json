@@ -1,0 +1,14 @@
+{
+  "control_request_id": "ctl_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "conversation_id": "conv_01J00000000000000000000000",
+  "branch_id": "main",
+  "action": "pause",
+  "expected_active_work_version": 2,
+  "reason": "User supplied an authorized steering input.",
+  "execution_grant": "eyJhbGciOiJFZERTQSIsImtpZCI6ImtleS0xIiwidHlwIjoiYWdlbnQtZXhlY3V0aW9uLWdyYW50K2p3dCJ9.payload.signature",
+  "metadata": {
+    "locale": "zh-CN"
+  },
+  "expected_message_head_version": 2
+}

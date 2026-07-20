@@ -19,5 +19,6 @@
       "size_bytes": 128
     }
   ],
-  "manifest_digest": "sha256:8dfcb5bb6d9d98edc1bf5b8f6a24beb60267e13635bf31190eac7a1c8a612098"
+  "manifest_digest": "sha256:ef0e25f8c192d97c4c99db13fba26569c7f78ca505e6b0db999c86398e4d86f5",
+  "path_case_policy": "case_sensitive"
 }

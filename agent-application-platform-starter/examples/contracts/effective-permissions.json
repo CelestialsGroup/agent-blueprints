@@ -1,6 +1,6 @@
 {
   "permissions_id": "perm_01J00000000000000000000000",
-  "permissions_digest": "sha256:5b103637f08ba7dd7fbabb1b1840dcc0780cb1dd335043475f30433c51397a67",
+  "permissions_digest": "sha256:fe357a824dfa4d264229e0ad365e23a1305a6ee51480b14098994bc4d0ce9439",
   "tenant_id": "ten_01J00000000000000000000000",
   "work_order_id": "wrk_01J00000000000000000000000",
   "model": {
@@ -16,8 +16,7 @@
   },
   "artifact": {
     "read": true,
-    "write": true,
-    "finalize": true
+    "stage_new_version": true
   },
   "egress": {
     "mode": "restricted",

@@ -22,13 +22,14 @@
     "usage": {
       "type": "array",
       "maxItems": 256,
-      "items": { "$ref": "urn:agent-platform:technical-usage-entry:v1" }
+      "items": { "$ref": "urn:agent-platform:usage-observation:v1" }
     },
     "completed_at": { "type": "string", "format": "date-time" }
   },
   "additionalProperties": false,
   "x-semantic-constraints": [
     "output validates against the request-bound output_schema_digest before platform acceptance",
-    "staged artifacts are quarantined until digest, size, media policy and InvocationAttempt bindings pass finalize checks"
+    "staged artifacts are quarantined until digest, size, media policy and InvocationAttempt bindings pass finalize checks",
+    "Provider usage contains UsageObservation only; Platform creates immutable TechnicalUsageEntry ledger rows after validation"
   ]
 }

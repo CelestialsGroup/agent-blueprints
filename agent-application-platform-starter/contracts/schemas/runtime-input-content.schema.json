@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:runtime-input-content:v1",
+  "title": "RuntimeInputContent",
+  "type": "array",
+  "minItems": 1,
+  "maxItems": 128,
+  "items": {
+    "oneOf": [
+      {
+        "type": "object",
+        "required": ["type", "text"],
+        "properties": {
+          "type": { "const": "text" },
+          "text": { "type": "string", "minLength": 1, "maxLength": 262144 }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": ["type", "artifact_id", "version_id", "digest"],
+        "properties": {
+          "type": { "const": "artifact" },
+          "artifact_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "version_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+          "role": { "type": "string", "minLength": 1, "maxLength": 100 }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": ["type", "immutable_input_reference", "digest", "size_bytes", "media_type"],
+        "properties": {
+          "type": { "const": "immutable_reference" },
+          "immutable_input_reference": { "type": "string", "minLength": 1, "maxLength": 500 },
+          "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+          "size_bytes": { "type": "integer", "minimum": 0, "maximum": 67108864 },
+          "media_type": { "type": "string", "minLength": 1, "maxLength": 200 }
+        },
+        "additionalProperties": false
+      }
+    ]
+  }
+}

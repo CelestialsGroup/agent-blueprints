@@ -1,7 +1,7 @@
 {
   "suite_id": "runtime-gateway",
   "suite_version": "1.0.0",
-  "suite_digest": "sha256:268894bbca3ffed42344366799aa481ac18e2bb546bf549a3f6e920f26609abe",
+  "suite_digest": "sha256:1bb9b2721be4d75a8d90103738ab5bbdfeeec30a5d8fb10cb09e92926537c326",
   "target_kind": "runtime_gateway",
   "profiles": [
     {
@@ -12,6 +12,18 @@
           "category": "security",
           "evidence_type": "test_log",
           "description": "Connection and control scopes match the authenticated RuntimeSession."
+        },
+        {
+          "test_id": "slot-scoped-runtime-session",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "RuntimeSession resolves exactly one admitted sandbox_slot_key and never accepts a provider-native Sandbox identity."
+        },
+        {
+          "test_id": "platform-managed-recording-authority",
+          "category": "recording",
+          "evidence_type": "trace",
+          "description": "Only Runtime Gateway creates platform-managed recording state; Sandbox Providers cannot authorize or finalize recordings."
         },
         {
           "test_id": "stale-generation-rejected",

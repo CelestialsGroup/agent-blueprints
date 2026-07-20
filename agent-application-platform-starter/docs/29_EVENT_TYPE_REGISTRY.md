@@ -34,9 +34,9 @@ runtime_session.*
 runtime_recording.*
 ```
 
-Plugin 私有 Event 必须带发布者 Namespace，且不能直接驱动核心 Projection。
+Provider 私有 Event 必须带发布者 Namespace，且不能直接驱动核心 Projection。
 
-平台领域事件注册表位于 `contracts/event-types/platform-core-v1.json`，Agent Runtime 标准化事件注册表位于 `contracts/event-types/agent-runtime-core-v1.json`。二者不能混成 Provider 私有 Registry。Registry 本身拥有 ID/Version/Digest；RunManifest 固化 Runtime Registry，Platform Event Ingest 固化对应 Platform Registry Revision。其中 URI 可以指向 Schema `$defs`。Data Schema 使用 `rfc8785-schema-closure-v1`，对根 Schema 与按绝对 `$id` 排序的传递外部依赖一起执行 JCS + SHA-256，避免只哈希根文件而漏掉 `$ref` 变化；`type + data_version` 在一个 Registry Revision 中唯一。
+平台领域事件注册表位于 `contracts/event-types/platform-core-v1.json`，其闭合 Payload 位于 `platform-core-event-data:v1`，至少覆盖 Conversation/Message、WorkOrder/Control、WorkflowRun/AgentRun、Grant、Approval、Invocation、Artifact、Usage、Workspace、RuntimeSession/Recording 和 Delivery。Agent Runtime 标准化事件注册表位于 `contracts/event-types/agent-runtime-core-v1.json`，只表达 Adapter 的 Message/Plan/Task/Tool/Checkpoint/Run 流。二者不能混成 Provider 私有 Registry。Registry 本身拥有 ID/Version/Digest；RunManifest 固化 Runtime Registry，Platform Event Ingest 固化对应 Platform Registry Revision。其中 URI 可以指向 Schema `$defs`。Data Schema 使用 `rfc8785-schema-closure-v1`，对根 Schema 与按绝对 `$id` 排序的传递外部依赖一起执行 JCS + SHA-256，避免只哈希根文件而漏掉 `$ref` 变化；`type + data_version` 在一个 Registry Revision 中唯一。
 
 ## 时间
 

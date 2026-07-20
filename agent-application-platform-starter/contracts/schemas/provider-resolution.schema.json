@@ -4,7 +4,7 @@
   "title": "ProviderResolution",
   "type": "object",
   "required": [
-    "resolution_id", "tenant_id", "client_app_id", "work_order_id", "execution_scope", "principal_context_digest",
+    "resolution_id", "tenant_id", "client_app_id", "work_order_id", "execution_scope", "identity_dependency", "principal_context_digest",
     "capability", "selected_provider_instance_id",
     "routing_reason", "resolved_at", "selected_provider_revision",
     "capability_definition_digest", "resolver_revision", "resolution_input_digest",
@@ -20,6 +20,15 @@
     "principal_context_digest": {
       "type": ["string", "null"],
       "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "identity_dependency": {
+      "type": "object",
+      "required": ["mode", "declaration_digest"],
+      "properties": {
+        "mode": { "enum": ["identity_independent", "principal_context"] },
+        "declaration_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
     },
     "capability": {
       "type": "object",
@@ -88,11 +97,21 @@
     "decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
   },
   "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": { "identity_dependency": { "properties": { "mode": { "const": "principal_context" } } } },
+        "required": ["identity_dependency"]
+      },
+      "then": { "properties": { "principal_context_digest": { "type": "string" } } },
+      "else": { "properties": { "principal_context_digest": { "type": "null" } } }
+    }
+  ],
   "x-semantic-constraints": [
     "decision_digest is RFC 8785 JCS SHA-256 over the resolution excluding decision_digest",
     "resolution_input_digest binds the complete requirements, policy, placement, health and capacity inputs evaluated by resolver_revision",
     "tenant_id, client_app_id and work_order_id define the ownership and execution scope of the decision",
-    "principal_context_digest is non-null when principal attributes affect candidate evaluation and null only when resolver_revision declares identity-independent selection",
+    "identity_dependency explicitly declares whether principal attributes affect selection and principal_context_digest is non-null exactly for principal_context mode",
     "candidate_evaluations contains exactly one selected candidate matching selected_provider_instance_id and selected_provider_revision",
     "resolution_evidence_reference resolves to immutable evidence whose digest equals resolution_evidence_digest"
   ]

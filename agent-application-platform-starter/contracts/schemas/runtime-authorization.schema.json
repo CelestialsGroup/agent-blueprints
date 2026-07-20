@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:runtime-authorization:v1",
+  "title": "RuntimeAuthorization",
+  "description": "Short-lived append-only authorization revision for one Runtime InvocationAttempt. It is not embedded in the immutable RunManifest.",
+  "type": "object",
+  "required": [
+    "authorization_id", "authorization_sequence", "predecessor_authorization_digest", "renewal_reason",
+    "tenant_id", "work_order_id", "runtime_run_id", "run_manifest_digest", "commercial_authorization",
+    "execution_budget", "policy_decision", "effective_permissions", "artifact_grants",
+    "issued_at", "expires_at", "authorization_digest"
+  ],
+  "properties": {
+    "authorization_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "authorization_sequence": { "type": "integer", "minimum": 1 },
+    "predecessor_authorization_digest": {
+      "type": ["string", "null"],
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "renewal_reason": { "enum": ["initial_dispatch", "token_expiry", "adapter_restart", "resume", "policy_refresh"] },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "runtime_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "run_manifest_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "commercial_authorization": {
+      "$ref": "urn:agent-platform:commercial-authorization-binding:v1"
+    },
+    "execution_budget": { "$ref": "urn:agent-platform:execution-budget:v1" },
+    "policy_decision": { "$ref": "urn:agent-platform:policy-decision:v1" },
+    "effective_permissions": { "$ref": "urn:agent-platform:effective-permissions:v1" },
+    "artifact_grants": {
+      "type": "array",
+      "maxItems": 256,
+      "uniqueItems": true,
+      "items": { "$ref": "urn:agent-platform:artifact-grant:v1" }
+    },
+    "issued_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "authorization_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "authorization_sequence": { "const": 1 } }, "required": ["authorization_sequence"] },
+      "then": {
+        "properties": {
+          "predecessor_authorization_digest": { "type": "null" },
+          "renewal_reason": { "const": "initial_dispatch" }
+        }
+      },
+      "else": {
+        "properties": {
+          "predecessor_authorization_digest": { "type": "string" },
+          "renewal_reason": { "not": { "const": "initial_dispatch" } }
+        }
+      }
+    }
+  ],
+  "x-semantic-constraints": [
+    "authorization_digest is RFC 8785 JCS SHA-256 over the authorization excluding authorization_digest",
+    "authorization revisions are append-only, sequence without gaps and bind the exact predecessor digest",
+    "the first authorization equals the RunManifest budget, policy and permission ceilings; later revisions may only remain equal or narrow them",
+    "the embedded budget, policy and permissions bind the same Tenant and WorkOrder, and the policy binds the same CommercialAuthorization, budget and permissions digests",
+    "commercial authorization, Tenant, WorkOrder, RuntimeRun and RunManifest bindings never change across renewal",
+    "expires_at is later than issued_at and no later than the CommercialAuthorization, budget, policy and every ArtifactGrant expiry; no ArtifactGrant predates authorization issuance or outlives it",
+    "fresh ArtifactGrants exactly cover admitted ArtifactAccessRequirements without granting finalize authority"
+  ]
+}

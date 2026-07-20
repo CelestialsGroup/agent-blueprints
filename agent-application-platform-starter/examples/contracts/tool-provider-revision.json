@@ -1,6 +1,6 @@
 {
   "provider_revision_id": "tpr_01J00000000000000000000000",
-  "provider_revision_digest": "sha256:aac2e6e5837401672b7266d5b01baaf3ea5a46a25bdc59a09016744984074dff",
+  "provider_revision_digest": "sha256:095db7c909c92e04d76604ec72115c6e47beeb28aa406d4a473ae8de186b1b67",
   "provider_instance_id": "tpi_echo",
   "configuration_digest": "sha256:2323232323232323232323232323232323232323232323232323232323232323",
   "approved_permissions_digest": "sha256:2424242424242424242424242424242424242424242424242424242424242424",
@@ -15,11 +15,11 @@
       "status": "passed",
       "report_digest": "sha256:2727272727272727272727272727272727272727272727272727272727272727",
       "suite_id": "capability-provider",
-      "suite_digest": "sha256:9ca84761cf924f8f0f6b03bc1943dc6722fb1b54fccc1dd6d125d52004afdd90",
+      "suite_digest": "sha256:f5906e48557a9cbe53c8424b570269a19339db7524b79f2d1fc11a814bfdb037",
       "suite_profile_id": "capability-core-v1"
     }
   ],
-  "conformance_set_digest": "sha256:f84d219b19bcf13aed19d1df91757fec362bcfbb0221dc85125640fe84bf5785",
+  "conformance_set_digest": "sha256:1b8db273b8f33ec7cc654bdaf41f775047e4e088b97aaf7d9e8d06a42d0d430f",
   "created_at": "2026-07-16T09:00:20Z",
   "implementation": {
     "implementation_id": "tool-provider.echo",

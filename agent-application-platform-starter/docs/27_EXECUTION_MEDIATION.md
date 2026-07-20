@@ -33,9 +33,9 @@ CommercialAuthorization hard limits
 
 PolicyDecision 固化全部匹配规则摘要和 Effective Permissions Digest。`ask` 创建 Approval；任何匹配 Deny 都不能被 Tenant、用户记忆授权、Runtime 自报 Allow 或 Hook 覆盖。Policy Allow 之后仍必须通过 Invocation、Gateway、OS Sandbox、NetworkPolicy 和 Artifact Staging。
 
-AgentRuntimeProvider 的每次调用还必须使用短期 RuntimeInvocation Token。Token 将 Tenant、ProviderRevision、WorkflowRun/AgentRun/RuntimeRun、RunManifest、InvocationAttempt、Fencing、PolicyDecision、ExecutionBudget、Effective Permissions 和请求摘要绑定为一个不可混用的授权上下文；mTLS 只证明工作负载身份，不能替代对象级绑定。
+AgentRuntimeProvider 的每次调用还必须使用短期 RuntimeInvocation Token。Token 将 Tenant、ProviderRevision、WorkflowRun/AgentRun/RuntimeRun、RunManifest、RuntimeAuthorization、InvocationAttempt、Fencing、PolicyDecision、ExecutionBudget、Effective Permissions 和请求摘要绑定为一个不可混用的授权上下文；mTLS 只证明工作负载身份，不能替代对象级绑定。
 
-Runtime Start 同时携带完整有效值和类型化 Model/Tool/Artifact/Egress Gateway Binding；摘要用于校验不可替代实际执行值。通用 Capability Provider 使用独立 Token，并额外绑定 ClientApplication、Principal Context、WorkOrder、Capability Schema、Artifact Grant 和 Staging Session；`plugin_id` 不属于稳定授权边界。
+RunManifest 固化初始 Budget/Policy/Permissions 上限、ArtifactAccessRequirement、CommercialAuthorizationBinding（ID/Digest/`expires_at`）和授权续期规则。Runtime Start 携带本 Attempt 的完整 RuntimeAuthorization 与类型化 Model/Tool/Artifact/Egress Gateway Binding；Authorization 内部作用域与摘要必须闭合，不能越过商业授权期限，ArtifactGrant 必须落在 Authorization 时间窗内。Token 过期、Adapter 重启或 Resume 通过前驱摘要链刷新 Authorization/ArtifactGrant，只能等价或缩权。通用 Capability Provider 使用独立 Token，并额外绑定 ClientApplication、Principal Context、WorkOrder、Capability Schema、ArtifactGrant 和 Staging Session；Capability ArtifactGrant 不能越过请求 deadline 或 Token `exp`，`plugin_id` 不属于稳定授权边界。
 
 ## 模型 Gateway
 

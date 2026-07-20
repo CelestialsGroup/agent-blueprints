@@ -71,7 +71,9 @@ Plugin 只是 Tool、Skill、Template 等实现的一种打包方式，PluginMan
 
 权威传输契约是 `contracts/openapi/capability-provider-v1.yaml`，覆盖 Invoke、Status、Cancel 和 attempt-local Event。Model、Tool、MCP、Skill、Template、Renderer、Editor、Converter 与 Catalog-backed Provider 均实现或适配该 Port；`plugin-invocation-v1` 只保留为旧 Plugin 的兼容协议，不能作为新 Provider 的公共前提。
 
-CapabilityInvocationRequest 和独立 Token 必须绑定 Tenant、ClientApplication、Principal Context Digest、WorkOrder、ProviderRevision、Capability Schema Digest、InvocationAttempt、Fencing、Request Digest、Policy、Budget、Permissions、Artifact Grant 与 Staging Session。Provider 不得接受只有 `plugin_id`、宽泛权限或未绑定 Request Digest 的令牌。写请求具有明确 encoded-byte 上限，超限必须在 JSON 解析前返回 413。
+CapabilityInvocationRequest 和独立 Token 必须绑定 Tenant、ClientApplication、PrincipalContextSnapshot Digest、WorkOrder、ProviderRevision、Capability Schema Digest、InvocationAttempt、Fencing、Request Digest、Policy、Budget、Permissions、ArtifactGrant 与 Staging Session。ArtifactGrant 使用通用 `execution_scope` 绑定同一 Tenant/WorkOrder/Capability InvocationAttempt，不要求伪造 RuntimeRun，其 `expires_at` 不得晚于请求 `deadline_at` 或独立 Token 的 `exp`。Provider 不得接受只有 `plugin_id`、宽泛权限或未绑定 Request Digest 的令牌。写请求具有明确 encoded-byte 上限，超限必须在 JSON 解析前返回 413。
+
+Provider 输出只包含 Structured Result、StagedArtifact 和 UsageObservation。UsageObservation 没有 Platform `entry_id`、Tenant/WorkOrder 归属、Idempotency Key 或 `recorded_at`；Platform 校验 Meter/Evidence/Attempt 后才创建 TechnicalUsageEntry。Provider 只能读取已授权 ArtifactVersion 或写 Staging，不能 Finalize 正式 ArtifactVersion。
 
 ## Plugin 实现声明
 
@@ -115,7 +117,7 @@ Run 不能只保存 ProviderInstance ID。
 
 ProviderResolution 必须固化：
 
-- Tenant、ClientApplication、WorkOrder 执行范围，以及身份参与解析时的 Principal Context Digest；
+- Tenant、ClientApplication、WorkOrder 执行范围，显式 `identity_dependency` 声明，以及身份参与解析时的 PrincipalContextSnapshot Digest；
 
 - Resolver ID/Version/Digest；
 - 完整解析输入摘要，包括 Capability、Policy、Placement、Health 和 Capacity；

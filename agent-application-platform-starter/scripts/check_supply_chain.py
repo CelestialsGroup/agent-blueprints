@@ -52,22 +52,29 @@ def governed_files() -> list[Path]:
     return sorted({path for path in files if not EXCLUDED_PARTS.intersection(path.relative_to(ROOT).parts)})
 
 
-lock_path = ROOT / "package-lock.json"
-lock = json.loads(lock_path.read_text(encoding="utf-8"))
-for package_name, package_entry in lock.get("packages", {}).items():
-    if isinstance(package_entry, dict) and isinstance(package_entry.get("resolved"), str):
-        check_url(package_entry["resolved"], lock_path)
-        if package_name and not package_entry.get("integrity"):
-            raise AssertionError(f"Missing npm integrity for {package_name}")
-
 package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
-root_lock = lock.get("packages", {}).get("", {})
-if lock.get("version") != package.get("version") or root_lock.get("version") != package.get("version"):
-    raise AssertionError("package.json and package-lock.json versions must match")
+package_manager = package.get("packageManager", "")
+if not re.fullmatch(r"pnpm@\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?", package_manager):
+    raise AssertionError("packageManager must pin one exact pnpm release")
+lock_path = ROOT / "pnpm-lock.yaml"
+lock = yaml.safe_load(lock_path.read_text(encoding="utf-8"))
+if str(lock.get("lockfileVersion")) != "9.0":
+    raise AssertionError("pnpm-lock.yaml must use the governed lockfile version 9.0")
+root_importer = lock.get("importers", {}).get(".", {})
+for package_name, package_entry in lock.get("packages", {}).items():
+    resolution = package_entry.get("resolution", {}) if isinstance(package_entry, dict) else {}
+    tarball = resolution.get("tarball")
+    if isinstance(tarball, str):
+        check_url(tarball, lock_path)
+    if not resolution.get("integrity"):
+        raise AssertionError(f"Missing pnpm integrity for {package_name}")
 for group in ("dependencies", "devDependencies"):
     for name, version in package.get(group, {}).items():
         if not re.fullmatch(r"\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?", version):
-            raise AssertionError(f"Unpinned npm dependency: {name}={version}")
+            raise AssertionError(f"Unpinned pnpm dependency: {name}={version}")
+        locked = root_importer.get(group, {}).get(name, {})
+        if locked.get("specifier") != version:
+            raise AssertionError(f"pnpm lock specifier differs from package.json: {name}")
 
 requirements = (ROOT / "requirements-contracts-v0.9.0.txt").read_text(encoding="utf-8")
 logical_lines: list[str] = []

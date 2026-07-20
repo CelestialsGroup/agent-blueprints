@@ -14,14 +14,15 @@
     "type": "provider",
     "id": "api_deerflow_runtime",
     "provider_revision_id": "apr_01J00000000000000000000000",
-    "provider_revision_digest": "sha256:688b9d7abe86270fc898deb57995c42737067526dfcd7967c5512a5f3b8be9ab"
+    "provider_revision_digest": "sha256:9c35dcaee06dd5d56bdf3297c493f9752c16f752b6ddc323e5f7dfcc49f7c252"
   },
   "provider_operation_id": "provider-op-model-001",
   "meter_source": "provider_reported",
   "measurement_status": "confirmed",
   "idempotency_key": "usage-model-input-0001",
-  "evidence_reference": "evidence://runtime/model-usage-001",
-  "occurred_at": "2026-07-16T09:05:00Z",
+  "evidence_reference": "https://evidence.agent.internal/provider-usage/uobs_01J000000000000000000000",
+  "occurred_at": "2026-07-16T09:02:00Z",
   "recorded_at": "2026-07-16T09:05:01Z",
-  "evidence_digest": "sha256:966b2a055f30a1821225ff320a0c5f6b2e5cc684730d5b761ec79c45dddcd75d"
+  "evidence_digest": "sha256:88c7ef6685a93713c9d1fa9a273d61a964eadc94b318115fc1a11c5e44e5e1c0",
+  "source_observation_id": "uobs_01J000000000000000000000"
 }

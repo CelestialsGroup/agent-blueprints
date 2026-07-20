@@ -6,7 +6,9 @@
 - **Agent Platform**：Conversation、执行账本、Artifact、Provider、Sandbox、Technical Usage 和 Delivery 的事实源。
 - **ClientApplication / ServicePrincipal**：使用 OAuth2 Client Credentials 调用平台的业务后端。
 - **CommercialAuthorizationSnapshot**：Business 签发的 Entitlement、Capability、Limit 和 Quota Reservation 快照。
-- **ExecutionGrant**：绑定精确请求 Contract/Digest Profile、Conversation Turn 和商业授权的短期单次 JWS。
+- **CommercialAuthorizationBinding**：RunManifest 与 RuntimeAuthorization 使用的不可变热路径引用，至少包含 Snapshot ID、Digest 和 `expires_at`，用于在不查询 Business 的情况下执行到期上限。
+- **PrincipalContextSnapshot**：Business 签发的有界不可变身份/授权属性快照；凭据和可变展示资料不得进入，摘要用于 Grant、Policy 和 ProviderResolution 绑定。
+- **ExecutionGrant**：绑定精确请求 Contract/Digest Profile、PrincipalContextSnapshot 和商业授权的短期单次 JWS；Turn 与 Control 使用互斥 Claim 形态。
 - **WorkSession**：绑定一个 Conversation、可选缩窄到一个 WorkOrder 的短期浏览器/SDK Session。
 
 ## Conversation 与执行
@@ -24,8 +26,9 @@
 - **MeterDefinition**：不含价格的不可变技术计量语义和基础单位。
 - **ExecutionBudget / PolicyDecision**：Platform 从商业限制和全部策略作用域导出的不可变执行预算与 `deny > ask > allow` 决策。
 - **AgentRuntimeProvider**：启动/Command/Status/Event/Checkpoint 的稳定 Agent Runtime Port；平台不依赖单一框架，DeerFlow 只是首个参考 Adapter。
-- **AgentRuntimeInvocation Token**：绑定 Tenant、ProviderRevision、Run、Attempt、Fencing、Policy、Budget、Permissions 和请求摘要的短期调用授权。
-- **RunManifest**：固化 Tenant、Scenario、ProviderResolution/Admission、Event Registry、Experience、Sandbox、Runtime 和授权/预算/策略摘要的执行快照。
+- **RuntimeAuthorization**：绑定一个 Runtime InvocationAttempt 的短期仅追加授权 Revision；可在同一 RunManifest 下等价或缩权续期，并携带 fresh ArtifactGrant。
+- **AgentRuntimeInvocation Token**：绑定 Tenant、ProviderRevision、RunManifest、RuntimeAuthorization、Attempt、Fencing、Policy、Budget、Permissions 和请求摘要的短期调用授权。
+- **RunManifest**：固化 Tenant、Scenario、ProviderResolution/Admission、Event Registry、Experience、Sandbox、Runtime、ArtifactAccessRequirement 和初始授权上限的执行快照；不保存短期 bearer Grant。
 
 ## 可靠性
 
@@ -52,9 +55,11 @@
 
 - **Artifact / ArtifactVersion**：逻辑产物及不可变内容版本。
 - **ArtifactStaging**：Provider 输出在正式提交前的隔离验证区。
+- **ArtifactAccessRequirement / ArtifactGrant**：前者是 RunManifest 中无时效的不可变访问需求，后者是绑定具体 InvocationAttempt 的短期读取/暂存授权；Provider 永远没有 Finalize 权限。
 - **SandboxProvider**：创建/执行/Session/Snapshot/终止的可替换基础设施 Port。
 - **SandboxOperation**：Sandbox 生命周期或 Exec 的持久化逻辑操作；与单次传输 Attempt 分离。
 - **RuntimeSession**：前端经 Runtime Gateway 访问 Terminal/Browser/Desktop/Port Forward 的短期实时授权；Port Forward 不录制。
 - **RuntimeRecording**：与实时 Session 分离的不可变 Chunk/Manifest 历史回放资源。
+- **UsageObservation**：Provider 返回的有界测量证据；Platform 据此创建 TechnicalUsageEntry 的身份、归属、幂等和持久化时间。
 - **UsageReport / BusinessSettlementEnvelope**：Platform 连续编号的技术用量快照与签名交接；Envelope 嵌入 Final/Correction Report，价格与余额仍由 Business 决定。
 - **Model/Tool/Artifact/Egress Gateway**：强制预算、审批、凭据、Artifact 和网络策略的执行中介。

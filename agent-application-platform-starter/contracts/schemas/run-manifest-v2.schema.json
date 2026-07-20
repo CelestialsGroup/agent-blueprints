@@ -5,8 +5,9 @@
   "type": "object",
   "required": [
     "agent_run_id", "workflow_run_id", "tenant_id", "work_order_id", "scenario", "workflow", "capability_resolutions",
-    "sandboxes", "location", "request_digest", "input", "context_package", "artifact_grants",
+    "sandboxes", "location", "request_digest", "input", "context_package", "artifact_access_requirements",
     "execution_budget", "policy_decision", "effective_permissions", "gateway_bindings", "admission_limits",
+    "authorization_renewal_policy",
     "event_registry", "agent_runtime",
     "run_manifest_digest", "orchestration_binding",
     "conversation", "selected_experiences", "commercial_authorization"
@@ -101,16 +102,17 @@
     "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "input": { "$ref": "urn:agent-platform:runtime-input-envelope:v1" },
     "context_package": { "$ref": "urn:agent-platform:context-package:v1" },
-    "artifact_grants": {
+    "artifact_access_requirements": {
       "type": "array",
       "maxItems": 256,
       "uniqueItems": true,
-      "items": { "$ref": "urn:agent-platform:artifact-grant:v1" }
+      "items": { "$ref": "urn:agent-platform:artifact-access-requirement:v1" }
     },
     "execution_budget": { "$ref": "urn:agent-platform:execution-budget:v1" },
     "policy_decision": { "$ref": "urn:agent-platform:policy-decision:v1" },
     "effective_permissions": { "$ref": "urn:agent-platform:effective-permissions:v1" },
     "gateway_bindings": { "$ref": "urn:agent-platform:runtime-gateway-bindings:v1" },
+    "authorization_renewal_policy": { "$ref": "urn:agent-platform:authorization-renewal-policy:v1" },
     "admission_limits": {
       "type": "object",
       "required": ["max_encoded_request_bytes", "max_inline_input_bytes", "max_context_items", "max_artifact_grants"],
@@ -123,13 +125,7 @@
       "additionalProperties": false
     },
     "commercial_authorization": {
-      "type": "object",
-      "required": ["commercial_authorization_id", "commercial_authorization_digest"],
-      "properties": {
-        "commercial_authorization_id": { "type": "string", "minLength": 1 },
-        "commercial_authorization_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
-      },
-      "additionalProperties": false
+      "$ref": "urn:agent-platform:commercial-authorization-binding:v1"
     },
     "event_registry": {
       "type": "object",
@@ -218,9 +214,10 @@
     ,"tenant_id and conversation binding match the WorkOrder, input message and ExecutionGrant"
     ,"conversation WorkspaceRevision matches the admitted branch head captured for this Run"
     ,"agent_run_id and workflow_run_id match the immutable AgentRun and WorkflowRun records"
-    ,"input, context_package and artifact_grants are the complete bounded execution inputs admitted for this Run"
-    ,"execution_budget, policy_decision, effective_permissions and gateway_bindings carry complete immutable effective values rather than digest-only placeholders"
-    ,"commercial_authorization and event_registry bind exact immutable IDs and digests"
+    ,"input, context_package and artifact_access_requirements are the complete bounded execution inputs admitted for this Run"
+    ,"execution_budget, policy_decision and effective_permissions are immutable initial ceilings; short-lived RuntimeAuthorization revisions may remain equal or narrow them without changing the RunManifest"
+    ,"gateway_bindings and authorization_renewal_policy are complete, typed and immutable for this Run"
+    ,"commercial_authorization binds the exact immutable ID, digest and expiration ceiling while event_registry binds its exact immutable ID, version and digest"
     ,"orchestration_binding equals the WorkflowRun binding and contains no engine-native endpoint or mutable infrastructure identity"
   ]
 }

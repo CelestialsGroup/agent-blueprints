@@ -53,13 +53,13 @@ Plugin Invocation Token 内容：
 
 - structured output
 - StagedArtifact
-- Technical Usage
+- UsageObservation（由 Platform 归一化为 TechnicalUsageEntry）
 - Provider Operation ID
 - Attempt/Fencing
 
 ## Artifact 暂存区
 
-Plugin 不创建正式 ArtifactVersion。
+Plugin 不创建正式 ArtifactVersion，也不返回带 Platform `entry_id/recorded_at` 的 TechnicalUsageEntry。
 
 平台验证：
 

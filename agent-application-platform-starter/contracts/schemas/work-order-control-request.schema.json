@@ -6,7 +6,7 @@
   "type": "object",
   "required": [
     "control_request_id", "work_order_id", "conversation_id", "branch_id", "action",
-    "expected_message_head_sequence", "expected_active_work_version", "execution_grant"
+    "expected_active_work_version", "execution_grant"
   ],
   "properties": {
     "control_request_id": { "type": "string", "minLength": 1, "maxLength": 200 },
@@ -14,9 +14,9 @@
     "conversation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "branch_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "action": { "enum": ["append_input", "interrupt", "pause", "resume", "cancel", "approval_decision"] },
-    "expected_message_head_sequence": { "type": "integer", "minimum": 0 },
+    "expected_message_head_version": { "type": "integer", "minimum": 1 },
     "expected_active_work_version": { "type": "integer", "minimum": 1 },
-    "content": { "$ref": "urn:agent-platform:runtime-input-envelope:v1" },
+    "content": { "$ref": "urn:agent-platform:work-order-control-input:v1" },
     "approval_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "decision": { "$ref": "urn:agent-platform:approval-decision:v1" },
     "reason": { "type": "string", "minLength": 1, "maxLength": 1000 },
@@ -31,20 +31,20 @@
   "allOf": [
     {
       "if": { "properties": { "action": { "enum": ["append_input", "interrupt"] } }, "required": ["action"] },
-      "then": { "required": ["content"], "not": { "anyOf": [{ "required": ["approval_id"] }, { "required": ["decision"] }] } }
+      "then": { "required": ["content", "expected_message_head_version"], "not": { "anyOf": [{ "required": ["approval_id"] }, { "required": ["decision"] }] } }
     },
     {
       "if": { "properties": { "action": { "const": "approval_decision" } }, "required": ["action"] },
-      "then": { "required": ["approval_id", "decision"], "not": { "required": ["content"] } }
+      "then": { "required": ["approval_id", "decision"], "not": { "anyOf": [{ "required": ["content"] }, { "required": ["expected_message_head_version"] }] } }
     },
     {
       "if": { "properties": { "action": { "enum": ["pause", "resume", "cancel"] } }, "required": ["action"] },
-      "then": { "not": { "anyOf": [{ "required": ["content"] }, { "required": ["approval_id"] }, { "required": ["decision"] }] } }
+      "then": { "not": { "anyOf": [{ "required": ["content"] }, { "required": ["approval_id"] }, { "required": ["decision"] }, { "required": ["expected_message_head_version"] }] } }
     }
   ],
   "x-semantic-constraints": [
     "a fresh single-use ExecutionGrant binds the exact control request excluding execution_grant",
-    "expected_message_head_sequence protects message ordering and expected_active_work_version protects active WorkOrder control; neither participates in WorkspaceRevision CAS",
-    "append_input and interrupt persist an immutable authorized control input before an AgentRuntime command is emitted"
+    "append_input and interrupt compare expected_message_head_version while every action compares expected_active_work_version; neither participates in WorkspaceRevision CAS",
+    "append_input and interrupt allocate platform input_id and input_message_id and persist an immutable authorized control input before an AgentRuntime command is emitted"
   ]
 }

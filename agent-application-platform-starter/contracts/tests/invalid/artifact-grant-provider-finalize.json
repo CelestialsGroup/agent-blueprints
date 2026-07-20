@@ -1,0 +1,21 @@
+{
+  "grant_id": "artg_01J0000000000000000000000",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "artifact_id": "art_workspace_manifest_01J000000000000000",
+  "version_id": "ver_workspace_manifest_01J00000000000000",
+  "artifact_digest": "sha256:ef0e25f8c192d97c4c99db13fba26569c7f78ca505e6b0db999c86398e4d86f5",
+  "permissions": [
+    "read",
+    "finalize"
+  ],
+  "gateway_route_id": "artifact-route-workspace-manifest",
+  "issued_at": "2026-07-16T09:01:00Z",
+  "expires_at": "2026-07-16T09:15:00Z",
+  "execution_scope": {
+    "kind": "runtime_invocation",
+    "runtime_run_id": "rtr_01J00000000000000000000000",
+    "invocation_id": "inv_runtime_01J000000000000000000",
+    "invocation_attempt_id": "iat_runtime_01J0000000000000000"
+  }
+}

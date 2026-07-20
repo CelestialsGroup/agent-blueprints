@@ -4,7 +4,8 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
-from datetime import datetime
+import posixpath
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -21,12 +22,87 @@ for schema_path in sorted((ROOT / "contracts/schemas").glob("*.json")):
     SCHEMA_REGISTRY = SCHEMA_REGISTRY.with_resource(schema_value["$id"], Resource.from_contents(schema_value))
 
 
+KNOWN_CONTRACT_CHECKS = {
+    "runtime_start.execution_topology",
+    "runtime_start.workspace_binding",
+    "runtime_start.sandbox_binding",
+    "runtime_start.request_digest",
+    "runtime_start.input_binding",
+    "runtime_start.immutable_context_binding",
+    "runtime_authorization.digest",
+    "runtime_authorization.lineage",
+    "runtime_authorization.ceiling",
+    "runtime_authorization.internal_binding",
+    "runtime_authorization.scope",
+    "runtime_authorization.expiry",
+    "runtime_authorization.artifact_coverage",
+    "runtime_token.binding",
+    "work_order_control.grant_binding",
+    "work_order_control.conditional_cas",
+    "conversation_branch.head_consistency",
+    "conversation_branch.workspace_binding",
+    "provider_resolution.decision_digest",
+    "provider_resolution.execution_scope",
+    "provider_resolution.identity_dependency",
+    "provider_resolution.selected_candidate",
+    "capability_invocation.request_digest",
+    "capability_invocation.token_binding",
+    "capability_invocation.token_lifetime",
+    "capability_invocation.artifact_grant_expiry",
+    "workspace_manifest.digest",
+    "workspace_manifest.path_policy",
+    "workspace_manifest.counts",
+    "workspace_manifest.symlink_policy",
+    "runtime_session.requested_scope_subset",
+    "runtime_session.sandbox_slot_binding",
+    "runtime_session.scope_class",
+    "runtime_session.channel_policy",
+    "canonical_event.work_binding",
+    "canonical_event.source_dedupe",
+    "canonical_event.producer_binding",
+    "canonical_event.registry_binding",
+    "execution_grant.clock_skew",
+    "execution_grant.expiration_order",
+    "execution_grant.max_ttl",
+    "execution_grant.request_digest",
+    "execution_grant.principal_context",
+    "execution_grant.request_identity",
+    "execution_grant.commercial_limits",
+    "execution_grant.snapshot_validity",
+    "principal_context.digest",
+    "principal_context.time_window",
+    "principal_context.closed_attributes",
+    "gateway_binding.closed_modes",
+    "gateway_binding.policy_alignment",
+    "artifact_grant.expiry",
+    "artifact_grant.scope",
+    "artifact_grant.provider_permissions",
+    "usage_observation.observation_identity",
+    "usage_observation.meter_and_evidence",
+    "usage_observation.incomplete_status",
+    "usage_observation.provider_boundary",
+    "semantic_traceability.known_but_unexecuted",
+}
+EXECUTED_CONTRACT_CHECKS: set[str] = set()
+
+
+def mark_checks(*check_ids: str) -> None:
+    unknown = set(check_ids) - KNOWN_CONTRACT_CHECKS
+    if unknown:
+        raise AssertionError(f"Validator attempted to mark unknown contract checks: {sorted(unknown)}")
+    EXECUTED_CONTRACT_CHECKS.update(check_ids)
+
+
 def load(relative: str) -> Any:
     return json.loads((ROOT / relative).read_text(encoding="utf-8"))
 
 
 def canonical_digest(value: Any) -> str:
     return "sha256:" + hashlib.sha256(rfc8785.dumps(value)).hexdigest()
+
+
+def parse_datetime(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
 def validate_self_digest(value: dict[str, Any], field: str) -> None:
@@ -37,15 +113,56 @@ def validate_self_digest(value: dict[str, Any], field: str) -> None:
         raise AssertionError(f"{field} mismatch: expected {actual}, got {expected}")
 
 
+def validate_principal_context(snapshot: dict[str, Any]) -> None:
+    validate_self_digest(snapshot, "principal_context_digest")
+    issued_at = parse_datetime(snapshot["issued_at"])
+    expires_at = parse_datetime(snapshot["expires_at"])
+    if expires_at <= issued_at:
+        raise AssertionError("PrincipalContextSnapshot expiry is not later than issuance")
+    forbidden_fragments = {"password", "secret", "token", "credential", "email", "display_name"}
+    if any(fragment in key for key in snapshot["attributes"] for fragment in forbidden_fragments):
+        raise AssertionError("PrincipalContextSnapshot contains credentials or mutable display attributes")
+    mark_checks(
+        "principal_context.digest",
+        "principal_context.time_window",
+        "principal_context.closed_attributes",
+    )
+
+
 def validate_execution_grant_request(
     grant: dict[str, Any], request: dict[str, Any], *, authenticated_conversation_id: str,
 ) -> None:
+    if grant["nbf"] > grant["iat"] + 30 or grant["iat"] >= grant["exp"] or grant["exp"] - grant["iat"] > 300:
+        raise AssertionError("ExecutionGrant time window is invalid")
     if grant["request_digest_profile"] != "rfc8785-request-excluding-execution-grant-v1":
         raise AssertionError("ExecutionGrant uses an unsupported request digest profile")
     unsigned = copy.deepcopy(request)
     unsigned.pop("execution_grant", None)
     if grant["request_digest"] != canonical_digest(unsigned):
         raise AssertionError("ExecutionGrant request_digest does not bind the submitted request")
+    validate_principal_context(grant["principal_context"])
+    principal = grant["principal_context"]
+    if grant["principal_context_digest"] != principal["principal_context_digest"]:
+        raise AssertionError("ExecutionGrant principal_context_digest does not bind its snapshot")
+    principal_bindings = {
+        "client_app_id": "client_app_id",
+        "external_tenant_id": "external_tenant_id",
+        "external_principal_id": "external_principal_id",
+    }
+    if any(grant[claim] != principal[field] for claim, field in principal_bindings.items()):
+        raise AssertionError("ExecutionGrant claims differ from PrincipalContextSnapshot")
+    commercial = grant["commercial_authorization"]
+    validate_self_digest(commercial, "commercial_authorization_digest")
+    commercial_issued_at = parse_datetime(commercial["issued_at"])
+    commercial_expires_at = parse_datetime(commercial["expires_at"])
+    if commercial_expires_at <= commercial_issued_at:
+        raise AssertionError("CommercialAuthorizationSnapshot expiry is not later than issuance")
+    grant_issued_at = datetime.fromtimestamp(grant["iat"], tz=timezone.utc)
+    grant_expires_at = datetime.fromtimestamp(grant["exp"], tz=timezone.utc)
+    if grant_issued_at < max(parse_datetime(principal["issued_at"]), commercial_issued_at) or grant_expires_at > min(
+        parse_datetime(principal["expires_at"]), commercial_expires_at
+    ):
+        raise AssertionError("ExecutionGrant is not fully covered by its identity and commercial snapshots")
     contract_id = grant["request_contract_id"]
     if contract_id == "urn:agent-platform:conversation-turn-request:v1":
         if not {"branch_id", "client_message_id", "scenario"} <= set(request):
@@ -83,10 +200,32 @@ def validate_execution_grant_request(
             "work_order_id": request["work_order_id"],
             "control_request_id": request["control_request_id"],
         }
+        forbidden = {"turn_id", "client_message_id", "scenario_id", "scenario_version", "scenario_definition_digest"}
+        if forbidden & set(grant):
+            raise AssertionError("Control ExecutionGrant contains stale Turn or Scenario bindings")
     else:
         raise AssertionError("ExecutionGrant request_contract_id is unsupported")
     if any(grant[field] != value for field, value in bindings.items()):
         raise AssertionError("ExecutionGrant identity bindings differ from the submitted request")
+    if not set(grant["capabilities"]) <= set(commercial["authorized_capabilities"]):
+        raise AssertionError("ExecutionGrant capabilities exceed commercial authorization")
+    if any(
+        name not in commercial["authorized_limits"] or value > commercial["authorized_limits"][name]
+        for name, value in grant["limits"].items()
+    ):
+        raise AssertionError("ExecutionGrant limits exceed commercial authorization")
+    mark_checks(
+        "execution_grant.clock_skew",
+        "execution_grant.expiration_order",
+        "execution_grant.max_ttl",
+        "execution_grant.request_digest",
+        "execution_grant.principal_context",
+        "execution_grant.request_identity",
+        "execution_grant.commercial_limits",
+        "execution_grant.snapshot_validity",
+    )
+    if contract_id == "urn:agent-platform:work-order-control-request:v1":
+        mark_checks("work_order_control.grant_binding")
 
 
 def validate_provider_resolution(resolution: dict[str, Any]) -> None:
@@ -108,8 +247,15 @@ def validate_provider_resolution(resolution: dict[str, Any]) -> None:
         raise AssertionError("ProviderResolution selected revision conflicts with candidate evidence")
     if resolution["execution_scope"] != "work_order" or not resolution["tenant_id"] or not resolution["client_app_id"] or not resolution["work_order_id"]:
         raise AssertionError("ProviderResolution is missing its Tenant, ClientApplication or WorkOrder scope")
-    if resolution["routing_reason"] in {"tenant_binding", "client_binding"} and resolution["principal_context_digest"] is None:
-        raise AssertionError("Identity-dependent ProviderResolution lacks Principal context binding")
+    identity_mode = resolution["identity_dependency"]["mode"]
+    if (identity_mode == "principal_context") != (resolution["principal_context_digest"] is not None):
+        raise AssertionError("ProviderResolution identity dependency conflicts with Principal context binding")
+    mark_checks(
+        "provider_resolution.decision_digest",
+        "provider_resolution.execution_scope",
+        "provider_resolution.identity_dependency",
+        "provider_resolution.selected_candidate",
+    )
 
 
 def validate_provider_architecture(context: dict[str, Any], suites: list[dict[str, Any]]) -> None:
@@ -133,6 +279,186 @@ def validate_provider_architecture(context: dict[str, Any], suites: list[dict[st
                 raise AssertionError("Provider conformance does not bind an admitted immutable Suite")
             if result["suite_profile_id"] not in {profile["profile_id"] for profile in suite["profiles"]}:
                 raise AssertionError("Provider conformance binds an unknown Suite profile")
+
+
+def permissions_are_subset(current: dict[str, Any], ceiling: dict[str, Any]) -> bool:
+    if not set(current["model"]["allowed_model_profiles"]) <= set(ceiling["model"]["allowed_model_profiles"]):
+        return False
+    if not set(current["tool"]["allowed_capabilities"]) <= set(ceiling["tool"]["allowed_capabilities"]):
+        return False
+    for permission in ("read", "stage_new_version"):
+        if current["artifact"][permission] and not ceiling["artifact"][permission]:
+            return False
+    egress_rank = {"none": 0, "restricted": 1, "full": 2}
+    if egress_rank[current["egress"]["mode"]] > egress_rank[ceiling["egress"]["mode"]]:
+        return False
+    if not set(current["egress"]["allowed_destination_classes"]) <= set(
+        ceiling["egress"]["allowed_destination_classes"]
+    ):
+        return False
+    ceiling_slots = {
+        item["sandbox_slot_key"]: set(item["allowed_operations"])
+        for item in ceiling["sandbox_slots"]
+    }
+    return all(
+        item["sandbox_slot_key"] in ceiling_slots
+        and set(item["allowed_operations"]) <= ceiling_slots[item["sandbox_slot_key"]]
+        for item in current["sandbox_slots"]
+    )
+
+
+def validate_gateway_bindings(
+    bindings: dict[str, Any], budget: dict[str, Any], permissions: dict[str, Any],
+) -> None:
+    for kind, binding in bindings.items():
+        if binding["kind"] != kind:
+            raise AssertionError("Runtime Gateway binding is stored under the wrong kind")
+        if binding["mode"] == "disabled" and any(
+            field in binding for field in ("gateway_id", "route_id", "protocol_version", "binding_digest", "audience")
+        ):
+            raise AssertionError("Disabled Runtime Gateway binding exposes a routable identity")
+    required_modes = {
+        "model": budget["policies"]["model_gateway_required"]
+        or bool(permissions["model"]["allowed_model_profiles"]),
+        "tool": budget["policies"]["tool_gateway_required"]
+        or bool(permissions["tool"]["allowed_capabilities"]),
+        "artifact": permissions["artifact"]["read"] or permissions["artifact"]["stage_new_version"],
+        "egress": budget["policies"]["egress_gateway_required"]
+        or permissions["egress"]["mode"] != "none",
+    }
+    for kind, required in required_modes.items():
+        if required and bindings[kind]["mode"] != "enabled":
+            raise AssertionError(f"Required {kind} Gateway binding is disabled")
+    mark_checks("gateway_binding.closed_modes", "gateway_binding.policy_alignment")
+
+
+def validate_runtime_authorization(
+    authorization: dict[str, Any], manifest: dict[str, Any], runtime_start: dict[str, Any],
+    predecessor: dict[str, Any] | None = None,
+) -> None:
+    validate_self_digest(authorization, "authorization_digest")
+    validate_self_digest(authorization["execution_budget"], "budget_digest")
+    validate_self_digest(authorization["policy_decision"], "decision_digest")
+    validate_self_digest(authorization["effective_permissions"], "permissions_digest")
+    if (
+        authorization["policy_decision"]["execution_budget_id"] != authorization["execution_budget"]["budget_id"]
+        or authorization["policy_decision"]["execution_budget_digest"] != authorization["execution_budget"]["budget_digest"]
+        or authorization["policy_decision"]["effective_permissions_digest"]
+        != authorization["effective_permissions"]["permissions_digest"]
+    ):
+        raise AssertionError("RuntimeAuthorization budget, policy and permission digests are not closed")
+    expected_tenant = authorization["tenant_id"]
+    expected_work_order = authorization["work_order_id"]
+    for component_name in ("execution_budget", "policy_decision", "effective_permissions"):
+        component = authorization[component_name]
+        if component["tenant_id"] != expected_tenant or component["work_order_id"] != expected_work_order:
+            raise AssertionError(f"RuntimeAuthorization {component_name} crosses its Tenant or WorkOrder")
+    commercial_binding = authorization["commercial_authorization"]
+    policy = authorization["policy_decision"]
+    if (
+        policy["commercial_authorization_id"] != commercial_binding["commercial_authorization_id"]
+        or policy["commercial_authorization_digest"] != commercial_binding["commercial_authorization_digest"]
+    ):
+        raise AssertionError("RuntimeAuthorization PolicyDecision binds a different CommercialAuthorization")
+    if authorization["authorization_sequence"] == 1:
+        if predecessor is not None or authorization["predecessor_authorization_digest"] is not None:
+            raise AssertionError("Initial RuntimeAuthorization cannot have a predecessor")
+        if authorization["renewal_reason"] != "initial_dispatch":
+            raise AssertionError("Initial RuntimeAuthorization uses the wrong reason")
+    else:
+        if predecessor is None:
+            raise AssertionError("Renewed RuntimeAuthorization lacks its predecessor")
+        if authorization["authorization_sequence"] != predecessor["authorization_sequence"] + 1:
+            raise AssertionError("RuntimeAuthorization sequence contains a gap")
+        if authorization["predecessor_authorization_digest"] != predecessor["authorization_digest"]:
+            raise AssertionError("RuntimeAuthorization predecessor digest mismatch")
+        if authorization["renewal_reason"] == "initial_dispatch":
+            raise AssertionError("Renewed RuntimeAuthorization uses initial_dispatch")
+    expected_scope = {
+        "tenant_id": manifest["tenant_id"],
+        "work_order_id": manifest["work_order_id"],
+        "runtime_run_id": runtime_start["runtime_run_id"],
+        "run_manifest_digest": manifest["run_manifest_digest"],
+        "commercial_authorization": manifest["commercial_authorization"],
+    }
+    if any(authorization[field] != value for field, value in expected_scope.items()):
+        raise AssertionError("RuntimeAuthorization crosses its immutable Run scope")
+    if authorization["authorization_sequence"] == 1:
+        for field in ("execution_budget", "policy_decision", "effective_permissions"):
+            if authorization[field] != manifest[field]:
+                raise AssertionError("Initial RuntimeAuthorization differs from the RunManifest ceiling")
+    else:
+        if any(
+            authorization["execution_budget"]["limits"][name] > manifest["execution_budget"]["limits"][name]
+            for name in authorization["execution_budget"]["limits"]
+        ):
+            raise AssertionError("Renewed RuntimeAuthorization widens the execution budget")
+        if authorization["execution_budget"]["policies"] != manifest["execution_budget"]["policies"]:
+            raise AssertionError("Renewed RuntimeAuthorization changes admitted enforcement policy")
+        outcome_rank = {"deny": 0, "approval_required": 1, "allow": 2}
+        if outcome_rank[authorization["policy_decision"]["outcome"]] > outcome_rank[manifest["policy_decision"]["outcome"]]:
+            raise AssertionError("Renewed RuntimeAuthorization widens the policy outcome")
+        if not permissions_are_subset(authorization["effective_permissions"], manifest["effective_permissions"]):
+            raise AssertionError("Renewed RuntimeAuthorization widens effective permissions")
+    issued_at = parse_datetime(authorization["issued_at"])
+    expires_at = parse_datetime(authorization["expires_at"])
+    if expires_at <= issued_at:
+        raise AssertionError("RuntimeAuthorization expiry is not later than issuance")
+    if (expires_at - issued_at).total_seconds() > manifest["authorization_renewal_policy"]["max_ttl_seconds"]:
+        raise AssertionError("RuntimeAuthorization exceeds the admitted renewal TTL")
+    expiry_ceiling = min(
+        parse_datetime(commercial_binding["expires_at"]),
+        parse_datetime(authorization["execution_budget"]["expires_at"]),
+        parse_datetime(authorization["policy_decision"]["expires_at"]),
+        *(
+            parse_datetime(grant["expires_at"])
+            for grant in authorization["artifact_grants"]
+        ),
+    )
+    if expires_at > expiry_ceiling:
+        raise AssertionError("RuntimeAuthorization outlives a bound budget, policy or ArtifactGrant")
+    requirements = {
+        (item["artifact_id"], item["version_id"], item["artifact_digest"]): item
+        for item in manifest["artifact_access_requirements"]
+    }
+    covered: set[tuple[str, str, str]] = set()
+    for grant in authorization["artifact_grants"]:
+        grant_issued_at = parse_datetime(grant["issued_at"])
+        grant_expires_at = parse_datetime(grant["expires_at"])
+        if grant_expires_at <= grant_issued_at:
+            raise AssertionError("Runtime ArtifactGrant expiry is not later than issuance")
+        if grant_issued_at < issued_at or grant_expires_at > expires_at:
+            raise AssertionError("Runtime ArtifactGrant is outside its RuntimeAuthorization window")
+        key = (grant["artifact_id"], grant["version_id"], grant["artifact_digest"])
+        requirement = requirements.get(key)
+        if requirement is None or grant["tenant_id"] != manifest["tenant_id"] or grant["work_order_id"] != manifest["work_order_id"]:
+            raise AssertionError("Runtime ArtifactGrant does not cover an admitted requirement")
+        scope = grant["execution_scope"]
+        if scope.get("kind") != "runtime_invocation" or any(
+            scope[field] != runtime_start[field]
+            for field in ("runtime_run_id", "invocation_id", "invocation_attempt_id")
+        ):
+            raise AssertionError("Runtime ArtifactGrant is not bound to the current InvocationAttempt")
+        if not set(grant["permissions"]) <= set(requirement["allowed_permissions"]):
+            raise AssertionError("Runtime ArtifactGrant exceeds admitted permissions")
+        covered.add(key)
+    if covered != set(requirements) or len(authorization["artifact_grants"]) != len(requirements):
+        raise AssertionError("Runtime ArtifactGrants do not exactly cover admitted requirements")
+    validate_gateway_bindings(
+        manifest["gateway_bindings"], authorization["execution_budget"], authorization["effective_permissions"]
+    )
+    mark_checks(
+        "runtime_authorization.digest",
+        "runtime_authorization.lineage",
+        "runtime_authorization.ceiling",
+        "runtime_authorization.internal_binding",
+        "runtime_authorization.scope",
+        "runtime_authorization.expiry",
+        "runtime_authorization.artifact_coverage",
+        "artifact_grant.expiry",
+        "artifact_grant.scope",
+        "artifact_grant.provider_permissions",
+    )
 
 
 def validate_execution_topology(
@@ -175,21 +501,15 @@ def validate_execution_topology(
             raise AssertionError(f"Runtime start and RunManifest differ on {field}")
     if runtime_start["input_message_id"] != runtime_start["input"]["input_message_id"]:
         raise AssertionError("Runtime start input envelope belongs to a different input message")
-    for field in (
-        "input", "context_package", "artifact_grants", "execution_budget", "policy_decision",
-        "effective_permissions", "gateway_bindings", "admission_limits",
-    ):
+    for field in ("input", "context_package", "gateway_bindings", "admission_limits"):
         if runtime_start[field] != manifest[field]:
             raise AssertionError(f"Runtime start and RunManifest differ on executable context {field}")
-    validate_self_digest(runtime_start["effective_permissions"], "permissions_digest")
     if runtime_start["input"]["content_digest"] != canonical_digest(runtime_start["input"]["content"]):
         raise AssertionError("Runtime input content_digest does not bind the actual content")
     expanded_context_bytes = sum(item["size_bytes"] for item in runtime_start["context_package"]["items"])
-    if expanded_context_bytes > runtime_start["execution_budget"]["limits"]["max_storage_bytes"]:
+    if expanded_context_bytes > runtime_start["runtime_authorization"]["execution_budget"]["limits"]["max_storage_bytes"]:
         raise AssertionError("Expanded Context Package exceeds the admitted storage budget")
-    for grant in runtime_start["artifact_grants"]:
-        if grant["tenant_id"] != manifest["tenant_id"] or grant["work_order_id"] != manifest["work_order_id"] or grant["runtime_run_id"] != runtime_start["runtime_run_id"]:
-            raise AssertionError("Artifact Grant crosses the admitted execution topology")
+    validate_runtime_authorization(runtime_start["runtime_authorization"], manifest, runtime_start)
     expected_sandboxes = {
         (item["sandbox_slot_key"], item["sandbox_id"])
         for item in manifest["sandboxes"]
@@ -200,12 +520,21 @@ def validate_execution_topology(
     }
     if len(actual_sandboxes) != len(runtime_start["sandbox_bindings"]) or actual_sandboxes != expected_sandboxes:
         raise AssertionError("Runtime start Sandbox bindings do not exactly match RunManifest")
+    mark_checks(
+        "runtime_start.execution_topology",
+        "runtime_start.workspace_binding",
+        "runtime_start.sandbox_binding",
+        "runtime_start.request_digest",
+        "runtime_start.input_binding",
+        "runtime_start.immutable_context_binding",
+    )
 
 
 def validate_runtime_token(
     token: dict[str, Any], manifest: dict[str, Any], agent_run: dict[str, Any],
-    runtime_start: dict[str, Any], policy: dict[str, Any], budget: dict[str, Any],
+    runtime_start: dict[str, Any],
 ) -> None:
+    authorization = runtime_start["runtime_authorization"]
     expected = {
         "tenant_id": manifest["tenant_id"],
         "runtime_run_id": runtime_start["runtime_run_id"],
@@ -213,13 +542,14 @@ def validate_runtime_token(
         "workflow_run_id": manifest["workflow_run_id"],
         "work_order_id": manifest["work_order_id"],
         "run_manifest_digest": manifest["run_manifest_digest"],
+        "runtime_authorization_digest": authorization["authorization_digest"],
         "request_digest": runtime_start["request_digest"],
         "invocation_id": runtime_start["invocation_id"],
         "invocation_attempt_id": runtime_start["invocation_attempt_id"],
         "fencing_token": runtime_start["fencing_token"],
-        "policy_decision_digest": policy["decision_digest"],
-        "execution_budget_digest": budget["budget_digest"],
-        "effective_permissions_digest": policy["effective_permissions_digest"],
+        "policy_decision_digest": authorization["policy_decision"]["decision_digest"],
+        "execution_budget_digest": authorization["execution_budget"]["budget_digest"],
+        "effective_permissions_digest": authorization["effective_permissions"]["permissions_digest"],
     }
     for field, value in expected.items():
         if token[field] != value:
@@ -234,6 +564,7 @@ def validate_runtime_token(
     )
     if token["provider_revision_id"] != runtime_resolution["selected_provider_revision"]["provider_revision_id"]:
         raise AssertionError("Agent Runtime token binds a different ProviderRevision")
+    mark_checks("runtime_token.binding")
 
 
 def validate_capability_invocation(request: dict[str, Any], token: dict[str, Any]) -> None:
@@ -252,6 +583,7 @@ def validate_capability_invocation(request: dict[str, Any], token: dict[str, Any
         "request_digest": request["request_digest"],
         "policy_decision_digest": request["policy_decision_digest"],
         "execution_budget_digest": request["execution_budget_digest"],
+        "permissions_digest": request["permissions_digest"],
         "staging_session_id": request["output_staging_session_id"],
     }
     for field, value in expected.items():
@@ -259,6 +591,33 @@ def validate_capability_invocation(request: dict[str, Any], token: dict[str, Any
             raise AssertionError(f"Capability Invocation token differs from request on {field}")
     if not token["iat"] <= token["nbf"] < token["exp"] or token["exp"] - token["iat"] > 900:
         raise AssertionError("Capability Invocation token lifetime is invalid")
+    request_deadline = parse_datetime(request["deadline_at"])
+    token_expiry = datetime.fromtimestamp(token["exp"], tz=timezone.utc)
+    for grant in request["input_artifact_grants"]:
+        scope = grant["execution_scope"]
+        if scope.get("kind") != "capability_invocation" or any(
+            scope[field] != request[field] for field in ("invocation_id", "invocation_attempt_id")
+        ):
+            raise AssertionError("Capability ArtifactGrant crosses its InvocationAttempt")
+        if grant["tenant_id"] != request["tenant_id"] or grant["work_order_id"] != request["work_order_id"]:
+            raise AssertionError("Capability ArtifactGrant crosses its Tenant or WorkOrder")
+        grant_issued_at = parse_datetime(grant["issued_at"])
+        grant_expires_at = parse_datetime(grant["expires_at"])
+        if grant_expires_at <= grant_issued_at:
+            raise AssertionError("Capability ArtifactGrant expiry is not later than issuance")
+        if grant_expires_at > min(request_deadline, token_expiry):
+            raise AssertionError("Capability ArtifactGrant outlives the request or bearer token")
+        if "finalize" in grant["permissions"]:
+            raise AssertionError("Capability Provider cannot finalize ArtifactVersion")
+    mark_checks(
+        "capability_invocation.request_digest",
+        "capability_invocation.token_binding",
+        "capability_invocation.token_lifetime",
+        "capability_invocation.artifact_grant_expiry",
+        "artifact_grant.expiry",
+        "artifact_grant.scope",
+        "artifact_grant.provider_permissions",
+    )
 
 
 def validate_workspace_content_manifest(manifest: dict[str, Any]) -> None:
@@ -266,6 +625,10 @@ def validate_workspace_content_manifest(manifest: dict[str, Any]) -> None:
     paths = [entry["path"] for entry in manifest["entries"]]
     if len(paths) != len(set(paths)):
         raise AssertionError("Workspace Content Manifest contains duplicate paths")
+    if any(posixpath.normpath(path) != path or path.startswith("/") or path in {".", ".."} for path in paths):
+        raise AssertionError("Workspace Content Manifest contains a non-normalized path")
+    if manifest["path_case_policy"] == "case_insensitive" and len({path.casefold() for path in paths}) != len(paths):
+        raise AssertionError("Workspace Content Manifest contains a case-colliding path")
     if manifest["entry_count"] != len(manifest["entries"]):
         raise AssertionError("Workspace Content Manifest entry_count mismatch")
     total_bytes = sum(entry.get("size_bytes", 0) for entry in manifest["entries"] if entry["entry_type"] == "file")
@@ -274,10 +637,22 @@ def validate_workspace_content_manifest(manifest: dict[str, Any]) -> None:
     symlinks = [entry for entry in manifest["entries"] if entry["entry_type"] == "symlink"]
     if manifest["symlink_policy"] == "forbid" and symlinks:
         raise AssertionError("Workspace Content Manifest forbids symlinks")
+    symlink_paths = {entry["path"] for entry in symlinks}
     for entry in symlinks:
         target = entry["symlink_target"]
-        if target.startswith("/") or ".." in target.split("/"):
+        resolved = posixpath.normpath(posixpath.join(posixpath.dirname(entry["path"]), target))
+        if target.startswith("/") or resolved == ".." or resolved.startswith("../"):
             raise AssertionError("Workspace Content Manifest symlink escapes the root")
+        target_parts = resolved.split("/")
+        prefixes = {"/".join(target_parts[:index]) for index in range(1, len(target_parts) + 1)}
+        if prefixes & (symlink_paths - {entry["path"]}):
+            raise AssertionError("Workspace Content Manifest symlink traverses another symlink")
+    mark_checks(
+        "workspace_manifest.digest",
+        "workspace_manifest.path_policy",
+        "workspace_manifest.counts",
+        "workspace_manifest.symlink_policy",
+    )
 
 
 def validate_canonical_event_source(event: dict[str, Any]) -> None:
@@ -289,8 +664,19 @@ def validate_canonical_event_source(event: dict[str, Any]) -> None:
     })
     if event["dedupe_key"] != expected:
         raise AssertionError("CanonicalEvent dedupe_key does not bind source identity")
-    if event["provider_revision_id"] is None and event["metadata"].get("provider_instance_id") is not None:
-        raise AssertionError("Provider-originated CanonicalEvent lacks ProviderRevision binding")
+    if event["producer_kind"] == "provider":
+        if event["provider_revision_id"] is None or event["metadata"].get("provider_instance_id") is None:
+            raise AssertionError("Provider-originated CanonicalEvent lacks immutable Provider binding")
+    elif event["provider_revision_id"] is not None or event["metadata"].get("provider_instance_id") is not None:
+        raise AssertionError("Platform-originated CanonicalEvent carries Provider identity")
+    work_fields = {"work_order_id", "turn_id", "branch_id", "input_message_id", "work_sequence"}
+    if work_fields & set(event) and not work_fields <= set(event):
+        raise AssertionError("CanonicalEvent has a partial executable Work binding")
+    mark_checks(
+        "canonical_event.work_binding",
+        "canonical_event.source_dedupe",
+        "canonical_event.producer_binding",
+    )
 
 
 def validate_platform_event_registry_binding(event: dict[str, Any], registry: dict[str, Any]) -> None:
@@ -307,11 +693,14 @@ def validate_platform_event_registry_binding(event: dict[str, Any], registry: di
     )
     if definition is None:
         raise AssertionError("CanonicalEvent type and data_version are not admitted")
-    if event["type"] == "artifact.version.created":
-        schema = load("contracts/schemas/event-data-artifact-version-created.schema.json")
-        errors = list(Draft202012Validator(schema, registry=SCHEMA_REGISTRY, format_checker=FormatChecker()).iter_errors(event["data"]))
-        if errors:
-            raise AssertionError("CanonicalEvent data does not validate against the admitted Platform Event schema")
+    schema = {"$ref": definition["data_schema"]["uri"]}
+    errors = list(
+        Draft202012Validator(schema, registry=SCHEMA_REGISTRY, format_checker=FormatChecker())
+        .iter_errors(event["data"])
+    )
+    if errors:
+        raise AssertionError("CanonicalEvent data does not validate against the admitted Platform Event schema")
+    mark_checks("canonical_event.registry_binding")
 
 
 def validate_semantic_traceability(traceability: dict[str, Any]) -> None:
@@ -329,6 +718,13 @@ def validate_semantic_traceability(traceability: dict[str, Any]) -> None:
         for enforcement in entry["enforcements"]:
             if not (ROOT / enforcement["artifact"]).exists():
                 raise AssertionError("Semantic traceability references a missing enforcement artifact")
+            if enforcement["status"] == "contract_gate":
+                if enforcement["kind"] != "semantic_validator" or enforcement["artifact"] != "scripts/validate_semantics.py":
+                    raise AssertionError("Contract-gate semantic evidence must be an executable semantic-validator check")
+                if enforcement["check_id"] not in KNOWN_CONTRACT_CHECKS:
+                    raise AssertionError("Semantic traceability references an unknown contract check ID")
+                if enforcement["check_id"] not in EXECUTED_CONTRACT_CHECKS:
+                    raise AssertionError("Semantic traceability references a contract check not executed in this Gate")
     for schema_id in traceability["critical_schema_ids"]:
         schema = schemas_by_id.get(schema_id)
         if schema is None:
@@ -340,8 +736,89 @@ def validate_semantic_traceability(traceability: dict[str, Any]) -> None:
         for index, (statement, entry) in enumerate(zip(statements, entries)):
             if entry["constraint_index"] != index or entry["statement"] != statement:
                 raise AssertionError("Semantic traceability is stale relative to its source Schema")
-            if not any(item["status"] == "contract_gate" for item in entry["enforcements"]):
-                raise AssertionError("Critical semantic constraint lacks a current contract-gate mapping")
+            if not entry["enforcements"]:
+                raise AssertionError("Critical semantic constraint has no enforcement responsibility")
+
+
+def validate_work_order_control_contract(request: dict[str, Any]) -> None:
+    has_message_cas = "expected_message_head_version" in request
+    if request["action"] in {"append_input", "interrupt"}:
+        if not has_message_cas or "content" not in request:
+            raise AssertionError("Executable control input lacks Message CAS or content")
+        if request["content"]["content_digest"] != canonical_digest(request["content"]["content"]):
+            raise AssertionError("WorkOrder control content digest mismatch")
+        forbidden_internal_ids = {"input_id", "input_message_id"} & set(request["content"])
+        if forbidden_internal_ids:
+            raise AssertionError("Client WorkOrder control contains Platform-owned input identity")
+    elif has_message_cas:
+        raise AssertionError("Non-message WorkOrder control incorrectly depends on Message CAS")
+    mark_checks("work_order_control.conditional_cas")
+
+
+def validate_runtime_session_request(
+    request: dict[str, Any], manifest: dict[str, Any], authorized_scopes: set[str],
+) -> None:
+    slots = {item["sandbox_slot_key"] for item in manifest["sandboxes"]}
+    if request["sandbox_slot_key"] not in slots:
+        raise AssertionError("RuntimeSession selects a Sandbox slot outside the RunManifest")
+    requested = set(request.get("requested_scopes", []))
+    control_scopes = {"control", "input", "clipboard", "file-transfer"}
+    required_scope = "runtime:control" if requested & control_scopes else "runtime:view"
+    if required_scope not in authorized_scopes:
+        raise AssertionError("RuntimeSession scopes exceed authenticated authorization")
+    recording = request["recording"]
+    if request["runtime_type"] == "port_forward" and recording["mode"] != "disabled":
+        raise AssertionError("Port-forward RuntimeSession cannot be recorded")
+    allowed_channels = {
+        "terminal": {"terminal", "file_delta"},
+        "browser": {"browser", "file_delta"},
+        "desktop": {"desktop", "file_delta"},
+        "port_forward": set(),
+    }[request["runtime_type"]]
+    if recording["mode"] == "platform_managed" and not set(recording["channels"]) <= allowed_channels:
+        raise AssertionError("RuntimeSession recording channels conflict with runtime_type")
+    mark_checks(
+        "runtime_session.requested_scope_subset",
+        "runtime_session.sandbox_slot_binding",
+        "runtime_session.scope_class",
+        "runtime_session.channel_policy",
+    )
+
+
+def validate_usage_observations(
+    result: dict[str, Any], meter: dict[str, Any], technical_entry: dict[str, Any],
+) -> None:
+    observations = result["usage"]
+    ids = [item["observation_id"] for item in observations]
+    if len(ids) != len(set(ids)):
+        raise AssertionError("Provider returned duplicate UsageObservation identities")
+    platform_owned = {"entry_id", "tenant_id", "work_order_id", "recorded_at", "idempotency_key", "producer"}
+    for observation in observations:
+        if platform_owned & set(observation):
+            raise AssertionError("Provider UsageObservation contains Platform-owned ledger fields")
+        if observation["meter_id"] != meter["meter_id"] or observation["meter_version"] != meter["meter_version"]:
+            raise AssertionError("UsageObservation binds a different MeterDefinition")
+        if observation["unit"] != meter["base_unit"]:
+            raise AssertionError("UsageObservation unit differs from MeterDefinition")
+        if observation["evidence_digest"] != canonical_digest({"evidence_reference": observation["evidence_reference"]}):
+            raise AssertionError("UsageObservation evidence digest mismatch")
+    if observations and technical_entry.get("source_observation_id") not in set(ids):
+        raise AssertionError("Platform TechnicalUsageEntry does not bind a validated UsageObservation")
+    source = next(
+        (item for item in observations if item["observation_id"] == technical_entry.get("source_observation_id")),
+        None,
+    )
+    if source is not None and any(
+        technical_entry[field] != source[field]
+        for field in ("meter_id", "meter_version", "quantity", "unit", "measurement_status", "occurred_at")
+    ):
+        raise AssertionError("Platform TechnicalUsageEntry changes Provider observation semantics")
+    mark_checks(
+        "usage_observation.observation_identity",
+        "usage_observation.incomplete_status",
+        "usage_observation.provider_boundary",
+        "usage_observation.meter_and_evidence",
+    )
 
 
 def validate_gateway_frames(connect: dict[str, Any], control: dict[str, Any]) -> None:
@@ -366,15 +843,15 @@ def validate_event_registry(registry: dict[str, Any]) -> None:
         dependencies = sorted(
             [
                 load("contracts/schemas/capability-error.schema.json"),
-                load("contracts/schemas/technical-usage-entry.schema.json"),
+                load("contracts/schemas/usage-observation.schema.json"),
             ],
             key=lambda schema: schema["$id"],
         )
         uri_prefix = "urn:agent-platform:agent-runtime-event-data:v1#/$defs/"
     elif registry["registry_id"] == "platform-core":
-        root = load("contracts/schemas/event-data-artifact-version-created.schema.json")
-        dependencies = []
-        uri_prefix = "urn:agent-platform:event-data:artifact-version-created:v1"
+        root = load("contracts/schemas/platform-core-event-data.schema.json")
+        dependencies = [load("contracts/schemas/work-order-state.schema.json")]
+        uri_prefix = "urn:agent-platform:platform-core-event-data:v1#/$defs/"
     else:
         raise AssertionError("Unknown EventTypeRegistry ownership domain")
     expected_schema_digest = canonical_digest({
@@ -393,6 +870,9 @@ def validate_event_registry(registry: dict[str, Any]) -> None:
             raise AssertionError("EventTypeRegistry uses an unsupported Schema closure digest profile")
         if not definition["data_schema"]["uri"].startswith(uri_prefix):
             raise AssertionError("Core event points outside its admitted payload registry")
+        fragment = definition["data_schema"]["uri"].removeprefix(uri_prefix)
+        if fragment not in root.get("$defs", {}):
+            raise AssertionError("EventTypeRegistry points at a missing payload definition")
 
 
 def validate_usage_contracts(
@@ -519,6 +999,7 @@ def validate_run_admission(manifest: dict[str, Any], context: dict[str, Any]) ->
     expected_commercial = {
         "commercial_authorization_id": commercial["commercial_authorization_id"],
         "commercial_authorization_digest": commercial["commercial_authorization_digest"],
+        "expires_at": commercial["expires_at"],
     }
     if manifest["commercial_authorization"] != expected_commercial:
         raise AssertionError("RunManifest does not bind the admitted CommercialAuthorizationSnapshot")
@@ -784,9 +1265,11 @@ no_sandbox_manifest = load("examples/contracts/run-manifest-no-sandbox.json")
 workflow_run = load("examples/contracts/workflow-run.json")
 agent_run = load("examples/contracts/agent-run.json")
 runtime_start = load("examples/contracts/agent-runtime-start-request.json")
+renewed_runtime_authorization = load("examples/contracts/runtime-authorization-renewed.json")
 runtime_token = load("examples/contracts/agent-runtime-invocation-token-claims.json")
 capability_request = load("examples/contracts/capability-invocation-request.json")
 capability_token = load("examples/contracts/capability-invocation-token-claims.json")
+capability_result = load("examples/contracts/capability-invocation-result.json")
 workspace_content_manifest = load("examples/contracts/workspace-content-manifest.json")
 canonical_event = load("examples/contracts/canonical-event-v2.json")
 semantic_traceability = load("contracts/semantic-constraints-v1.json")
@@ -800,6 +1283,7 @@ policy_decision = load("examples/contracts/policy-decision.json")
 execution_budget = load("examples/contracts/execution-budget.json")
 gateway_connect = load("examples/contracts/runtime-gateway-frame.json")
 gateway_control = load("examples/contracts/runtime-gateway-control-frame.json")
+runtime_session_request = load("examples/contracts/runtime-session-request.json")
 conformance_suites = [
     load("contracts/conformance/runtime/v1/suite.json"),
     load("contracts/conformance/sandbox/v1/suite.json"),
@@ -808,13 +1292,26 @@ conformance_suites = [
 ]
 validate_provider_architecture(context, conformance_suites)
 validate_execution_topology(manifest, workflow_run, agent_run, runtime_start)
-validate_runtime_token(runtime_token, manifest, agent_run, runtime_start, policy_decision, execution_budget)
+renewed_runtime_start = copy.deepcopy(runtime_start)
+renewed_runtime_start["invocation_attempt_id"] = renewed_runtime_authorization[
+    "artifact_grants"
+][0]["execution_scope"]["invocation_attempt_id"]
+renewed_runtime_start["runtime_authorization"] = renewed_runtime_authorization
+validate_runtime_authorization(
+    renewed_runtime_authorization,
+    manifest,
+    renewed_runtime_start,
+    runtime_start["runtime_authorization"],
+)
+validate_runtime_token(runtime_token, manifest, agent_run, runtime_start)
 validate_capability_invocation(capability_request, capability_token)
 validate_workspace_content_manifest(workspace_content_manifest)
 validate_canonical_event_source(canonical_event)
 validate_platform_event_registry_binding(canonical_event, platform_event_registry)
-validate_semantic_traceability(semantic_traceability)
 validate_gateway_frames(gateway_connect, gateway_control)
+validate_runtime_session_request(
+    runtime_session_request, manifest, {"runtime:view", "runtime:control"}
+)
 validate_event_registry(event_registry)
 validate_event_registry(platform_event_registry)
 if manifest["event_registry"] != {
@@ -824,6 +1321,7 @@ if manifest["event_registry"] != {
 }:
     raise AssertionError("RunManifest binds a different EventTypeRegistry revision")
 validate_usage_contracts(meter, usage_entry, usage_report, settlement)
+validate_usage_observations(capability_result, meter, usage_entry)
 validate_policy_decision(policy_decision)
 for conformance_suite in conformance_suites:
     validate_conformance_suite(conformance_suite)
@@ -851,11 +1349,15 @@ validate_execution_grant_request(
     control_request,
     authenticated_conversation_id=control_request["conversation_id"],
 )
+validate_work_order_control_contract(control_request)
 bound_runtime_command = load("examples/contracts/agent-runtime-command.json")
+control_runtime_input = load("examples/contracts/work-order-control-runtime-input.json")
 if bound_runtime_command["authorized_control_request_id"] != control_request["control_request_id"]:
     raise AssertionError("Agent Runtime command references a different WorkOrderControlRequest")
-if bound_runtime_command.get("input_id") != control_request["content"]["input_id"] or bound_runtime_command.get("input_content_digest") != control_request["content"]["content_digest"]:
+if bound_runtime_command.get("input_id") != control_runtime_input["input_id"] or bound_runtime_command.get("input_content_digest") != control_runtime_input["content_digest"]:
     raise AssertionError("Agent Runtime command input does not match the authorized control input")
+if control_runtime_input["content"] != control_request["content"]["content"]:
+    raise AssertionError("Platform RuntimeInputEnvelope changes authorized control content")
 commercial = grant["commercial_authorization"]
 validate_self_digest(commercial, "commercial_authorization_digest")
 validate_self_digest(execution_budget, "budget_digest")
@@ -974,7 +1476,7 @@ for case in architecture_negative["cases"]:
         elif mutation == "runtime_token_request_digest_mismatch":
             candidate = copy.deepcopy(runtime_token)
             candidate["request_digest"] = "sha256:" + "f" * 64
-            validate_runtime_token(candidate, manifest, agent_run, runtime_start, policy_decision, execution_budget)
+            validate_runtime_token(candidate, manifest, agent_run, runtime_start)
         elif mutation == "provider_resolution_decision_digest_mismatch":
             candidate = copy.deepcopy(manifest["capability_resolutions"][0])
             candidate["decision_digest"] = "sha256:" + "f" * 64
@@ -1487,6 +1989,7 @@ def validate_conversation_branch(
         raise AssertionError("ConversationBranch Workspace head digest is stale or forged")
     if workspace_revision["branch_id"] != branch["branch_id"]:
         raise AssertionError("ConversationBranch WorkspaceRevision belongs to another branch")
+    mark_checks("conversation_branch.head_consistency", "conversation_branch.workspace_binding")
 
 
 branch_fixture = load("contracts/tests/semantic-invalid/conversation-branch-cases.json")
@@ -1544,6 +2047,8 @@ for case in branch_fixture["cases"]:
         raise AssertionError(f"Expected ConversationBranch semantic fixture to fail: {case['id']}")
 
 
+validate_semantic_traceability(semantic_traceability)
+
 phase0_closure_negative = load("contracts/tests/semantic-invalid/phase0-closure-cases.json")
 for case in phase0_closure_negative["cases"]:
     mutation = case["mutation"]
@@ -1565,14 +2070,16 @@ for case in phase0_closure_negative["cases"]:
             })
             validate_execution_topology(manifest, workflow_run, agent_run, candidate_start)
         elif mutation == "artifact_grant_tenant_mismatch":
-            candidate_manifest = copy.deepcopy(manifest)
             candidate_start = copy.deepcopy(runtime_start)
-            candidate_manifest["artifact_grants"][0]["tenant_id"] = "ten_other"
-            candidate_start["artifact_grants"] = copy.deepcopy(candidate_manifest["artifact_grants"])
+            authorization = candidate_start["runtime_authorization"]
+            authorization["artifact_grants"][0]["tenant_id"] = "ten_other"
+            authorization["authorization_digest"] = canonical_digest({
+                key: value for key, value in authorization.items() if key != "authorization_digest"
+            })
             candidate_start["request_digest"] = canonical_digest({
                 key: value for key, value in candidate_start.items() if key != "request_digest"
             })
-            validate_execution_topology(candidate_manifest, workflow_run, agent_run, candidate_start)
+            validate_execution_topology(manifest, workflow_run, agent_run, candidate_start)
         elif mutation == "capability_token_tenant_mismatch":
             candidate = copy.deepcopy(capability_token)
             candidate["tenant_id"] = "ten_other"
@@ -1620,6 +2127,7 @@ for case in phase0_closure_negative["cases"]:
             validate_canonical_event_source(candidate)
         elif mutation == "canonical_event_provider_revision_missing":
             candidate = copy.deepcopy(canonical_event)
+            candidate["producer_kind"] = "provider"
             candidate["metadata"]["provider_instance_id"] = "provider-instance"
             validate_canonical_event_source(candidate)
         elif mutation == "control_grant_work_order_mismatch":
@@ -1632,6 +2140,140 @@ for case in phase0_closure_negative["cases"]:
             candidate = copy.deepcopy(semantic_traceability)
             candidate["constraints"].pop()
             validate_semantic_traceability(candidate)
+        elif mutation == "traceability_unknown_check_id":
+            candidate = copy.deepcopy(semantic_traceability)
+            enforcement = next(
+                enforcement
+                for entry in candidate["constraints"]
+                for enforcement in entry["enforcements"]
+                if enforcement["status"] == "contract_gate"
+            )
+            enforcement["check_id"] = "semantic.unknown"
+            validate_semantic_traceability(candidate)
+        elif mutation == "traceability_unexecuted_check_id":
+            candidate = copy.deepcopy(semantic_traceability)
+            enforcement = next(
+                enforcement
+                for entry in candidate["constraints"]
+                for enforcement in entry["enforcements"]
+                if enforcement["status"] == "contract_gate"
+            )
+            enforcement["check_id"] = "semantic_traceability.known_but_unexecuted"
+            validate_semantic_traceability(candidate)
+        elif mutation == "control_grant_stale_turn_binding":
+            candidate = copy.deepcopy(control_grant)
+            candidate["turn_id"] = "turn_stale"
+            validate_execution_grant_request(
+                candidate, control_request, authenticated_conversation_id=control_request["conversation_id"]
+            )
+        elif mutation == "principal_context_digest_mismatch":
+            candidate = copy.deepcopy(grant)
+            candidate["principal_context_digest"] = "sha256:" + "f" * 64
+            validate_execution_grant_request(
+                candidate, conversation_turn_request, authenticated_conversation_id=conversation["conversation_id"]
+            )
+        elif mutation == "execution_grant_snapshot_expired":
+            candidate = copy.deepcopy(grant)
+            candidate["principal_context"]["expires_at"] = "2026-07-16T08:59:59Z"
+            candidate["principal_context"]["principal_context_digest"] = canonical_digest({
+                key: value for key, value in candidate["principal_context"].items()
+                if key != "principal_context_digest"
+            })
+            candidate["principal_context_digest"] = candidate["principal_context"]["principal_context_digest"]
+            validate_execution_grant_request(
+                candidate, conversation_turn_request, authenticated_conversation_id=conversation["conversation_id"]
+            )
+        elif mutation == "runtime_authorization_widens_permissions":
+            candidate_start = copy.deepcopy(runtime_start)
+            authorization = candidate_start["runtime_authorization"]
+            authorization["authorization_sequence"] = 2
+            authorization["predecessor_authorization_digest"] = runtime_start["runtime_authorization"]["authorization_digest"]
+            authorization["renewal_reason"] = "adapter_restart"
+            authorization["effective_permissions"]["model"]["allowed_model_profiles"].append("forbidden-model")
+            authorization["effective_permissions"]["permissions_digest"] = canonical_digest({
+                key: value for key, value in authorization["effective_permissions"].items()
+                if key != "permissions_digest"
+            })
+            authorization["policy_decision"]["effective_permissions_digest"] = authorization[
+                "effective_permissions"
+            ]["permissions_digest"]
+            authorization["policy_decision"]["decision_digest"] = canonical_digest({
+                key: value for key, value in authorization["policy_decision"].items()
+                if key != "decision_digest"
+            })
+            authorization["authorization_digest"] = canonical_digest({
+                key: value for key, value in authorization.items() if key != "authorization_digest"
+            })
+            validate_runtime_authorization(
+                authorization, manifest, candidate_start, runtime_start["runtime_authorization"]
+            )
+        elif mutation == "runtime_authorization_component_scope_mismatch":
+            candidate_start = copy.deepcopy(runtime_start)
+            authorization = candidate_start["runtime_authorization"]
+            authorization["execution_budget"]["tenant_id"] = "ten_other"
+            authorization["execution_budget"]["budget_digest"] = canonical_digest({
+                key: value for key, value in authorization["execution_budget"].items()
+                if key != "budget_digest"
+            })
+            authorization["policy_decision"]["execution_budget_digest"] = authorization[
+                "execution_budget"
+            ]["budget_digest"]
+            authorization["policy_decision"]["decision_digest"] = canonical_digest({
+                key: value for key, value in authorization["policy_decision"].items()
+                if key != "decision_digest"
+            })
+            authorization["authorization_digest"] = canonical_digest({
+                key: value for key, value in authorization.items() if key != "authorization_digest"
+            })
+            validate_runtime_authorization(authorization, manifest, candidate_start)
+        elif mutation == "runtime_authorization_commercial_expiry_exceeded":
+            candidate_manifest = copy.deepcopy(manifest)
+            candidate_start = copy.deepcopy(runtime_start)
+            candidate_manifest["commercial_authorization"]["expires_at"] = "2026-07-16T09:10:00Z"
+            candidate_manifest["run_manifest_digest"] = canonical_digest({
+                key: value for key, value in candidate_manifest.items() if key != "run_manifest_digest"
+            })
+            authorization = candidate_start["runtime_authorization"]
+            authorization["commercial_authorization"] = copy.deepcopy(
+                candidate_manifest["commercial_authorization"]
+            )
+            authorization["run_manifest_digest"] = candidate_manifest["run_manifest_digest"]
+            authorization["authorization_digest"] = canonical_digest({
+                key: value for key, value in authorization.items() if key != "authorization_digest"
+            })
+            validate_runtime_authorization(authorization, candidate_manifest, candidate_start)
+        elif mutation == "runtime_artifact_grant_predates_authorization":
+            candidate_start = copy.deepcopy(runtime_start)
+            authorization = candidate_start["runtime_authorization"]
+            authorization["artifact_grants"][0]["issued_at"] = "2026-07-16T09:00:59Z"
+            authorization["authorization_digest"] = canonical_digest({
+                key: value for key, value in authorization.items() if key != "authorization_digest"
+            })
+            validate_runtime_authorization(authorization, manifest, candidate_start)
+        elif mutation == "capability_artifact_grant_outlives_deadline":
+            candidate_request = copy.deepcopy(capability_request)
+            candidate_token = copy.deepcopy(capability_token)
+            candidate_request["input_artifact_grants"][0]["expires_at"] = "2026-07-16T09:10:01Z"
+            candidate_request["request_digest"] = canonical_digest({
+                key: value for key, value in candidate_request.items() if key != "request_digest"
+            })
+            candidate_token["request_digest"] = candidate_request["request_digest"]
+            candidate_token["exp"] = 1784193060
+            validate_capability_invocation(candidate_request, candidate_token)
+        elif mutation == "required_gateway_disabled":
+            candidate_start = copy.deepcopy(runtime_start)
+            candidate_start["gateway_bindings"]["model"] = {
+                "kind": "model", "mode": "disabled", "reason": "policy_denied",
+            }
+            validate_gateway_bindings(
+                candidate_start["gateway_bindings"],
+                candidate_start["runtime_authorization"]["execution_budget"],
+                candidate_start["runtime_authorization"]["effective_permissions"],
+            )
+        elif mutation == "provider_usage_contains_platform_entry":
+            candidate = copy.deepcopy(capability_result)
+            candidate["usage"][0]["entry_id"] = "platform-owned"
+            validate_usage_observations(candidate, meter, usage_entry)
         else:
             raise AssertionError(f"Unknown Phase 0 closure mutation: {mutation}")
     except AssertionError:

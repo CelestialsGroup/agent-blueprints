@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:usage-observation:v1",
+  "title": "UsageObservation",
+  "description": "Provider-originated bounded measurement evidence. Platform assigns TechnicalUsageEntry identity, attribution, idempotency and recorded_at after validation.",
+  "type": "object",
+  "required": [
+    "observation_id", "meter_id", "meter_version", "quantity", "unit",
+    "measurement_status", "evidence_reference", "evidence_digest", "occurred_at"
+  ],
+  "properties": {
+    "observation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "meter_id": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]{2,191}$" },
+    "meter_version": { "type": "integer", "minimum": 1 },
+    "quantity": { "type": "integer", "minimum": 0 },
+    "unit": { "enum": ["token", "millisecond", "nanosecond", "byte", "byte_millisecond", "count"] },
+    "measurement_status": { "enum": ["confirmed", "partial", "estimated"] },
+    "evidence_reference": { "type": "string", "format": "uri", "minLength": 1 },
+    "evidence_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "occurred_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "observation_id is idempotent within one ProviderRevision and InvocationAttempt",
+    "meter unit matches the admitted MeterDefinition and evidence_reference resolves to bytes matching evidence_digest",
+    "partial or estimated observations remain explicitly incomplete when normalized into Platform TechnicalUsage"
+  ]
+}

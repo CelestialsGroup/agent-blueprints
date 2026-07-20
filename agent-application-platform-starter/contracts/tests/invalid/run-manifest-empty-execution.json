@@ -6,7 +6,7 @@
     "branch_id": "main",
     "input_message_id": "msg_01J00000000000000000000000",
     "workspace_revision_id": "wsr_01J00000000000000000000000",
-    "workspace_revision_digest": "sha256:366b5c58b91f28f19b73b1287cc13488b6055b5a7d57bbd21f065e3340b5bde1"
+    "workspace_revision_digest": "sha256:b8e661287a6861876e0e28cf94cc7f638653ea3b023367bfe046f54481381291"
   },
   "scenario": {
     "id": "html-generation",
@@ -29,7 +29,7 @@
         "kind": "template",
         "catalog_entry_id": "html-anything/landing-saas-dark",
         "revision_id": "tmplrev_01J00000000000000000000000",
-        "revision_digest": "sha256:c4fba5c22c7be1e1f13eb3129999f198b0d6b32bf54741c82e8297b4f9e7db22",
+        "revision_digest": "sha256:20017f0bfa23b5eb5d2b957a8f22a7ed481e5d21fbd728d69efc15f46fd57c34",
         "capability_id": "template.html.generate",
         "parameter_values": {
           "theme": "dark"
@@ -38,7 +38,7 @@
       "provider_instance_id": "tpli_html_anything",
       "provider_revision": {
         "provider_revision_id": "tplpr_01J0000000000000000000000",
-        "provider_revision_digest": "sha256:dc4cde002de443b8d3d4335c5c13fec5bb8ded2c32f403b086e82bd468a4d2d3",
+        "provider_revision_digest": "sha256:8324669a083e9c43c8cb0064e25e7bb34435a9a1a5fadbe9da3de31c397a470f",
         "provider_kind": "template",
         "implementation": {
           "implementation_id": "template-provider.html-anything",
@@ -64,9 +64,9 @@
         "configuration_digest": "sha256:8383838383838383838383838383838383838383838383838383838383838383",
         "approved_permissions_digest": "sha256:8484848484848484848484848484848484848484848484848484848484848484",
         "credential_binding_digest": "sha256:8686868686868686868686868686868686868686868686868686868686868686",
-        "conformance_set_digest": "sha256:bc30eaabf9114765300856d750ed8ae1beb9d8b47bac47613974f970fa6d8fc1",
+        "conformance_set_digest": "sha256:717cddea2f0cbb8fd11afe436b4f3b6eb428f152e62039354643679cb1ad2e5d",
         "admission_decision_id": "tplad_01J0000000000000000000000",
-        "admission_decision_digest": "sha256:bbcf62d7cd2ab3bf01147415d183994f1c33168f31cfe0cbcd754ebe4e3aa8e7",
+        "admission_decision_digest": "sha256:b7a5fe55bbd4a4f64f090adcb4cec3642f9cd3d5811558c68a8158ef8738dab6",
         "admission_status": "certified"
       }
     }
@@ -95,7 +95,7 @@
     }
   ],
   "primary_sandbox_slot_key": "primary-code",
-  "run_manifest_digest": "sha256:4f164098b2a3636f2c3471889320092f8ef446628cdcd15b7dbf6bbdb941575f",
+  "run_manifest_digest": "sha256:e0ebd4512d49a0d26250fbba7df88a7e67e734a1f2018b4de0c11464f2d5a744",
   "agent_run_id": "agr_01J00000000000000000000000",
   "workflow_run_id": "wfr_01J00000000000000000000000",
   "orchestration_binding": {
@@ -111,7 +111,8 @@
   "tenant_id": "ten_01J00000000000000000000000",
   "commercial_authorization": {
     "commercial_authorization_id": "cauth_01J00000000000000000000000",
-    "commercial_authorization_digest": "sha256:7e0df7d1f12c15fa7b37f829cbbd7faf5dd927ae121e1d963d6205d71ff505ed"
+    "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7",
+    "expires_at": "2026-07-16T09:30:00Z"
   },
   "execution_budget": {
     "budget_id": "bud_01J00000000000000000000000",
@@ -143,11 +144,11 @@
   },
   "policy_decision": {
     "decision_id": "pol_01J00000000000000000000000",
-    "decision_digest": "sha256:d5cd511225fb525c6c6ec7dab6ddb47157717e1292d1110e1e6792adf05205b7",
+    "decision_digest": "sha256:2040f3ac261711f1c60fe68af1d678fb0fd26c25b410f28d7d315a7bf42fe2e0",
     "tenant_id": "ten_01J00000000000000000000000",
     "work_order_id": "wrk_01J00000000000000000000000",
     "policy_bundle_digest": "sha256:6161616161616161616161616161616161616161616161616161616161616161",
-    "commercial_authorization_digest": "sha256:7e0df7d1f12c15fa7b37f829cbbd7faf5dd927ae121e1d963d6205d71ff505ed",
+    "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7",
     "execution_budget_digest": "sha256:4e8aac35b4943db25ecbb3ea6fa2259cdb2f3c144bb837f1cc6c97b0b6f94096",
     "evaluations": [
       {
@@ -166,7 +167,7 @@
       }
     ],
     "outcome": "allow",
-    "effective_permissions_digest": "sha256:5b103637f08ba7dd7fbabb1b1840dcc0780cb1dd335043475f30433c51397a67",
+    "effective_permissions_digest": "sha256:fe357a824dfa4d264229e0ad365e23a1305a6ee51480b14098994bc4d0ce9439",
     "decided_at": "2026-07-16T09:00:59Z",
     "expires_at": "2026-07-16T09:30:00Z",
     "decision_point": "run_admission",
@@ -176,7 +177,7 @@
   "event_registry": {
     "registry_id": "agent-runtime-core",
     "registry_version": 1,
-    "registry_digest": "sha256:9ccdd4614fee2676150d8bd728fad02bb82f1a3bbeb9fbdd2357792157e53c67"
+    "registry_digest": "sha256:bf26513793a1e7953417069712b1f02211a674e77c645d48407fbc330333eb53"
   },
   "input": {
     "input_id": "rin_01J00000000000000000000000",
@@ -191,37 +192,20 @@
   },
   "context_package": {
     "context_package_id": "ctx_01J00000000000000000000000",
-    "context_package_digest": "sha256:b1de85e947e2180045d38425524e9a66bd1ea06e2bd452ad0759dc62b389e95c",
+    "context_package_digest": "sha256:b6abd86538d61118ea40e023fc3564389f9fbc41d4420b6878d9c4b932d2c3f8",
     "items": [
       {
         "kind": "workspace_manifest",
         "reference_id": "artifact:art_workspace_manifest_01J000000000000000/version:ver_workspace_manifest_01J00000000000000",
-        "digest": "sha256:8dfcb5bb6d9d98edc1bf5b8f6a24beb60267e13635bf31190eac7a1c8a612098",
-        "size_bytes": 601,
+        "digest": "sha256:ef0e25f8c192d97c4c99db13fba26569c7f78ca505e6b0db999c86398e4d86f5",
+        "size_bytes": 641,
         "media_type": "application/vnd.agent.workspace-manifest+json"
       }
     ]
   },
-  "artifact_grants": [
-    {
-      "grant_id": "artg_01J0000000000000000000000",
-      "tenant_id": "ten_01J00000000000000000000000",
-      "work_order_id": "wrk_01J00000000000000000000000",
-      "runtime_run_id": "rtr_01J00000000000000000000000",
-      "artifact_id": "art_workspace_manifest_01J000000000000000",
-      "version_id": "ver_workspace_manifest_01J00000000000000",
-      "artifact_digest": "sha256:8dfcb5bb6d9d98edc1bf5b8f6a24beb60267e13635bf31190eac7a1c8a612098",
-      "permissions": [
-        "read"
-      ],
-      "gateway_route_id": "artifact-route-workspace-manifest",
-      "issued_at": "2026-07-16T09:01:00Z",
-      "expires_at": "2026-07-16T09:30:00Z"
-    }
-  ],
   "effective_permissions": {
     "permissions_id": "perm_01J00000000000000000000000",
-    "permissions_digest": "sha256:5b103637f08ba7dd7fbabb1b1840dcc0780cb1dd335043475f30433c51397a67",
+    "permissions_digest": "sha256:fe357a824dfa4d264229e0ad365e23a1305a6ee51480b14098994bc4d0ce9439",
     "tenant_id": "ten_01J00000000000000000000000",
     "work_order_id": "wrk_01J00000000000000000000000",
     "model": {
@@ -237,8 +221,7 @@
     },
     "artifact": {
       "read": true,
-      "write": true,
-      "finalize": true
+      "stage_new_version": true
     },
     "egress": {
       "mode": "restricted",
@@ -267,7 +250,8 @@
       "route_id": "model-route-general-balanced",
       "protocol_version": "v1",
       "binding_digest": "sha256:7171717171717171717171717171717171717171717171717171717171717171",
-      "audience": "agent-model-gateway"
+      "audience": "agent-model-gateway",
+      "mode": "enabled"
     },
     "tool": {
       "kind": "tool",
@@ -275,7 +259,8 @@
       "route_id": "tool-route-work-order",
       "protocol_version": "v1",
       "binding_digest": "sha256:7272727272727272727272727272727272727272727272727272727272727272",
-      "audience": "agent-tool-gateway"
+      "audience": "agent-tool-gateway",
+      "mode": "enabled"
     },
     "artifact": {
       "kind": "artifact",
@@ -283,7 +268,8 @@
       "route_id": "artifact-route-work-order",
       "protocol_version": "v1",
       "binding_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
-      "audience": "agent-artifact-gateway"
+      "audience": "agent-artifact-gateway",
+      "mode": "enabled"
     },
     "egress": {
       "kind": "egress",
@@ -291,7 +277,8 @@
       "route_id": "egress-route-restricted",
       "protocol_version": "v1",
       "binding_digest": "sha256:7474747474747474747474747474747474747474747474747474747474747474",
-      "audience": "agent-egress-gateway"
+      "audience": "agent-egress-gateway",
+      "mode": "enabled"
     }
   },
   "admission_limits": {
@@ -299,5 +286,30 @@
     "max_inline_input_bytes": 262144,
     "max_context_items": 512,
     "max_artifact_grants": 256
+  },
+  "artifact_access_requirements": [
+    {
+      "requirement_id": "arq_01J0000000000000000000000",
+      "tenant_id": "ten_01J00000000000000000000000",
+      "work_order_id": "wrk_01J00000000000000000000000",
+      "artifact_id": "art_workspace_manifest_01J000000000000000",
+      "version_id": "ver_workspace_manifest_01J00000000000000",
+      "artifact_digest": "sha256:ef0e25f8c192d97c4c99db13fba26569c7f78ca505e6b0db999c86398e4d86f5",
+      "allowed_permissions": [
+        "read"
+      ]
+    }
+  ],
+  "authorization_renewal_policy": {
+    "profile": "equal-or-narrow-runtime-authorization-v1",
+    "max_ttl_seconds": 900,
+    "allowed_reasons": [
+      "initial_dispatch",
+      "token_expiry",
+      "adapter_restart",
+      "resume",
+      "policy_refresh"
+    ],
+    "widening_mode": "new_work_order_and_execution_grant"
   }
 }

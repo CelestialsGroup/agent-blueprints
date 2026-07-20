@@ -1,6 +1,6 @@
 {
   "provider_revision_id": "tplpr_01J0000000000000000000000",
-  "provider_revision_digest": "sha256:dc4cde002de443b8d3d4335c5c13fec5bb8ded2c32f403b086e82bd468a4d2d3",
+  "provider_revision_digest": "sha256:8324669a083e9c43c8cb0064e25e7bb34435a9a1a5fadbe9da3de31c397a470f",
   "provider_instance_id": "tpli_html_anything",
   "configuration_digest": "sha256:8383838383838383838383838383838383838383838383838383838383838383",
   "approved_permissions_digest": "sha256:8484848484848484848484848484848484848484848484848484848484848484",
@@ -15,11 +15,11 @@
       "status": "passed",
       "report_digest": "sha256:8787878787878787878787878787878787878787878787878787878787878787",
       "suite_id": "capability-provider",
-      "suite_digest": "sha256:9ca84761cf924f8f0f6b03bc1943dc6722fb1b54fccc1dd6d125d52004afdd90",
+      "suite_digest": "sha256:f5906e48557a9cbe53c8424b570269a19339db7524b79f2d1fc11a814bfdb037",
       "suite_profile_id": "capability-core-v1"
     }
   ],
-  "conformance_set_digest": "sha256:bc30eaabf9114765300856d750ed8ae1beb9d8b47bac47613974f970fa6d8fc1",
+  "conformance_set_digest": "sha256:717cddea2f0cbb8fd11afe436b4f3b6eb428f152e62039354643679cb1ad2e5d",
   "created_at": "2026-07-16T09:00:25Z",
   "implementation": {
     "implementation_id": "template-provider.html-anything",

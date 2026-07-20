@@ -29,9 +29,9 @@ SaaS Runtime 必须通过受治理 Profile，支持预算注入、Model Gateway�
 - Checkpoint Manifest；
 - Artifact Staging 和 Usage。
 
-每次调用使用短期 RuntimeInvocation Token，并绑定 Tenant、ProviderRevision、WorkflowRun/AgentRun/RuntimeRun、RunManifest、InvocationAttempt、幂等请求摘要、Fencing、Policy、Budget 和 Permissions。取消意图不等于取消证明；`outcome_unknown` 必须通过 Invocation Ledger 查询或对账后才能进入终态。
+每次调用使用短期 RuntimeInvocation Token，并绑定 Tenant、ProviderRevision、WorkflowRun/AgentRun/RuntimeRun、RunManifest、RuntimeAuthorization、InvocationAttempt、幂等请求摘要、Fencing、Policy、Budget 和 Permissions。取消意图不等于取消证明；`outcome_unknown` 必须通过 Invocation Ledger 查询或对账后才能进入终态。
 
-Start 请求不是只有 Message ID 的通知。Adapter 必须收到实际有界输入或不可变输入引用、ContextPackage、ArtifactGrant、完整 ExecutionBudget/PolicyDecision/EffectivePermissions、四类 Gateway Binding 和请求体 Admission Limits，并逐项验证与 RunManifest 相等；任何缺失、空 Limits 或摘要不匹配都拒绝执行。
+Start 请求不是只有 Message ID 的通知。Adapter 必须收到实际有界输入或不可变输入引用、ContextPackage、四类 Gateway Binding、请求体 Admission Limits，以及本 Attempt 的完整 RuntimeAuthorization/ArtifactGrant。Input/Context/Gateway 必须与 RunManifest 相等；Authorization 必须覆盖 Manifest 的 ArtifactAccessRequirement，闭合同一 Tenant/WorkOrder/CommercialAuthorization 的 Budget/Policy/Permissions 绑定，不超过初始上限或商业授权 `expires_at`，并拒绝早于 Authorization 签发或晚于其到期的 ArtifactGrant。任何缺失、过期、扩权或摘要不匹配都拒绝执行。
 
 ## 与 Temporal 的职责分离
 

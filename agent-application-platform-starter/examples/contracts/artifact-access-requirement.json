@@ -1,0 +1,11 @@
+{
+  "requirement_id": "arq_01J0000000000000000000000",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "artifact_id": "art_workspace_manifest_01J000000000000000",
+  "version_id": "ver_workspace_manifest_01J00000000000000",
+  "artifact_digest": "sha256:ef0e25f8c192d97c4c99db13fba26569c7f78ca505e6b0db999c86398e4d86f5",
+  "allowed_permissions": [
+    "read"
+  ]
+}

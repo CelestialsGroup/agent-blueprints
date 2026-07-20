@@ -3,11 +3,12 @@
   "$id": "urn:agent-platform:workspace-content-manifest:v1",
   "title": "WorkspaceContentManifest",
   "type": "object",
-  "required": ["manifest_version", "workspace_id", "branch_id", "symlink_policy", "entry_count", "total_file_bytes", "entries", "manifest_digest"],
+  "required": ["manifest_version", "workspace_id", "branch_id", "path_case_policy", "symlink_policy", "entry_count", "total_file_bytes", "entries", "manifest_digest"],
   "properties": {
     "manifest_version": { "const": 1 },
     "workspace_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "branch_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "path_case_policy": { "enum": ["case_sensitive", "case_insensitive"] },
     "symlink_policy": { "enum": ["forbid", "allow_relative_within_root"] },
     "entry_count": { "type": "integer", "minimum": 0, "maximum": 1000000 },
     "total_file_bytes": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },

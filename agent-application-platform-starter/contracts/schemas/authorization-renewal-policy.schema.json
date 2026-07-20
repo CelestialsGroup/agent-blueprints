@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:authorization-renewal-policy:v1",
+  "title": "AuthorizationRenewalPolicy",
+  "type": "object",
+  "required": ["profile", "max_ttl_seconds", "allowed_reasons", "widening_mode"],
+  "properties": {
+    "profile": { "const": "equal-or-narrow-runtime-authorization-v1" },
+    "max_ttl_seconds": { "type": "integer", "minimum": 60, "maximum": 3600 },
+    "allowed_reasons": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["initial_dispatch", "token_expiry", "adapter_restart", "resume", "policy_refresh"] }
+    },
+    "widening_mode": { "const": "new_work_order_and_execution_grant" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "renewal preserves the RunManifest, RuntimeRun and commercial authorization and may only keep or narrow budget and permissions",
+    "an authorization widening or commercial authorization change requires a new WorkOrder, ExecutionGrant, ProviderResolution and RunManifest"
+  ]
+}

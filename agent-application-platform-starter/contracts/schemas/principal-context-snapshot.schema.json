@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:principal-context-snapshot:v1",
+  "title": "PrincipalContextSnapshot",
+  "description": "Bounded immutable identity and authorization attributes supplied by Business for routing and policy evaluation. Display profile and credentials are excluded.",
+  "type": "object",
+  "required": [
+    "snapshot_version", "client_app_id", "external_tenant_id", "external_principal_id",
+    "principal_type", "roles", "groups", "attributes", "issued_at", "expires_at",
+    "digest_profile", "principal_context_digest"
+  ],
+  "properties": {
+    "snapshot_version": { "const": 1 },
+    "client_app_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "external_tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "external_principal_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "principal_type": { "enum": ["user", "service"] },
+    "roles": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 200 }
+    },
+    "groups": {
+      "type": "array",
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 200 }
+    },
+    "attributes": {
+      "type": "object",
+      "maxProperties": 64,
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_.-]{0,127}$" },
+      "additionalProperties": {
+        "oneOf": [
+          { "type": "string", "maxLength": 1000 },
+          {
+            "type": "array",
+            "maxItems": 64,
+            "uniqueItems": true,
+            "items": { "type": "string", "maxLength": 1000 }
+          }
+        ]
+      }
+    },
+    "issued_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "digest_profile": { "const": "rfc8785-principal-context-excluding-digest-v1" },
+    "principal_context_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "principal_context_digest is RFC 8785 JCS SHA-256 over the snapshot excluding principal_context_digest",
+    "expires_at is later than issued_at and the snapshot is immutable once referenced by a Grant, WorkOrder or ProviderResolution",
+    "credentials, secrets and mutable display-profile fields are forbidden from the snapshot"
+  ]
+}

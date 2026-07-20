@@ -31,7 +31,7 @@ Conversation 生命周期由 `contracts/state-machines/conversation-v1.json` 治
 
 相同幂等键、Message ID 和请求摘要返回原 Turn；任一内容不匹配则返回 409。
 
-`POST /v1/work-orders/{id}/control` 是另一条事务边界：它使用 `WorkOrderControlRequest` 和新的 ExecutionGrant 控制现有 WorkOrder，不创建 Turn。Append/Interrupt 先追加不可变 Control Input，再由 Outbox 发送引用 `control_request_id + input_id + content_digest` 的 Runtime Command。Pause/Resume/Cancel/Approval 同样绑定 Control Request；只有内部 Checkpoint Command 不需要用户控制请求。
+`POST /v1/work-orders/{id}/control` 是另一条事务边界：它使用 `WorkOrderControlRequest` 和新的 ExecutionGrant 控制现有 WorkOrder，不创建 Turn。客户端只提交 `client_control_input_id + content`；平台验证 Grant 后原子分配 `input_id + input_message_id` 并追加不可变 Control Input，再由 Outbox 发送引用 `control_request_id + input_id + content_digest` 的 Runtime Command。Append/Interrupt 比较 `message_head_version + active_work_version`，Pause/Resume/Cancel/Approval 只比较 `active_work_version`，避免无关 Message 产生假冲突。只有内部 Checkpoint Command 不需要用户控制请求。
 
 ## 分支与并发
 

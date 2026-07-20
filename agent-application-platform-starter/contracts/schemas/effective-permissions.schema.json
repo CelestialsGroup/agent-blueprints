@@ -47,11 +47,10 @@
     },
     "artifact": {
       "type": "object",
-      "required": ["read", "write", "finalize"],
+      "required": ["read", "stage_new_version"],
       "properties": {
         "read": { "type": "boolean" },
-        "write": { "type": "boolean" },
-        "finalize": { "type": "boolean" }
+        "stage_new_version": { "type": "boolean" }
       },
       "additionalProperties": false
     },
@@ -92,6 +91,7 @@
   "additionalProperties": false,
   "x-semantic-constraints": [
     "permissions_digest is RFC 8785 JCS SHA-256 over the permissions excluding permissions_digest",
-    "all permissions are the intersection of commercial authorization, policy, Scenario and Provider admission; absent permission is denied"
+    "all permissions are the intersection of commercial authorization, policy, Scenario and Provider admission; absent permission is denied",
+    "ArtifactVersion finalization is a Platform-owned transaction and is never represented as a Provider permission"
   ]
 }

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:work-order-control-input:v1",
+  "title": "WorkOrderControlInput",
+  "description": "Client-owned, grant-bound input. Platform input_id and input_message_id are allocated only after authorization succeeds.",
+  "type": "object",
+  "required": ["client_control_input_id", "content_digest", "content"],
+  "properties": {
+    "client_control_input_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "content_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "content": { "$ref": "urn:agent-platform:runtime-input-content:v1" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "content_digest is RFC 8785 JCS SHA-256 over content",
+    "client_control_input_id is idempotent within the WorkOrder and never becomes a platform input_id or input_message_id"
+  ]
+}

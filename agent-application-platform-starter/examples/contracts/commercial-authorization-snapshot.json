@@ -6,8 +6,8 @@
   "business_account_id": "account-456",
   "plan_reference": "pro",
   "authorized_limits_digest": "sha256:36b5a673a7d6b2636626f04ad6e28c5d43e54ee4510dfbba604692d0da028380",
-  "issued_at": "2026-07-15T09:59:30Z",
-  "expires_at": "2026-07-15T10:30:00Z",
+  "issued_at": "2026-07-16T08:59:30Z",
+  "expires_at": "2026-07-16T09:30:00Z",
   "settlement_target_id": "business-usage-settlement-v1",
   "authorized_entitlements": [
     "experience.html.premium"
@@ -29,5 +29,5 @@
     "max_conversion_count": 3
   },
   "commercial_authorization_id": "cauth_01J00000000000000000000000",
-  "commercial_authorization_digest": "sha256:7e0df7d1f12c15fa7b37f829cbbd7faf5dd927ae121e1d963d6205d71ff505ed"
+  "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7"
 }

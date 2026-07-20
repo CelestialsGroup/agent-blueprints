@@ -1,0 +1,6 @@
+{
+  "profile": "equal-or-narrow-runtime-authorization-v1",
+  "max_ttl_seconds": 900,
+  "allowed_reasons": ["initial_dispatch", "token_expiry", "adapter_restart", "resume", "policy_refresh"],
+  "widening_mode": "new_work_order_and_execution_grant"
+}

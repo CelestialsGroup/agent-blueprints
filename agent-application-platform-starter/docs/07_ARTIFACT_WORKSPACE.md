@@ -107,3 +107,5 @@ Office/PDF/Image/Video 先扫描，宏和主动内容默认不执行。
 WorkspaceRevision 的内容 Manifest Artifact 是平台版本事实；Workspace Snapshot 是 Sandbox Provider 对该 Revision 的可移植或 Provider 私有恢复表示。两者通过摘要绑定，但 Snapshot 不能取代 Branch Head。
 
 Sandbox Provider 不直接创建 ArtifactVersion；平台验证 `/outputs` 或 Staging Manifest 后提交。
+
+该规则适用于所有 Agent Runtime、Capability、Plugin 和 Sandbox Provider。Provider ArtifactGrant/EffectivePermissions 只有 `read` 或 `stage_new_version`；Finalize 是 Platform 内部、幂等且可对账的 Ledger 事务。

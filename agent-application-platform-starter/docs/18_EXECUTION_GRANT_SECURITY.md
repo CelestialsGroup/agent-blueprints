@@ -42,13 +42,10 @@ JWKS 或公钥只能来自管理员预注册的 ClientApplication 配置。
 - client_app_id
 - external_tenant_id
 - external_principal_id
+- principal_context（有界、不可变 PrincipalContextSnapshot）
 - principal_context_digest
 - conversation_id
-- turn_id
 - branch_id
-- client_message_id
-- scenario_id
-- scenario_version 与 scenario_definition_digest
 - request_contract_id
 - request_digest_profile=`rfc8785-request-excluding-execution-grant-v1`
 - request_digest
@@ -59,6 +56,8 @@ JWKS 或公钥只能来自管理员预注册的 ClientApplication 配置。
 - limits
 - policies
 - commercial_authorization（Business 签发的 entitlement/quota/plan/settlement 快照引用）
+
+Turn Grant 额外且只能包含 `turn_id + client_message_id + scenario_id/version/definition_digest`。Control Grant 额外且只能包含 `work_order_id + control_request_id`，不得复制原 Turn/Message/Scenario Claim。`principal_context_digest` 必须匹配内嵌 Snapshot，Snapshot 的 Tenant/Principal/ClientApplication 必须匹配顶层 Claim。
 
 默认：
 
@@ -79,7 +78,7 @@ clock_skew = 30 seconds
 execution_grant
 ```
 
-WorkOrderRequest 包括 `source`、`work`、`delivery`、`placement_constraints` 和 `metadata`；ConversationTurnRequest 包括 Message、Branch、Scenario、Experience、Delivery 和 Metadata；WorkOrderControlRequest 包括 WorkOrder/Conversation/Branch、Action、独立 CAS 预期值、控制输入和 Metadata。不能先把三种请求映射成含混的内部对象再计算摘要。
+WorkOrderRequest 包括 `source`、`work`、`delivery`、`placement_constraints` 和 `metadata`；ConversationTurnRequest 包括 Message、Branch、Scenario、Experience、Delivery 和 Metadata；WorkOrderControlRequest 包括 WorkOrder/Conversation/Branch、Action、Active Work CAS、Append/Interrupt 专用 Message Head CAS、客户端 Control Input 和 Metadata。不能先把三种请求映射成含混的内部对象再计算摘要。
 
 WorkOrderRequest 包括：
 
@@ -93,7 +92,7 @@ WorkOrderRequest 包括：
 
 因此 metadata 不得绕过授权改变行为。
 
-Limits 使用全字段 EffectiveExecutionLimits；空对象、字段缺失或未知 Profile 均 fail-closed。Control Grant 额外绑定 `work_order_id + control_request_id`，不得复用原 Turn Grant。
+Limits 使用全字段 EffectiveExecutionLimits；空对象、字段缺失或未知 Profile 均 fail-closed。Control Grant 不得复用原 Turn Grant；客户端只提供 `client_control_input_id + content`，平台在 Grant 验证成功的同一事务内分配内部 `input_id + input_message_id`。
 
 输入必须满足 I-JSON/JCS 可互操作要求：
 
@@ -116,9 +115,10 @@ Limits 使用全字段 EffectiveExecutionLimits；空对象、字段缺失或未
 5. 校验 idempotency digest。
 6. 唯一插入 GrantConsumption。
 7. 校验 CommercialAuthorizationSnapshot ID/digest、有效期与 quota reservation。
-8. 锁定或创建 Conversation 及其 Workspace，追加 Message，并创建 WorkOrder。
-9. 写 Workflow Start Outbox 与 Canonical Event。
-10. 提交事务。
+8. 校验 Grant 的 `iat..exp` 完整落在 PrincipalContextSnapshot 与 CommercialAuthorizationSnapshot 有效期内。
+9. 锁定或创建 Conversation 及其 Workspace，追加 Message，并创建 WorkOrder。
+10. 写 Workflow Start Outbox 与 Canonical Event。
+11. 提交事务。
 
 ## 重复请求
 

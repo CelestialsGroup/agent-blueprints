@@ -19,6 +19,7 @@
     "workflow_run_id",
     "work_order_id",
     "run_manifest_digest",
+    "runtime_authorization_digest",
     "operation",
     "invocation_id",
     "invocation_attempt_id",
@@ -42,6 +43,7 @@
     "workflow_run_id": { "type": "string", "minLength": 1 },
     "work_order_id": { "type": "string", "minLength": 1 },
     "run_manifest_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "runtime_authorization_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "operation": { "enum": ["start", "read_status", "submit_command", "read_events"] },
     "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "invocation_id": { "type": "string", "minLength": 1 },
@@ -61,7 +63,7 @@
   "x-semantic-constraints": [
     "the token lifetime is short, nbf is not before iat, and exp is after nbf",
     "audience and provider_revision_id identify the admitted Agent Runtime ProviderRevision",
-    "tenant, execution IDs and immutable digests match the request, RunManifest and InvocationAttempt",
+    "tenant, execution IDs and immutable digests match the request, RunManifest, RuntimeAuthorization and InvocationAttempt",
     "request_digest equals the Start request_digest or AgentRuntimeCommand command_digest for mutation operations",
     "a stale fencing_token or replayed jti cannot authorize a mutation"
   ]

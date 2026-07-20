@@ -4,11 +4,9 @@
   "conversation_id": "conv_01J00000000000000000000000",
   "branch_id": "main",
   "action": "append_input",
-  "expected_message_head_sequence": 1,
   "expected_active_work_version": 2,
   "content": {
-    "input_id": "rin_01J00000000000000000000001",
-    "input_message_id": "msg_01J00000000000000000000001",
+    "client_control_input_id": "client-control-input-0001",
     "content_digest": "sha256:3ee5da709dc141b215e943a10388da878f35902be68783b0fc7fbe4b5ebee529",
     "content": [
       {
@@ -21,5 +19,6 @@
   "execution_grant": "eyJhbGciOiJFZERTQSIsImtpZCI6ImtleS0xIiwidHlwIjoiYWdlbnQtZXhlY3V0aW9uLWdyYW50K2p3dCJ9.payload.signature",
   "metadata": {
     "locale": "zh-CN"
-  }
+  },
+  "expected_message_head_version": 2
 }

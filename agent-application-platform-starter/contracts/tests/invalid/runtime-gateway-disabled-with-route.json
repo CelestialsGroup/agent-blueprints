@@ -1,0 +1,39 @@
+{
+  "model": {
+    "kind": "model",
+    "gateway_id": "model-gateway",
+    "route_id": "model-route-general-balanced",
+    "protocol_version": "v1",
+    "binding_digest": "sha256:7171717171717171717171717171717171717171717171717171717171717171",
+    "audience": "agent-model-gateway",
+    "mode": "enabled"
+  },
+  "tool": {
+    "kind": "tool",
+    "gateway_id": "tool-gateway",
+    "route_id": "tool-route-work-order",
+    "protocol_version": "v1",
+    "binding_digest": "sha256:7272727272727272727272727272727272727272727272727272727272727272",
+    "audience": "agent-tool-gateway",
+    "mode": "enabled"
+  },
+  "artifact": {
+    "kind": "artifact",
+    "gateway_id": "artifact-gateway",
+    "route_id": "artifact-route-work-order",
+    "protocol_version": "v1",
+    "binding_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
+    "audience": "agent-artifact-gateway",
+    "mode": "enabled"
+  },
+  "egress": {
+    "kind": "egress",
+    "gateway_id": "egress-gateway",
+    "route_id": "egress-route-restricted",
+    "protocol_version": "v1",
+    "binding_digest": "sha256:7474747474747474747474747474747474747474747474747474747474747474",
+    "audience": "agent-egress-gateway",
+    "mode": "disabled",
+    "reason": "policy_denied"
+  }
+}

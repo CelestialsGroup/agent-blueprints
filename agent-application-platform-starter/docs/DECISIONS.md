@@ -17,8 +17,12 @@
 | Provider Envelope 与 Build Provenance | Plugin 打包方式不能污染 Runtime、Sandbox 或远程服务 | ProviderRevision 统一绑定 Implementation、稳定 Port、配置和 Conformance；Source Revision、Build、SBOM 与 Provenance 摘要不可变 |
 | 明确执行拓扑 | WorkOrder、Workflow 和框架 Run 混用会破坏重试与恢复 | 一个 WorkOrder 对应一个 Platform WorkflowRun；每个 AgentRun 对应一个 RunManifest 和 AgentRuntimeRun，Sub-agent 使用显式父子关系 |
 | Tenant-qualified 执行与统一 Resolution 引用 | 只靠间接 WorkOrder 关联或复制 Revision 会产生越权和漂移 | WorkflowRun/AgentRun/RunManifest/Runtime Start 显式绑定 Tenant；Runtime 与每个 Sandbox Slot 只引用一个 ProviderResolution |
-| 完整 Runtime 执行快照 | 只保存 Message ID、预算摘要或策略摘要无法让 Adapter 安全执行与回放 | RunManifest 与 Runtime Start 携带真实有界输入/不可变引用、ContextPackage、ArtifactGrant、完整有效值和 Model/Tool/Artifact/Egress Gateway Binding |
+| 不可变准入与可续期 Runtime 授权分离 | 把短期 ArtifactGrant/Token 写进 RunManifest 会让长任务、Adapter 重启和 Resume 无法恢复，也可能让续期绕过商业期限 | RunManifest 固化输入、ArtifactAccessRequirement、初始授权上限、CommercialAuthorization ID/Digest/到期上限和续期规则；每个 Attempt 使用内部作用域闭合、带前驱摘要的 RuntimeAuthorization 与同窗 ArtifactGrant，等价/缩权续期，扩权新建 WorkOrder |
+| Provider Artifact/Usage 所有权收口 | Provider 直接 Finalize ArtifactVersion 或构造 Platform TechnicalUsageEntry 会形成竞争事实源 | Provider 只写 Staging 并返回 UsageObservation；Platform 校验后 Finalize ArtifactVersion、分配 TechnicalUsage identity/idempotency/recorded_at |
+| PrincipalContext 与解析依赖显式化 | 只有一个不透明摘要无法审计身份路由，routing_reason 也不能证明是否使用身份 | ExecutionGrant 内嵌有界 PrincipalContextSnapshot；ProviderResolution 用 identity_dependency 明确声明并绑定摘要 |
+| 可执行语义追踪 | 文件存在或函数名标签不能证明约束真的被测试 | 每个 contract_gate Check ID 必须注册并在当前 Gate 执行；DDL/网络/Conformance 责任保留为明确的 Phase 0 待实现证据 |
 | Fail-closed 限额与请求体上限 | 空 limits 和无界 JSON 会产生跨实现歧义及资源耗尽 | EffectiveExecutionLimits 全字段必填；各写操作声明 encoded-byte 上限并在解析前以 413 拒绝 |
+| 最新稳定运行时与可复现构建并存 | 浮动 `latest` 不可复现，Node Current 生命周期又不适合作为生产基线 | Go/Python 固定最新正式稳定补丁，Node 固定最新 Active LTS；精确版本、依赖锁、OCI Digest 和 BuildProvenance 受治理，升级走双版本/Canary/Rollback |
 | 来源身份与 Inbox 去重 | Provider 重试和游标重放不能依赖平台 Event ID 偶然去重 | CanonicalEvent 固化 Producer/ProviderRevision/SourceStream/SourceEvent/Cursor 和 Dedupe Key，Metadata 闭合，Inbox 建唯一约束 |
 | Service OAuth、Conversation WorkSession、单次 ExecutionGrant | 后端与浏览器信任级别不同，会员授权不能变成长会话权限 | WorkSession 绑定 Conversation、可缩窄到 WorkOrder；每个可执行 Turn 都需要新的 Business Grant 与额度 Reservation |
 | Runtime Gateway 与按需 SandboxProvider | 双向连接和 Sandbox 生命周期不能依赖 API Pod 或 DeerFlow 内部实现，轻量 Run 也不应被迫创建 Sandbox | 前端只访问短期 Gateway Session；Scenario Capability 决定是否创建 Sandbox；Provider 私有 Pod/VM/Endpoint 不进入稳定模型 |

@@ -12,6 +12,18 @@
     { "id": "canonical-event-source-dedupe-mismatch", "mutation": "canonical_event_dedupe_mismatch" },
     { "id": "canonical-event-provider-without-revision", "mutation": "canonical_event_provider_revision_missing" },
     { "id": "control-grant-work-order-mismatch", "mutation": "control_grant_work_order_mismatch" },
-    { "id": "semantic-traceability-missing-constraint", "mutation": "traceability_missing_constraint" }
+    { "id": "semantic-traceability-missing-constraint", "mutation": "traceability_missing_constraint" },
+    { "id": "semantic-traceability-unknown-check-id", "mutation": "traceability_unknown_check_id" },
+    { "id": "semantic-traceability-unexecuted-check-id", "mutation": "traceability_unexecuted_check_id" },
+    { "id": "control-grant-carries-stale-turn", "mutation": "control_grant_stale_turn_binding" },
+    { "id": "principal-context-digest-mismatch", "mutation": "principal_context_digest_mismatch" },
+    { "id": "execution-grant-outlives-principal-snapshot", "mutation": "execution_grant_snapshot_expired" },
+    { "id": "runtime-authorization-widens-permissions", "mutation": "runtime_authorization_widens_permissions" },
+    { "id": "runtime-authorization-component-crosses-tenant", "mutation": "runtime_authorization_component_scope_mismatch" },
+    { "id": "runtime-authorization-outlives-commercial-authorization", "mutation": "runtime_authorization_commercial_expiry_exceeded" },
+    { "id": "runtime-artifact-grant-predates-authorization", "mutation": "runtime_artifact_grant_predates_authorization" },
+    { "id": "capability-artifact-grant-outlives-request-deadline", "mutation": "capability_artifact_grant_outlives_deadline" },
+    { "id": "required-gateway-is-disabled", "mutation": "required_gateway_disabled" },
+    { "id": "provider-usage-contains-platform-entry", "mutation": "provider_usage_contains_platform_entry" }
   ]
 }

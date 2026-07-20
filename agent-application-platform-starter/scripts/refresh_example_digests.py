@@ -239,6 +239,15 @@ capability_definitions = [
 ]
 definition_by_capability = {item["id"]: item for item in capability_definitions}
 
+principal_context_path = "examples/contracts/principal-context-snapshot.json"
+principal_context = read(principal_context_path)
+principal_context["issued_at"] = "2026-07-16T08:59:30Z"
+principal_context["expires_at"] = "2026-07-16T09:30:00Z"
+principal_context["principal_context_digest"] = digest_without(
+    principal_context, "principal_context_digest"
+)
+write(principal_context_path, principal_context)
+
 
 def resolution(
     resolution_id: str, capability: dict[str, Any], revision_id: str,
@@ -249,7 +258,7 @@ def resolution(
         "tenant_id": "ten_01J00000000000000000000000",
         "client_app_id": "html-product",
         "work_order_id": "wrk_01J00000000000000000000000",
-        "principal_context_digest": "sha256:" + "51" * 32,
+        "principal_context_digest": principal_context["principal_context_digest"],
         "capability": capability,
         "capability_definition_digest": definition_by_capability[capability["id"]]["definition_digest"],
         "provider_revision_id": revision_id,
@@ -276,7 +285,14 @@ def resolution(
         "client_app_id": "html-product",
         "work_order_id": "wrk_01J00000000000000000000000",
         "execution_scope": "work_order",
-        "principal_context_digest": "sha256:" + "51" * 32,
+        "principal_context_digest": principal_context["principal_context_digest"],
+        "identity_dependency": {
+            "mode": "principal_context",
+            "declaration_digest": digest({
+                "resolver": "provider-resolver",
+                "identity_dependency": "principal_context",
+            }),
+        },
         "capability": capability,
         "selected_provider_instance_id": revision["provider_instance_id"],
         "routing_reason": "scenario_requirement",
@@ -315,25 +331,39 @@ write(template_path, template)
 
 grant_path = "examples/contracts/execution-grant-claims.json"
 grant = read(grant_path)
+grant["iat"] = 1784192400
+grant["nbf"] = 1784192400
+grant["exp"] = 1784192700
 grant["request_contract_id"] = "urn:agent-platform:conversation-turn-request:v1"
 grant["request_digest_profile"] = "rfc8785-request-excluding-execution-grant-v1"
+grant["principal_context"] = copy.deepcopy(principal_context)
+grant["principal_context_digest"] = principal_context["principal_context_digest"]
 commercial_path = "examples/contracts/commercial-authorization-snapshot.json"
 commercial = read(commercial_path)
 commercial["commercial_authorization_id"] = commercial.pop(
     "authorization_id", commercial.get("commercial_authorization_id")
 )
 commercial.pop("authorization_digest", None)
+commercial["issued_at"] = "2026-07-16T08:59:30Z"
+commercial["expires_at"] = "2026-07-16T09:30:00Z"
 commercial["authorized_entitlements"] = ["experience.html.premium"]
 commercial["authorized_capabilities"] = grant["capabilities"]
 commercial["authorized_limits"] = grant["limits"]
 commercial["authorized_limits_digest"] = digest(commercial["authorized_limits"])
 commercial["commercial_authorization_digest"] = digest_without(commercial, "commercial_authorization_digest")
 write(commercial_path, commercial)
+commercial_binding = {
+    "commercial_authorization_id": commercial["commercial_authorization_id"],
+    "commercial_authorization_digest": commercial["commercial_authorization_digest"],
+    "expires_at": commercial["expires_at"],
+}
+write("examples/contracts/commercial-authorization-binding.json", commercial_binding)
 grant["commercial_authorization"] = commercial
 write(grant_path, grant)
 
 workspace_manifest_path = "examples/contracts/workspace-content-manifest.json"
 workspace_manifest = read(workspace_manifest_path)
+workspace_manifest["path_case_policy"] = workspace_manifest.get("path_case_policy", "case_sensitive")
 workspace_manifest["entry_count"] = len(workspace_manifest["entries"])
 workspace_manifest["total_file_bytes"] = sum(
     entry.get("size_bytes", 0) for entry in workspace_manifest["entries"]
@@ -383,6 +413,7 @@ sandbox_restore["request_digest"] = digest_without(sandbox_restore, "request_dig
 write("examples/contracts/sandbox-restore-request.json", sandbox_restore)
 work_session = read("examples/contracts/work-session-request.json")
 work_session["commercial_authorization"] = commercial
+work_session["principal_context"] = copy.deepcopy(principal_context)
 write("examples/contracts/work-session-request.json", work_session)
 
 meter_path = "examples/contracts/meter-definition.json"
@@ -402,6 +433,13 @@ permissions_path = "examples/contracts/effective-permissions.json"
 permissions = read(permissions_path)
 permissions["tenant_id"] = budget["tenant_id"]
 permissions["work_order_id"] = budget["work_order_id"]
+legacy_artifact_permissions = permissions["artifact"]
+permissions["artifact"] = {
+    "read": legacy_artifact_permissions["read"],
+    "stage_new_version": legacy_artifact_permissions.get(
+        "stage_new_version", legacy_artifact_permissions.get("write", False)
+    ),
+}
 permissions["permissions_digest"] = digest_without(permissions, "permissions_digest")
 write(permissions_path, permissions)
 
@@ -419,8 +457,29 @@ write(context_package_path, context_package)
 
 artifact_grant = read("examples/contracts/artifact-grant.json")
 artifact_grant["artifact_digest"] = workspace_manifest["manifest_digest"]
+artifact_grant.pop("runtime_run_id", None)
+artifact_grant["execution_scope"] = {
+    "kind": "runtime_invocation",
+    "runtime_run_id": "rtr_01J00000000000000000000000",
+    "invocation_id": "inv_runtime_start_01J000000000000",
+    "invocation_attempt_id": "iat_runtime_start_01J00000000000",
+}
+artifact_grant["permissions"] = [
+    "stage_new_version" if permission == "write_new_version" else permission
+    for permission in artifact_grant["permissions"]
+    if permission != "finalize"
+]
 write("examples/contracts/artifact-grant.json", artifact_grant)
+artifact_requirement_path = "examples/contracts/artifact-access-requirement.json"
+artifact_requirement = read(artifact_requirement_path)
+for field in ("tenant_id", "work_order_id", "artifact_id", "version_id", "artifact_digest"):
+    artifact_requirement[field] = artifact_grant[field]
+artifact_requirement["allowed_permissions"] = copy.deepcopy(artifact_grant["permissions"])
+write(artifact_requirement_path, artifact_requirement)
 gateway_bindings = read("examples/contracts/runtime-gateway-bindings.json")
+for binding in gateway_bindings.values():
+    binding["mode"] = "enabled"
+write("examples/contracts/runtime-gateway-bindings.json", gateway_bindings)
 
 usage_entry_path = "examples/contracts/technical-usage-entry.json"
 usage_entry = read(usage_entry_path)
@@ -432,6 +491,24 @@ usage_entry["producer"]["provider_revision_digest"] = revisions[
     usage_entry["producer"]["provider_revision_id"]
 ]["provider_revision_digest"]
 usage_entry["evidence_digest"] = digest({"evidence_reference": usage_entry["evidence_reference"]})
+usage_entry["source_observation_id"] = "uobs_01J000000000000000000000"
+write(usage_entry_path, usage_entry)
+
+usage_observation_path = "examples/contracts/usage-observation.json"
+usage_observation = read(usage_observation_path)
+usage_observation["meter_id"] = meter["meter_id"]
+usage_observation["meter_version"] = meter["meter_version"]
+usage_observation["unit"] = meter["base_unit"]
+usage_observation["evidence_digest"] = digest({
+    "evidence_reference": usage_observation["evidence_reference"]
+})
+write(usage_observation_path, usage_observation)
+for field in (
+    "meter_id", "meter_version", "quantity", "unit", "measurement_status",
+    "evidence_reference", "evidence_digest", "occurred_at",
+):
+    usage_entry[field] = usage_observation[field]
+usage_entry["source_observation_id"] = usage_observation["observation_id"]
 write(usage_entry_path, usage_entry)
 
 usage_report_path = "examples/contracts/usage-report.json"
@@ -497,7 +574,7 @@ event_registry = read(event_registry_path)
 event_dependencies = sorted(
     [
         read("contracts/schemas/capability-error.schema.json"),
-        read("contracts/schemas/technical-usage-entry.schema.json"),
+        read("contracts/schemas/usage-observation.schema.json"),
     ],
     key=lambda schema: schema["$id"],
 )
@@ -508,17 +585,27 @@ for definition in event_registry["definitions"]:
 event_registry["registry_digest"] = digest_without(event_registry, "registry_digest")
 write(event_registry_path, event_registry)
 
-platform_event_schema = read("contracts/schemas/event-data-artifact-version-created.schema.json")
-platform_event_schema_digest = digest({"root": platform_event_schema, "dependencies": []})
+platform_event_schema = read("contracts/schemas/platform-core-event-data.schema.json")
+platform_event_dependencies = [read("contracts/schemas/work-order-state.schema.json")]
+platform_event_schema_digest = digest({
+    "root": platform_event_schema,
+    "dependencies": sorted(platform_event_dependencies, key=lambda schema: schema["$id"]),
+})
 platform_registry_path = "contracts/event-types/platform-core-v1.json"
 platform_event_registry = read(platform_registry_path)
 for definition in platform_event_registry["definitions"]:
     definition["data_schema"]["digest"] = platform_event_schema_digest
+    definition["data_schema"]["digest_profile"] = "rfc8785-schema-closure-v1"
 platform_event_registry["registry_digest"] = digest_without(platform_event_registry, "registry_digest")
 write(platform_registry_path, platform_event_registry)
-write("examples/contracts/event-type-artifact-version-created.json", platform_event_registry["definitions"][0])
+artifact_event_definition = next(
+    item for item in platform_event_registry["definitions"]
+    if item["type"] == "artifact.version.created"
+)
+write("examples/contracts/event-type-artifact-version-created.json", artifact_event_definition)
 
 canonical_event = read("examples/contracts/canonical-event-v2.json")
+canonical_event["producer_kind"] = "platform"
 canonical_event["event_registry"] = {
     "registry_id": platform_event_registry["registry_id"],
     "registry_version": platform_event_registry["registry_version"],
@@ -531,6 +618,7 @@ canonical_event["dedupe_key"] = digest({
     "source_event_id": canonical_event["source_event_id"],
 })
 write("examples/contracts/canonical-event-v2.json", canonical_event)
+write("examples/contracts/platform-core-event-data.json", canonical_event["data"])
 
 
 manifest_path = "examples/contracts/run-manifest-v2.json"
@@ -607,14 +695,19 @@ manifest.pop("event_schema_version", None)
 manifest["commercial_authorization"] = {
     "commercial_authorization_id": commercial["commercial_authorization_id"],
     "commercial_authorization_digest": commercial["commercial_authorization_digest"],
+    "expires_at": commercial["expires_at"],
 }
 manifest["input"] = copy.deepcopy(runtime_input)
 manifest["context_package"] = copy.deepcopy(context_package)
-manifest["artifact_grants"] = [copy.deepcopy(artifact_grant)]
+manifest.pop("artifact_grants", None)
+manifest["artifact_access_requirements"] = [copy.deepcopy(artifact_requirement)]
 manifest["execution_budget"] = copy.deepcopy(budget)
 manifest["policy_decision"] = copy.deepcopy(policy)
 manifest["effective_permissions"] = copy.deepcopy(permissions)
 manifest["gateway_bindings"] = copy.deepcopy(gateway_bindings)
+manifest["authorization_renewal_policy"] = read(
+    "examples/contracts/authorization-renewal-policy.json"
+)
 manifest["admission_limits"] = {
     "max_encoded_request_bytes": 8388608,
     "max_inline_input_bytes": 262144,
@@ -705,7 +798,8 @@ for path, keys in template_reference_paths:
 
 grant = read(grant_path)
 conversation_turn_request = read("examples/contracts/conversation-turn-request.json")
-grant["principal_context_digest"] = "sha256:" + "51" * 32
+grant["principal_context"] = copy.deepcopy(principal_context)
+grant["principal_context_digest"] = principal_context["principal_context_digest"]
 grant["request_contract_id"] = "urn:agent-platform:conversation-turn-request:v1"
 grant["request_digest_profile"] = "rfc8785-request-excluding-execution-grant-v1"
 grant["request_digest"] = digest_without(conversation_turn_request, "execution_grant")
@@ -720,7 +814,12 @@ write("examples/contracts/execution-grant-work-order-claims.json", work_order_gr
 
 control_request_path = "examples/contracts/work-order-control-request.json"
 control_request = read(control_request_path)
-control_request["content"]["content_digest"] = digest(control_request["content"]["content"])
+control_input = read("examples/contracts/work-order-control-input.json")
+control_input["content_digest"] = digest(control_input["content"])
+write("examples/contracts/work-order-control-input.json", control_input)
+control_request.pop("expected_message_head_sequence", None)
+control_request["expected_message_head_version"] = conversation_branch["message_head_version"]
+control_request["content"] = copy.deepcopy(control_input)
 write(control_request_path, control_request)
 control_grant = copy.deepcopy(grant)
 control_grant["jti"] = "grant_control_01J00000000000000000"
@@ -728,6 +827,11 @@ control_grant["nonce"] = "nonce-work-control-0123456789"
 control_grant["request_contract_id"] = "urn:agent-platform:work-order-control-request:v1"
 control_grant["work_order_id"] = control_request["work_order_id"]
 control_grant["control_request_id"] = control_request["control_request_id"]
+for field in (
+    "turn_id", "client_message_id", "scenario_id", "scenario_version",
+    "scenario_definition_digest",
+):
+    control_grant.pop(field, None)
 control_grant["request_digest"] = digest_without(control_request, "execution_grant")
 write("examples/contracts/execution-grant-control-claims.json", control_grant)
 
@@ -760,11 +864,70 @@ runtime_start["run_manifest_digest"] = manifest["run_manifest_digest"]
 runtime_start["agent_run_id"] = manifest["agent_run_id"]
 runtime_start["workspace_revision_id"] = workspace_revision["workspace_revision_id"]
 runtime_start["workspace_revision_digest"] = workspace_revision["revision_digest"]
+runtime_start["deadline_at"] = "2026-07-16T09:15:00Z"
+artifact_grant["execution_scope"] = {
+    "kind": "runtime_invocation",
+    "runtime_run_id": runtime_start["runtime_run_id"],
+    "invocation_id": runtime_start["invocation_id"],
+    "invocation_attempt_id": runtime_start["invocation_attempt_id"],
+}
+artifact_grant["expires_at"] = "2026-07-16T09:15:00Z"
+write("examples/contracts/artifact-grant.json", artifact_grant)
+
+
+def make_runtime_authorization(
+    manifest_value: dict[str, Any], start_value: dict[str, Any], authorization_id: str,
+) -> dict[str, Any]:
+    value = read("examples/contracts/runtime-authorization.json")
+    value.update({
+        "authorization_id": authorization_id,
+        "authorization_sequence": 1,
+        "predecessor_authorization_digest": None,
+        "renewal_reason": "initial_dispatch",
+        "tenant_id": manifest_value["tenant_id"],
+        "work_order_id": manifest_value["work_order_id"],
+        "runtime_run_id": start_value["runtime_run_id"],
+        "run_manifest_digest": manifest_value["run_manifest_digest"],
+        "commercial_authorization": copy.deepcopy(manifest_value["commercial_authorization"]),
+        "execution_budget": copy.deepcopy(manifest_value["execution_budget"]),
+        "policy_decision": copy.deepcopy(manifest_value["policy_decision"]),
+        "effective_permissions": copy.deepcopy(manifest_value["effective_permissions"]),
+        "artifact_grants": [copy.deepcopy(artifact_grant)],
+        "issued_at": "2026-07-16T09:01:00Z",
+        "expires_at": "2026-07-16T09:15:00Z",
+    })
+    value["authorization_digest"] = digest_without(value, "authorization_digest")
+    return value
+
+
+runtime_authorization = make_runtime_authorization(
+    manifest, runtime_start, "rauth_01J000000000000000000000"
+)
+write("examples/contracts/runtime-authorization.json", runtime_authorization)
+renewed_authorization = copy.deepcopy(runtime_authorization)
+renewed_authorization.update({
+    "authorization_id": "rauth_01J000000000000000000001",
+    "authorization_sequence": 2,
+    "predecessor_authorization_digest": runtime_authorization["authorization_digest"],
+    "renewal_reason": "adapter_restart",
+    "issued_at": "2026-07-16T09:05:00Z",
+})
+renewed_authorization["artifact_grants"][0]["grant_id"] = "artg_01J0000000000000000000001"
+renewed_authorization["artifact_grants"][0]["issued_at"] = "2026-07-16T09:05:00Z"
+renewed_authorization["artifact_grants"][0]["execution_scope"]["invocation_attempt_id"] = (
+    "iat_runtime_01J0000000000000001"
+)
+renewed_authorization["authorization_digest"] = digest_without(
+    renewed_authorization, "authorization_digest"
+)
+write("examples/contracts/runtime-authorization-renewed.json", renewed_authorization)
+for legacy_field in ("artifact_grants", "execution_budget", "policy_decision", "effective_permissions"):
+    runtime_start.pop(legacy_field, None)
 for field in (
-    "input", "context_package", "artifact_grants", "execution_budget", "policy_decision",
-    "effective_permissions", "gateway_bindings", "admission_limits",
+    "input", "context_package", "gateway_bindings", "admission_limits",
 ):
     runtime_start[field] = copy.deepcopy(manifest[field])
+runtime_start["runtime_authorization"] = copy.deepcopy(runtime_authorization)
 runtime_start["request_digest"] = digest_without(runtime_start, "request_digest")
 write("examples/contracts/agent-runtime-start-request.json", runtime_start)
 
@@ -772,10 +935,14 @@ no_sandbox_runtime_start = copy.deepcopy(runtime_start)
 no_sandbox_runtime_start["run_manifest_digest"] = no_sandbox_manifest["run_manifest_digest"]
 no_sandbox_runtime_start["sandbox_bindings"] = []
 for field in (
-    "input", "context_package", "artifact_grants", "execution_budget", "policy_decision",
-    "effective_permissions", "gateway_bindings", "admission_limits",
+    "input", "context_package", "gateway_bindings", "admission_limits",
 ):
     no_sandbox_runtime_start[field] = copy.deepcopy(no_sandbox_manifest[field])
+no_sandbox_runtime_start["runtime_authorization"] = make_runtime_authorization(
+    no_sandbox_manifest,
+    no_sandbox_runtime_start,
+    "rauth_no_sandbox_01J000000000000000",
+)
 no_sandbox_runtime_start["request_digest"] = digest_without(no_sandbox_runtime_start, "request_digest")
 write("examples/contracts/agent-runtime-start-no-sandbox.json", no_sandbox_runtime_start)
 
@@ -787,8 +954,12 @@ write("examples/contracts/agent-runtime-run-status.json", runtime_status)
 
 runtime_command = read("examples/contracts/agent-runtime-command.json")
 runtime_command["authorized_control_request_id"] = control_request["control_request_id"]
-runtime_command["input_id"] = control_request["content"]["input_id"]
-runtime_command["input_content_digest"] = control_request["content"]["content_digest"]
+control_runtime_input = read("examples/contracts/work-order-control-runtime-input.json")
+control_runtime_input["content"] = copy.deepcopy(control_request["content"]["content"])
+control_runtime_input["content_digest"] = control_request["content"]["content_digest"]
+write("examples/contracts/work-order-control-runtime-input.json", control_runtime_input)
+runtime_command["input_id"] = control_runtime_input["input_id"]
+runtime_command["input_content_digest"] = control_runtime_input["content_digest"]
 runtime_command["command_digest"] = digest_without(runtime_command, "command_digest")
 write("examples/contracts/agent-runtime-command.json", runtime_command)
 
@@ -810,13 +981,14 @@ runtime_token.update({
     "workflow_run_id": manifest["workflow_run_id"],
     "work_order_id": manifest["work_order_id"],
     "run_manifest_digest": manifest["run_manifest_digest"],
+    "runtime_authorization_digest": runtime_authorization["authorization_digest"],
     "request_digest": runtime_start["request_digest"],
     "invocation_id": runtime_start["invocation_id"],
     "invocation_attempt_id": runtime_start["invocation_attempt_id"],
     "fencing_token": runtime_start["fencing_token"],
-    "policy_decision_digest": policy["decision_digest"],
-    "execution_budget_digest": budget["budget_digest"],
-    "effective_permissions_digest": policy["effective_permissions_digest"],
+    "policy_decision_digest": runtime_authorization["policy_decision"]["decision_digest"],
+    "execution_budget_digest": runtime_authorization["execution_budget"]["budget_digest"],
+    "effective_permissions_digest": runtime_authorization["effective_permissions"]["permissions_digest"],
 })
 write("examples/contracts/agent-runtime-invocation-token-claims.json", runtime_token)
 
@@ -828,9 +1000,23 @@ capability_request.update({
     "work_order_id": manifest["work_order_id"],
     "policy_decision_digest": policy["decision_digest"],
     "execution_budget_digest": budget["budget_digest"],
+    "permissions_digest": permissions["permissions_digest"],
 })
+capability_artifact_grant = copy.deepcopy(artifact_grant)
+capability_artifact_grant["grant_id"] = "artg_cap_01J0000000000000000000"
+capability_artifact_grant["execution_scope"] = {
+    "kind": "capability_invocation",
+    "invocation_id": capability_request["invocation_id"],
+    "invocation_attempt_id": capability_request["invocation_attempt_id"],
+}
+capability_artifact_grant["expires_at"] = "2026-07-16T09:06:10Z"
+capability_request["input_artifact_grants"] = [capability_artifact_grant]
 capability_request["request_digest"] = digest_without(capability_request, "request_digest")
 write("examples/contracts/capability-invocation-request.json", capability_request)
+
+capability_result = read("examples/contracts/capability-invocation-result.json")
+capability_result["usage"] = [copy.deepcopy(usage_observation)]
+write("examples/contracts/capability-invocation-result.json", capability_result)
 
 capability_token = read("examples/contracts/capability-invocation-token-claims.json")
 capability_token.update({
@@ -866,6 +1052,31 @@ write("contracts/tests/invalid/runtime-start-missing-executable-input.json", mis
 missing_control_grant = copy.deepcopy(control_request)
 missing_control_grant.pop("execution_grant")
 write("contracts/tests/invalid/work-order-control-missing-grant.json", missing_control_grant)
+
+pause_with_message_cas = copy.deepcopy(control_request)
+pause_with_message_cas["action"] = "pause"
+pause_with_message_cas.pop("content", None)
+write("contracts/tests/invalid/work-order-control-pause-with-message-cas.json", pause_with_message_cas)
+
+control_grant_with_turn = copy.deepcopy(control_grant)
+control_grant_with_turn["turn_id"] = "turn_forbidden_on_control"
+write("contracts/tests/invalid/execution-grant-control-with-turn-binding.json", control_grant_with_turn)
+
+artifact_finalize_grant = copy.deepcopy(artifact_grant)
+artifact_finalize_grant["permissions"] = ["read", "finalize"]
+write("contracts/tests/invalid/artifact-grant-provider-finalize.json", artifact_finalize_grant)
+
+authorization_with_first_predecessor = copy.deepcopy(runtime_authorization)
+authorization_with_first_predecessor["predecessor_authorization_digest"] = "sha256:" + "f" * 64
+write(
+    "contracts/tests/invalid/runtime-authorization-first-with-predecessor.json",
+    authorization_with_first_predecessor,
+)
+
+disabled_gateway_with_route = copy.deepcopy(gateway_bindings)
+disabled_gateway_with_route["egress"]["mode"] = "disabled"
+disabled_gateway_with_route["egress"]["reason"] = "policy_denied"
+write("contracts/tests/invalid/runtime-gateway-disabled-with-route.json", disabled_gateway_with_route)
 
 missing_capability_digest = copy.deepcopy(capability_token)
 missing_capability_digest.pop("request_digest")
@@ -987,57 +1198,139 @@ for case_path, manual_path in case_decision_pairs:
     manual["decision_digest"] = digest_without(manual, "decision_digest")
     write(manual_path, manual)
 
+def contract_check(check_id: str) -> list[tuple[str, str, str, str]]:
+    return [("semantic_validator", "scripts/validate_semantics.py", check_id, "contract_gate")]
+
+
+def implementation_check(
+    kind: str, artifact: str, check_id: str,
+) -> list[tuple[str, str, str, str]]:
+    return [(kind, artifact, check_id, "phase0_implementation_required")]
+
+
 traceability_profiles = {
     "agent-runtime-start-request.schema.json": [
-        ("semantic_validator", "scripts/validate_semantics.py", "validate_execution_topology", "contract_gate"),
-        ("openapi_gate", "contracts/openapi/agent-runtime-provider-v1.yaml", "startAgentRuntimeRun", "contract_gate"),
-        ("conformance_test", "contracts/conformance/runtime/v1/suite.json", "runtime-core-v1", "phase0_implementation_required"),
+        contract_check("runtime_start.execution_topology"),
+        contract_check("runtime_start.workspace_binding"),
+        contract_check("runtime_start.sandbox_binding"),
+        contract_check("runtime_start.request_digest"),
+        contract_check("runtime_start.input_binding"),
+        contract_check("runtime_start.immutable_context_binding") + contract_check("runtime_authorization.ceiling"),
+        contract_check("runtime_authorization.scope") + contract_check("runtime_authorization.expiry") + contract_check("runtime_authorization.artifact_coverage"),
+        implementation_check("conformance_test", "contracts/conformance/runtime/v1/suite.json", "start-encoded-body-limit"),
+        contract_check("runtime_token.binding"),
     ],
     "work-order-control-request.schema.json": [
-        ("semantic_validator", "scripts/validate_semantics.py", "validate_execution_grant_request", "contract_gate"),
-        ("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "work_order_control_input_and_split_cas", "phase0_implementation_required"),
+        contract_check("work_order_control.grant_binding"),
+        contract_check("work_order_control.conditional_cas"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "work_order_control_input_allocation_and_outbox"),
     ],
     "conversation-branch.schema.json": [
-        ("semantic_validator", "scripts/validate_semantics.py", "validate_conversation_branch", "contract_gate"),
-        ("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "message_workspace_active_work_cas", "phase0_implementation_required"),
+        contract_check("conversation_branch.head_consistency"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "branch_fork_prior_message_fk"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "branch_one_active_work_order"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "message_workspace_active_work_split_cas"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "branch_etag_not_write_cas"),
+        contract_check("conversation_branch.workspace_binding") + implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "branch_workspace_revision_fk"),
     ],
     "provider-resolution.schema.json": [
-        ("semantic_validator", "scripts/validate_semantics.py", "validate_provider_resolution", "contract_gate"),
-        ("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "tenant_client_work_order_provider_resolution", "phase0_implementation_required"),
+        contract_check("provider_resolution.decision_digest"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "provider_resolution_complete_input_evidence"),
+        contract_check("provider_resolution.execution_scope") + implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "tenant_client_work_order_provider_resolution"),
+        contract_check("provider_resolution.identity_dependency"),
+        contract_check("provider_resolution.selected_candidate"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "provider_resolution_immutable_evidence_lookup"),
     ],
     "capability-invocation-request.schema.json": [
-        ("semantic_validator", "scripts/validate_semantics.py", "validate_capability_invocation", "contract_gate"),
-        ("conformance_test", "contracts/conformance/capability/v1/suite.json", "capability-core-v1", "phase0_implementation_required"),
+        contract_check("capability_invocation.request_digest"),
+        implementation_check("conformance_test", "contracts/conformance/capability/v1/suite.json", "request-schema-boundaries"),
+        contract_check("capability_invocation.token_binding") + implementation_check("conformance_test", "contracts/conformance/capability/v1/suite.json", "token-binding"),
+        contract_check("capability_invocation.artifact_grant_expiry") + implementation_check("conformance_test", "contracts/conformance/capability/v1/suite.json", "artifact-contract"),
     ],
     "capability-invocation-token-claims.schema.json": [
-        ("semantic_validator", "scripts/validate_semantics.py", "validate_capability_invocation", "contract_gate"),
-        ("conformance_test", "contracts/conformance/capability/v1/suite.json", "token_binding", "phase0_implementation_required"),
+        contract_check("capability_invocation.token_lifetime"),
+        contract_check("capability_invocation.token_binding"),
     ],
     "workspace-content-manifest.schema.json": [
-        ("semantic_validator", "scripts/validate_semantics.py", "validate_workspace_content_manifest", "contract_gate"),
-        ("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "workspace_manifest_admission", "phase0_implementation_required"),
+        contract_check("workspace_manifest.digest"),
+        contract_check("workspace_manifest.path_policy"),
+        contract_check("workspace_manifest.counts"),
+        contract_check("workspace_manifest.symlink_policy"),
     ],
     "runtime-session-request.schema.json": [
-        ("json_schema", "contracts/schemas/runtime-session-request.schema.json", "sandbox_slot_key_and_recording_mode", "contract_gate"),
-        ("conformance_test", "contracts/conformance/runtime-gateway/v1/suite.json", "slot_scoped_runtime_session", "phase0_implementation_required"),
+        contract_check("runtime_session.requested_scope_subset") + implementation_check("conformance_test", "contracts/conformance/runtime-gateway/v1/suite.json", "session-scope-enforced"),
+        contract_check("runtime_session.sandbox_slot_binding") + implementation_check("conformance_test", "contracts/conformance/runtime-gateway/v1/suite.json", "slot-scoped-runtime-session"),
+        contract_check("runtime_session.scope_class"),
+        implementation_check("conformance_test", "contracts/conformance/runtime-gateway/v1/suite.json", "platform-managed-recording-authority"),
+        contract_check("runtime_session.channel_policy"),
     ],
     "canonical-event-v2.schema.json": [
-        ("semantic_validator", "scripts/validate_semantics.py", "validate_canonical_event_source", "contract_gate"),
-        ("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "canonical_event_inbox_source_uniqueness", "phase0_implementation_required"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "conversation_event_omits_work_scope"),
+        contract_check("canonical_event.work_binding"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "aggregate_and_work_sequence_ledgers"),
+        contract_check("canonical_event.source_dedupe"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "canonical_event_inbox_source_uniqueness"),
+        contract_check("canonical_event.producer_binding"),
+        contract_check("canonical_event.registry_binding"),
     ],
     "idempotency-record.schema.json": [
-        ("json_schema", "contracts/schemas/idempotency-record.schema.json", "tenant_client_operation_key_scope", "contract_gate"),
-        ("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "idempotency_scope_unique_index", "phase0_implementation_required"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "idempotency_scope_unique_index"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "idempotency_digest_conflict"),
     ],
     "execution-grant-claims.schema.json": [
-        ("semantic_validator", "scripts/validate_semantics.py", "validate_execution_grant_request", "contract_gate"),
-        ("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "grant_consumption_and_request_binding", "phase0_implementation_required"),
+        contract_check("execution_grant.clock_skew"),
+        contract_check("execution_grant.expiration_order"),
+        contract_check("execution_grant.max_ttl"),
+        contract_check("execution_grant.request_digest"),
+        contract_check("execution_grant.principal_context"),
+        contract_check("execution_grant.request_identity"),
+        contract_check("execution_grant.commercial_limits"),
+        contract_check("execution_grant.snapshot_validity"),
+    ],
+    "runtime-authorization.schema.json": [
+        contract_check("runtime_authorization.digest"),
+        contract_check("runtime_authorization.lineage"),
+        contract_check("runtime_authorization.ceiling"),
+        contract_check("runtime_authorization.internal_binding"),
+        contract_check("runtime_authorization.scope"),
+        contract_check("runtime_authorization.expiry"),
+        contract_check("runtime_authorization.artifact_coverage") + implementation_check("conformance_test", "contracts/conformance/runtime/v1/suite.json", "authorization-renewal"),
+    ],
+    "artifact-grant.schema.json": [
+        contract_check("artifact_grant.expiry"),
+        contract_check("artifact_grant.scope"),
+        contract_check("artifact_grant.provider_permissions"),
+    ],
+    "principal-context-snapshot.schema.json": [
+        contract_check("principal_context.digest"),
+        contract_check("principal_context.time_window"),
+        contract_check("principal_context.closed_attributes"),
+    ],
+    "runtime-gateway-bindings.schema.json": [
+        contract_check("gateway_binding.closed_modes"),
+        contract_check("gateway_binding.policy_alignment"),
+    ],
+    "capability-invocation-result.schema.json": [
+        implementation_check("conformance_test", "contracts/conformance/capability/v1/suite.json", "request-schema-boundaries"),
+        implementation_check("conformance_test", "contracts/conformance/capability/v1/suite.json", "artifact-contract"),
+        contract_check("usage_observation.provider_boundary"),
+    ],
+    "usage-observation.schema.json": [
+        contract_check("usage_observation.observation_identity"),
+        contract_check("usage_observation.meter_and_evidence"),
+        contract_check("usage_observation.incomplete_status"),
     ],
 }
 traceability_constraints = []
-for schema_filename, enforcements in traceability_profiles.items():
+for schema_filename, constraint_enforcements in traceability_profiles.items():
     schema = read(f"contracts/schemas/{schema_filename}")
-    for index, statement in enumerate(schema.get("x-semantic-constraints", [])):
+    statements = schema.get("x-semantic-constraints", [])
+    if len(statements) != len(constraint_enforcements):
+        raise AssertionError(
+            f"Traceability profile length differs from {schema_filename} semantic constraints"
+        )
+    for index, statement in enumerate(statements):
+        enforcements = constraint_enforcements[index]
         identifier_material = f"{schema['$id']}\n{index}\n{statement}".encode()
         traceability_constraints.append({
             "constraint_id": "sem-" + hashlib.sha256(identifier_material).hexdigest()[:16],

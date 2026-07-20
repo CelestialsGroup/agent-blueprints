@@ -14,13 +14,10 @@
     "client_app_id",
     "external_tenant_id",
     "external_principal_id",
+    "principal_context",
     "principal_context_digest",
     "conversation_id",
-    "turn_id",
     "branch_id",
-    "client_message_id",
-    "scenario_id",
-    "scenario_version",
     "request_contract_id",
     "request_digest_profile",
     "request_digest",
@@ -30,8 +27,7 @@
     "capabilities",
     "limits",
     "policies",
-    "commercial_authorization",
-    "scenario_definition_digest"
+    "commercial_authorization"
   ],
   "properties": {
     "jti": {
@@ -76,6 +72,9 @@
     "principal_context_digest": {
       "type": "string",
       "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "principal_context": {
+      "$ref": "urn:agent-platform:principal-context-snapshot:v1"
     },
     "work_order_id": {
       "type": "string",
@@ -195,7 +194,27 @@
         "properties": { "request_contract_id": { "const": "urn:agent-platform:work-order-control-request:v1" } },
         "required": ["request_contract_id"]
       },
-      "then": { "required": ["work_order_id", "control_request_id"] }
+      "then": {
+        "required": ["work_order_id", "control_request_id"],
+        "not": {
+          "anyOf": [
+            { "required": ["turn_id"] },
+            { "required": ["client_message_id"] },
+            { "required": ["scenario_id"] },
+            { "required": ["scenario_version"] },
+            { "required": ["scenario_definition_digest"] }
+          ]
+        }
+      },
+      "else": {
+        "required": ["turn_id", "client_message_id", "scenario_id", "scenario_version", "scenario_definition_digest"],
+        "not": {
+          "anyOf": [
+            { "required": ["work_order_id"] },
+            { "required": ["control_request_id"] }
+          ]
+        }
+      }
     }
   ],
   "x-semantic-constraints": [
@@ -203,7 +222,9 @@
     "iat < exp",
     "exp - iat <= 300",
     "request_contract_id identifies the exact submitted request schema and request_digest is RFC 8785 JCS SHA-256 over that request excluding only execution_grant",
-    "conversation, turn, branch, client_message, principal context and optional WorkOrder control bindings match the submitted request and authenticated path context",
-    "limits and capabilities do not exceed commercial_authorization"
+    "principal_context_digest matches principal_context, whose Tenant, Principal and ClientApplication fields match the Grant claims",
+    "turn requests bind conversation, turn, branch, client_message and scenario while control requests bind only conversation, branch, WorkOrder and control_request to the submitted request and authenticated path context",
+    "limits and capabilities do not exceed commercial_authorization",
+    "the Grant validity window is fully covered by principal_context and commercial_authorization validity windows"
   ]
 }

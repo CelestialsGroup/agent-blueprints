@@ -1,10 +1,10 @@
 {
   "settlement_envelope_id": "set_invalid_reconcile_final",
-  "settlement_envelope_digest": "sha256:a28ac9794d360c9e699772d4d915ce1e4f4a9918a3673d9ef691956c2cf76ed5",
+  "settlement_envelope_digest": "sha256:34a87388df65ed66541ad27c9d6a29a939663452fb607e317d3cbd06a1860b8c",
   "tenant_id": "ten_01J00000000000000000000000",
   "work_order_id": "wrk_01J00000000000000000000000",
   "commercial_authorization_id": "cauth_01J00000000000000000000000",
-  "commercial_authorization_digest": "sha256:7e0df7d1f12c15fa7b37f829cbbd7faf5dd927ae121e1d963d6205d71ff505ed",
+  "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7",
   "quota_reservation_id": "qres_01J00000000000000000000000",
   "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
   "work_order_terminal_status": "completed",
@@ -14,11 +14,11 @@
   "created_at": "2026-07-16T09:21:00Z",
   "usage_report": {
     "usage_report_id": "usr_01J00000000000000000000000",
-    "usage_report_digest": "sha256:ed0a304263c75f2690bf82e83552d1be733c3ba5118b638cea1a3017724cda49",
+    "usage_report_digest": "sha256:a36ccdb3a7fb07e339f9bbbb3210b4421ff70790c0b77d94d11205facb6edd3e",
     "tenant_id": "ten_01J00000000000000000000000",
     "work_order_id": "wrk_01J00000000000000000000000",
     "commercial_authorization_id": "cauth_01J00000000000000000000000",
-    "commercial_authorization_digest": "sha256:7e0df7d1f12c15fa7b37f829cbbd7faf5dd927ae121e1d963d6205d71ff505ed",
+    "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7",
     "quota_reservation_id": "qres_01J00000000000000000000000",
     "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
     "report_status": "final",
@@ -40,16 +40,17 @@
           "type": "provider",
           "id": "api_deerflow_runtime",
           "provider_revision_id": "apr_01J00000000000000000000000",
-          "provider_revision_digest": "sha256:688b9d7abe86270fc898deb57995c42737067526dfcd7967c5512a5f3b8be9ab"
+          "provider_revision_digest": "sha256:9c35dcaee06dd5d56bdf3297c493f9752c16f752b6ddc323e5f7dfcc49f7c252"
         },
         "provider_operation_id": "provider-op-model-001",
         "meter_source": "provider_reported",
         "measurement_status": "confirmed",
         "idempotency_key": "usage-model-input-0001",
-        "evidence_reference": "evidence://runtime/model-usage-001",
-        "occurred_at": "2026-07-16T09:05:00Z",
+        "evidence_reference": "https://evidence.agent.internal/provider-usage/uobs_01J000000000000000000000",
+        "occurred_at": "2026-07-16T09:02:00Z",
         "recorded_at": "2026-07-16T09:05:01Z",
-        "evidence_digest": "sha256:966b2a055f30a1821225ff320a0c5f6b2e5cc684730d5b761ec79c45dddcd75d"
+        "evidence_digest": "sha256:88c7ef6685a93713c9d1fa9a273d61a964eadc94b318115fc1a11c5e44e5e1c0",
+        "source_observation_id": "uobs_01J000000000000000000000"
       }
     ],
     "created_at": "2026-07-16T09:20:00Z",

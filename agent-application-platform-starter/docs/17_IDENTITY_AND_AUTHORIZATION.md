@@ -91,11 +91,11 @@ OpenAPI 使用 `x-required-work-session-scopes` 表达 Bearer/Cookie Scheme 无�
 + Token Profile
 + Scope
 + 内部 Tenant
-+ ClientApplication 与 Principal Context Digest
++ ClientApplication 与 PrincipalContextSnapshot Digest
 + Conversation 绑定
 + 可选的 work_order 缩窄绑定
 + 对象所有权
-+ 商业授权 ID/摘要
++ 商业授权 ID/摘要/到期上限
 + 当前 Session 版本
 + 可选策略
 ```
@@ -109,6 +109,7 @@ OpenAPI 使用 `x-required-work-session-scopes` 表达 Bearer/Cookie Scheme 无�
 - Audit 默认不保存用户正文；删除按 retention、tombstone 和 crypto erasure policy 执行。
 - Callback、Connector、Remote Provider 和 Storage endpoint 必须预注册；网络访问经 DNS/IP/rebinding/redirect policy 与 Egress Gateway 校验。
 - ProviderResolution、IdempotencyRecord、CapabilityInvocation 和 Event Inbox 都显式 Tenant-qualified；`client_app_id` 只能来自认证上下文，不能信任请求体覆盖。
+- PrincipalContextSnapshot 只包含有界角色、组和策略属性，使用 `rfc8785-principal-context-excluding-digest-v1`；凭据、Secret、Token、Email 和可变展示资料不得进入 Snapshot。ExecutionGrant 内嵌 Snapshot，Provider 只接收其摘要绑定。
 
 ## JWT 类型隔离
 

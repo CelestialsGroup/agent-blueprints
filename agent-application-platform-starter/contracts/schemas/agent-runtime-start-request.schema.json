@@ -22,10 +22,7 @@
     "input_message_id",
     "input",
     "context_package",
-    "artifact_grants",
-    "execution_budget",
-    "policy_decision",
-    "effective_permissions",
+    "runtime_authorization",
     "gateway_bindings",
     "admission_limits",
     "workspace_revision_id",
@@ -51,15 +48,7 @@
     "input_message_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "input": { "$ref": "urn:agent-platform:runtime-input-envelope:v1" },
     "context_package": { "$ref": "urn:agent-platform:context-package:v1" },
-    "artifact_grants": {
-      "type": "array",
-      "maxItems": 256,
-      "uniqueItems": true,
-      "items": { "$ref": "urn:agent-platform:artifact-grant:v1" }
-    },
-    "execution_budget": { "$ref": "urn:agent-platform:execution-budget:v1" },
-    "policy_decision": { "$ref": "urn:agent-platform:policy-decision:v1" },
-    "effective_permissions": { "$ref": "urn:agent-platform:effective-permissions:v1" },
+    "runtime_authorization": { "$ref": "urn:agent-platform:runtime-authorization:v1" },
     "gateway_bindings": { "$ref": "urn:agent-platform:runtime-gateway-bindings:v1" },
     "admission_limits": {
       "type": "object",
@@ -97,8 +86,9 @@
     "sandbox_bindings exactly match the RunManifest Sandbox slots and may be empty when the Scenario does not require a Sandbox",
     "request_digest is RFC 8785 JCS SHA-256 over the request excluding request_digest",
     "input carries the actual bounded input or an immutable platform reference and matches input_message_id",
-    "context_package, artifact_grants, execution_budget, policy_decision, effective_permissions and gateway_bindings exactly match the RunManifest admission snapshot",
+    "context_package and gateway_bindings exactly match the RunManifest while runtime_authorization binds fresh ArtifactGrants and values equal to or narrower than the immutable admission ceilings",
+    "runtime_authorization is unexpired, belongs to this RuntimeRun, RunManifest and InvocationAttempt, and covers every ArtifactAccessRequirement",
     "the Provider rejects an encoded body above admission_limits.max_encoded_request_bytes before parsing with HTTP 413",
-    "the bearer token claims match the request, ProviderRevision, RunManifest, InvocationAttempt and fencing_token"
+    "the bearer token claims match the request, ProviderRevision, RunManifest, RuntimeAuthorization, InvocationAttempt and fencing_token"
   ]
 }

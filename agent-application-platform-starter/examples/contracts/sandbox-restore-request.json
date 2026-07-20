@@ -3,7 +3,7 @@
   "attempt_id": "sat_restore_01",
   "fencing_token": 12,
   "idempotency_key": "sop_restore_01-idempotency-0001",
-  "request_digest": "sha256:2e31e47dd4ac24c862491e37e5d93479e7455b98e8cc658c9b4bb9aaab98711e",
+  "request_digest": "sha256:b8670e4b540eb1a7003c88b465b631bd77ee5f83016f53223de51fb7388f9607",
   "deadline_at": "2026-07-16T10:30:00Z",
   "protocol_version": "v1",
   "spec": {
@@ -64,7 +64,7 @@
       "mount_path": "/workspace",
       "snapshot_reference": "ssn_01J00000000000000000000000",
       "base_revision_id": "wsr_01J00000000000000000000000",
-      "base_revision_digest": "sha256:366b5c58b91f28f19b73b1287cc13488b6055b5a7d57bbd21f065e3340b5bde1",
+      "base_revision_digest": "sha256:b8e661287a6861876e0e28cf94cc7f638653ea3b023367bfe046f54481381291",
       "commit_mode": "cas_new_revision",
       "base_workspace_head_version": 1
     },

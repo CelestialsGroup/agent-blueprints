@@ -2,6 +2,7 @@
 	validate-jcs validate-supply-chain validate-architecture bundle-openapi validate-all clean-contracts
 
 PYTHON ?= .venv/bin/python
+PNPM ?= corepack pnpm
 
 bootstrap-contracts:
 	./scripts/bootstrap_contracts.sh
@@ -31,7 +32,7 @@ validate-contracts: prepare-openapi
 
 bundle-openapi: prepare-openapi
 	mkdir -p build
-	npm run bundle:openapi
+	$(PNPM) run bundle:openapi
 
 validate-architecture: validate-static validate-contracts validate-compatibility validate-jcs bundle-openapi
 	$(PYTHON) scripts/verify_contract_manifest.py

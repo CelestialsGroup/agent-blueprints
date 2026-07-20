@@ -2,26 +2,26 @@
   "baseline": "v0.9.0",
   "status": "candidate-not-frozen",
   "digest_profile": "RFC8785-JCS+SHA-256; Strict-I-JSON-v2.0",
-  "resource_count": 195,
-  "resources_digest": "sha256:7129f05cb77e896fd9538f67381049ba1b12bff9f23ca26b9416bbfb6fe64561",
+  "resource_count": 204,
+  "resources_digest": "sha256:f21045cd254745f4de0d89cdf6363f7522f4552a820d49a195511bb2d2d29468",
   "resources": [
     {
       "path": "contracts/conformance/capability/v1/suite.json",
       "kind": "governance",
       "id": "contracts/conformance/capability/v1/suite.json",
-      "digest": "sha256:1971971ad9c5d8b442f6847bd620b0f2fe2675886bbe7cbbde7894951806b7a9"
+      "digest": "sha256:de9ab0f3fa0fa7593456e286f10e13b3e244ea4ef65728e3423fbe15be9512fc"
     },
     {
       "path": "contracts/conformance/runtime-gateway/v1/suite.json",
       "kind": "governance",
       "id": "contracts/conformance/runtime-gateway/v1/suite.json",
-      "digest": "sha256:43d5276032fd74b9e0e73711214324e37aae60c1f0b5924b3c47d4450645a16b"
+      "digest": "sha256:9e8cec651300a7330e166de02102340a786e2ca924ccc1e396dab55b2095c137"
     },
     {
       "path": "contracts/conformance/runtime/v1/suite.json",
       "kind": "governance",
       "id": "contracts/conformance/runtime/v1/suite.json",
-      "digest": "sha256:1d4de869c2f52e1c8d9facd97c7892439023d19d992bf4dbbeaa0a6dd14a8be3"
+      "digest": "sha256:92c08664ab7246f2465d2b1acc352326f95a4fb67396b2b6ec6066e3f0c01e64"
     },
     {
       "path": "contracts/conformance/sandbox/v1/suite.json",
@@ -33,13 +33,13 @@
       "path": "contracts/event-types/agent-runtime-core-v1.json",
       "kind": "governance",
       "id": "contracts/event-types/agent-runtime-core-v1.json",
-      "digest": "sha256:b5ef75f84c1b81c2cc3e5e47d9349f061d7670da99a7d59018d7ddbcd44449f3"
+      "digest": "sha256:f42127a65e096b75774ac65c4f915abb14073148d745a21165c543a8a6f221e2"
     },
     {
       "path": "contracts/event-types/platform-core-v1.json",
       "kind": "governance",
       "id": "contracts/event-types/platform-core-v1.json",
-      "digest": "sha256:320b29ce48aeeeca1b4bb3dab57e63c906a762fa47dd2280008797aed531fe69"
+      "digest": "sha256:55e6978ca716c1a9972110e49de9120853f53cef814aff906150a32dccc40685"
     },
     {
       "path": "contracts/openapi/agent-access-v1.yaml",
@@ -111,7 +111,7 @@
       "path": "contracts/schemas/agent-runtime-event-data.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:agent-runtime-event-data:v1",
-      "digest": "sha256:4b3df862196dded953b55e01532a24562ec79fd338022de42adfa2bd161d0460"
+      "digest": "sha256:bbc6feab06eee6fe28e48ed4a1563928cf3d36cae4a023cec5dc2c52b56f47e9"
     },
     {
       "path": "contracts/schemas/agent-runtime-event-page.schema.json",
@@ -129,7 +129,7 @@
       "path": "contracts/schemas/agent-runtime-invocation-token-claims.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:agent-runtime-invocation-token-claims:v1",
-      "digest": "sha256:cf3173f68115ba3ed25bababefd480eb9a73133223e76fa9cfd343bd461696a8"
+      "digest": "sha256:171d55883fb4021f4f0e422a2f7a04f05afcb84b9bc796ea7f68053e42bcf435"
     },
     {
       "path": "contracts/schemas/agent-runtime-run-status.schema.json",
@@ -141,7 +141,7 @@
       "path": "contracts/schemas/agent-runtime-start-request.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:agent-runtime-start-request:v1",
-      "digest": "sha256:5b2c2b4d61075ec4d73934b10c00a73a1b0f2fe6a4d2043beca3b19ba358366e"
+      "digest": "sha256:77aaf158217605f3dbabd42945fc6f98e7b28d76c26a58f7c3655568f5af9460"
     },
     {
       "path": "contracts/schemas/approval-decision.schema.json",
@@ -168,6 +168,12 @@
       "digest": "sha256:be4e33c499af8272923992ba062a5c89c9d9b6ff06836a0e3cbe9d3ae3828169"
     },
     {
+      "path": "contracts/schemas/artifact-access-requirement.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:artifact-access-requirement:v1",
+      "digest": "sha256:00a9544aa68400c1c4fe8bc7c5128332829d061bfcd69f4b47368357613a31a5"
+    },
+    {
       "path": "contracts/schemas/artifact-access-response.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:artifact-access-response:v1",
@@ -177,7 +183,7 @@
       "path": "contracts/schemas/artifact-grant.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:artifact-grant:v1",
-      "digest": "sha256:1748ae2ccacfee279556050306d8f30e933cea228cb508a56ecfb603f07c2c90"
+      "digest": "sha256:2de626625a7ec7d5c1fc86a55f205da0b0b9f038e120611e431b8e3576f47a01"
     },
     {
       "path": "contracts/schemas/artifact-ingest-request.schema.json",
@@ -222,6 +228,12 @@
       "digest": "sha256:f21e1790e2c9b79aba2f97e5df60e0d752aa724eada431e3465851061417c20d"
     },
     {
+      "path": "contracts/schemas/authorization-renewal-policy.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:authorization-renewal-policy:v1",
+      "digest": "sha256:0cbac987dcf9dda75698bf89002e0931a604920b3c855678a7fe126422f3411a"
+    },
+    {
       "path": "contracts/schemas/build-provenance.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:build-provenance:v1",
@@ -255,7 +267,7 @@
       "path": "contracts/schemas/canonical-event-v2.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:canonical-event:v2",
-      "digest": "sha256:f218002b52f60d2af1c6871eeab5279dae40553d5e63d3812cf717f09d40dc51"
+      "digest": "sha256:49264a2044eac321e86c976b47a87d7fe3006de3827e653f05a7c13096c4b1b1"
     },
     {
       "path": "contracts/schemas/capability-cancellation-request.schema.json",
@@ -291,13 +303,13 @@
       "path": "contracts/schemas/capability-invocation-request.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:capability-invocation-request:v1",
-      "digest": "sha256:c55938ac15b2066a19ee52e51f67cd060e45aff451d03a3933c4105df5107c7b"
+      "digest": "sha256:c508ba33761e83b4f8bf6a9b648be8e3513627a9d585ff86b02b6893ee84fec4"
     },
     {
       "path": "contracts/schemas/capability-invocation-result.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:capability-invocation-result:v1",
-      "digest": "sha256:a0a9d3bb7b2176e937b2a1aede3939e57b6f0c8147fc5020b416d423dad0f3df"
+      "digest": "sha256:3f86ba881fbe1691f63d0ee725871f470ee8a9003c49a19a0dfe71f86dc98f5e"
     },
     {
       "path": "contracts/schemas/capability-invocation-status.schema.json",
@@ -310,6 +322,12 @@
       "kind": "json-schema",
       "id": "urn:agent-platform:capability-invocation-token-claims:v1",
       "digest": "sha256:7ffc7a61e864499c270b5b4a4da3f2f02e5e2de38bfa9cb8b0d028e351b02a3d"
+    },
+    {
+      "path": "contracts/schemas/commercial-authorization-binding.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:commercial-authorization-binding:v1",
+      "digest": "sha256:93aed43d57808441b3c024eaf1e6a22c83813b56c5f844fbfee760ce46f8ef8e"
     },
     {
       "path": "contracts/schemas/commercial-authorization-snapshot.schema.json",
@@ -447,7 +465,7 @@
       "path": "contracts/schemas/effective-permissions.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:effective-permissions:v1",
-      "digest": "sha256:88582af941d2d3db1b492aa129162c62e0a06918b5146d6fecd9a0c7b9d410b4"
+      "digest": "sha256:03b49ad8ac74a560eda620782c9d2c0944cdad92656d7c8c35fc2b293893cf2e"
     },
     {
       "path": "contracts/schemas/event-cursor-expired.schema.json",
@@ -459,7 +477,7 @@
       "path": "contracts/schemas/event-data-artifact-version-created.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:event-data:artifact-version-created:v1",
-      "digest": "sha256:7258066b03c0791ee7b3064b08ba38604bcb87ed3b639740a5935f808ad67e3a"
+      "digest": "sha256:b443d6233881053fc87d533a5de8240dccb484cfeeba51540602368ef9ffebdc"
     },
     {
       "path": "contracts/schemas/event-page.schema.json",
@@ -489,7 +507,7 @@
       "path": "contracts/schemas/execution-grant-claims.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:execution-grant-claims:v1",
-      "digest": "sha256:c5bb84c0c1cb75ba499c0d3a7a94d4a0018ddeeadd2fc5e2e91952dafe4c2967"
+      "digest": "sha256:301724e65149cabe79fa6f66248395c8724092cd9bd645d8e7358bec3962df84"
     },
     {
       "path": "contracts/schemas/execution-grant-jws-header.schema.json",
@@ -562,6 +580,12 @@
       "kind": "json-schema",
       "id": "urn:agent-platform:orchestration-binding:v1",
       "digest": "sha256:0202ba73a98462e2c5e2b7a954855d449a0bc2eaafb56e7689a7c690993b2d0f"
+    },
+    {
+      "path": "contracts/schemas/platform-core-event-data.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:platform-core-event-data:v1",
+      "digest": "sha256:e6d70b1947618f1c229597458eae2eced4d7f6b6ed7acf3d1eeff5bf9b9a4a17"
     },
     {
       "path": "contracts/schemas/plugin-cancellation-request.schema.json",
@@ -654,6 +678,12 @@
       "digest": "sha256:39c2a29273929e40a91baf88cc3ce45795ed072d6bebddb3ad41f5bf8f1e1cb1"
     },
     {
+      "path": "contracts/schemas/principal-context-snapshot.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:principal-context-snapshot:v1",
+      "digest": "sha256:d1bd0eb723e7da3076894b5ed41544f3829790e7fe0c24ba489f5fe26f645c99"
+    },
+    {
       "path": "contracts/schemas/provider-admission-decision.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:provider-admission-decision:v1",
@@ -687,7 +717,7 @@
       "path": "contracts/schemas/provider-resolution.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:provider-resolution:v1",
-      "digest": "sha256:e852d021ad9ffc4cb75b082871bfde54cde6f1cf4517dc757b428a970c966733"
+      "digest": "sha256:fc6b3becd5a1d8cb96a3c0005be5955e28bd11f9d04bf97cd8292aa74da9705d"
     },
     {
       "path": "contracts/schemas/provider-revision-snapshot.schema.json",
@@ -711,13 +741,19 @@
       "path": "contracts/schemas/run-manifest-v2.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:run-manifest:v2",
-      "digest": "sha256:4edd6300d4d6545290424764398dd2b5b06fe7c0f1909df8053e310a3c96a152"
+      "digest": "sha256:7dc022533367edc7efc6a0f70e512dc5fd31f50f245af763ad8f9b03a6eb4cf0"
+    },
+    {
+      "path": "contracts/schemas/runtime-authorization.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:runtime-authorization:v1",
+      "digest": "sha256:0138e3e35eccc88c5855067ac5b6fe80c90d5f9ea1eec977bf10a099c293dda2"
     },
     {
       "path": "contracts/schemas/runtime-gateway-bindings.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:runtime-gateway-bindings:v1",
-      "digest": "sha256:3c60b34ee6c8244e785d62c39fd7df2b18d9cbe96e48d1a9746505e1afe4bc46"
+      "digest": "sha256:1bb2552c42a699f29600fbb32a32969a9fadb26f5c79b2bf06a787ff98de1302"
     },
     {
       "path": "contracts/schemas/runtime-gateway-frame.schema.json",
@@ -726,10 +762,16 @@
       "digest": "sha256:a826ce72beb75232559131e611d6f33f5437090884793e22d3f5cf4d8f736148"
     },
     {
+      "path": "contracts/schemas/runtime-input-content.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:runtime-input-content:v1",
+      "digest": "sha256:312ff93174a5147e33b59c3941eee788e592e87ddc29a608d05f41b6a95aaada"
+    },
+    {
       "path": "contracts/schemas/runtime-input-envelope.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:runtime-input-envelope:v1",
-      "digest": "sha256:c27ea261482f4120ceb81c71bedcd10b24a609c34f2078997dee7c8c1773f947"
+      "digest": "sha256:76d710f3ac1350e85b2e518c7a5796941854218cf549bb435b08cac85987309c"
     },
     {
       "path": "contracts/schemas/runtime-recording-chunk.schema.json",
@@ -975,7 +1017,7 @@
       "path": "contracts/schemas/technical-usage-entry.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:technical-usage-entry:v1",
-      "digest": "sha256:6cb93cb1711aa7fd686b0d1f07d7bb697c6cdbab06c0479f1237647f87067ecb"
+      "digest": "sha256:9a5c8ac2a596a7be456e3cae7eeabb98f5001efd6f74f65633d79afd863c7246"
     },
     {
       "path": "contracts/schemas/template-revision.schema.json",
@@ -990,6 +1032,12 @@
       "digest": "sha256:1fbc0f1965277b551c382e8f0b7e7a2d2c63259c03c62acb5f14c59e372c4bca"
     },
     {
+      "path": "contracts/schemas/usage-observation.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:usage-observation:v1",
+      "digest": "sha256:e27c8f1b1291f2edae204dd7d232b0082be5730c357ee8b57f934293cb4450eb"
+    },
+    {
       "path": "contracts/schemas/usage-report.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:usage-report:v1",
@@ -1002,10 +1050,16 @@
       "digest": "sha256:bc2f9cf7e799f650f212217ec1f122092c19da457c7447dc4a5631c65cea7fb3"
     },
     {
+      "path": "contracts/schemas/work-order-control-input.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:work-order-control-input:v1",
+      "digest": "sha256:3d52f2b71d481eed4ab0ecd0fffbd1615807442364c2018dabbe4114f402909c"
+    },
+    {
       "path": "contracts/schemas/work-order-control-request.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:work-order-control-request:v1",
-      "digest": "sha256:7e68cb8d58425490ed86b622e3f67d854a42354daf810bb0789e8b7a79eac504"
+      "digest": "sha256:da2f2162f21c7163432d58cdb5062f9ff9ddf1440e7a3fa281f15678135fd165"
     },
     {
       "path": "contracts/schemas/work-order-request.schema.json",
@@ -1047,7 +1101,7 @@
       "path": "contracts/schemas/work-session-request.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:work-session-request:v1",
-      "digest": "sha256:217debccc0b59fbb7862d10baf19df6c95efaaa9f3442ce977d5be263f09a2bb"
+      "digest": "sha256:92dd57e6dfba32ab984e0eb9f0443f5c299683fd9ae96775fd95845d42c3ffe7"
     },
     {
       "path": "contracts/schemas/work-session-response.schema.json",
@@ -1065,7 +1119,7 @@
       "path": "contracts/schemas/workspace-content-manifest.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:workspace-content-manifest:v1",
-      "digest": "sha256:0fbe0c444fee2428e5f2728e10a18333beeb7111b911c3b9e228914726d89685"
+      "digest": "sha256:23e0e2d7d6ed0691b16db0b033ff22df1041254ca03ec9c292f77189ea165f8d"
     },
     {
       "path": "contracts/schemas/workspace-revision.schema.json",
@@ -1125,7 +1179,7 @@
       "path": "docs/26_DATA_MODEL_INVARIANTS.md",
       "kind": "governance",
       "id": "docs/26_DATA_MODEL_INVARIANTS.md",
-      "digest": "sha256:45aa7008df8c6287df76205d645e689631458fe6cde27aeee9ba1df95c1e79de"
+      "digest": "sha256:39304a1bd9a2fb27f1a0745364067676c6ffe9df1b1c6533ebf476320fb8d5f2"
     },
     {
       "path": "examples/schemas/html-anything-config.schema.json",
@@ -1176,5 +1230,5 @@
       "digest": "sha256:46d6fa17b4a8b06e6da4a016d776385952a12d2e59e51066fcd5173248258d8e"
     }
   ],
-  "manifest_digest": "sha256:4f3338ead59891692cc961bad2dd11908b05134b11e6846368127032c7a54ab9"
+  "manifest_digest": "sha256:09da274756d702ca8c653b5673f2a26ce0a0f76dc4f3afde2f4419bd337b8113"
 }

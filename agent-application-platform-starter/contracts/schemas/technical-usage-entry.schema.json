@@ -69,6 +69,7 @@
       ]
     },
     "provider_operation_id": { "type": "string", "minLength": 1 },
+    "source_observation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "meter_source": { "enum": ["platform_metered", "provider_reported", "reconciled"] },
     "measurement_status": { "enum": ["confirmed", "partial", "estimated", "corrected"] },
     "idempotency_key": { "type": "string", "minLength": 16, "maxLength": 255 },
@@ -108,7 +109,7 @@
       "if": { "properties": { "meter_source": { "const": "provider_reported" } }, "required": ["meter_source"] },
       "then": {
         "properties": { "producer": { "properties": { "type": { "const": "provider" } } } },
-        "required": ["provider_operation_id"]
+        "required": ["provider_operation_id", "source_observation_id"]
       }
     },
     {
@@ -122,6 +123,7 @@
     "correction chains are acyclic, preserve tenant and attribution, and never rewrite the corrected entry",
     "partial or estimated Usage is never silently treated as confirmed or zero",
     "evidence_reference resolves to immutable Platform-controlled evidence matching evidence_digest",
-    "recorded_at is not earlier than occurred_at"
+    "recorded_at is not earlier than occurred_at",
+    "entry_id, idempotency_key and recorded_at are assigned by Platform; provider-reported entries bind a validated source_observation_id"
   ]
 }

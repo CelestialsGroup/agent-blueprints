@@ -20,7 +20,7 @@ Phase 0 实现一条真实、可恢复的 Manus-like Conversation 链路。目�
 - 固化 Tenant-qualified `WorkOrder 1 -> 1 WorkflowRun -> 1 Root AgentRun + N Sub-agent AgentRun`，且一个 AgentRun 只绑定一个 RunManifest/AgentRuntimeRun；RunManifest Runtime 只引用一个 ProviderResolution；
 - 固化 ExecutionGrant `request_contract_id + digest_profile + request_digest`，分别闭合 WorkOrderRequest 与 ConversationTurnRequest；
 - 将 ConversationTurnRequest（新 Turn/WorkOrder）与 WorkOrderControlRequest（现有 Runtime 控制）分开；Interrupt-and-enqueue 建立明确后继，Runtime Command 只引用已授权 Control Input；
-- 固化 Runtime Start 的实际有界输入/不可变引用、ContextPackage、ArtifactGrant、完整 Budget/Policy/Permissions 和 Model/Tool/Artifact/Egress Gateway Binding；
+- 固化 RunManifest 的实际有界输入/不可变引用、ContextPackage、ArtifactAccessRequirement、初始 Budget/Policy/Permissions 上限、CommercialAuthorization ID/Digest/到期上限、授权续期规则和四类 Gateway Binding；Runtime Start 使用本 Attempt 内部作用域闭合且不越过商业期限的短期 RuntimeAuthorization/ArtifactGrant；
 - 固化 Conversation Workspace、Branch WorkspaceRevision Head、Fork 与 CAS 提交；Sandbox Slot 唯一范围是 WorkOrder，不允许并行 Branch 共享可变文件头；
 - 为 Chat、Plan、Tool、Approval、Artifact、Background Task、Usage 和终态定义核心 Event Payload，并由 RunManifest 绑定不可变 Registry ID/Version/Digest；
 - 固化 AgentRuntimeInvocation Token 对 Tenant、ProviderRevision、Run、Attempt、Fencing、Policy、Budget、Permissions 和请求摘要的绑定；
@@ -28,7 +28,7 @@ Phase 0 实现一条真实、可恢复的 Manus-like Conversation 链路。目�
 - 固化 TechnicalUsage 的 MeterDefinition、归属、Evidence、幂等、更正、连续 UsageReport，以及嵌入完整 Report 的 BusinessSettlementEnvelope/Callback；
 - 使用 Provider Implementation/BuildProvenance/Port Binding，禁止 Runtime 或 Sandbox 被迫伪装成 Plugin；
 - ProviderResolution 固化 Resolver/Input/Candidate/Evidence/Decision；Runtime 与 Sandbox Slot 只引用 Resolution；Sandbox 是否存在由 Capability 决定；
-- ProviderResolution 显式绑定 Tenant/ClientApplication/WorkOrder/Principal Context；幂等范围固定为 Tenant + ClientApplication + Operation + Key Digest；
+- ProviderResolution 显式绑定 Tenant/ClientApplication/WorkOrder，并通过 identity_dependency 绑定 PrincipalContextSnapshot；幂等范围固定为 Tenant + ClientApplication + Operation + Key Digest；
 - 发布独立 `capability-provider-v1` 与 Capability Invocation Token，禁止以 `plugin_id` 作为 Model/Tool/MCP/Skill/Renderer 等公共执行前提；
 - 拆分 Message/Workspace/Active Work CAS；发布 WorkspaceContentManifest，并要求 RuntimeSession 选择 `sandbox_slot_key`；
 - CanonicalEvent 固化 Producer/ProviderRevision/SourceStream/SourceEvent/Cursor/Dedupe Key，Metadata 闭合，持久化 Inbox 唯一责任机器可追踪；
@@ -43,7 +43,7 @@ Phase 0 实现一条真实、可恢复的 Manus-like Conversation 链路。目�
 
 1. Wire Closure：Schema/OpenAPI/状态机、正反例和 JCS 摘要同时更新；缺少真实执行值、所有权或上限即停止。
 2. Semantic Closure：`semantic-constraints-v1.json` 覆盖关键约束，并将每条约束映射到当前 Validator 及待实现 DDL/Conformance 责任。
-3. Local Gate：`./scripts/bootstrap_contracts.sh && make validate-architecture`、六份 OpenAPI 0 Error/0 Warning、Manifest Python/Node 一致、`git diff --check` 全部通过。
+3. Local Gate：在 `.tool-versions` 固定的 CPython 3.14.6、Node 24.18.0 Active LTS/pnpm 11.15.1、Go 1.26.5 上运行 `./scripts/bootstrap_contracts.sh && make validate-architecture`，六份 OpenAPI 0 Error/0 Warning、Manifest Python/Node 一致、`git diff --check` 全部通过；CPython 3.13 兼容通道另行验证。
 4. Implementation Entry Review：只允许把 0A.1 标记为“架构/契约验证通过”；产品实现、集成链路和生产可靠性仍为未完成。
 5. 进入 0B 后先实现 Migration/RLS/Repository/Outbox/Inbox 与空库升级回滚证据，再实现 Native Runtime Probe；不得用框架行为替代领域 Constraint。
 
