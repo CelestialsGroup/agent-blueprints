@@ -5,18 +5,19 @@
 ## 身份与工作执行
 
 - `(tenant_id, external_subject)` 唯一；所有业务表显式 tenant_id。
-- `work_orders(tenant_id, idempotency_key_digest)` 唯一。
+- `idempotency_records(tenant_id, client_app_id, operation_id, idempotency_key_digest)` 唯一；同范围不同 Request Digest 冲突。WorkOrder 创建不能使用范围更窄的替代索引。
 - ExecutionGrant `jti` 单次消费，消费记录唯一；过期时间、Request/Scenario/Idempotency 摘要必须匹配。
 - `conversations(conversation_id)` 主键；`(tenant_id, client_app_id, client_conversation_key)` 唯一。
 - `conversation_messages(message_id)` 主键；`(conversation_id, message_sequence)` 与 `(conversation_id, client_message_id)` 唯一；Message 仅允许追加。
-- `conversation_branches(conversation_id, branch_id)` 主键；Head Message/Sequence 与 Fork Point 必须引用同一 Conversation 的先前 Message；Workspace Head 必须引用同 Branch 的不可变 WorkspaceRevision ID/Digest；`branch_version` 同时保护 Message、Workspace Head 和活动 WorkOrder 的 Compare-and-swap。
-- `workspace_revisions(workspace_revision_id)` 主键、`revision_digest` 唯一；`(workspace_id, branch_id, revision_number)` 唯一且从 1 连续；后续 Revision 引用同 Branch 紧邻前驱，Fork Revision 记录来源 Branch Revision，内容 Manifest ArtifactVersion 不可变。
+- `conversation_branches(conversation_id, branch_id)` 主键；Head Message/Sequence 与 Fork Point 必须引用同一 Conversation 的先前 Message；Workspace Head 必须引用同 Branch 的不可变 WorkspaceRevision ID/Digest。Message、Workspace Head 和 Active Work 分别使用 `message_head_version`、`workspace_head_version`、`active_work_version` CAS；`branch_version` 只作投影 ETag。
+- `workspace_revisions(workspace_revision_id)` 主键、`revision_digest` 唯一；`(workspace_id, branch_id, revision_number)` 唯一且从 1 连续；后续 Revision 引用同 Branch 紧邻前驱，Fork Revision 记录来源 Branch Revision，内容 Manifest ArtifactVersion 不可变并在准入时验证独立 WorkspaceContentManifest Schema。
 - `parent_message_id` 只能引用同一 Conversation 中 Sequence 更小的 Message；每个 Branch 默认最多一个活动 WorkOrder，不能用 Conversation 顶层单值表达并行分支。
-- Conversation Turn 事务原子完成 Message Sequence、WorkOrder、GrantConsumption、Workflow Start Outbox 和 CanonicalEvent。
+- Conversation Turn 事务原子完成 Message Sequence、WorkOrder、GrantConsumption、Workflow Start Outbox 和 CanonicalEvent。WorkOrderControl 事务只追加 ControlInput/GrantConsumption/Control Outbox，不创建新 Turn；`interrupt_and_enqueue` 通过取消意图与后继 WorkOrder 的明确关联闭合。
 - WorkOrder、ExecutionGrant、RunManifest 和 CanonicalEvent 的 Conversation/Turn/Branch/Input Message 绑定必须一致。
 - `workflow_runs(workflow_run_id)` 与 `work_orders(work_order_id)` 一对一；显式 `tenant_id` 必须一致，`root_agent_run_id` 唯一引用同一 WorkflowRun 的 Root；Temporal Continue-as-New 或未来编排器分段不能创建第二个平台 WorkflowRun。
 - `agent_runs(agent_run_id)` 显式绑定 Tenant、WorkflowRun、RunManifest 和 `runtime_run_id`；每个 WorkOrder 恰好一个 Root AgentRun，Sub-agent 的 Parent/Root 必须属于同一 Tenant/WorkOrder/WorkflowRun。
 - RunManifest 的 `agent_runtime.resolution_id` 必须引用恰好一个 Agent Runtime ProviderResolution，并与 AgentRun 的 `runtime_provider_resolution_id` 相同；每个 Sandbox Slot 同样只引用一个 Sandbox ProviderResolution；禁止复制第二份 Revision/Conformance 快照。
+- RunManifest 与 Runtime Start 的 Input、ContextPackage、ArtifactGrant、完整 ExecutionBudget/PolicyDecision/EffectivePermissions、Gateway Binding 和 Admission Limits 必须逐值相同；仅有摘要或 Message ID 不得进入 Runtime Dispatch。
 - Conversation 生命周期必须遵循 `conversation-v1`；`archived`/`deleted` 写入相应审计时间，`deleted` 不可恢复。
 - CommercialAuthorizationSnapshot ID/摘要、显式 Entitlement/Capability/Limit 和 Quota Reservation 引用随 WorkOrder 固化；Limit 摘要必须闭合，Platform 无权更新 Business Entitlement/Balance。
 
@@ -52,11 +53,13 @@
 - ProviderRevision 的 Implementation、BuildProvenance、Port Binding、配置、权限和凭据均按摘要不可变；`agent_runtime`/`sandbox`/`capability` kind 只能绑定对应稳定 Port。
 - BuildProvenance 的 Build Artifact Digest 必须等于 Implementation Distribution Digest；OCI 分发必须绑定 Image Digest。
 - ProviderResolution 的 Decision Digest 必须绑定 Resolver Revision、Resolution Input Digest、逐候选结论及 Evidence；恰好一个 Candidate 为 Selected，并与 Snapshot 的 Instance/Revision 相同。
+- ProviderResolution 行必须显式绑定 Tenant、ClientApplication 和 WorkOrder；身份影响路由时 Principal Context Digest 非空，RLS 不得只依赖经 WorkOrder 间接推导的 Tenant。
 - `provider_admission_decisions(decision_id)` 主键；`(provider_revision_id, decision_sequence)` 唯一且仅允许追加。
 - Sequence 必须从 1 连续递增；`sequence=1` 不得有 Supersedes，`sequence>1` 必须引用同一 Revision 紧邻的上一 Decision；`revoked` 必须有 Reason。
 - 新 Run 只能选择最新决策为 `certified` 的 Revision；RunManifest 保留 Revision/Decision 摘要，后续撤销不改写历史 Run。
 - Agent Runtime Command `(runtime_run_id, command_sequence)`、`command_id` 唯一；Command 仅允许追加且 Fencing Token 严格递增。
 - Agent Runtime Command 的 `command_digest` 必须与短期 RuntimeInvocation Token 的 `request_digest` 相等；Token 还必须匹配 Tenant、ProviderRevision、WorkflowRun/AgentRun/RuntimeRun、RunManifest、Attempt、Policy、Budget 和 Permissions。
+- Capability Invocation Token 必须逐字段匹配 Tenant、ClientApplication、Principal Context、WorkOrder、ProviderRevision、Capability、Attempt、Fencing、Request Digest、Policy、Budget、Permissions 和 Staging Session；公共表和 Port 不要求 `plugin_id`。
 - AgentRuntimeRun 生命周期必须遵循 `agent-runtime-run-v1`；`cancel_requested` 不是取消证明，`outcome_unknown` 必须经 Invocation Ledger 对账，终态必须有 `completed_at`。
 - TemplateRevision ID/摘要唯一且不可变；SelectedExperience 必须引用已准入 Catalog Revision 和已认证 Template ProviderRevision，并满足 Scenario `required_tags` 与 CommercialAuthorizationSnapshot Entitlement。
 - UiExtensionManifest Bundle/摘要/ProviderRevision 不可变；只允许受支持 Slot、不透明 Origin iframe 和已批准权限。
@@ -66,9 +69,10 @@
 - OrchestrationBinding `binding_digest` 唯一且不可变；原生 Engine 执行引用只保存摘要，Endpoint、Namespace 和原生 Run ID 不进入稳定领域表。
 - PolicyDecision 按 `(tenant_id, work_order_id, decision_id)` 唯一且仅追加；有效 Outcome 必须从所有匹配规则按 `deny > ask > allow` 推导，`ask` 必须绑定 Approval。
 - CanonicalEvent `(aggregate_type, aggregate_id, aggregate_sequence)` 唯一；`event_id` 全局唯一。
-- Outbox Row 与业务变更同事务；Inbox `(consumer, message_id)` 唯一。
+- Outbox Row 与业务变更同事务；传输 Inbox `(consumer, message_id)` 唯一；Canonical Event 来源 Inbox `(tenant_id, producer_id, source_stream_id, source_event_id)` 唯一并验证 Dedupe Key。
 - Canonical Aggregate 支持 Conversation、ConversationBranch、ConversationMessage、WorkspaceRevision、Sandbox、RuntimeSession 和 RuntimeRecording；EventPage 必须 `$ref` CanonicalEvent，禁止复制 Schema。
 - CanonicalEvent 的 Work Context 是全有或全无绑定；仅属于 Conversation 的生命周期 Event 不得伪造 `work_order_id`/`work_sequence`。
+- CanonicalEvent Metadata 闭合；Provider 来源必须绑定不可变 ProviderRevision，Provider 私有 Trace/Metadata 只保存为 Evidence 引用。
 - EventTypeRegistry 的 ID/Version/Digest 随 RunManifest 固化，`(type, data_version)` 唯一；核心 Projection 只消费 Registry 中 Schema Digest 已准入的 Payload。
 - Runtime Gateway `(runtime_session_id, connection_generation, direction, channel, frame_sequence)` 唯一；重连 Cursor 按 Channel 唯一，Control ID + Digest 幂等，Recording Checkpoint 固化 recorded-through Sequence。旧 Generation、Sequence Gap、超出 ACK Window 和 Digest 冲突必须拒绝或显式对账。
 

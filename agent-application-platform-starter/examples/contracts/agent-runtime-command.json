@@ -3,10 +3,12 @@
   "runtime_run_id": "rtr_01J00000000000000000000000",
   "command_sequence": 2,
   "type": "append_input",
-  "message_id": "msg_01J00000000000000000000001",
+  "authorized_control_request_id": "ctl_01J00000000000000000000000",
+  "input_id": "rin_01J00000000000000000000001",
+  "input_content_digest": "sha256:3ee5da709dc141b215e943a10388da878f35902be68783b0fc7fbe4b5ebee529",
   "invocation_attempt_id": "iat_runtime_01J0000000000000001",
   "fencing_token": 2,
   "idempotency_key": "runtime-command-key-0002",
   "deadline_at": "2026-07-15T10:30:00Z",
-  "command_digest": "sha256:8efa8c2425c05e72b8c0767e65f8098690489f8df003a9e6f9205eaee881d8b8"
+  "command_digest": "sha256:5aa9d1d1c2d415cd024c9d8b3f07c1680c8ea61b7f94b755fbed003701f15c24"
 }

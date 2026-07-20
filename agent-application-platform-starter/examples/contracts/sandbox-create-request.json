@@ -4,7 +4,7 @@
   "attempt_id": "sat_01J00000000000000000000000",
   "fencing_token": 1,
   "idempotency_key": "sandbox-create-example-0001",
-  "request_digest": "sha256:165779ddfdd328456073a09261cf7936b45bbf316654c7af6c975e8324e5cf7b",
+  "request_digest": "sha256:6c0d93d56d8cea17949c4accc0d5a4dd29704f18e8b283108acf672e0b51577f",
   "deadline_at": "2026-07-16T10:05:00Z",
   "spec": {
     "sandbox_id": "sbx_01J00000000000000000000000",
@@ -64,10 +64,10 @@
     "workspace": {
       "mode": "persistent",
       "base_revision_id": "wsr_01J00000000000000000000000",
-      "base_revision_digest": "sha256:a46a321d81d58bc756a5a53ade99f768962998eab038a055f57838f4d33065aa",
-      "base_branch_version": 2,
+      "base_revision_digest": "sha256:366b5c58b91f28f19b73b1287cc13488b6055b5a7d57bbd21f065e3340b5bde1",
       "commit_mode": "cas_new_revision",
-      "mount_path": "/workspace"
+      "mount_path": "/workspace",
+      "base_workspace_head_version": 1
     },
     "lease": {
       "expires_at": "2026-07-16T12:00:00Z",

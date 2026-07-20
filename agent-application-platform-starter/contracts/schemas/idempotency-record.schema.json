@@ -4,15 +4,29 @@
   "title": "IdempotencyRecord",
   "type": "object",
   "required": [
+    "tenant_id",
     "client_app_id",
+    "operation_id",
     "idempotency_key_digest",
     "request_digest",
     "status",
     "created_at"
   ],
   "properties": {
+    "tenant_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
     "client_app_id": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "operation_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
     },
     "idempotency_key_digest": {
       "type": "string",
@@ -44,5 +58,9 @@
       "format": "date-time"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "the unique idempotency scope is tenant_id plus client_app_id plus operation_id plus idempotency_key_digest",
+    "the same scoped key with a different request_digest is rejected as a conflict and never re-executed"
+  ]
 }

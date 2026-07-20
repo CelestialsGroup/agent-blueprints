@@ -1,0 +1,12 @@
+{
+  "invocation_id": "inv_cap_01J000000000000000000000",
+  "invocation_attempt_id": "iat_cap_01J00000000000000000000",
+  "fencing_token": 1,
+  "sequence": 1,
+  "event_id": "provider-event-html-0001",
+  "type": "progress",
+  "occurred_at": "2026-07-16T09:01:30Z",
+  "data": {
+    "percent": 50
+  }
+}

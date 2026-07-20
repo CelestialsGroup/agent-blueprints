@@ -31,6 +31,8 @@ SaaS Runtime 必须通过受治理 Profile，支持预算注入、Model Gateway�
 
 每次调用使用短期 RuntimeInvocation Token，并绑定 Tenant、ProviderRevision、WorkflowRun/AgentRun/RuntimeRun、RunManifest、InvocationAttempt、幂等请求摘要、Fencing、Policy、Budget 和 Permissions。取消意图不等于取消证明；`outcome_unknown` 必须通过 Invocation Ledger 查询或对账后才能进入终态。
 
+Start 请求不是只有 Message ID 的通知。Adapter 必须收到实际有界输入或不可变输入引用、ContextPackage、ArtifactGrant、完整 ExecutionBudget/PolicyDecision/EffectivePermissions、四类 Gateway Binding 和请求体 Admission Limits，并逐项验证与 RunManifest 相等；任何缺失、空 Limits 或摘要不匹配都拒绝执行。
+
 ## 与 Temporal 的职责分离
 
 Temporal 管理 WorkOrder 编排、审批等待、重试、交付、结算和跨进程恢复。Agent Runtime Provider 管理单次 Agent Run 的内部循环和框架状态。
@@ -65,7 +67,7 @@ RunManifest 在准入时通过唯一 ProviderResolution 锁定 Agent Runtime Pro
 
 DeerFlow Adapter 可以借鉴通用 Agent、研究、编码、Sub-agent、Skill、Sandbox 和前端交互，但所有 Platform 交互仍经过 AgentRuntimeProvider、SandboxProvider 和强制 Gateway。
 
-对 DeerFlow 的修改按以下优先级处理：Configuration、Skill、受治理 MCP、External Adapter、Plugin Service、Gateway Extension、Core Patch。Core Patch 必须记录上游 Commit、Patch Ledger 和 Rebase Test。
+对 DeerFlow 的修改按以下优先级处理：Configuration、Skill、受治理 MCP、External Adapter、Capability Provider Service、Gateway Extension、Core Patch。Core Patch 必须记录上游 Commit、Patch Ledger 和 Rebase Test。DeerFlow 不需要整仓复制进稳定内核；以锁定 Commit/Image 的独立 Runtime Adapter 和可选 Sandbox Adapter 接入。
 
 首个 Sandbox 实现可以是：
 

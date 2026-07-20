@@ -1,0 +1,85 @@
+{
+  "jti": "grant_control_01J00000000000000000",
+  "iss": "business-a",
+  "aud": "agent-platform",
+  "sub": "user-123",
+  "iat": 1784100000,
+  "nbf": 1784100000,
+  "exp": 1784100300,
+  "client_app_id": "html-product",
+  "external_tenant_id": "org-456",
+  "external_principal_id": "user-123",
+  "principal_context_digest": "sha256:5151515151515151515151515151515151515151515151515151515151515151",
+  "conversation_id": "conv_01J00000000000000000000000",
+  "turn_id": "turn_01J00000000000000000000000",
+  "branch_id": "main",
+  "client_message_id": "client-msg-0001",
+  "scenario_id": "html-generation",
+  "request_digest": "sha256:90b373448b28440072dce82181b3847a6840e41cdb3c1e3dfc9d9fd7d48e7931",
+  "idempotency_key_digest": "sha256:6bf53ca6b162632ebe7a477b424bedb41cae0759b08b27970fe9dbc7199ff87c",
+  "usage": "single",
+  "nonce": "nonce-work-control-0123456789",
+  "capabilities": [
+    "agent.general",
+    "html.generate",
+    "artifact.preview.html",
+    "converter.html-to-pptx"
+  ],
+  "limits": {
+    "max_input_tokens": 100000,
+    "max_output_tokens": 20000,
+    "max_model_requests": 200,
+    "max_sandbox_seconds": 1800,
+    "max_network_bytes": 104857600,
+    "max_storage_bytes": 104857600,
+    "max_artifact_count": 20,
+    "max_conversion_count": 3
+  },
+  "policies": {
+    "network_access": "restricted",
+    "external_communication": false,
+    "require_approval_for": [
+      "external_communication"
+    ],
+    "data_classification": "internal"
+  },
+  "commercial_authorization": {
+    "entitlement_revision_id": "entitlement-pro-2026-07",
+    "entitlement_revision_digest": "sha256:7272727272727272727272727272727272727272727272727272727272727272",
+    "quota_reservation_id": "qres_01J00000000000000000000000",
+    "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
+    "business_account_id": "account-456",
+    "plan_reference": "pro",
+    "authorized_limits_digest": "sha256:36b5a673a7d6b2636626f04ad6e28c5d43e54ee4510dfbba604692d0da028380",
+    "issued_at": "2026-07-15T09:59:30Z",
+    "expires_at": "2026-07-15T10:30:00Z",
+    "settlement_target_id": "business-usage-settlement-v1",
+    "authorized_entitlements": [
+      "experience.html.premium"
+    ],
+    "authorized_capabilities": [
+      "agent.general",
+      "html.generate",
+      "artifact.preview.html",
+      "converter.html-to-pptx"
+    ],
+    "authorized_limits": {
+      "max_input_tokens": 100000,
+      "max_output_tokens": 20000,
+      "max_model_requests": 200,
+      "max_sandbox_seconds": 1800,
+      "max_network_bytes": 104857600,
+      "max_storage_bytes": 104857600,
+      "max_artifact_count": 20,
+      "max_conversion_count": 3
+    },
+    "commercial_authorization_id": "cauth_01J00000000000000000000000",
+    "commercial_authorization_digest": "sha256:7e0df7d1f12c15fa7b37f829cbbd7faf5dd927ae121e1d963d6205d71ff505ed"
+  },
+  "scenario_version": "1.0.0",
+  "scenario_definition_digest": "sha256:2ef129bc2277d1927147c533a18bcc5500db43e4c36ef12313b904fe80bb709c",
+  "request_contract_id": "urn:agent-platform:work-order-control-request:v1",
+  "request_digest_profile": "rfc8785-request-excluding-execution-grant-v1",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "control_request_id": "ctl_01J00000000000000000000000"
+}

@@ -1,5 +1,7 @@
 # Plugin Invocation 协议
 
+本协议只服务既有 Plugin 实现兼容，不是通用 Provider Port。新 Model、Tool、MCP、Skill、Renderer、Editor、Converter 和远程服务必须实现 `capability-provider-v1`；Adapter 在内部映射 `plugin_id`，稳定内核与 Capability Token 不依赖它。
+
 ## 统一语义
 
 运行模式：

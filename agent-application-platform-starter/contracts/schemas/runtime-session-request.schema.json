@@ -5,6 +5,7 @@
   "type": "object",
   "required": [
     "runtime_type",
+    "sandbox_slot_key",
     "recording"
   ],
   "properties": {
@@ -15,6 +16,10 @@
         "desktop",
         "port_forward"
       ]
+    },
+    "sandbox_slot_key": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9/_-]{0,127}$"
     },
     "requested_scopes": {
       "type": "array",
@@ -73,6 +78,7 @@
   ],
   "x-semantic-constraints": [
     "requested scopes must be a subset of the authenticated WorkSession and WorkOrder policy",
+    "sandbox_slot_key selects exactly one Sandbox slot from the admitted RunManifest and cannot resolve a provider-native Sandbox identity",
     "control, input, clipboard, or file-transfer requires runtime:control; view-only requires runtime:view",
     "platform_managed recording is created by Runtime Gateway and never delegated to the Sandbox Provider as an authorization decision",
     "recording channels are compatible with runtime_type; port_forward is live-only and requires disabled recording"

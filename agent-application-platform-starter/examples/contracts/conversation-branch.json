@@ -5,7 +5,10 @@
   "head_message_sequence": 1,
   "active_work_order_id": "wrk_01J00000000000000000000000",
   "workspace_head_revision_id": "wsr_01J00000000000000000000000",
-  "workspace_head_revision_digest": "sha256:a46a321d81d58bc756a5a53ade99f768962998eab038a055f57838f4d33065aa",
+  "workspace_head_revision_digest": "sha256:366b5c58b91f28f19b73b1287cc13488b6055b5a7d57bbd21f065e3340b5bde1",
+  "message_head_version": 2,
+  "workspace_head_version": 1,
+  "active_work_version": 2,
   "branch_version": 2,
   "created_at": "2026-07-15T10:00:00Z",
   "updated_at": "2026-07-15T10:00:01Z"

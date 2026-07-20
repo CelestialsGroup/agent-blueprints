@@ -1,7 +1,7 @@
 {
   "suite_id": "agent-runtime-provider",
   "suite_version": "1.0.0",
-  "suite_digest": "sha256:3b950315ca1584671203c29af62d1a00eea5b22e046e498e01d39defbcdc7c18",
+  "suite_digest": "sha256:8fee6bdb88e49df4c28b39989f1141e3b1d89006e7a7511269fb641161dbf449",
   "target_kind": "agent_runtime",
   "profiles": [
     {
@@ -24,6 +24,18 @@
           "category": "contract",
           "evidence_type": "test_log",
           "description": "Reusing an idempotency key with a different request digest is rejected."
+        },
+        {
+          "test_id": "start-executable-context-complete",
+          "category": "contract",
+          "evidence_type": "test_log",
+          "description": "Start rejects missing or mismatched input, ContextPackage, ArtifactGrant, effective budget, policy, permissions or Gateway bindings."
+        },
+        {
+          "test_id": "start-encoded-body-limit",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "Start requests above the encoded-body limit return 413 before JSON parsing or Runtime work begins."
         },
         {
           "test_id": "command-contiguous",
@@ -91,7 +103,7 @@
           "test_id": "append-input-queue",
           "category": "ordering",
           "evidence_type": "trace",
-          "description": "Append input preserves ConversationMessage and command ordering."
+          "description": "Append input references a persisted authorized WorkOrderControlRequest and preserves message and command ordering."
         },
         {
           "test_id": "interrupt-capability",

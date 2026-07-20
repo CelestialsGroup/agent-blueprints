@@ -52,16 +52,18 @@ AgentRun 1 -> 1 RunManifest + 1 AgentRuntimeRun
 AgentRuntimeRun mutation -> Invocation 1 -> N Attempt
 ```
 
-每个 AgentRun 由 Tenant/Conversation/Branch WorkspaceRevision、授权/预算/策略摘要、ProviderResolution、AdmissionDecision、Event Registry、Experience Revision、按需 Sandbox Slot 和 RunManifest 固化。Runtime 与 Sandbox Slot 只引用 ProviderResolution，避免重复快照产生冲突。没有 Sandbox Capability 的 Run 可以使用空 `sandboxes[]`；运行中的 Run 不得静默切换 Provider。
+每个 AgentRun 由 Tenant/Conversation/Branch WorkspaceRevision、实际有界输入、ContextPackage、ArtifactGrant、完整有效预算/策略/权限、四类 Gateway Binding、ProviderResolution、AdmissionDecision、Event Registry、Experience Revision、按需 Sandbox Slot 和 RunManifest 固化。Runtime 与 Sandbox Slot 只引用 ProviderResolution，避免重复快照产生冲突。没有 Sandbox Capability 的 Run 可以使用空 `sandboxes[]`；运行中的 Run 不得静默切换 Provider。
 
 ## 可靠性边界
 
 - Temporal 保存执行控制 History，PostgreSQL 保存查询态和账本。
 - 外部副作用通过 Invocation 或 SandboxOperation Ledger 管理。
 - 双写通过事务 Outbox/Inbox 或可重放协调器闭合。
+- CanonicalEvent 以 Tenant/Producer/SourceStream/SourceEvent 唯一去重，Metadata 闭合；Provider 来源必须绑定 ProviderRevision。
 - Artifact 和 Recording 大块字节只进入对象存储，数据库和 Event 只保存引用与摘要。
 - 核心 Runtime Event、PolicyDecision、TechnicalUsage 和 Runtime Gateway Frame 使用闭合 Schema；RunManifest 绑定 Event Registry ID/Version/Digest，未知 Provider Payload 不能驱动核心 Projection。
 - Runtime/Sandbox/Capability 认证绑定不可变 Conformance Suite/Profile/Digest；Runtime 调用令牌绑定 Tenant、Run、Attempt、Fencing、Policy、Budget 和请求摘要。
+- Capability Provider 是独立通用 Port，调用 Token 绑定 Tenant、ClientApplication、Principal Context、WorkOrder、ProviderRevision、Attempt、Fencing、请求、策略、预算、权限和暂存授权；Plugin 只是可选实现方式。
 - BusinessSettlementEnvelope 嵌入完整不可变 UsageReport，但不包含价格、货币、余额或商业结论。
 - 系统不承诺全局 Exactly-once。
 

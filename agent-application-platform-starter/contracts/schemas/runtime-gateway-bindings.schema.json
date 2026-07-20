@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:runtime-gateway-bindings:v1",
+  "title": "RuntimeGatewayBindings",
+  "type": "object",
+  "required": ["model", "tool", "artifact", "egress"],
+  "properties": {
+    "model": { "$ref": "#/$defs/modelBinding" },
+    "tool": { "$ref": "#/$defs/toolBinding" },
+    "artifact": { "$ref": "#/$defs/artifactBinding" },
+    "egress": { "$ref": "#/$defs/egressBinding" }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "modelBinding": {
+      "type": "object",
+      "required": ["kind", "gateway_id", "route_id", "protocol_version", "binding_digest", "audience"],
+      "properties": {
+        "kind": { "const": "model" },
+        "gateway_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "route_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "protocol_version": { "const": "v1" },
+        "binding_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "audience": { "type": "string", "minLength": 1, "maxLength": 300 }
+      },
+      "additionalProperties": false
+    },
+    "toolBinding": {
+      "type": "object",
+      "required": ["kind", "gateway_id", "route_id", "protocol_version", "binding_digest", "audience"],
+      "properties": {
+        "kind": { "const": "tool" },
+        "gateway_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "route_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "protocol_version": { "const": "v1" },
+        "binding_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "audience": { "type": "string", "minLength": 1, "maxLength": 300 }
+      },
+      "additionalProperties": false
+    },
+    "artifactBinding": {
+      "type": "object",
+      "required": ["kind", "gateway_id", "route_id", "protocol_version", "binding_digest", "audience"],
+      "properties": {
+        "kind": { "const": "artifact" },
+        "gateway_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "route_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "protocol_version": { "const": "v1" },
+        "binding_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "audience": { "type": "string", "minLength": 1, "maxLength": 300 }
+      },
+      "additionalProperties": false
+    },
+    "egressBinding": {
+      "type": "object",
+      "required": ["kind", "gateway_id", "route_id", "protocol_version", "binding_digest", "audience"],
+      "properties": {
+        "kind": { "const": "egress" },
+        "gateway_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "route_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "protocol_version": { "const": "v1" },
+        "binding_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "audience": { "type": "string", "minLength": 1, "maxLength": 300 }
+      },
+      "additionalProperties": false
+    }
+  }
+}

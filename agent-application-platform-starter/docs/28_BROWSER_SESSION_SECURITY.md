@@ -81,6 +81,8 @@ Cookie 认证的写操作要求：
 - ExecutionGrant：`agent-execution-grant+jwt`
 - WorkSession：`agent-work-session+jwt`
 - Plugin Invocation：`agent-plugin-invocation+jwt`
+- Capability Invocation：`agent-capability-invocation+jwt`
+- Agent Runtime Invocation：`agent-runtime-invocation+jwt`
 
 ## 撤销
 

@@ -1,10 +1,10 @@
 {
   "settlement_envelope_id": "set_01J00000000000000000000000",
-  "settlement_envelope_digest": "sha256:7c4b6e5cda46d9ae7e4f8c3cda22081bc841acff32b33c80507cf5e17f5a0ea8",
+  "settlement_envelope_digest": "sha256:b44739ff6087b5d48e8372616d87bd312214304f96d6a62885e3466bc69cbd62",
   "tenant_id": "ten_01J00000000000000000000000",
   "work_order_id": "wrk_01J00000000000000000000000",
   "commercial_authorization_id": "cauth_01J00000000000000000000000",
-  "commercial_authorization_digest": "sha256:58fecad357ce4fe69cce9437814834bba7435d3712fc878ab9832ecc1719a20c",
+  "commercial_authorization_digest": "sha256:7e0df7d1f12c15fa7b37f829cbbd7faf5dd927ae121e1d963d6205d71ff505ed",
   "quota_reservation_id": "qres_01J00000000000000000000000",
   "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
   "work_order_terminal_status": "completed",
@@ -14,11 +14,11 @@
   "created_at": "2026-07-16T09:21:00Z",
   "usage_report": {
     "usage_report_id": "usr_01J00000000000000000000000",
-    "usage_report_digest": "sha256:dcad0b2b1debdac4bac33a8775f97133e715d0707ccc97f0193dfd028df532e1",
+    "usage_report_digest": "sha256:ed0a304263c75f2690bf82e83552d1be733c3ba5118b638cea1a3017724cda49",
     "tenant_id": "ten_01J00000000000000000000000",
     "work_order_id": "wrk_01J00000000000000000000000",
     "commercial_authorization_id": "cauth_01J00000000000000000000000",
-    "commercial_authorization_digest": "sha256:58fecad357ce4fe69cce9437814834bba7435d3712fc878ab9832ecc1719a20c",
+    "commercial_authorization_digest": "sha256:7e0df7d1f12c15fa7b37f829cbbd7faf5dd927ae121e1d963d6205d71ff505ed",
     "quota_reservation_id": "qres_01J00000000000000000000000",
     "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
     "report_status": "final",
@@ -40,7 +40,7 @@
           "type": "provider",
           "id": "api_deerflow_runtime",
           "provider_revision_id": "apr_01J00000000000000000000000",
-          "provider_revision_digest": "sha256:1ef82012bd07d83be302d138c556f27561e14560ae13c5d6a440f5ea1b1858ed"
+          "provider_revision_digest": "sha256:688b9d7abe86270fc898deb57995c42737067526dfcd7967c5512a5f3b8be9ab"
         },
         "provider_operation_id": "provider-op-model-001",
         "meter_source": "provider_reported",

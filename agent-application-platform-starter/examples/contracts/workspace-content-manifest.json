@@ -1,0 +1,23 @@
+{
+  "manifest_version": 1,
+  "workspace_id": "wsp_01J00000000000000000000000",
+  "branch_id": "main",
+  "symlink_policy": "forbid",
+  "entry_count": 2,
+  "total_file_bytes": 128,
+  "entries": [
+    {
+      "path": "src",
+      "entry_type": "directory",
+      "mode": "0755"
+    },
+    {
+      "path": "src/index.html",
+      "entry_type": "file",
+      "mode": "0644",
+      "content_digest": "sha256:8181818181818181818181818181818181818181818181818181818181818181",
+      "size_bytes": 128
+    }
+  ],
+  "manifest_digest": "sha256:8dfcb5bb6d9d98edc1bf5b8f6a24beb60267e13635bf31190eac7a1c8a612098"
+}

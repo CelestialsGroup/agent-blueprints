@@ -6,6 +6,7 @@
   "required": [
     "runtime_session_id",
     "runtime_type",
+    "sandbox_slot_key",
     "gateway_protocol_version",
     "connection_generation",
     "connect_url",
@@ -25,6 +26,10 @@
         "desktop",
         "port_forward"
       ]
+    },
+    "sandbox_slot_key": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9/_-]{0,127}$"
     },
     "gateway_protocol_version": { "const": "runtime-gateway/v1" },
     "connection_generation": { "type": "integer", "minimum": 1 },
@@ -87,6 +92,7 @@
   ],
   "x-semantic-constraints": [
     "scopes are the fail-closed intersection of the authenticated WorkSession, WorkOrder PolicyDecision and requested scopes",
+    "sandbox_slot_key equals the request and one admitted RunManifest slot for the WorkOrder",
     "port_forward sessions always have recording.status disabled",
     "a platform_managed recording request cannot silently downgrade to disabled"
   ]

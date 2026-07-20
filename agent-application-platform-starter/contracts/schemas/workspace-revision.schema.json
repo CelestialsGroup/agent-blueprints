@@ -12,6 +12,7 @@
     "revision_number",
     "parent_revision_id",
     "content_manifest_artifact",
+    "content_manifest_schema_id",
     "revision_digest",
     "created_at"
   ],
@@ -24,6 +25,7 @@
     "parent_revision_id": { "type": ["string", "null"] },
     "forked_from_revision_id": { "type": "string", "minLength": 1 },
     "content_manifest_artifact": { "$ref": "urn:agent-platform:artifact-reference:v1" },
+    "content_manifest_schema_id": { "const": "urn:agent-platform:workspace-content-manifest:v1" },
     "produced_by_work_order_id": { "type": "string", "minLength": 1 },
     "revision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "created_at": { "type": "string", "format": "date-time" }
@@ -34,6 +36,6 @@
     "revision_number is contiguous per workspace_id plus branch_id",
     "revision_number one has null parent_revision_id; later revisions reference the immediate predecessor on the same branch",
     "a fork may bind forked_from_revision_id from the source branch while creating revision one on the new branch",
-    "content_manifest_artifact is immutable and contains the complete path, mode and content-digest manifest"
+    "content_manifest_artifact is immutable and validates against content_manifest_schema_id before the WorkspaceRevision is admitted"
   ]
 }

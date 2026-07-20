@@ -11,7 +11,7 @@ JSON Schema、OpenAPI、状态机、JCS/I-JSON 向量、数据不变量和契约
 | Strict I-JSON/JCS | Python、Node、Go 共用全部正反向向量 |
 | Schema | Draft 2020-12 元验证、绝对 `$id`、Registry `$ref`、正反向 Fixture |
 | 语义 | Conversation/Runtime/Recording 序列、RunManifest、Experience 准入、CapabilityDefinition/Provider Kind/Conformance、Provider/Decision 摘要、Slot、Snapshot、Fencing、状态可达性 |
-| OpenAPI | Registry 投影后 Redocly Lint 为 0 个错误、0 个警告，5 个确定性 Bundle |
+| OpenAPI | Registry 投影后 Redocly Lint 为 0 个错误、0 个警告，6 个确定性 Bundle |
 | 完整性 | v0.9.0 契约清单自摘要和全资源摘要 |
 | 兼容性 | 与受保护变量指定的冻结基线比较删除/收窄；CI 缺基线时默认失败 |
 | 供应链 | 摘要锁、npm 完整性校验、Action SHA、公开 Registry、Git 跟踪文件无 Bytecode/`.DS_Store`、Git 根 Workflow 已激活 |

@@ -59,6 +59,7 @@ paths:
       tags: [Runs]
       operationId: startAgentRuntimeRun
       summary: Idempotently start or restore one governed Agent Runtime run
+      x-max-encoded-body-bytes: 8388608
       parameters:
         - $ref: '#/components/parameters/Traceparent'
       requestBody:
@@ -82,6 +83,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '422':
           $ref: '#/components/responses/Unprocessable'
         '429':
@@ -125,6 +128,7 @@ paths:
       tags: [Runs]
       operationId: submitAgentRuntimeCommand
       summary: Append an idempotent input, control, approval or checkpoint command
+      x-max-encoded-body-bytes: 262144
       requestBody:
         required: true
         content:
@@ -148,6 +152,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '422':
           $ref: '#/components/responses/Unprocessable'
         '429':
@@ -256,6 +262,12 @@ components:
             $ref: ../schemas/standard-error.schema.json
     Conflict:
       description: Stale fencing token, command sequence conflict or request digest mismatch.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    PayloadTooLarge:
+      description: Encoded request exceeds the operation limit and was rejected before JSON parsing.
       content:
         application/json:
           schema:

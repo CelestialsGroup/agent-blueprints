@@ -1,0 +1,17 @@
+{
+  "cases": [
+    { "id": "runtime-input-content-digest-mismatch", "mutation": "runtime_input_digest_mismatch" },
+    { "id": "runtime-context-package-differs-from-manifest", "mutation": "runtime_context_mismatch" },
+    { "id": "runtime-artifact-grant-crosses-tenant", "mutation": "artifact_grant_tenant_mismatch" },
+    { "id": "capability-token-crosses-tenant", "mutation": "capability_token_tenant_mismatch" },
+    { "id": "capability-token-request-digest-mismatch", "mutation": "capability_token_request_digest_mismatch" },
+    { "id": "provider-resolution-crosses-work-order", "mutation": "provider_resolution_work_order_mismatch" },
+    { "id": "workspace-manifest-count-mismatch", "mutation": "workspace_manifest_count_mismatch" },
+    { "id": "workspace-manifest-byte-total-mismatch", "mutation": "workspace_manifest_bytes_mismatch" },
+    { "id": "workspace-manifest-symlink-escapes-root", "mutation": "workspace_manifest_symlink_escape" },
+    { "id": "canonical-event-source-dedupe-mismatch", "mutation": "canonical_event_dedupe_mismatch" },
+    { "id": "canonical-event-provider-without-revision", "mutation": "canonical_event_provider_revision_missing" },
+    { "id": "control-grant-work-order-mismatch", "mutation": "control_grant_work_order_mismatch" },
+    { "id": "semantic-traceability-missing-constraint", "mutation": "traceability_missing_constraint" }
+  ]
+}

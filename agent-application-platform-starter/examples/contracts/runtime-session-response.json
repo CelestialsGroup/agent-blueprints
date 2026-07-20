@@ -1,6 +1,7 @@
 {
   "runtime_session_id": "rts_01J00000000000000000000000",
   "runtime_type": "terminal",
+  "sandbox_slot_key": "primary-code",
   "gateway_protocol_version": "runtime-gateway/v1",
   "connection_generation": 1,
   "connect_url": "https://runtime-gateway.example.test/sessions/rts_01J00000000000000000000000",

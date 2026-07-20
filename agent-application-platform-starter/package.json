@@ -5,7 +5,7 @@
   "scripts": {
     "prepare:openapi": "python3 scripts/prepare_openapi.py",
     "lint:openapi": "node scripts/lint_openapi_zero.mjs",
-    "bundle:openapi": "redocly bundle build/openapi-src/openapi/agent-access-v1.yaml -o build/agent-access-v1.bundle.yaml && redocly bundle build/openapi-src/openapi/plugin-invocation-v1.yaml -o build/plugin-invocation-v1.bundle.yaml && redocly bundle build/openapi-src/openapi/delivery-webhook-v1.yaml -o build/delivery-webhook-v1.bundle.yaml && redocly bundle build/openapi-src/openapi/sandbox-provider-v1.yaml -o build/sandbox-provider-v1.bundle.yaml && redocly bundle build/openapi-src/openapi/agent-runtime-provider-v1.yaml -o build/agent-runtime-provider-v1.bundle.yaml"
+    "bundle:openapi": "redocly bundle build/openapi-src/openapi/agent-access-v1.yaml -o build/agent-access-v1.bundle.yaml && redocly bundle build/openapi-src/openapi/plugin-invocation-v1.yaml -o build/plugin-invocation-v1.bundle.yaml && redocly bundle build/openapi-src/openapi/capability-provider-v1.yaml -o build/capability-provider-v1.bundle.yaml && redocly bundle build/openapi-src/openapi/delivery-webhook-v1.yaml -o build/delivery-webhook-v1.bundle.yaml && redocly bundle build/openapi-src/openapi/sandbox-provider-v1.yaml -o build/sandbox-provider-v1.bundle.yaml && redocly bundle build/openapi-src/openapi/agent-runtime-provider-v1.yaml -o build/agent-runtime-provider-v1.bundle.yaml"
   },
   "devDependencies": {
     "@redocly/cli": "2.39.0"

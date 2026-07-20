@@ -35,6 +35,8 @@ PolicyDecision 固化全部匹配规则摘要和 Effective Permissions Digest。
 
 AgentRuntimeProvider 的每次调用还必须使用短期 RuntimeInvocation Token。Token 将 Tenant、ProviderRevision、WorkflowRun/AgentRun/RuntimeRun、RunManifest、InvocationAttempt、Fencing、PolicyDecision、ExecutionBudget、Effective Permissions 和请求摘要绑定为一个不可混用的授权上下文；mTLS 只证明工作负载身份，不能替代对象级绑定。
 
+Runtime Start 同时携带完整有效值和类型化 Model/Tool/Artifact/Egress Gateway Binding；摘要用于校验不可替代实际执行值。通用 Capability Provider 使用独立 Token，并额外绑定 ClientApplication、Principal Context、WorkOrder、Capability Schema、Artifact Grant 和 Staging Session；`plugin_id` 不属于稳定授权边界。
+
 ## 模型 Gateway
 
 负责：

@@ -1,11 +1,11 @@
 {
   "decision_id": "pol_01J00000000000000000000000",
-  "decision_digest": "sha256:c60f1ab5be9aa73926cf7c57390edc364b767814a129d57f7d254950c30a4129",
+  "decision_digest": "sha256:d5cd511225fb525c6c6ec7dab6ddb47157717e1292d1110e1e6792adf05205b7",
   "tenant_id": "ten_01J00000000000000000000000",
   "work_order_id": "wrk_01J00000000000000000000000",
   "policy_bundle_digest": "sha256:6161616161616161616161616161616161616161616161616161616161616161",
-  "commercial_authorization_digest": "sha256:58fecad357ce4fe69cce9437814834bba7435d3712fc878ab9832ecc1719a20c",
-  "execution_budget_digest": "sha256:117d085f1a771beeecf05b8f3e2ded71c775b15942f983ab90f269cddcc6a35e",
+  "commercial_authorization_digest": "sha256:7e0df7d1f12c15fa7b37f829cbbd7faf5dd927ae121e1d963d6205d71ff505ed",
+  "execution_budget_digest": "sha256:4e8aac35b4943db25ecbb3ea6fa2259cdb2f3c144bb837f1cc6c97b0b6f94096",
   "evaluations": [
     {
       "subject_kind": "runtime",
@@ -23,7 +23,7 @@
     }
   ],
   "outcome": "allow",
-  "effective_permissions_digest": "sha256:6464646464646464646464646464646464646464646464646464646464646464",
+  "effective_permissions_digest": "sha256:5b103637f08ba7dd7fbabb1b1840dcc0780cb1dd335043475f30433c51397a67",
   "decided_at": "2026-07-16T09:00:59Z",
   "expires_at": "2026-07-16T09:30:00Z",
   "decision_point": "run_admission",

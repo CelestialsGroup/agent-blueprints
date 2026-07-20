@@ -10,7 +10,9 @@ Workspace
  -> Branch B -> forked_from Revision 2 -> WorkspaceRevision 1 -> 2
 ```
 
-WorkOrder 准入时固化 Branch Head Revision；Sandbox 只挂载该 Revision。成功提交生成新 Revision，并用 `branch_version` CAS 推进 Head；冲突必须显式合并、重试或创建新 Branch，不能覆盖另一分支的文件状态。
+WorkOrder 准入时固化 Branch Head Revision；Sandbox 只挂载该 Revision。成功提交生成新 Revision，并用 `workspace_head_version` CAS 推进 Head；Message 追加使用 `message_head_version`，Steering 使用 `active_work_version`，互不制造假冲突。冲突必须显式合并、重试或创建新 Branch，不能覆盖另一分支的文件状态。
+
+WorkspaceRevision 的 Manifest Artifact 必须验证 `workspace-content-manifest-v1`：路径为规范化相对 POSIX 路径，File 固化 Mode/Digest/Size，计数与总字节闭合，Symlink 默认禁止；允许时也只能指向 Workspace Root 内且不得借其他 Symlink 穿越。
 
 负责：
 

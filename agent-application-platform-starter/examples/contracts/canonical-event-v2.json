@@ -2,6 +2,12 @@
   "event_id": "evt_01J00000000000000000000000",
   "schema_version": 2,
   "tenant_id": "ten_01J00000000000000000000000",
+  "producer_id": "artifact-service",
+  "provider_revision_id": null,
+  "source_stream_id": "artifact/art_01J00000000000000000000000",
+  "source_event_id": "artifact-version-created/ver_01J00000000000000000000000",
+  "source_cursor": "4",
+  "dedupe_key": "sha256:b8fc682610fdb746035d18be3014f0a4574be49bf1991cb9481d3f1e7087f995",
   "conversation_id": "conv_01J00000000000000000000000",
   "work_order_id": "wrk_01J00000000000000000000000",
   "turn_id": "turn_01J00000000000000000000000",
@@ -36,5 +42,10 @@
     "causation_id": "inv_01J00000000000000000000000"
   },
   "data_version": 1,
-  "recorded_at": "2026-07-15T10:00:00.100Z"
+  "recorded_at": "2026-07-15T10:00:00.100Z",
+  "event_registry": {
+    "registry_id": "platform-core",
+    "registry_version": 1,
+    "registry_digest": "sha256:5e5b658d485ae9df45c8e0639e757145954c0d28e01c2e2cdcf31faadda55cde"
+  }
 }

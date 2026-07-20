@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:capability-invocation-status:v1",
+  "title": "CapabilityInvocationStatus",
+  "type": "object",
+  "required": ["invocation_id", "invocation_attempt_id", "fencing_token", "provider_operation_id", "status", "observed_at"],
+  "properties": {
+    "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "fencing_token": { "type": "integer", "minimum": 1 },
+    "provider_operation_id": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "status": { "enum": ["accepted", "running", "succeeded", "failed", "cancelled", "outcome_unknown"] },
+    "result": { "$ref": "urn:agent-platform:capability-invocation-result:v1" },
+    "error": { "$ref": "urn:agent-platform:capability-error:v1" },
+    "observed_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "oneOf": [
+    {
+      "properties": { "status": { "enum": ["accepted", "running", "cancelled"] } },
+      "not": { "anyOf": [{ "required": ["result"] }, { "required": ["error"] }] }
+    },
+    {
+      "properties": { "status": { "const": "succeeded" } },
+      "required": ["result"],
+      "not": { "required": ["error"] }
+    },
+    {
+      "properties": { "status": { "enum": ["failed", "outcome_unknown"] } },
+      "required": ["error"],
+      "not": { "required": ["result"] }
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 {
   "runtime_type": "terminal",
+  "sandbox_slot_key": "primary-code",
   "requested_scopes": ["view", "control", "input"],
   "recording": {
     "mode": "platform_managed",

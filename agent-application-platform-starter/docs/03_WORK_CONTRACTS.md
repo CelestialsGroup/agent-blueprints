@@ -19,7 +19,7 @@ client_app_id 不出现在请求正文。
 
 ## 请求摘要
 
-ExecutionGrant 显式声明 `request_contract_id`，其 `request_digest` 绑定该精确 WorkOrderRequest 或 ConversationTurnRequest，唯一排除 `execution_grant`。两种请求使用相同 Digest Profile，但不能互换 Contract ID。
+ExecutionGrant 显式声明 `request_contract_id`，其 `request_digest` 绑定该精确 WorkOrderRequest、ConversationTurnRequest 或 WorkOrderControlRequest，唯一排除 `execution_grant`。三种请求使用相同 Digest Profile，但不能互换 Contract ID。前两种创建新 WorkOrder，Control Request 只操作已有 WorkOrder。
 
 使用 RFC 8785 JCS 与固定跨语言 Test Vector。
 

@@ -194,6 +194,63 @@ paths:
         '503':
           $ref: '#/components/responses/Unavailable'
 
+  /v1/work-orders/{work_order_id}/control:
+    parameters:
+      - $ref: '#/components/parameters/WorkOrderId'
+      - $ref: '#/components/parameters/Traceparent'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      tags: [WorkOrders]
+      operationId: controlWorkOrder
+      summary: Append an authorized control input to an existing WorkOrder
+      description: |
+        This endpoint never creates a Turn or successor WorkOrder. append_input and
+        interrupt first persist the immutable control input, then emit an Agent Runtime
+        command referencing control_request_id. A fresh single-use ExecutionGrant binds
+        the exact request. Message and active-work CAS are independent from Workspace CAS.
+      x-required-work-session-scopes: [work:control]
+      x-cookie-csrf-required: true
+      x-max-encoded-body-bytes: 1048576
+      security:
+        - ServiceOAuth:
+            - work:control
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/work-order-control-request.schema.json
+      responses:
+        '202':
+          description: Control request durably accepted
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/work-order-state.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
   /v1/work-orders/{work_order_id}/events:
     parameters:
       - $ref: '#/components/parameters/WorkOrderId'
@@ -1129,6 +1186,7 @@ paths:
         verified Grant; the Platform atomically allocates the internal input_message_id.
       x-required-work-session-scopes: [conversation:write]
       x-cookie-csrf-required: true
+      x-max-encoded-body-bytes: 1048576
       security:
         - ServiceOAuth:
             - work:create
@@ -1155,6 +1213,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '422':
           $ref: '#/components/responses/Unprocessable'
         '429':
@@ -1376,7 +1436,7 @@ components:
       name: Idempotency-Key
       in: header
       required: true
-      description: Stable key scoped to the authenticated client or WorkSession.
+      description: Stable key scoped by Tenant, ClientApplication, operation and key digest.
       schema:
         type: string
         minLength: 16
@@ -1522,7 +1582,7 @@ components:
           schema:
             $ref: ../schemas/standard-error.schema.json
     PayloadTooLarge:
-      description: Requested upload exceeds configured size policy.
+      description: Encoded request or upload exceeds the operation limit and is rejected before JSON parsing or blob admission.
       content:
         application/json:
           schema:

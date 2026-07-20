@@ -9,11 +9,17 @@
 | Temporal 编排，PostgreSQL 记账 | 长任务需要恢复，外部副作用需要可对账 | Temporal 管理持久 History；Invocation/Sandbox Ledger、Outbox 和当前状态由 PostgreSQL 管理，不宣称全局 Exactly-once |
 | 关系当前态加 CanonicalEvent | 当前查询和审计/Timeline 都必须稳定 | 不采用全量 Event Sourcing；Work Event 使用 `work_sequence`，仅属于 Conversation 的 Event 使用 `aggregate_sequence` |
 | Conversation 拥有 Workspace，Branch 拥有 Revision Head | 多轮 Agent 需要保留产物，并行分支不能共享可变文件头 | WorkOrder 只表示一个 Turn；ConversationBranch 用 CAS 维护 Message Head、WorkspaceRevision Head 和活动 WorkOrder |
+| 新 Turn 与既有 WorkOrder 控制分离 | Append/Interrupt 既不能暗中创建第二个 WorkOrder，也不能绕过新的商业授权 | ConversationTurnRequest 创建新 WorkOrder；WorkOrderControlRequest 以新 Grant 控制现有 WorkOrder；`interrupt_and_enqueue` 创建明确后继 |
+| Message、Workspace、Active Work 分离 CAS | 单一 Branch Version 会让 Steering 与文件提交互相制造无关冲突 | 三个所有权域分别使用 `message_head_version`、`workspace_head_version`、`active_work_version`；`branch_version` 只作查询 ETag |
 | 平台拥有 AgentRuntimeProvider，不依赖单一 Agent 框架 | DeerFlow 或其他框架的内部 Agent/Thread/Run/Checkpoint、持久化和升级节奏都不稳定 | DeerFlow 只是首个参考 Adapter；LangGraph/Deep Agents、OpenAI Agents SDK、Microsoft Agent Framework、Google ADK、Mastra 或 Native Runtime 均可实现同一 Port |
 | Capability、一致性验证和不可变 Resolution | 同名字符串不能证明 Provider 可替换，也不能解释动态路由 | Scenario 解析到精确 Capability/Profile；Resolution 固化 Resolver/Input/Candidate/Evidence/Decision，RunManifest 只引用统一解析事实 |
+| 通用 Capability Provider Port | Plugin ID 不能成为 Model、Tool、MCP、Skill、Renderer 或远程服务的稳定前提 | `capability-provider-v1` 提供 Invoke/Status/Cancel/Event；独立 Token 绑定租户、客户端、主体、WorkOrder、Attempt、Fencing、请求、策略、预算、权限和 Staging |
 | Provider Envelope 与 Build Provenance | Plugin 打包方式不能污染 Runtime、Sandbox 或远程服务 | ProviderRevision 统一绑定 Implementation、稳定 Port、配置和 Conformance；Source Revision、Build、SBOM 与 Provenance 摘要不可变 |
 | 明确执行拓扑 | WorkOrder、Workflow 和框架 Run 混用会破坏重试与恢复 | 一个 WorkOrder 对应一个 Platform WorkflowRun；每个 AgentRun 对应一个 RunManifest 和 AgentRuntimeRun，Sub-agent 使用显式父子关系 |
 | Tenant-qualified 执行与统一 Resolution 引用 | 只靠间接 WorkOrder 关联或复制 Revision 会产生越权和漂移 | WorkflowRun/AgentRun/RunManifest/Runtime Start 显式绑定 Tenant；Runtime 与每个 Sandbox Slot 只引用一个 ProviderResolution |
+| 完整 Runtime 执行快照 | 只保存 Message ID、预算摘要或策略摘要无法让 Adapter 安全执行与回放 | RunManifest 与 Runtime Start 携带真实有界输入/不可变引用、ContextPackage、ArtifactGrant、完整有效值和 Model/Tool/Artifact/Egress Gateway Binding |
+| Fail-closed 限额与请求体上限 | 空 limits 和无界 JSON 会产生跨实现歧义及资源耗尽 | EffectiveExecutionLimits 全字段必填；各写操作声明 encoded-byte 上限并在解析前以 413 拒绝 |
+| 来源身份与 Inbox 去重 | Provider 重试和游标重放不能依赖平台 Event ID 偶然去重 | CanonicalEvent 固化 Producer/ProviderRevision/SourceStream/SourceEvent/Cursor 和 Dedupe Key，Metadata 闭合，Inbox 建唯一约束 |
 | Service OAuth、Conversation WorkSession、单次 ExecutionGrant | 后端与浏览器信任级别不同，会员授权不能变成长会话权限 | WorkSession 绑定 Conversation、可缩窄到 WorkOrder；每个可执行 Turn 都需要新的 Business Grant 与额度 Reservation |
 | Runtime Gateway 与按需 SandboxProvider | 双向连接和 Sandbox 生命周期不能依赖 API Pod 或 DeerFlow 内部实现，轻量 Run 也不应被迫创建 Sandbox | 前端只访问短期 Gateway Session；Scenario Capability 决定是否创建 Sandbox；Provider 私有 Pod/VM/Endpoint 不进入稳定模型 |
 | 强制 Model/Tool/Artifact/Egress Gateway | Prompt 约束不能执行预算、审批和网络策略 | 公共 SaaS Runtime 必须通过受治理 Profile；外部副作用进入 Invocation Ledger |

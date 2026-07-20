@@ -1,0 +1,41 @@
+{
+  "permissions_id": "perm_01J00000000000000000000000",
+  "permissions_digest": "sha256:5b103637f08ba7dd7fbabb1b1840dcc0780cb1dd335043475f30433c51397a67",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "model": {
+    "allowed_model_profiles": [
+      "general-balanced"
+    ]
+  },
+  "tool": {
+    "allowed_capabilities": [
+      "html.generate",
+      "artifact.preview.html"
+    ]
+  },
+  "artifact": {
+    "read": true,
+    "write": true,
+    "finalize": true
+  },
+  "egress": {
+    "mode": "restricted",
+    "allowed_destination_classes": [
+      "model_gateway",
+      "artifact_gateway"
+    ]
+  },
+  "sandbox_slots": [
+    {
+      "sandbox_slot_key": "primary-code",
+      "allowed_operations": [
+        "exec",
+        "files_read",
+        "files_write",
+        "terminal",
+        "snapshot"
+      ]
+    }
+  ]
+}

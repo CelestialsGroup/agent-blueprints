@@ -14,6 +14,7 @@
     "client_app_id",
     "external_tenant_id",
     "external_principal_id",
+    "principal_context_digest",
     "conversation_id",
     "turn_id",
     "branch_id",
@@ -72,6 +73,20 @@
       "type": "string",
       "minLength": 1
     },
+    "principal_context_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "work_order_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "control_request_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
     "conversation_id": {
       "type": "string",
       "minLength": 1
@@ -95,7 +110,8 @@
     "request_contract_id": {
       "enum": [
         "urn:agent-platform:work-order-request:v1",
-        "urn:agent-platform:conversation-turn-request:v1"
+        "urn:agent-platform:conversation-turn-request:v1",
+        "urn:agent-platform:work-order-control-request:v1"
       ]
     },
     "request_digest_profile": {
@@ -124,36 +140,7 @@
         "type": "string"
       }
     },
-    "limits": {
-      "type": "object",
-      "properties": {
-        "max_input_tokens": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "max_output_tokens": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "max_sandbox_seconds": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "max_storage_bytes": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "max_artifact_count": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "max_conversion_count": {
-          "type": "integer",
-          "minimum": 0
-        }
-      },
-      "additionalProperties": false
-    },
+    "limits": { "$ref": "urn:agent-platform:effective-execution-limits:v1" },
     "policies": {
       "type": "object",
       "required": [
@@ -202,12 +189,21 @@
     }
   },
   "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": { "request_contract_id": { "const": "urn:agent-platform:work-order-control-request:v1" } },
+        "required": ["request_contract_id"]
+      },
+      "then": { "required": ["work_order_id", "control_request_id"] }
+    }
+  ],
   "x-semantic-constraints": [
     "nbf <= iat + 30",
     "iat < exp",
     "exp - iat <= 300",
     "request_contract_id identifies the exact submitted request schema and request_digest is RFC 8785 JCS SHA-256 over that request excluding only execution_grant",
-    "conversation, turn, branch and client_message bindings match the submitted request and authenticated path context",
+    "conversation, turn, branch, client_message, principal context and optional WorkOrder control bindings match the submitted request and authenticated path context",
     "limits and capabilities do not exceed commercial_authorization"
   ]
 }

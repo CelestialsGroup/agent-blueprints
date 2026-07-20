@@ -30,44 +30,7 @@
       "type": "string",
       "minLength": 1
     },
-    "limits": {
-      "type": "object",
-      "properties": {
-        "max_input_tokens": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "max_output_tokens": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "max_model_requests": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "max_sandbox_seconds": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "max_network_bytes": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "max_storage_bytes": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "max_artifact_count": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "max_conversion_count": {
-          "type": "integer",
-          "minimum": 0
-        }
-      },
-      "additionalProperties": false
-    },
+    "limits": { "$ref": "urn:agent-platform:effective-execution-limits:v1" },
     "policies": {
       "type": "object",
       "required": [

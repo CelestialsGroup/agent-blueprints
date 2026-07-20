@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:capability-invocation-accepted:v1",
+  "title": "CapabilityInvocationAccepted",
+  "type": "object",
+  "required": ["invocation_id", "invocation_attempt_id", "fencing_token", "provider_operation_id", "status", "accepted_at"],
+  "properties": {
+    "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "fencing_token": { "type": "integer", "minimum": 1 },
+    "provider_operation_id": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "status": { "const": "accepted" },
+    "accepted_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

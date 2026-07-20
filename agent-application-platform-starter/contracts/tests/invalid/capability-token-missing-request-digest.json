@@ -1,0 +1,22 @@
+{
+  "jti": "cit_01J00000000000000000000000",
+  "iss": "agent-platform",
+  "aud": "capability-provider-html-anything",
+  "iat": 1784192470,
+  "nbf": 1784192470,
+  "exp": 1784192770,
+  "tenant_id": "ten_01J00000000000000000000000",
+  "client_app_id": "html-product",
+  "principal_context_digest": "sha256:5151515151515151515151515151515151515151515151515151515151515151",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "provider_revision_id": "hpr_01J00000000000000000000000",
+  "capability_id": "html.generate",
+  "capability_version": "1.0",
+  "invocation_id": "inv_cap_01J000000000000000000000",
+  "invocation_attempt_id": "iat_cap_01J00000000000000000000",
+  "fencing_token": 1,
+  "policy_decision_digest": "sha256:d5cd511225fb525c6c6ec7dab6ddb47157717e1292d1110e1e6792adf05205b7",
+  "execution_budget_digest": "sha256:4e8aac35b4943db25ecbb3ea6fa2259cdb2f3c144bb837f1cc6c97b0b6f94096",
+  "permissions_digest": "sha256:5b103637f08ba7dd7fbabb1b1840dcc0780cb1dd335043475f30433c51397a67",
+  "staging_session_id": "stg_01J00000000000000000000000"
+}

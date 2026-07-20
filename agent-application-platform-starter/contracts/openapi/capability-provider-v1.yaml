@@ -1,0 +1,289 @@
+openapi: 3.1.1
+
+info:
+  title: Capability Provider Protocol
+  version: 1.0.0
+  description: |
+    Generic execution Port for model, tool, MCP, renderer, editor, converter, skill,
+    template and catalog-backed Capability Providers. A Provider implementation may
+    internally be a Plugin, process, service or remote API, but plugin_id and provider
+    native operation models are not stable platform requirements. Every attempt is
+    Tenant, ClientApplication, Principal context, WorkOrder, ProviderRevision, request
+    digest and fencing bound. Cancellation intent is not cancellation proof.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+
+servers:
+  - url: https://capability-provider.agent-platform.internal
+    description: Registered Capability Provider endpoint
+
+tags:
+  - name: Invocations
+    description: Invoke, inspect, cancel and observe one governed Capability Invocation.
+
+security:
+  - CapabilityMutualTLS: []
+    CapabilityInvocationBearer: []
+
+paths:
+  /v1/invocations:
+    post:
+      tags: [Invocations]
+      operationId: createCapabilityInvocation
+      summary: Submit one idempotent Capability InvocationAttempt
+      x-max-encoded-body-bytes: 4194304
+      parameters:
+        - $ref: '#/components/parameters/Traceparent'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/capability-invocation-request.schema.json
+      responses:
+        '202':
+          description: InvocationAttempt accepted
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/capability-invocation-accepted.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /v1/invocations/{invocation_id}:
+    parameters:
+      - $ref: '#/components/parameters/InvocationId'
+      - $ref: '#/components/parameters/Traceparent'
+    get:
+      tags: [Invocations]
+      operationId: getCapabilityInvocation
+      summary: Read the current confirmed Provider operation state
+      responses:
+        '200':
+          description: Current InvocationAttempt state
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/capability-invocation-status.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /v1/invocations/{invocation_id}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/InvocationId'
+      - $ref: '#/components/parameters/Traceparent'
+    post:
+      tags: [Invocations]
+      operationId: cancelCapabilityInvocation
+      summary: Record idempotent cancellation intent for one InvocationAttempt
+      x-max-encoded-body-bytes: 65536
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/capability-cancellation-request.schema.json
+      responses:
+        '202':
+          description: Cancellation intent accepted
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/capability-invocation-status.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+  /v1/invocations/{invocation_id}/events:
+    parameters:
+      - $ref: '#/components/parameters/InvocationId'
+      - $ref: '#/components/parameters/Traceparent'
+    get:
+      tags: [Invocations]
+      operationId: readCapabilityInvocationEvents
+      summary: Read durable attempt-local progress after a sequence
+      parameters:
+        - name: invocation_attempt_id
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 200
+        - name: after_sequence
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+      responses:
+        '200':
+          description: Ordered attempt-local events
+          content:
+            application/x-ndjson:
+              schema:
+                $ref: ../schemas/capability-invocation-event.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          $ref: '#/components/responses/Gone'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
+components:
+  securitySchemes:
+    CapabilityMutualTLS:
+      type: mutualTLS
+      description: Registered workload identity for the Agent Platform caller.
+    CapabilityInvocationBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Short-lived token with typ agent-capability-invocation+jwt. Claims validate
+        against urn:agent-platform:capability-invocation-token-claims:v1 and bind the
+        complete request and staging authority without requiring plugin_id.
+
+  parameters:
+    InvocationId:
+      name: invocation_id
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 200
+    Traceparent:
+      name: traceparent
+      in: header
+      required: false
+      schema:
+        type: string
+        maxLength: 512
+
+  responses:
+    BadRequest:
+      description: Malformed request.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Unauthorized:
+      description: Missing or invalid workload identity or Capability Invocation token.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Forbidden:
+      description: Token bindings, ProviderRevision, WorkOrder, policy, budget or staging authority do not match.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    NotFound:
+      description: Invocation or attempt does not exist in the authenticated Tenant scope.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Conflict:
+      description: Stale fencing token, scoped idempotency conflict, request digest mismatch or invalid state transition.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    PayloadTooLarge:
+      description: Encoded request exceeds the operation limit and was rejected before JSON parsing.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Unprocessable:
+      description: Input or output violates the admitted CapabilityDefinition schema or policy.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    TooManyRequests:
+      description: Provider concurrency or rate limit exceeded.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Gone:
+      description: Attempt-local progress is no longer retained; current status remains queryable.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    InternalError:
+      description: Unexpected Provider error.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Unavailable:
+      description: ProviderRevision is draining or temporarily unavailable.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json

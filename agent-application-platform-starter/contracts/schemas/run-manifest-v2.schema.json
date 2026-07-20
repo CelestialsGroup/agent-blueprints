@@ -5,8 +5,9 @@
   "type": "object",
   "required": [
     "agent_run_id", "workflow_run_id", "tenant_id", "work_order_id", "scenario", "workflow", "capability_resolutions",
-    "sandboxes", "location", "request_digest", "execution_budget",
-    "policy_decision", "event_registry", "agent_runtime",
+    "sandboxes", "location", "request_digest", "input", "context_package", "artifact_grants",
+    "execution_budget", "policy_decision", "effective_permissions", "gateway_bindings", "admission_limits",
+    "event_registry", "agent_runtime",
     "run_manifest_digest", "orchestration_binding",
     "conversation", "selected_experiences", "commercial_authorization"
   ],
@@ -60,6 +61,7 @@
       "type": "array",
       "items": { "$ref": "urn:agent-platform:provider-resolution:v1" },
       "minItems": 1,
+      "maxItems": 256,
       "uniqueItems": true
     },
     "agent_runtime": {
@@ -72,6 +74,7 @@
     },
     "selected_experiences": {
       "type": "array",
+      "maxItems": 64,
       "items": {
         "type": "object",
         "required": ["selection", "provider_instance_id", "provider_revision"],
@@ -96,21 +99,26 @@
       "additionalProperties": false
     },
     "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
-    "execution_budget": {
-      "type": "object",
-      "required": ["budget_id", "budget_digest"],
-      "properties": {
-        "budget_id": { "type": "string", "minLength": 1 },
-        "budget_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
-      },
-      "additionalProperties": false
+    "input": { "$ref": "urn:agent-platform:runtime-input-envelope:v1" },
+    "context_package": { "$ref": "urn:agent-platform:context-package:v1" },
+    "artifact_grants": {
+      "type": "array",
+      "maxItems": 256,
+      "uniqueItems": true,
+      "items": { "$ref": "urn:agent-platform:artifact-grant:v1" }
     },
-    "policy_decision": {
+    "execution_budget": { "$ref": "urn:agent-platform:execution-budget:v1" },
+    "policy_decision": { "$ref": "urn:agent-platform:policy-decision:v1" },
+    "effective_permissions": { "$ref": "urn:agent-platform:effective-permissions:v1" },
+    "gateway_bindings": { "$ref": "urn:agent-platform:runtime-gateway-bindings:v1" },
+    "admission_limits": {
       "type": "object",
-      "required": ["decision_id", "decision_digest"],
+      "required": ["max_encoded_request_bytes", "max_inline_input_bytes", "max_context_items", "max_artifact_grants"],
       "properties": {
-        "decision_id": { "type": "string", "minLength": 1 },
-        "decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+        "max_encoded_request_bytes": { "const": 8388608 },
+        "max_inline_input_bytes": { "const": 262144 },
+        "max_context_items": { "const": 512 },
+        "max_artifact_grants": { "const": 256 }
       },
       "additionalProperties": false
     },
@@ -137,6 +145,7 @@
     "orchestration_binding": { "$ref": "urn:agent-platform:orchestration-binding:v1" },
     "sandboxes": {
       "type": "array",
+      "maxItems": 64,
       "uniqueItems": true,
       "items": {
         "type": "object",
@@ -152,6 +161,7 @@
           "sandbox_spec_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
           "required_capabilities": {
             "type": "array",
+            "maxItems": 64,
             "items": {
               "type": "object",
               "required": ["id", "version"],
@@ -208,7 +218,9 @@
     ,"tenant_id and conversation binding match the WorkOrder, input message and ExecutionGrant"
     ,"conversation WorkspaceRevision matches the admitted branch head captured for this Run"
     ,"agent_run_id and workflow_run_id match the immutable AgentRun and WorkflowRun records"
-    ,"execution_budget, policy_decision, commercial_authorization and event_registry bind exact immutable IDs and digests"
+    ,"input, context_package and artifact_grants are the complete bounded execution inputs admitted for this Run"
+    ,"execution_budget, policy_decision, effective_permissions and gateway_bindings carry complete immutable effective values rather than digest-only placeholders"
+    ,"commercial_authorization and event_registry bind exact immutable IDs and digests"
     ,"orchestration_binding equals the WorkflowRun binding and contains no engine-native endpoint or mutable infrastructure identity"
   ]
 }

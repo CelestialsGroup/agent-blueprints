@@ -1,0 +1,31 @@
+{
+  "protocol_version": "v1",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "client_app_id": "html-product",
+  "principal_context_digest": "sha256:5151515151515151515151515151515151515151515151515151515151515151",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "invocation_id": "inv_cap_01J000000000000000000000",
+  "invocation_attempt_id": "iat_cap_01J00000000000000000000",
+  "fencing_token": 1,
+  "idempotency_key": "capability-invocation-key-0001",
+  "request_digest": "sha256:6d45786aff2d5cfb2379e16d365bede7cf6236ca0e27203b0863505f987411db",
+  "provider_revision_id": "hpr_01J00000000000000000000000",
+  "capability": {
+    "id": "html.generate",
+    "version": "1.0",
+    "profile": "responsive",
+    "input_schema_digest": "sha256:3434343434343434343434343434343434343434343434343434343434343434",
+    "output_schema_digest": "sha256:3535353535353535353535353535353535353535353535353535353535353535"
+  },
+  "deadline_at": "2026-07-16T09:10:00Z",
+  "input": {
+    "prompt": "Generate the admitted HTML artifact."
+  },
+  "input_artifact_grants": [],
+  "output_staging_session_id": "stg_01J00000000000000000000000",
+  "policy_decision_digest": "sha256:d5cd511225fb525c6c6ec7dab6ddb47157717e1292d1110e1e6792adf05205b7",
+  "execution_budget_digest": "sha256:4e8aac35b4943db25ecbb3ea6fa2259cdb2f3c144bb837f1cc6c97b0b6f94096",
+  "trace_context": {
+    "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+  }
+}

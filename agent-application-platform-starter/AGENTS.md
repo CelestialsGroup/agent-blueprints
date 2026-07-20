@@ -34,6 +34,7 @@ Scenario
 
 - ProviderRevision 创建后按摘要不可变。
 - ProviderResolution 必须绑定 Resolver Revision、完整输入摘要、逐候选结论、不可变证据和 Decision Digest；只保存“选了谁”不构成可审计解析。
+- ProviderResolution 必须显式绑定 `tenant_id + client_app_id + work_order_id`；身份参与路由时必须绑定 Principal Context Digest。幂等记录唯一范围固定为 Tenant + ClientApplication + Operation + Key Digest。
 - ProviderRevision 的公共 Envelope 只包含 Provider kind、Implementation、Port、配置、权限、凭据和 Conformance；Runtime、Sandbox 和 Capability Provider 不得被强制包装成 Plugin。
 - Implementation 必须绑定不可变 BuildProvenance，包括 Source Revision、Source Tree、Build Artifact、SBOM 和 Provenance Statement 摘要。
 - 认证/撤销使用仅追加的 ProviderAdmissionDecision，不得回写 Revision。
@@ -52,9 +53,12 @@ Scenario
 - 不得把任何单一 Agent 框架设为稳定内核的编译时依赖、领域事实源或唯一合法实现。
 - 每个 Run 在准入时锁定 Agent Runtime ProviderRevision；运行中不得自动切换框架。Provider 原生 Checkpoint 只能在明确声明并通过测试的兼容范围内恢复。
 - 每个可执行后续输入都需要新的 Business ExecutionGrant；WorkSession 不能扩大商业授权。
+- `ConversationTurnRequest` 只创建新 Turn/WorkOrder；`WorkOrderControlRequest` 只控制现有 WorkOrder。`interrupt_and_enqueue` 先记录当前 WorkOrder 取消意图，再创建独立后继 WorkOrder；不得把 Append/Interrupt 偷换成新 Turn。
 - ExecutionGrant 必须声明 `request_contract_id` 与固定 Digest Profile，并绑定该精确请求去除 `execution_grant` 后的 JCS 摘要；WorkOrder 与 ConversationTurn 不得共享含混的摘要解释。
 - Runtime Command 与核心 Runtime Event Payload 必须使用类型化 Schema；Provider 私有 Event 不能直接驱动 Chat、Plan、Task、Usage 或终态 Projection。
+- Runtime Start 必须携带实际有界输入或不可变引用、ContextPackage、ArtifactGrant、完整 ExecutionBudget/PolicyDecision/EffectivePermissions 和类型化 Model/Tool/Artifact/Egress Gateway Binding；只有摘要或 Message ID 不构成可执行请求。
 - Runtime 调用使用短期 AgentRuntimeInvocation Token，绑定 Tenant、ProviderRevision、WorkflowRun/AgentRun/RuntimeRun、RunManifest、InvocationAttempt、Fencing、Policy、Budget、Permissions 和请求摘要。
+- 通用 Capability 调用只使用 `capability-provider-v1`，独立 Token 绑定 Tenant、ClientApplication、Principal Context、WorkOrder、ProviderRevision、InvocationAttempt、Fencing、Request Digest、Policy、Budget、Permissions 和 Staging；不得要求 `plugin_id`。Plugin Invocation 只保留为实现适配层。
 - RunManifest 绑定 EventTypeRegistry 的 ID/Version/Digest；只有该 Registry 准入的 Payload 可以进入核心 Projection。
 
 ## 可靠性
@@ -79,7 +83,7 @@ Sandbox Provider API 返回的是单次传输状态；平台的 SandboxOperation
 
 ## Sandbox 隔离
 
-Conversation 拥有 Workspace，Branch 通过不可变 WorkspaceRevision Head 隔离文件历史。Sandbox 只挂载 RunManifest 固化的 Revision，提交通过 Branch CAS 产生新 Revision。
+Conversation 拥有 Workspace，Branch 通过不可变 WorkspaceRevision Head 隔离文件历史。Sandbox 只挂载 RunManifest 固化的 Revision，提交通过 `workspace_head_version` CAS 产生新 Revision。Message、Workspace 与 Active Work 分别使用独立 CAS 版本，不得共享一个 Branch Version 制造假冲突。
 
 Workspace 通过 `sandboxes[]` 和 WorkOrder 内唯一 `sandbox_slot_key` 支持 `primary-code`、`browser`、`desktop`、`subagent/*`、`isolated/*`。Sandbox 由 Scenario Capability 按需创建；数组为空时不得存在 `primary_sandbox_slot_key`，非空时它必须恰好引用一个 Slot。
 
@@ -104,6 +108,8 @@ Runtime Gateway 使用 `runtime-gateway/v1` 类型化帧、Connection Generation
 - JSON：Draft 2020-12、绝对 `$id`、Registry 解析、Strict I-JSON、RFC 8785 JCS。
 - 复用：SandboxSpec、ProviderRevisionSnapshot 等必须通过 `$ref` 复用，禁止复制展开。
 - 语义约束：由 `validate_semantics.py` 与反向 Fixture 执行。
+- 关键 `x-semantic-constraints` 必须进入 `contracts/semantic-constraints-v1.json`，明确映射当前 Validator 和待实现的 DDL/Conformance 责任；追踪缺失必须使 Gate 失败。
+- 空 `limits: {}` 没有合法语义；EffectiveExecutionLimits 全字段必填且缺失即拒绝。HTTP 操作必须声明并执行 encoded-body 上限，超限在解析前返回 413。
 - OpenAPI：原始契约保留绝对 URN；Redocly 只对 Registry 投影生成的 `build/openapi-src` 执行 Lint/Bundle，结果必须为 0 个错误、0 个警告。
 - 兼容性：CI 只与受保护变量指定的冻结基线比较且缺失时 fail-closed；首个冻结基线前必须由受保护变量显式允许 N/A，不得写成 pass。
 - 供应链：Python 摘要锁、npm 完整性校验、Actions 完整 SHA；Git 跟踪文件不得包含 Bytecode/`.DS_Store`，Monorepo 必须提交 Git 根 Workflow。

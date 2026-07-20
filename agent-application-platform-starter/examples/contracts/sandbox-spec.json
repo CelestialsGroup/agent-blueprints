@@ -56,10 +56,10 @@
   "workspace": {
     "mode": "persistent",
     "base_revision_id": "wsr_01J00000000000000000000000",
-    "base_revision_digest": "sha256:a46a321d81d58bc756a5a53ade99f768962998eab038a055f57838f4d33065aa",
-    "base_branch_version": 2,
+    "base_revision_digest": "sha256:366b5c58b91f28f19b73b1287cc13488b6055b5a7d57bbd21f065e3340b5bde1",
     "commit_mode": "cas_new_revision",
-    "mount_path": "/workspace"
+    "mount_path": "/workspace",
+    "base_workspace_head_version": 1
   },
   "lease": {
     "expires_at": "2026-07-16T12:00:00Z",

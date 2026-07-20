@@ -14,7 +14,7 @@
     "type": "provider",
     "id": "api_deerflow_runtime",
     "provider_revision_id": "apr_01J00000000000000000000000",
-    "provider_revision_digest": "sha256:1ef82012bd07d83be302d138c556f27561e14560ae13c5d6a440f5ea1b1858ed"
+    "provider_revision_digest": "sha256:688b9d7abe86270fc898deb57995c42737067526dfcd7967c5512a5f3b8be9ab"
   },
   "provider_operation_id": "provider-op-model-001",
   "meter_source": "provider_reported",

@@ -91,6 +91,7 @@ OpenAPI 使用 `x-required-work-session-scopes` 表达 Bearer/Cookie Scheme 无�
 + Token Profile
 + Scope
 + 内部 Tenant
++ ClientApplication 与 Principal Context Digest
 + Conversation 绑定
 + 可选的 work_order 缩窄绑定
 + 对象所有权
@@ -107,6 +108,7 @@ OpenAPI 使用 `x-required-work-session-scopes` 表达 Bearer/Cookie Scheme 无�
 - Secret 不进入 CanonicalEvent、日志或 Temporal History；Temporal 敏感 payload 使用加密 codec，大内容只保存 Artifact reference。
 - Audit 默认不保存用户正文；删除按 retention、tombstone 和 crypto erasure policy 执行。
 - Callback、Connector、Remote Provider 和 Storage endpoint 必须预注册；网络访问经 DNS/IP/rebinding/redirect policy 与 Egress Gateway 校验。
+- ProviderResolution、IdempotencyRecord、CapabilityInvocation 和 Event Inbox 都显式 Tenant-qualified；`client_app_id` 只能来自认证上下文，不能信任请求体覆盖。
 
 ## JWT 类型隔离
 
@@ -116,5 +118,7 @@ OpenAPI 使用 `x-required-work-session-scopes` 表达 Bearer/Cookie Scheme 无�
 - ExecutionGrant：`agent-execution-grant+jwt`
 - WorkSession：`agent-work-session+jwt`
 - Plugin Invocation：`agent-plugin-invocation+jwt`
+- Capability Invocation：`agent-capability-invocation+jwt`
+- Agent Runtime Invocation：`agent-runtime-invocation+jwt`
 
-未知 typ、alg、iss、aud 或 kid 必须拒绝。
+新 Provider 使用 Capability Invocation Profile；Plugin Profile 只用于兼容 Adapter。未知 typ、alg、iss、aud 或 kid 必须拒绝。

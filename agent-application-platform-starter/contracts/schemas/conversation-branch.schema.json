@@ -11,6 +11,9 @@
     "active_work_order_id",
     "workspace_head_revision_id",
     "workspace_head_revision_digest",
+    "message_head_version",
+    "workspace_head_version",
+    "active_work_version",
     "branch_version",
     "created_at",
     "updated_at"
@@ -25,6 +28,9 @@
     "active_work_order_id": { "type": ["string", "null"] },
     "workspace_head_revision_id": { "type": "string", "minLength": 1 },
     "workspace_head_revision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "message_head_version": { "type": "integer", "minimum": 1 },
+    "workspace_head_version": { "type": "integer", "minimum": 1 },
+    "active_work_version": { "type": "integer", "minimum": 1 },
     "branch_version": { "type": "integer", "minimum": 1 },
     "created_at": { "type": "string", "format": "date-time" },
     "updated_at": { "type": "string", "format": "date-time" }
@@ -37,7 +43,9 @@
   "x-semantic-constraints": [
     "head_message_id is null exactly when head_message_sequence is zero",
     "forked_from_message_id references an immutable prior message on forked_from_branch_id",
-    "active_work_order_id and the WorkspaceRevision head change with branch_version compare-and-swap",
+    "active_work_order_id references at most one non-terminal WorkOrder for the Branch",
+    "message appends compare-and-swap message_head_version, Workspace commits compare-and-swap workspace_head_version, and WorkOrder steering compares active_work_version",
+    "branch_version is a read-model ETag only and is not a substitute for the three ownership-specific CAS versions",
     "workspace_head_revision_id and workspace_head_revision_digest bind an immutable WorkspaceRevision for this branch"
   ]
 }

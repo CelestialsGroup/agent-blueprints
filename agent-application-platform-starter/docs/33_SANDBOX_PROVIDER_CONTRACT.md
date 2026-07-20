@@ -164,6 +164,8 @@ Sandbox Provider
 
 Provider 的内部 Pod IP、Node IP 和凭据不得直接返回给浏览器。
 
+用户创建 RuntimeSession 时必须指定 RunManifest 中的逻辑 `sandbox_slot_key`；Gateway 再解析 Provider 私有路由。多 Sandbox WorkOrder 不能依赖“第一个 Sandbox”或裸 Sandbox ID 猜测目标。
+
 支持：
 
 - terminal
@@ -184,7 +186,7 @@ Provider 对 Agent 暴露固定语义：
 
 宿主机、平台数据库、业务存储不通过文件系统暴露。
 
-`/workspace` 不是 Conversation 级共享可变目录。SandboxSpec 固化 ProviderResolution、Branch WorkspaceRevision ID/Digest 和 Branch Version；只读任务不提交，写任务以 `cas_new_revision` 创建新 Revision，并通过 Branch Version CAS 推进 Head。
+`/workspace` 不是 Conversation 级共享可变目录。SandboxSpec 固化 ProviderResolution、Branch WorkspaceRevision ID/Digest 和 `base_workspace_head_version`；只读任务不提交，写任务以 `cas_new_revision` 创建新 Revision，并通过 Workspace Head Version CAS 推进 Head。Message 和 Active Work 的版本变化不应导致 Workspace 假冲突。
 
 ## OCI 与底层 Runtime
 

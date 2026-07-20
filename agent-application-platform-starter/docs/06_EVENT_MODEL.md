@@ -54,13 +54,15 @@ AgentRuntimeProvider 的核心事件使用 `contracts/event-types/agent-runtime-
 
 ## 写入事务
 
-1. 按 `(provider_instance_id, source_stream_id, source_cursor)` 去重。
+1. 按 `(tenant_id, producer_id, source_stream_id, source_event_id)` 写 Inbox 唯一键并校验 Dedupe Key；Provider 来源额外绑定不可变 `provider_revision_id`，Cursor 只用于恢复读取，不作为唯一事件身份。
 2. 对 WorkOrder Event 原子分配 `work_sequence`；仅属于 Conversation 的 Event 省略完整 Work 上下文组。
 3. 原子分配 Aggregate Sequence。
 4. 写 Event。
 5. 更新必要 Projection。
 6. 写 Outbox。
 7. 提交事务。
+
+CanonicalEvent Metadata 是闭合对象，只允许标准 Trace/Correlation/Causation 和少量平台注册字段。Provider 私有 Metadata 与 Trace 原始载荷留在只读 Evidence，不得进入核心 Projection。
 
 ## SSE
 
@@ -82,6 +84,6 @@ GET /v1/work-orders/{id}/events?after_work_sequence=152
 
 Delta 进行批量合并，最终 Completed Event 或 Artifact 必须可独立重建结果。
 
-Prompt Queue 和 Interjection 不新增本地 Session 事实源：用户输入先成为 ConversationMessage，再通过连续、仅追加且带请求摘要的 `append_input` 或 `interrupt` Runtime Command 传递。Sub-agent、后台命令、Monitor 和 Scheduler 统一投影为 `runtime.task.*`；Sub-agent Task 显式绑定 Child AgentRun，PID 与本地队列仍是 Runtime 私有状态。`runtime.usage.reported` 传递可去重的 TechnicalUsage Entry Batch，Platform 再形成跨来源 UsageReport。
+Prompt Queue 和 Interjection 不新增本地 Session 事实源：用户输入先成为 ConversationMessage/WorkOrderControlInput，并通过连续、仅追加且带请求摘要、引用已授权 `control_request_id` 的 `append_input` 或 `interrupt` Runtime Command 传递。Sub-agent、后台命令、Monitor 和 Scheduler 统一投影为 `runtime.task.*`；Sub-agent Task 显式绑定 Child AgentRun，PID 与本地队列仍是 Runtime 私有状态。`runtime.usage.reported` 传递可去重的 TechnicalUsage Entry Batch，Platform 再形成跨来源 UsageReport。
 
 Terminal/Browser/Desktop 录制字节进入加密 Artifact chunks，CanonicalEvent 只保存 recording/chunk 引用，不保存视频或完整终端流。

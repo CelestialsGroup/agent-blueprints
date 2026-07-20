@@ -40,18 +40,7 @@
       "uniqueItems": true,
       "items": { "type": "string", "minLength": 1 }
     },
-    "authorized_limits": {
-      "type": "object",
-      "properties": {
-        "max_input_tokens": { "type": "integer", "minimum": 0 },
-        "max_output_tokens": { "type": "integer", "minimum": 0 },
-        "max_sandbox_seconds": { "type": "integer", "minimum": 0 },
-        "max_storage_bytes": { "type": "integer", "minimum": 0 },
-        "max_artifact_count": { "type": "integer", "minimum": 0 },
-        "max_conversion_count": { "type": "integer", "minimum": 0 }
-      },
-      "additionalProperties": false
-    },
+    "authorized_limits": { "$ref": "urn:agent-platform:effective-execution-limits:v1" },
     "authorized_limits_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "issued_at": { "type": "string", "format": "date-time" },
     "expires_at": { "type": "string", "format": "date-time" },

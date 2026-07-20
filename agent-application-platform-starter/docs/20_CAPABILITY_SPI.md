@@ -10,7 +10,7 @@ Scenario
     -> ProviderImplementation + BuildProvenance
     -> ProviderPortBinding
  -> ProviderAdmissionDecision
- -> Plugin / Runtime / Sandbox Provider
+ -> Capability / Runtime / Sandbox Provider
 ```
 
 Scenario 只声明版本范围、Profile、Artifact 和风险要求，不绑定实现。
@@ -67,6 +67,12 @@ ProviderRevision 的公共部分不使用 `plugin_id/plugin_version`。它统一
 
 Plugin 只是 Tool、Skill、Template 等实现的一种打包方式，PluginManifest 不得污染 Agent Runtime、Sandbox、内置 Bundle 或远程服务的公共 Revision。
 
+## 通用 Capability Provider Port
+
+权威传输契约是 `contracts/openapi/capability-provider-v1.yaml`，覆盖 Invoke、Status、Cancel 和 attempt-local Event。Model、Tool、MCP、Skill、Template、Renderer、Editor、Converter 与 Catalog-backed Provider 均实现或适配该 Port；`plugin-invocation-v1` 只保留为旧 Plugin 的兼容协议，不能作为新 Provider 的公共前提。
+
+CapabilityInvocationRequest 和独立 Token 必须绑定 Tenant、ClientApplication、Principal Context Digest、WorkOrder、ProviderRevision、Capability Schema Digest、InvocationAttempt、Fencing、Request Digest、Policy、Budget、Permissions、Artifact Grant 与 Staging Session。Provider 不得接受只有 `plugin_id`、宽泛权限或未绑定 Request Digest 的令牌。写请求具有明确 encoded-byte 上限，超限必须在 JSON 解析前返回 413。
+
 ## Plugin 实现声明
 
 Plugin 只声明：
@@ -109,6 +115,8 @@ Run 不能只保存 ProviderInstance ID。
 
 ProviderResolution 必须固化：
 
+- Tenant、ClientApplication、WorkOrder 执行范围，以及身份参与解析时的 Principal Context Digest；
+
 - Resolver ID/Version/Digest；
 - 完整解析输入摘要，包括 Capability、Policy、Placement、Health 和 Capacity；
 - 每个候选的 Revision、结论、Reason Code 与 Evidence Digest；
@@ -125,6 +133,8 @@ ProviderResolution 必须固化：
 用户可见的 Experience 在 Provider Resolution 之上增加不可变 Catalog Revision。只有可变 `template_id` 绝不足以支持 WorkOrder 准入或 Run 回放。
 
 Resolver 优先级是 Tenant Binding、ClientApplication Binding、Scenario Requirement、Platform Default、显式安全 Fallback。ProviderHealth 必须绑定精确 ProviderRevision 和 Health Generation；只保存可变 Instance 状态不能作为历史解析证据。Fallback 只有在 Capability 与 side-effect policy 允许时才能发生；非幂等外部操作禁止自动切换 Provider。
+
+空 `limits` 没有默认或无限语义。商业授权、ExecutionGrant、ExecutionBudget 与 Provider 请求使用全字段 EffectiveExecutionLimits；任何缺失或无法解释的版本都 fail-closed。
 
 Sandbox 使用独立 Provider Contract 表达 Desired/Observed State、Lease、Exec、RuntimeSession 和 Snapshot，不能用普通 Plugin Invocation 代替；它仍使用同一 ProviderRevision/Admission/Conformance/Resolution 治理模型。RunManifest 的 Sandbox Slot 只引用 `resolution_id`，不得再复制 Revision Snapshot。
 

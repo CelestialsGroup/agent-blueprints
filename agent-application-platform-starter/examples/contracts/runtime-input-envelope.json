@@ -1,0 +1,11 @@
+{
+  "input_id": "rin_01J00000000000000000000000",
+  "input_message_id": "msg_01J00000000000000000000000",
+  "content_digest": "sha256:b5703a5ce400f7e037913ea6ec96bad2ce954a9b6b327fe752fa25e8515eb2ef",
+  "content": [
+    {
+      "type": "text",
+      "text": "生成一个 SaaS 产品介绍页面"
+    }
+  ]
+}

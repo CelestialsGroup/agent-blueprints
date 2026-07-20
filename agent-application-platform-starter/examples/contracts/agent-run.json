@@ -8,6 +8,6 @@
   "run_kind": "root",
   "agent_role": "general",
   "runtime_provider_resolution_id": "res_agent_general_01J00000000000000",
-  "run_manifest_digest": "sha256:6a14898b14a21e07fc9cfe02804d6ce0b71a99ea2b3abd3b6054ee093b76a527",
+  "run_manifest_digest": "sha256:4f164098b2a3636f2c3471889320092f8ef446628cdcd15b7dbf6bbdb941575f",
   "created_at": "2026-07-16T09:01:00Z"
 }

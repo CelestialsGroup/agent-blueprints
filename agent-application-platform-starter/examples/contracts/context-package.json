@@ -1,0 +1,13 @@
+{
+  "context_package_id": "ctx_01J00000000000000000000000",
+  "context_package_digest": "sha256:b1de85e947e2180045d38425524e9a66bd1ea06e2bd452ad0759dc62b389e95c",
+  "items": [
+    {
+      "kind": "workspace_manifest",
+      "reference_id": "artifact:art_workspace_manifest_01J000000000000000/version:ver_workspace_manifest_01J00000000000000",
+      "digest": "sha256:8dfcb5bb6d9d98edc1bf5b8f6a24beb60267e13635bf31190eac7a1c8a612098",
+      "size_bytes": 601,
+      "media_type": "application/vnd.agent.workspace-manifest+json"
+    }
+  ]
+}

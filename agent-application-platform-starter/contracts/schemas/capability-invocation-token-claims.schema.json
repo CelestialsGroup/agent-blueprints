@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:capability-invocation-token-claims:v1",
+  "title": "CapabilityInvocationTokenClaims",
+  "type": "object",
+  "required": [
+    "jti", "iss", "aud", "iat", "nbf", "exp", "tenant_id", "client_app_id", "principal_context_digest",
+    "work_order_id", "provider_revision_id", "capability_id", "capability_version", "invocation_id",
+    "invocation_attempt_id", "fencing_token", "request_digest", "policy_decision_digest",
+    "execution_budget_digest", "permissions_digest", "staging_session_id"
+  ],
+  "properties": {
+    "jti": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "iss": { "const": "agent-platform" },
+    "aud": { "type": "string", "minLength": 1, "maxLength": 300 },
+    "iat": { "type": "integer", "minimum": 0 },
+    "nbf": { "type": "integer", "minimum": 0 },
+    "exp": { "type": "integer", "minimum": 0 },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "client_app_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "principal_context_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "provider_revision_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "capability_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "capability_version": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "fencing_token": { "type": "integer", "minimum": 1 },
+    "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "policy_decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "execution_budget_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "permissions_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "staging_session_id": { "type": "string", "minLength": 1, "maxLength": 200 }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "iat <= nbf < exp and exp - iat <= 900",
+    "every claim matches the exact CapabilityInvocationRequest and admitted ProviderResolution before execution"
+  ]
+}

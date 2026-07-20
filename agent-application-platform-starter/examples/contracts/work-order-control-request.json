@@ -1,0 +1,25 @@
+{
+  "control_request_id": "ctl_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "conversation_id": "conv_01J00000000000000000000000",
+  "branch_id": "main",
+  "action": "append_input",
+  "expected_message_head_sequence": 1,
+  "expected_active_work_version": 2,
+  "content": {
+    "input_id": "rin_01J00000000000000000000001",
+    "input_message_id": "msg_01J00000000000000000000001",
+    "content_digest": "sha256:3ee5da709dc141b215e943a10388da878f35902be68783b0fc7fbe4b5ebee529",
+    "content": [
+      {
+        "type": "text",
+        "text": "把主按钮改为更清晰的行动文案"
+      }
+    ]
+  },
+  "reason": "User supplied an authorized steering input.",
+  "execution_grant": "eyJhbGciOiJFZERTQSIsImtpZCI6ImtleS0xIiwidHlwIjoiYWdlbnQtZXhlY3V0aW9uLWdyYW50K2p3dCJ9.payload.signature",
+  "metadata": {
+    "locale": "zh-CN"
+  }
+}

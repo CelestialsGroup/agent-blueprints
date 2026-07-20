@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:capability-invocation-event:v1",
+  "title": "CapabilityInvocationEvent",
+  "type": "object",
+  "required": ["invocation_id", "invocation_attempt_id", "fencing_token", "sequence", "event_id", "type", "occurred_at", "data"],
+  "properties": {
+    "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "fencing_token": { "type": "integer", "minimum": 1 },
+    "sequence": { "type": "integer", "minimum": 1 },
+    "event_id": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "type": { "enum": ["progress", "log", "output_delta", "usage_delta"] },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "data": { "type": "object", "maxProperties": 64 }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "sequence is contiguous per InvocationAttempt and repeated event_id plus identical payload is idempotent",
+    "Provider events are evidence only and become CanonicalEvents only after Event Registry mapping and Inbox deduplication"
+  ]
+}

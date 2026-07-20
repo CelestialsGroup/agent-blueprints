@@ -31,6 +31,8 @@ Workflow 启动后通过幂等领域 Activity 将 WorkOrder 从 `accepted` 转�
 
 Conversation Turn 事务先原子追加 Message、分配 message_sequence、创建 WorkOrder 和 Workflow Start Outbox。Conversation Workflow 只协调长期实体；每个 WorkOrder Workflow 保持可终止、可回放的执行边界。
 
+控制现有 WorkOrder 不创建新 Turn。`WorkOrderControlRequest` 与新的单次 ExecutionGrant 先原子保存控制输入和 Control Outbox，再由 Worker 发送只引用 `control_request_id` 的 Runtime Command。`interrupt_and_enqueue` 属于新 Turn 路径：先记录当前 WorkOrder 取消意图，再创建独立后继 WorkOrder。`accepted` 在尚未入队时也允许直接进入 `cancel_requested`。
+
 ## 权威状态
 
 PostgreSQL 是 API 当前状态事实源。
@@ -95,3 +97,5 @@ Workflow 必须：
 - Lease 续期必须受 ExecutionBudget 限制
 
 需要 Sandbox 的 AgentRun 按以下顺序执行：ProviderResolution 与证据固化 → 从 Branch WorkspaceRevision 创建 Sandbox → 固化含实际 Sandbox ID 的 RunManifest → Start Runtime。不得在 Sandbox 身份尚未知时伪造完整 RunManifest。
+
+RunManifest 与 Start Runtime 同时固化实际有界输入或不可变输入引用、ContextPackage、ArtifactGrant、完整 ExecutionBudget/PolicyDecision/EffectivePermissions 以及 Model/Tool/Artifact/Egress Gateway Binding。Temporal History 只传内容寻址引用和必要控制字段，不复制大 Payload；Provider 收到摘要占位但拿不到执行值必须 fail-closed。

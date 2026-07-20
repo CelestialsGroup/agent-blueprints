@@ -1,7 +1,7 @@
 {
   "suite_id": "capability-provider",
   "suite_version": "1.0.0",
-  "suite_digest": "sha256:87070d107edb785270c9e2c7b50ed775362b39e0262f319232f56093a2e1225d",
+  "suite_digest": "sha256:9ca84761cf924f8f0f6b03bc1943dc6722fb1b54fccc1dd6d125d52004afdd90",
   "target_kind": "capability_provider",
   "profiles": [
     {
@@ -24,6 +24,24 @@
           "category": "ordering",
           "evidence_type": "test_log",
           "description": "Retries obey the declared idempotency scope and reject one key with a different request digest."
+        },
+        {
+          "test_id": "token-binding",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "The Provider rejects any mismatch in Tenant, ClientApplication, Principal context, WorkOrder, ProviderRevision, Attempt, fencing token, request digest, policy, budget, permissions or staging claims."
+        },
+        {
+          "test_id": "fencing-and-source-ordering",
+          "category": "ordering",
+          "evidence_type": "trace",
+          "description": "A stale fencing token cannot mutate state and attempt-local Event sequence remains contiguous and idempotent."
+        },
+        {
+          "test_id": "encoded-body-limit",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "Oversized encoded request bodies are rejected with 413 before JSON parsing or Provider work begins."
         },
         {
           "test_id": "side-effect-policy",

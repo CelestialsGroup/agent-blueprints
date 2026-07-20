@@ -5,6 +5,7 @@
   "terminal_states": ["completed", "partial", "failed", "cancelled"],
   "transitions": [
     { "from": "accepted", "event": "enqueue", "to": "queued" },
+    { "from": "accepted", "event": "cancel_requested", "to": "cancel_requested" },
     { "from": "queued", "event": "start", "to": "running" },
     { "from": "running", "event": "wait", "to": "waiting" },
     { "from": "waiting", "event": "resume", "to": "running" },

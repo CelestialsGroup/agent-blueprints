@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:context-package:v1",
+  "title": "ContextPackage",
+  "type": "object",
+  "required": ["context_package_id", "context_package_digest", "items"],
+  "properties": {
+    "context_package_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "context_package_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "items": {
+      "type": "array",
+      "maxItems": 512,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": ["kind", "reference_id", "digest", "size_bytes"],
+        "properties": {
+          "kind": { "enum": ["message", "artifact", "instruction", "memory", "catalog_revision", "workspace_manifest"] },
+          "reference_id": { "type": "string", "minLength": 1, "maxLength": 500 },
+          "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+          "size_bytes": { "type": "integer", "minimum": 0, "maximum": 67108864 },
+          "media_type": { "type": "string", "minLength": 1, "maxLength": 200 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "context_package_digest is RFC 8785 JCS SHA-256 over the package excluding context_package_digest",
+    "every reference resolves to immutable tenant-authorized content and the aggregate expanded size is admission bounded"
+  ]
+}

@@ -13,12 +13,13 @@
   ],
   "properties": {
     "client_message_id": { "type": "string", "minLength": 1, "maxLength": 200 },
-    "branch_id": { "type": "string", "minLength": 1 },
-    "parent_message_id": { "type": ["string", "null"] },
-    "command": { "enum": ["enqueue", "interrupt_and_enqueue", "append_context"] },
+    "branch_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "parent_message_id": { "type": ["string", "null"], "maxLength": 200 },
+    "command": { "enum": ["enqueue", "interrupt_and_enqueue"] },
     "content": {
       "type": "array",
       "minItems": 1,
+      "maxItems": 128,
       "items": {
         "oneOf": [
           {
@@ -26,7 +27,7 @@
             "required": ["type", "text"],
             "properties": {
               "type": { "const": "text" },
-              "text": { "type": "string", "minLength": 1 }
+              "text": { "type": "string", "minLength": 1, "maxLength": 262144 }
             },
             "additionalProperties": false
           },
@@ -59,25 +60,29 @@
       "items": { "$ref": "urn:agent-platform:selected-experience:v1" },
       "uniqueItems": true
     },
-    "execution_grant": { "type": "string", "minLength": 20 },
+    "execution_grant": { "type": "string", "minLength": 20, "maxLength": 16384 },
     "delivery": {
       "type": "object",
       "required": ["storage_mode", "required_formats", "retention_days"],
       "properties": {
         "storage_mode": { "enum": ["agent_managed", "business_managed", "replicated"] },
-        "required_formats": { "type": "array", "items": { "type": "string" } },
+        "required_formats": { "type": "array", "maxItems": 32, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 200 } },
         "retention_days": { "type": "integer", "minimum": 0, "maximum": 3650 },
         "callback_registration_id": { "type": "string" },
         "delivery_target_id": { "type": "string" }
       },
       "additionalProperties": false
     },
-    "metadata": { "type": "object" }
+    "metadata": {
+      "type": "object",
+      "maxProperties": 32,
+      "additionalProperties": { "type": "string", "maxLength": 1000 }
+    }
   },
   "additionalProperties": false,
   "x-semantic-constraints": [
     "client_message_id is idempotent within the Conversation",
-    "interrupt_and_enqueue records cancellation intent for the active WorkOrder before a successor starts",
-    "append_context never mutates a completed message and cannot bypass a fresh ExecutionGrant"
+    "interrupt_and_enqueue records cancellation intent for the active WorkOrder and atomically creates a distinct successor Turn and WorkOrder",
+    "control of an existing WorkOrder is forbidden here and uses WorkOrderControlRequest with a fresh ExecutionGrant"
   ]
 }

@@ -1,12 +1,14 @@
 {
   "budget_id": "bud_01J00000000000000000000000",
-  "budget_digest": "sha256:117d085f1a771beeecf05b8f3e2ded71c775b15942f983ab90f269cddcc6a35e",
+  "budget_digest": "sha256:4e8aac35b4943db25ecbb3ea6fa2259cdb2f3c144bb837f1cc6c97b0b6f94096",
   "tenant_id": "ten_01J00000000000000000000000",
   "work_order_id": "wrk_01J00000000000000000000000",
   "limits": {
     "max_input_tokens": 100000,
     "max_output_tokens": 20000,
+    "max_model_requests": 200,
     "max_sandbox_seconds": 1800,
+    "max_network_bytes": 104857600,
     "max_storage_bytes": 104857600,
     "max_artifact_count": 20,
     "max_conversion_count": 3

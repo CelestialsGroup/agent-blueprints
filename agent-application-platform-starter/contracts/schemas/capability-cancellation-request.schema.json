@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:capability-cancellation-request:v1",
+  "title": "CapabilityCancellationRequest",
+  "type": "object",
+  "required": ["invocation_id", "invocation_attempt_id", "fencing_token", "request_digest", "reason", "requested_at"],
+  "properties": {
+    "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "fencing_token": { "type": "integer", "minimum": 1 },
+    "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "reason": { "type": "string", "minLength": 1, "maxLength": 1000 },
+    "requested_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "cancellation intent is idempotent and does not prove cancellation; the platform reconciles outcome_unknown"
+  ]
+}

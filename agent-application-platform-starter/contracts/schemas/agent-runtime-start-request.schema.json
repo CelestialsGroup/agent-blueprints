@@ -20,39 +20,71 @@
     "deadline_at",
     "run_manifest_digest",
     "input_message_id",
+    "input",
+    "context_package",
+    "artifact_grants",
+    "execution_budget",
+    "policy_decision",
+    "effective_permissions",
+    "gateway_bindings",
+    "admission_limits",
     "workspace_revision_id",
     "workspace_revision_digest",
     "sandbox_bindings"
   ],
   "properties": {
     "protocol_version": { "const": "v1" },
-    "runtime_run_id": { "type": "string", "minLength": 1 },
-    "tenant_id": { "type": "string", "minLength": 1 },
-    "conversation_id": { "type": "string", "minLength": 1 },
-    "branch_id": { "type": "string", "minLength": 1 },
-    "work_order_id": { "type": "string", "minLength": 1 },
-    "workflow_run_id": { "type": "string", "minLength": 1 },
-    "agent_run_id": { "type": "string", "minLength": 1 },
-    "invocation_id": { "type": "string", "minLength": 1 },
-    "invocation_attempt_id": { "type": "string", "minLength": 1 },
+    "runtime_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "conversation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "branch_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "workflow_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "agent_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "fencing_token": { "type": "integer", "minimum": 1 },
-    "idempotency_key": { "type": "string", "minLength": 16 },
+    "idempotency_key": { "type": "string", "minLength": 16, "maxLength": 500 },
     "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "deadline_at": { "type": "string", "format": "date-time" },
     "run_manifest_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
-    "input_message_id": { "type": "string", "minLength": 1 },
-    "workspace_revision_id": { "type": "string", "minLength": 1 },
+    "input_message_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "input": { "$ref": "urn:agent-platform:runtime-input-envelope:v1" },
+    "context_package": { "$ref": "urn:agent-platform:context-package:v1" },
+    "artifact_grants": {
+      "type": "array",
+      "maxItems": 256,
+      "uniqueItems": true,
+      "items": { "$ref": "urn:agent-platform:artifact-grant:v1" }
+    },
+    "execution_budget": { "$ref": "urn:agent-platform:execution-budget:v1" },
+    "policy_decision": { "$ref": "urn:agent-platform:policy-decision:v1" },
+    "effective_permissions": { "$ref": "urn:agent-platform:effective-permissions:v1" },
+    "gateway_bindings": { "$ref": "urn:agent-platform:runtime-gateway-bindings:v1" },
+    "admission_limits": {
+      "type": "object",
+      "required": ["max_encoded_request_bytes", "max_inline_input_bytes", "max_context_items", "max_artifact_grants"],
+      "properties": {
+        "max_encoded_request_bytes": { "const": 8388608 },
+        "max_inline_input_bytes": { "const": 262144 },
+        "max_context_items": { "const": 512 },
+        "max_artifact_grants": { "const": 256 }
+      },
+      "additionalProperties": false
+    },
+    "workspace_revision_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "workspace_revision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "checkpoint": { "$ref": "urn:agent-platform:agent-runtime-checkpoint-manifest:v1" },
     "sandbox_bindings": {
       "type": "array",
+      "maxItems": 64,
       "uniqueItems": true,
       "items": {
         "type": "object",
         "required": ["sandbox_slot_key", "sandbox_id"],
         "properties": {
           "sandbox_slot_key": { "type": "string", "minLength": 1 },
-          "sandbox_id": { "type": "string", "minLength": 1 }
+          "sandbox_id": { "type": "string", "minLength": 1, "maxLength": 200 }
         },
         "additionalProperties": false
       }
@@ -64,6 +96,9 @@
     "workspace_revision_id and workspace_revision_digest match the RunManifest branch Workspace head",
     "sandbox_bindings exactly match the RunManifest Sandbox slots and may be empty when the Scenario does not require a Sandbox",
     "request_digest is RFC 8785 JCS SHA-256 over the request excluding request_digest",
+    "input carries the actual bounded input or an immutable platform reference and matches input_message_id",
+    "context_package, artifact_grants, execution_budget, policy_decision, effective_permissions and gateway_bindings exactly match the RunManifest admission snapshot",
+    "the Provider rejects an encoded body above admission_limits.max_encoded_request_bytes before parsing with HTTP 413",
     "the bearer token claims match the request, ProviderRevision, RunManifest, InvocationAttempt and fencing_token"
   ]
 }

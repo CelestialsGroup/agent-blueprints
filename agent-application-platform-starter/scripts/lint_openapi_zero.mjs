@@ -10,6 +10,7 @@ const openapiDir = path.join(root, "build", "openapi-src", "openapi");
 const documents = [
   "agent-access-v1.yaml",
   "plugin-invocation-v1.yaml",
+  "capability-provider-v1.yaml",
   "delivery-webhook-v1.yaml",
   "sandbox-provider-v1.yaml",
   "agent-runtime-provider-v1.yaml",

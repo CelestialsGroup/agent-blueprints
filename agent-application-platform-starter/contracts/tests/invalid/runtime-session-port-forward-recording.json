@@ -1,5 +1,6 @@
 {
   "runtime_type": "port_forward",
+  "sandbox_slot_key": "primary-code",
   "requested_scopes": [
     "view",
     "control",

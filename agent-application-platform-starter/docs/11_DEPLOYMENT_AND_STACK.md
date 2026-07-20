@@ -28,7 +28,7 @@
 - Tool/MCP Gateway
 - Sandbox 出站 Gateway
 - Artifact Gateway
-- Plugin 服务 / Job / Sandbox CLI / MCP / 远程服务
+- Capability Provider 服务 / Job / Sandbox CLI / MCP / 远程服务；Plugin 仅作兼容打包
 
 ## Kubernetes 工作负载
 
@@ -95,8 +95,8 @@ audit
 - Business -> Agent：Service OAuth HTTP
 - Browser -> Workbench：WorkSession Cookie + HTTP/SSE/WebSocket
 - Agent -> Business：签名 Webhook + Outbox
-- Agent -> Plugin 服务：mTLS + Invocation Token
-- Worker -> Plugin Job：Kubernetes Adapter + Manifest 协议
+- Agent -> Capability Provider：mTLS + Capability Invocation Token
+- Worker -> 兼容 Plugin/Job：Capability Adapter + Kubernetes/Manifest 私有协议
 - Agent Runtime -> Model/Tool/Egress：强制 Gateway
 - Workflow：Temporal
 

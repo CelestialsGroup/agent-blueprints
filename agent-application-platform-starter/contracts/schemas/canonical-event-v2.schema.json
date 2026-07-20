@@ -7,6 +7,13 @@
     "event_id",
     "schema_version",
     "tenant_id",
+    "producer_id",
+    "provider_revision_id",
+    "source_stream_id",
+    "source_event_id",
+    "source_cursor",
+    "dedupe_key",
+    "event_registry",
     "conversation_id",
     "aggregate",
     "type",
@@ -19,17 +26,60 @@
   ],
   "properties": {
     "event_id": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
     },
     "schema_version": {
       "const": 2
     },
     "tenant_id": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "producer_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "provider_revision_id": {
+      "type": ["string", "null"],
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "source_stream_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "source_event_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "source_cursor": {
+      "type": ["string", "null"],
+      "maxLength": 1000
+    },
+    "dedupe_key": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "event_registry": {
+      "type": "object",
+      "required": ["registry_id", "registry_version", "registry_digest"],
+      "properties": {
+        "registry_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "registry_version": { "type": "integer", "minimum": 1 },
+        "registry_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
     },
     "conversation_id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "maxLength": 200
     },
     "work_order_id": {
       "type": "string",
@@ -131,7 +181,9 @@
       "additionalProperties": false
     },
     "type": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
     },
     "occurred_at": {
       "type": "string",
@@ -160,7 +212,8 @@
       "additionalProperties": false
     },
     "data": {
-      "type": "object"
+      "type": "object",
+      "maxProperties": 256
     },
     "metadata": {
       "type": "object",
@@ -170,25 +223,32 @@
       ],
       "properties": {
         "trace_id": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
         },
         "correlation_id": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
         },
         "causation_id": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
         },
         "provider_instance_id": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
         },
         "runtime_id": {
-          "type": "string"
-        },
-        "source_cursor": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "data_version": {
       "type": "integer",
@@ -211,6 +271,10 @@
   "x-semantic-constraints": [
     "Conversation lifecycle events omit the complete Work context group",
     "events for an executable Turn carry work_order_id, turn_id, branch_id, input_message_id and work_sequence as an all-or-none binding",
-    "aggregate sequence and WorkOrder work_sequence are independent monotonic ledgers"
+    "aggregate sequence and WorkOrder work_sequence are independent monotonic ledgers",
+    "dedupe_key is RFC 8785 JCS SHA-256 over tenant_id, producer_id, source_stream_id and source_event_id",
+    "Inbox uniqueness on tenant_id plus producer_id plus source_stream_id plus source_event_id rejects source retries before Projection",
+    "provider_revision_id is required for Provider-originated events and null only for a platform-owned producer"
+    ,"event_registry identifies the immutable Platform Core Event Registry revision that admits type and data_version"
   ]
 }

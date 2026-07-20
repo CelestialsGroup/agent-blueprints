@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:workspace-content-manifest:v1",
+  "title": "WorkspaceContentManifest",
+  "type": "object",
+  "required": ["manifest_version", "workspace_id", "branch_id", "symlink_policy", "entry_count", "total_file_bytes", "entries", "manifest_digest"],
+  "properties": {
+    "manifest_version": { "const": 1 },
+    "workspace_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "branch_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "symlink_policy": { "enum": ["forbid", "allow_relative_within_root"] },
+    "entry_count": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+    "total_file_bytes": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "entries": {
+      "type": "array",
+      "maxItems": 1000000,
+      "items": {
+        "type": "object",
+        "required": ["path", "entry_type", "mode"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//).+$" },
+          "entry_type": { "enum": ["file", "directory", "symlink"] },
+          "mode": { "type": "string", "pattern": "^0[0-7]{3}$" },
+          "content_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+          "size_bytes": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+          "symlink_target": { "type": "string", "minLength": 1, "maxLength": 4096 }
+        },
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": { "properties": { "entry_type": { "const": "file" } }, "required": ["entry_type"] },
+            "then": { "required": ["content_digest", "size_bytes"], "not": { "required": ["symlink_target"] } }
+          },
+          {
+            "if": { "properties": { "entry_type": { "const": "directory" } }, "required": ["entry_type"] },
+            "then": { "not": { "anyOf": [{ "required": ["content_digest"] }, { "required": ["size_bytes"] }, { "required": ["symlink_target"] }] } }
+          },
+          {
+            "if": { "properties": { "entry_type": { "const": "symlink" } }, "required": ["entry_type"] },
+            "then": { "required": ["symlink_target"], "not": { "anyOf": [{ "required": ["content_digest"] }, { "required": ["size_bytes"] }] } }
+          }
+        ]
+      }
+    },
+    "manifest_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "manifest_digest is RFC 8785 JCS SHA-256 over the manifest excluding manifest_digest",
+    "entry paths are normalized unique relative POSIX paths and case-collision policy is enforced for the target filesystem profile",
+    "entry_count equals entries length and total_file_bytes equals the sum of file size_bytes",
+    "symlinks are absent when policy is forbid; allowed targets are relative, remain within the Workspace root and cannot traverse through another symlink"
+  ]
+}

@@ -1,10 +1,10 @@
 {
   "usage_report_id": "usr_invalid_first_correction",
-  "usage_report_digest": "sha256:3cf48125219128bddcecebb44bc07f795bc4c8dc9705032a6cd2f56759170587",
+  "usage_report_digest": "sha256:92a37d25cdbe968928e98b9af80b57d95a7f6264835cfce016950d1423d8fd7a",
   "tenant_id": "ten_01J00000000000000000000000",
   "work_order_id": "wrk_01J00000000000000000000000",
   "commercial_authorization_id": "cauth_01J00000000000000000000000",
-  "commercial_authorization_digest": "sha256:58fecad357ce4fe69cce9437814834bba7435d3712fc878ab9832ecc1719a20c",
+  "commercial_authorization_digest": "sha256:7e0df7d1f12c15fa7b37f829cbbd7faf5dd927ae121e1d963d6205d71ff505ed",
   "quota_reservation_id": "qres_01J00000000000000000000000",
   "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
   "report_status": "correction",
@@ -26,7 +26,7 @@
         "type": "provider",
         "id": "api_deerflow_runtime",
         "provider_revision_id": "apr_01J00000000000000000000000",
-        "provider_revision_digest": "sha256:1ef82012bd07d83be302d138c556f27561e14560ae13c5d6a440f5ea1b1858ed"
+        "provider_revision_digest": "sha256:688b9d7abe86270fc898deb57995c42737067526dfcd7967c5512a5f3b8be9ab"
       },
       "provider_operation_id": "provider-op-model-001",
       "meter_source": "provider_reported",

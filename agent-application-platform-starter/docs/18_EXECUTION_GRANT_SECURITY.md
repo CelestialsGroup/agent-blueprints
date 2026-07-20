@@ -42,6 +42,7 @@ JWKS 或公钥只能来自管理员预注册的 ClientApplication 配置。
 - client_app_id
 - external_tenant_id
 - external_principal_id
+- principal_context_digest
 - conversation_id
 - turn_id
 - branch_id
@@ -72,13 +73,13 @@ clock_skew = 30 seconds
 
 不能使用 `json.dumps(sort_keys=True)`、普通 Map 排序或语言默认序列化代替。
 
-`request_contract_id` 必须是实际提交的 `work-order-request:v1` 或 `conversation-turn-request:v1`。摘要覆盖该精确请求 JSON，唯一排除字段：
+`request_contract_id` 必须是实际提交的 `work-order-request:v1`、`conversation-turn-request:v1` 或 `work-order-control-request:v1`。摘要覆盖该精确请求 JSON，唯一排除字段：
 
 ```text
 execution_grant
 ```
 
-WorkOrderRequest 包括 `source`、`work`、`delivery`、`placement_constraints` 和 `metadata`；ConversationTurnRequest 包括 Message、Branch、Scenario、Experience、Delivery 和 Metadata。不能先把两种请求映射成含混的内部对象再计算摘要。
+WorkOrderRequest 包括 `source`、`work`、`delivery`、`placement_constraints` 和 `metadata`；ConversationTurnRequest 包括 Message、Branch、Scenario、Experience、Delivery 和 Metadata；WorkOrderControlRequest 包括 WorkOrder/Conversation/Branch、Action、独立 CAS 预期值、控制输入和 Metadata。不能先把三种请求映射成含混的内部对象再计算摘要。
 
 WorkOrderRequest 包括：
 
@@ -91,6 +92,8 @@ WorkOrderRequest 包括：
 请求中的 Conversation/Turn/ClientMessage 绑定和 Experience Revision 选择属于摘要覆盖范围，不能在 Grant 签发后替换模板、分支、父消息或请求类型。ConversationTurn 的 `turn_id` 从已验证 Grant 创建，内部 `input_message_id` 由平台原子分配。
 
 因此 metadata 不得绕过授权改变行为。
+
+Limits 使用全字段 EffectiveExecutionLimits；空对象、字段缺失或未知 Profile 均 fail-closed。Control Grant 额外绑定 `work_order_id + control_request_id`，不得复用原 Turn Grant。
 
 输入必须满足 I-JSON/JCS 可互操作要求：
 

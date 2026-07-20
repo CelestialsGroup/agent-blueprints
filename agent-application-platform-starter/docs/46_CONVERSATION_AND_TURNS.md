@@ -31,6 +31,8 @@ Conversation 生命周期由 `contracts/state-machines/conversation-v1.json` 治
 
 相同幂等键、Message ID 和请求摘要返回原 Turn；任一内容不匹配则返回 409。
 
+`POST /v1/work-orders/{id}/control` 是另一条事务边界：它使用 `WorkOrderControlRequest` 和新的 ExecutionGrant 控制现有 WorkOrder，不创建 Turn。Append/Interrupt 先追加不可变 Control Input，再由 Outbox 发送引用 `control_request_id + input_id + content_digest` 的 Runtime Command。Pause/Resume/Cancel/Approval 同样绑定 Control Request；只有内部 Checkpoint Command 不需要用户控制请求。
+
 ## 分支与并发
 
 - `parent_message_id` 始终引用先前的不可变 Message。
@@ -38,8 +40,9 @@ Conversation 生命周期由 `contracts/state-machines/conversation-v1.json` 治
 - `ConversationBranch` 是可查询的分支头投影；Conversation 聚合不保存单一的全局活动 WorkOrder。
 - 默认每个 Conversation 分支最多只有一个执行变更的活动 WorkOrder。
 - `interrupt_and_enqueue` 记录活动 WorkOrder 的取消意图；不得把意图视为取消证明。
+- `interrupt_and_enqueue` 同时创建独立后继 Turn/WorkOrder；Append/Interrupt 现有 Runtime 必须走 WorkOrder Control，二者不能共用含混命令。
 - 并行分支使用独立的 WorkOrder、WorkspaceRevision Head 和 Sandbox Slot；只共享不可变的 Conversation/Artifact 历史。
-- Sandbox 完成后只能以创建 Run 时的 Workspace Head/`branch_version` 为 CAS 前提提交新 Revision；CAS 失败不得覆盖当前 Head。
+- Message、Workspace 与 Active Work 分别使用独立 CAS；Sandbox 完成后只能以创建 Run 时的 Workspace Head/`workspace_head_version` 提交新 Revision，Steering 不得使文件提交产生假冲突。
 
 ## 上下文与记忆
 

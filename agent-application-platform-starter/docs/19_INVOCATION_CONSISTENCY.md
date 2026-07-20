@@ -4,7 +4,7 @@
 
 Temporal Activity 可能重复调度，网络调用可能超时，外部 Provider 可能已经成功但响应丢失。
 
-所有 Agent Runtime、Plugin、Model、Tool 和外部系统调用必须经过 Invocation Ledger，
+所有 Agent Runtime、Capability Provider、兼容 Plugin、Model、Tool 和外部系统调用必须经过 Invocation Ledger，
 除非明确属于受控 Runtime 内部的纯计算事件。
 
 ## 对象
@@ -59,6 +59,10 @@ Attempt 属性：
 - deadline
 - cancellation context
 - Artifact grants
+- Tenant、ClientApplication、Principal Context 和 WorkOrder
+- ProviderRevision、PolicyDecision、ExecutionBudget、Permissions、Request Digest 和 Staging Session
+
+通用 Model/Tool/MCP/Skill/Renderer/Converter 调用使用 `capability-provider-v1` 和独立 Capability Invocation Token；`plugin_id` 只允许出现在兼容 Adapter 私有映射中。幂等唯一范围是 `(tenant_id, client_app_id, operation_id, idempotency_key_digest)`，同范围不同 Request Digest 必须返回 409。
 
 ## 完成
 

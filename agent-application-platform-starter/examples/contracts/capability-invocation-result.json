@@ -1,0 +1,13 @@
+{
+  "invocation_id": "inv_cap_01J000000000000000000000",
+  "invocation_attempt_id": "iat_cap_01J00000000000000000000",
+  "fencing_token": 1,
+  "provider_operation_id": "provider-op-html-0001",
+  "output": {
+    "summary": "HTML artifact staged."
+  },
+  "output_schema_digest": "sha256:3535353535353535353535353535353535353535353535353535353535353535",
+  "staged_artifacts": [],
+  "usage": [],
+  "completed_at": "2026-07-16T09:02:00Z"
+}

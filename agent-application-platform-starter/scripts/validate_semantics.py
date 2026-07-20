@@ -72,6 +72,17 @@ def validate_execution_grant_request(
             "scenario_version": work["scenario_version"],
             "scenario_definition_digest": work["scenario_definition_digest"],
         }
+    elif contract_id == "urn:agent-platform:work-order-control-request:v1":
+        if not {"control_request_id", "work_order_id", "conversation_id", "branch_id", "action"} <= set(request):
+            raise AssertionError("ExecutionGrant request_contract_id does not match the submitted request shape")
+        if authenticated_conversation_id != request["conversation_id"]:
+            raise AssertionError("WorkOrderControl path and request bind different Conversations")
+        bindings = {
+            "conversation_id": request["conversation_id"],
+            "branch_id": request["branch_id"],
+            "work_order_id": request["work_order_id"],
+            "control_request_id": request["control_request_id"],
+        }
     else:
         raise AssertionError("ExecutionGrant request_contract_id is unsupported")
     if any(grant[field] != value for field, value in bindings.items()):
@@ -95,6 +106,10 @@ def validate_provider_resolution(resolution: dict[str, Any]) -> None:
         raise AssertionError("ProviderResolution selected instance conflicts with candidate evidence")
     if selected[0]["provider_revision_id"] != snapshot["provider_revision_id"]:
         raise AssertionError("ProviderResolution selected revision conflicts with candidate evidence")
+    if resolution["execution_scope"] != "work_order" or not resolution["tenant_id"] or not resolution["client_app_id"] or not resolution["work_order_id"]:
+        raise AssertionError("ProviderResolution is missing its Tenant, ClientApplication or WorkOrder scope")
+    if resolution["routing_reason"] in {"tenant_binding", "client_binding"} and resolution["principal_context_digest"] is None:
+        raise AssertionError("Identity-dependent ProviderResolution lacks Principal context binding")
 
 
 def validate_provider_architecture(context: dict[str, Any], suites: list[dict[str, Any]]) -> None:
@@ -151,9 +166,30 @@ def validate_execution_topology(
         raise AssertionError("Runtime start belongs to a different WorkflowRun")
     if agent_run["runtime_provider_resolution_id"] != manifest["agent_runtime"]["resolution_id"]:
         raise AssertionError("AgentRun and RunManifest bind different Runtime Provider resolutions")
+    for resolution in manifest["capability_resolutions"]:
+        if resolution["tenant_id"] != manifest["tenant_id"] or resolution["work_order_id"] != manifest["work_order_id"]:
+            raise AssertionError("ProviderResolution crosses the RunManifest execution scope")
+        validate_provider_resolution(resolution)
     for field in ("workspace_revision_id", "workspace_revision_digest"):
         if runtime_start[field] != manifest["conversation"][field]:
             raise AssertionError(f"Runtime start and RunManifest differ on {field}")
+    if runtime_start["input_message_id"] != runtime_start["input"]["input_message_id"]:
+        raise AssertionError("Runtime start input envelope belongs to a different input message")
+    for field in (
+        "input", "context_package", "artifact_grants", "execution_budget", "policy_decision",
+        "effective_permissions", "gateway_bindings", "admission_limits",
+    ):
+        if runtime_start[field] != manifest[field]:
+            raise AssertionError(f"Runtime start and RunManifest differ on executable context {field}")
+    validate_self_digest(runtime_start["effective_permissions"], "permissions_digest")
+    if runtime_start["input"]["content_digest"] != canonical_digest(runtime_start["input"]["content"]):
+        raise AssertionError("Runtime input content_digest does not bind the actual content")
+    expanded_context_bytes = sum(item["size_bytes"] for item in runtime_start["context_package"]["items"])
+    if expanded_context_bytes > runtime_start["execution_budget"]["limits"]["max_storage_bytes"]:
+        raise AssertionError("Expanded Context Package exceeds the admitted storage budget")
+    for grant in runtime_start["artifact_grants"]:
+        if grant["tenant_id"] != manifest["tenant_id"] or grant["work_order_id"] != manifest["work_order_id"] or grant["runtime_run_id"] != runtime_start["runtime_run_id"]:
+            raise AssertionError("Artifact Grant crosses the admitted execution topology")
     expected_sandboxes = {
         (item["sandbox_slot_key"], item["sandbox_id"])
         for item in manifest["sandboxes"]
@@ -200,6 +236,114 @@ def validate_runtime_token(
         raise AssertionError("Agent Runtime token binds a different ProviderRevision")
 
 
+def validate_capability_invocation(request: dict[str, Any], token: dict[str, Any]) -> None:
+    validate_self_digest(request, "request_digest")
+    expected = {
+        "tenant_id": request["tenant_id"],
+        "client_app_id": request["client_app_id"],
+        "principal_context_digest": request["principal_context_digest"],
+        "work_order_id": request["work_order_id"],
+        "provider_revision_id": request["provider_revision_id"],
+        "capability_id": request["capability"]["id"],
+        "capability_version": request["capability"]["version"],
+        "invocation_id": request["invocation_id"],
+        "invocation_attempt_id": request["invocation_attempt_id"],
+        "fencing_token": request["fencing_token"],
+        "request_digest": request["request_digest"],
+        "policy_decision_digest": request["policy_decision_digest"],
+        "execution_budget_digest": request["execution_budget_digest"],
+        "staging_session_id": request["output_staging_session_id"],
+    }
+    for field, value in expected.items():
+        if token[field] != value:
+            raise AssertionError(f"Capability Invocation token differs from request on {field}")
+    if not token["iat"] <= token["nbf"] < token["exp"] or token["exp"] - token["iat"] > 900:
+        raise AssertionError("Capability Invocation token lifetime is invalid")
+
+
+def validate_workspace_content_manifest(manifest: dict[str, Any]) -> None:
+    validate_self_digest(manifest, "manifest_digest")
+    paths = [entry["path"] for entry in manifest["entries"]]
+    if len(paths) != len(set(paths)):
+        raise AssertionError("Workspace Content Manifest contains duplicate paths")
+    if manifest["entry_count"] != len(manifest["entries"]):
+        raise AssertionError("Workspace Content Manifest entry_count mismatch")
+    total_bytes = sum(entry.get("size_bytes", 0) for entry in manifest["entries"] if entry["entry_type"] == "file")
+    if manifest["total_file_bytes"] != total_bytes:
+        raise AssertionError("Workspace Content Manifest total_file_bytes mismatch")
+    symlinks = [entry for entry in manifest["entries"] if entry["entry_type"] == "symlink"]
+    if manifest["symlink_policy"] == "forbid" and symlinks:
+        raise AssertionError("Workspace Content Manifest forbids symlinks")
+    for entry in symlinks:
+        target = entry["symlink_target"]
+        if target.startswith("/") or ".." in target.split("/"):
+            raise AssertionError("Workspace Content Manifest symlink escapes the root")
+
+
+def validate_canonical_event_source(event: dict[str, Any]) -> None:
+    expected = canonical_digest({
+        "tenant_id": event["tenant_id"],
+        "producer_id": event["producer_id"],
+        "source_stream_id": event["source_stream_id"],
+        "source_event_id": event["source_event_id"],
+    })
+    if event["dedupe_key"] != expected:
+        raise AssertionError("CanonicalEvent dedupe_key does not bind source identity")
+    if event["provider_revision_id"] is None and event["metadata"].get("provider_instance_id") is not None:
+        raise AssertionError("Provider-originated CanonicalEvent lacks ProviderRevision binding")
+
+
+def validate_platform_event_registry_binding(event: dict[str, Any], registry: dict[str, Any]) -> None:
+    expected_registry = {
+        "registry_id": registry["registry_id"],
+        "registry_version": registry["registry_version"],
+        "registry_digest": registry["registry_digest"],
+    }
+    if event["event_registry"] != expected_registry:
+        raise AssertionError("CanonicalEvent binds a different Platform Core Event Registry")
+    definition = next(
+        (item for item in registry["definitions"] if item["type"] == event["type"] and item["data_version"] == event["data_version"]),
+        None,
+    )
+    if definition is None:
+        raise AssertionError("CanonicalEvent type and data_version are not admitted")
+    if event["type"] == "artifact.version.created":
+        schema = load("contracts/schemas/event-data-artifact-version-created.schema.json")
+        errors = list(Draft202012Validator(schema, registry=SCHEMA_REGISTRY, format_checker=FormatChecker()).iter_errors(event["data"]))
+        if errors:
+            raise AssertionError("CanonicalEvent data does not validate against the admitted Platform Event schema")
+
+
+def validate_semantic_traceability(traceability: dict[str, Any]) -> None:
+    schemas_by_id = {}
+    for path in sorted((ROOT / "contracts/schemas").glob("*.json")):
+        schema = json.loads(path.read_text(encoding="utf-8"))
+        schemas_by_id[schema["$id"]] = schema
+    entries_by_schema: dict[str, list[dict[str, Any]]] = {}
+    identifiers: set[str] = set()
+    for entry in traceability["constraints"]:
+        if entry["constraint_id"] in identifiers:
+            raise AssertionError("Semantic traceability contains duplicate constraint IDs")
+        identifiers.add(entry["constraint_id"])
+        entries_by_schema.setdefault(entry["schema_id"], []).append(entry)
+        for enforcement in entry["enforcements"]:
+            if not (ROOT / enforcement["artifact"]).exists():
+                raise AssertionError("Semantic traceability references a missing enforcement artifact")
+    for schema_id in traceability["critical_schema_ids"]:
+        schema = schemas_by_id.get(schema_id)
+        if schema is None:
+            raise AssertionError("Semantic traceability references an unknown critical Schema")
+        statements = schema.get("x-semantic-constraints", [])
+        entries = sorted(entries_by_schema.get(schema_id, []), key=lambda item: item["constraint_index"])
+        if len(entries) != len(statements):
+            raise AssertionError("Semantic traceability does not cover every critical constraint")
+        for index, (statement, entry) in enumerate(zip(statements, entries)):
+            if entry["constraint_index"] != index or entry["statement"] != statement:
+                raise AssertionError("Semantic traceability is stale relative to its source Schema")
+            if not any(item["status"] == "contract_gate" for item in entry["enforcements"]):
+                raise AssertionError("Critical semantic constraint lacks a current contract-gate mapping")
+
+
 def validate_gateway_frames(connect: dict[str, Any], control: dict[str, Any]) -> None:
     channels = [cursor["channel"] for cursor in connect["resume_cursors"]]
     if len(channels) != len(set(channels)):
@@ -217,15 +361,24 @@ def validate_gateway_frames(connect: dict[str, Any], control: dict[str, Any]) ->
 
 def validate_event_registry(registry: dict[str, Any]) -> None:
     validate_self_digest(registry, "registry_digest")
-    dependencies = sorted(
-        [
-            load("contracts/schemas/capability-error.schema.json"),
-            load("contracts/schemas/technical-usage-entry.schema.json"),
-        ],
-        key=lambda schema: schema["$id"],
-    )
+    if registry["registry_id"] == "agent-runtime-core":
+        root = load("contracts/schemas/agent-runtime-event-data.schema.json")
+        dependencies = sorted(
+            [
+                load("contracts/schemas/capability-error.schema.json"),
+                load("contracts/schemas/technical-usage-entry.schema.json"),
+            ],
+            key=lambda schema: schema["$id"],
+        )
+        uri_prefix = "urn:agent-platform:agent-runtime-event-data:v1#/$defs/"
+    elif registry["registry_id"] == "platform-core":
+        root = load("contracts/schemas/event-data-artifact-version-created.schema.json")
+        dependencies = []
+        uri_prefix = "urn:agent-platform:event-data:artifact-version-created:v1"
+    else:
+        raise AssertionError("Unknown EventTypeRegistry ownership domain")
     expected_schema_digest = canonical_digest({
-        "root": load("contracts/schemas/agent-runtime-event-data.schema.json"),
+        "root": root,
         "dependencies": dependencies,
     })
     keys: set[tuple[str, int]] = set()
@@ -238,8 +391,8 @@ def validate_event_registry(registry: dict[str, Any]) -> None:
             raise AssertionError("EventTypeRegistry data schema digest is not admitted")
         if definition["data_schema"]["digest_profile"] != "rfc8785-schema-closure-v1":
             raise AssertionError("EventTypeRegistry uses an unsupported Schema closure digest profile")
-        if not definition["data_schema"]["uri"].startswith("urn:agent-platform:agent-runtime-event-data:v1#/$defs/"):
-            raise AssertionError("Runtime core event points outside the admitted payload registry")
+        if not definition["data_schema"]["uri"].startswith(uri_prefix):
+            raise AssertionError("Core event points outside its admitted payload registry")
 
 
 def validate_usage_contracts(
@@ -632,7 +785,13 @@ workflow_run = load("examples/contracts/workflow-run.json")
 agent_run = load("examples/contracts/agent-run.json")
 runtime_start = load("examples/contracts/agent-runtime-start-request.json")
 runtime_token = load("examples/contracts/agent-runtime-invocation-token-claims.json")
+capability_request = load("examples/contracts/capability-invocation-request.json")
+capability_token = load("examples/contracts/capability-invocation-token-claims.json")
+workspace_content_manifest = load("examples/contracts/workspace-content-manifest.json")
+canonical_event = load("examples/contracts/canonical-event-v2.json")
+semantic_traceability = load("contracts/semantic-constraints-v1.json")
 event_registry = load("contracts/event-types/agent-runtime-core-v1.json")
+platform_event_registry = load("contracts/event-types/platform-core-v1.json")
 meter = load("examples/contracts/meter-definition.json")
 usage_entry = load("examples/contracts/technical-usage-entry.json")
 usage_report = load("examples/contracts/usage-report.json")
@@ -650,8 +809,14 @@ conformance_suites = [
 validate_provider_architecture(context, conformance_suites)
 validate_execution_topology(manifest, workflow_run, agent_run, runtime_start)
 validate_runtime_token(runtime_token, manifest, agent_run, runtime_start, policy_decision, execution_budget)
+validate_capability_invocation(capability_request, capability_token)
+validate_workspace_content_manifest(workspace_content_manifest)
+validate_canonical_event_source(canonical_event)
+validate_platform_event_registry_binding(canonical_event, platform_event_registry)
+validate_semantic_traceability(semantic_traceability)
 validate_gateway_frames(gateway_connect, gateway_control)
 validate_event_registry(event_registry)
+validate_event_registry(platform_event_registry)
 if manifest["event_registry"] != {
     "registry_id": event_registry["registry_id"],
     "registry_version": event_registry["registry_version"],
@@ -668,6 +833,8 @@ grant = load("examples/contracts/execution-grant-claims.json")
 work_order_grant = load("examples/contracts/execution-grant-work-order-claims.json")
 conversation_turn_request = load("examples/contracts/conversation-turn-request.json")
 work_order_request = load("examples/contracts/work-order.json")
+control_request = load("examples/contracts/work-order-control-request.json")
+control_grant = load("examples/contracts/execution-grant-control-claims.json")
 conversation = load("examples/contracts/conversation.json")
 validate_execution_grant_request(
     grant,
@@ -679,6 +846,16 @@ validate_execution_grant_request(
     work_order_request,
     authenticated_conversation_id=work_order_grant["conversation_id"],
 )
+validate_execution_grant_request(
+    control_grant,
+    control_request,
+    authenticated_conversation_id=control_request["conversation_id"],
+)
+bound_runtime_command = load("examples/contracts/agent-runtime-command.json")
+if bound_runtime_command["authorized_control_request_id"] != control_request["control_request_id"]:
+    raise AssertionError("Agent Runtime command references a different WorkOrderControlRequest")
+if bound_runtime_command.get("input_id") != control_request["content"]["input_id"] or bound_runtime_command.get("input_content_digest") != control_request["content"]["content_digest"]:
+    raise AssertionError("Agent Runtime command input does not match the authorized control input")
 commercial = grant["commercial_authorization"]
 validate_self_digest(commercial, "commercial_authorization_digest")
 validate_self_digest(execution_budget, "budget_digest")
@@ -692,9 +869,9 @@ if policy_decision["commercial_authorization_id"] != commercial["commercial_auth
     raise AssertionError("PolicyDecision binds a different CommercialAuthorizationSnapshot")
 if policy_decision["execution_budget_id"] != execution_budget["budget_id"] or policy_decision["execution_budget_digest"] != execution_budget["budget_digest"]:
     raise AssertionError("PolicyDecision binds a different ExecutionBudget")
-if manifest["policy_decision"] != {"decision_id": policy_decision["decision_id"], "decision_digest": policy_decision["decision_digest"]}:
+if manifest["policy_decision"] != policy_decision:
     raise AssertionError("RunManifest binds a different PolicyDecision")
-if manifest["execution_budget"] != {"budget_id": execution_budget["budget_id"], "budget_digest": execution_budget["budget_digest"]}:
+if manifest["execution_budget"] != execution_budget:
     raise AssertionError("RunManifest binds a different ExecutionBudget")
 if usage_report["commercial_authorization_digest"] != commercial["commercial_authorization_digest"]:
     raise AssertionError("UsageReport binds a different CommercialAuthorizationSnapshot")
@@ -1365,6 +1542,102 @@ for case in branch_fixture["cases"]:
         pass
     else:
         raise AssertionError(f"Expected ConversationBranch semantic fixture to fail: {case['id']}")
+
+
+phase0_closure_negative = load("contracts/tests/semantic-invalid/phase0-closure-cases.json")
+for case in phase0_closure_negative["cases"]:
+    mutation = case["mutation"]
+    try:
+        if mutation == "runtime_input_digest_mismatch":
+            candidate_manifest = copy.deepcopy(manifest)
+            candidate_start = copy.deepcopy(runtime_start)
+            candidate_manifest["input"]["content_digest"] = "sha256:" + "f" * 64
+            candidate_start["input"] = copy.deepcopy(candidate_manifest["input"])
+            candidate_start["request_digest"] = canonical_digest({
+                key: value for key, value in candidate_start.items() if key != "request_digest"
+            })
+            validate_execution_topology(candidate_manifest, workflow_run, agent_run, candidate_start)
+        elif mutation == "runtime_context_mismatch":
+            candidate_start = copy.deepcopy(runtime_start)
+            candidate_start["context_package"]["context_package_id"] = "ctx_other"
+            candidate_start["request_digest"] = canonical_digest({
+                key: value for key, value in candidate_start.items() if key != "request_digest"
+            })
+            validate_execution_topology(manifest, workflow_run, agent_run, candidate_start)
+        elif mutation == "artifact_grant_tenant_mismatch":
+            candidate_manifest = copy.deepcopy(manifest)
+            candidate_start = copy.deepcopy(runtime_start)
+            candidate_manifest["artifact_grants"][0]["tenant_id"] = "ten_other"
+            candidate_start["artifact_grants"] = copy.deepcopy(candidate_manifest["artifact_grants"])
+            candidate_start["request_digest"] = canonical_digest({
+                key: value for key, value in candidate_start.items() if key != "request_digest"
+            })
+            validate_execution_topology(candidate_manifest, workflow_run, agent_run, candidate_start)
+        elif mutation == "capability_token_tenant_mismatch":
+            candidate = copy.deepcopy(capability_token)
+            candidate["tenant_id"] = "ten_other"
+            validate_capability_invocation(capability_request, candidate)
+        elif mutation == "capability_token_request_digest_mismatch":
+            candidate = copy.deepcopy(capability_token)
+            candidate["request_digest"] = "sha256:" + "f" * 64
+            validate_capability_invocation(capability_request, candidate)
+        elif mutation == "provider_resolution_work_order_mismatch":
+            candidate_manifest = copy.deepcopy(manifest)
+            candidate = candidate_manifest["capability_resolutions"][0]
+            candidate["work_order_id"] = "wrk_other"
+            candidate["decision_digest"] = canonical_digest({
+                key: value for key, value in candidate.items() if key != "decision_digest"
+            })
+            validate_execution_topology(candidate_manifest, workflow_run, agent_run, runtime_start)
+        elif mutation == "workspace_manifest_count_mismatch":
+            candidate = copy.deepcopy(workspace_content_manifest)
+            candidate["entry_count"] += 1
+            candidate["manifest_digest"] = canonical_digest({
+                key: value for key, value in candidate.items() if key != "manifest_digest"
+            })
+            validate_workspace_content_manifest(candidate)
+        elif mutation == "workspace_manifest_bytes_mismatch":
+            candidate = copy.deepcopy(workspace_content_manifest)
+            candidate["total_file_bytes"] += 1
+            candidate["manifest_digest"] = canonical_digest({
+                key: value for key, value in candidate.items() if key != "manifest_digest"
+            })
+            validate_workspace_content_manifest(candidate)
+        elif mutation == "workspace_manifest_symlink_escape":
+            candidate = copy.deepcopy(workspace_content_manifest)
+            candidate["symlink_policy"] = "allow_relative_within_root"
+            candidate["entries"].append({
+                "path": "escape-link", "entry_type": "symlink", "mode": "0777", "symlink_target": "../outside",
+            })
+            candidate["entry_count"] += 1
+            candidate["manifest_digest"] = canonical_digest({
+                key: value for key, value in candidate.items() if key != "manifest_digest"
+            })
+            validate_workspace_content_manifest(candidate)
+        elif mutation == "canonical_event_dedupe_mismatch":
+            candidate = copy.deepcopy(canonical_event)
+            candidate["dedupe_key"] = "sha256:" + "f" * 64
+            validate_canonical_event_source(candidate)
+        elif mutation == "canonical_event_provider_revision_missing":
+            candidate = copy.deepcopy(canonical_event)
+            candidate["metadata"]["provider_instance_id"] = "provider-instance"
+            validate_canonical_event_source(candidate)
+        elif mutation == "control_grant_work_order_mismatch":
+            candidate = copy.deepcopy(control_grant)
+            candidate["work_order_id"] = "wrk_other"
+            validate_execution_grant_request(
+                candidate, control_request, authenticated_conversation_id=control_request["conversation_id"]
+            )
+        elif mutation == "traceability_missing_constraint":
+            candidate = copy.deepcopy(semantic_traceability)
+            candidate["constraints"].pop()
+            validate_semantic_traceability(candidate)
+        else:
+            raise AssertionError(f"Unknown Phase 0 closure mutation: {mutation}")
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError(f"Expected Phase 0 closure fixture to fail: {case['id']}")
 
 
 negative_fixture_count = sum(

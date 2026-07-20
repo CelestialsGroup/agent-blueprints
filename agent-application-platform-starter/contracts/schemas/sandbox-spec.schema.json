@@ -176,7 +176,7 @@
         "mode",
         "base_revision_id",
         "base_revision_digest",
-        "base_branch_version",
+        "base_workspace_head_version",
         "commit_mode"
       ],
       "properties": {
@@ -188,7 +188,7 @@
         },
         "base_revision_id": { "type": "string", "minLength": 1 },
         "base_revision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
-        "base_branch_version": { "type": "integer", "minimum": 1 },
+        "base_workspace_head_version": { "type": "integer", "minimum": 1 },
         "commit_mode": { "enum": ["read_only", "cas_new_revision"] },
         "snapshot_reference": { "type": "string" },
         "mount_path": {

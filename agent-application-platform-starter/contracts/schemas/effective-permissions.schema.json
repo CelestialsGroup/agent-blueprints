@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:effective-permissions:v1",
+  "title": "EffectivePermissions",
+  "type": "object",
+  "required": [
+    "permissions_id",
+    "permissions_digest",
+    "tenant_id",
+    "work_order_id",
+    "model",
+    "tool",
+    "artifact",
+    "egress",
+    "sandbox_slots"
+  ],
+  "properties": {
+    "permissions_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "permissions_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "model": {
+      "type": "object",
+      "required": ["allowed_model_profiles"],
+      "properties": {
+        "allowed_model_profiles": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 200 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "tool": {
+      "type": "object",
+      "required": ["allowed_capabilities"],
+      "properties": {
+        "allowed_capabilities": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 200 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["read", "write", "finalize"],
+      "properties": {
+        "read": { "type": "boolean" },
+        "write": { "type": "boolean" },
+        "finalize": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "egress": {
+      "type": "object",
+      "required": ["mode", "allowed_destination_classes"],
+      "properties": {
+        "mode": { "enum": ["none", "restricted", "full"] },
+        "allowed_destination_classes": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 200 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "sandbox_slots": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": ["sandbox_slot_key", "allowed_operations"],
+        "properties": {
+          "sandbox_slot_key": { "type": "string", "pattern": "^[a-z0-9][a-z0-9/_-]{0,127}$" },
+          "allowed_operations": {
+            "type": "array",
+            "maxItems": 32,
+            "uniqueItems": true,
+            "items": { "enum": ["exec", "files_read", "files_write", "terminal", "browser", "desktop", "snapshot"] }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "permissions_digest is RFC 8785 JCS SHA-256 over the permissions excluding permissions_digest",
+    "all permissions are the intersection of commercial authorization, policy, Scenario and Provider admission; absent permission is denied"
+  ]
+}

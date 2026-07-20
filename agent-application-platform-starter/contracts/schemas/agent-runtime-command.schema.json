@@ -20,7 +20,9 @@
     "runtime_run_id": { "type": "string", "minLength": 1 },
     "command_sequence": { "type": "integer", "minimum": 1 },
     "type": { "enum": ["append_input", "interrupt", "pause", "resume", "cancel", "approval_decision", "checkpoint"] },
-    "message_id": { "type": "string", "minLength": 1 },
+    "authorized_control_request_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "input_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "input_content_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "approval_id": { "type": "string", "minLength": 1 },
     "decision": { "$ref": "urn:agent-platform:approval-decision:v1" },
     "reason": { "type": "string", "minLength": 1, "maxLength": 1000 },
@@ -34,30 +36,46 @@
     {
       "if": { "properties": { "type": { "const": "append_input" } }, "required": ["type"] },
       "then": {
-        "required": ["message_id"],
+        "required": ["authorized_control_request_id", "input_id", "input_content_digest"],
         "not": { "anyOf": [{ "required": ["approval_id"] }, { "required": ["decision"] }] }
       }
     },
     {
       "if": { "properties": { "type": { "const": "interrupt" } }, "required": ["type"] },
       "then": {
-        "required": ["message_id"],
+        "required": ["authorized_control_request_id", "input_id", "input_content_digest"],
         "not": { "anyOf": [{ "required": ["approval_id"] }, { "required": ["decision"] }] }
       }
     },
     {
       "if": { "properties": { "type": { "const": "approval_decision" } }, "required": ["type"] },
       "then": {
-        "required": ["approval_id", "decision"],
-        "not": { "required": ["message_id"] }
+        "required": ["authorized_control_request_id", "approval_id", "decision"],
+        "not": { "anyOf": [{ "required": ["input_id"] }, { "required": ["input_content_digest"] }] }
       }
     },
     {
-      "if": { "properties": { "type": { "enum": ["pause", "resume", "cancel", "checkpoint"] } }, "required": ["type"] },
+      "if": { "properties": { "type": { "enum": ["pause", "resume", "cancel"] } }, "required": ["type"] },
+      "then": {
+        "required": ["authorized_control_request_id"],
+        "not": {
+          "anyOf": [
+            { "required": ["input_id"] },
+            { "required": ["input_content_digest"] },
+            { "required": ["approval_id"] },
+            { "required": ["decision"] }
+          ]
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "checkpoint" } }, "required": ["type"] },
       "then": {
         "not": {
           "anyOf": [
-            { "required": ["message_id"] },
+            { "required": ["authorized_control_request_id"] },
+            { "required": ["input_id"] },
+            { "required": ["input_content_digest"] },
             { "required": ["approval_id"] },
             { "required": ["decision"] }
           ]
@@ -70,7 +88,7 @@
     "command_sequence is contiguous per runtime_run_id",
     "commands are append-only and repeated command_id plus digest is idempotent",
     "a stale fencing_token cannot mutate runtime state",
-    "append_input queues a durable ConversationMessage; interrupt requests immediate delivery but cannot bypass ordering, authorization or Provider capability checks",
+    "append_input and interrupt reference a persisted WorkOrderControlRequest and its immutable input; Runtime transport never accepts an unbound message ID",
     "the RuntimeInvocation token request_digest equals command_digest"
   ]
 }
