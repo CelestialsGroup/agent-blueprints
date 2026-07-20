@@ -9,6 +9,7 @@
     "aud",
     "exp",
     "iat",
+    "nbf",
     "jti",
     "client_id",
     "scope"
@@ -19,7 +20,9 @@
       "format": "uri"
     },
     "sub": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
     },
     "aud": {
       "oneOf": [
@@ -28,6 +31,10 @@
         },
         {
           "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": { "type": "string", "format": "uri", "maxLength": 500 },
           "contains": {
             "const": "https://agent-api.agent-platform.internal"
           }
@@ -40,31 +47,55 @@
     },
     "iat": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "nbf": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
     },
     "jti": {
-      "type": "string"
+      "type": "string",
+      "minLength": 16,
+      "maxLength": 200
     },
     "client_id": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
     },
     "scope": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000,
+      "pattern": "^[A-Za-z0-9:._-]+(?: [A-Za-z0-9:._-]+)*$"
     },
     "cnf": {
       "type": "object",
       "properties": {
         "x5t#S256": {
-          "type": "string"
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 200
         },
         "jkt": {
-          "type": "string"
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 200
         }
       },
       "minProperties": 1,
       "additionalProperties": false
     }
   },
-  "additionalProperties": true,
-  "x-profile": "RFC 9068 with RFC 8705 or RFC 9449 sender constraint in production"
+  "additionalProperties": false,
+  "x-profile": "RFC 9068 with RFC 8705 or RFC 9449 sender constraint in production",
+  "x-semantic-constraints": [
+    "iat <= nbf < exp, exp - iat <= 300 and clock skew is bounded",
+    "iss is registered, aud contains only the Agent Access audience and sub/client_id match the authenticated Business workload",
+    "scope is parsed as a set, is allowlisted for client_id and client_app_id is derived only from the authenticated context",
+    "the at+jwt header profile is mutually exclusive from every Platform token profile and unknown claims are rejected",
+    "production Service Access Tokens are sender-constrained and jti replay is rejected for mutation requests"
+  ]
 }

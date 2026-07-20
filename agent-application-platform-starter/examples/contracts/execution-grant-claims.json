@@ -15,7 +15,7 @@
   "branch_id": "main",
   "client_message_id": "client-msg-0001",
   "scenario_id": "html-generation",
-  "request_digest": "sha256:512a15fbc1938b2c9a4161ba788d6cebd9f41037203a90c73ecd4d888d8574d0",
+  "request_digest": "sha256:f80da1ee511b349d6a065df4591220c6422b7c26884f2e8459ff694720ef2a50",
   "idempotency_key_digest": "sha256:6bf53ca6b162632ebe7a477b424bedb41cae0759b08b27970fe9dbc7199ff87c",
   "usage": "single",
   "nonce": "nonce-0123456789abcdef",

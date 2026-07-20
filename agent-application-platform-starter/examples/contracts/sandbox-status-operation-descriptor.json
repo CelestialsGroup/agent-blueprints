@@ -1,0 +1,7 @@
+{
+  "operation": "read_sandbox",
+  "sandbox_id": "sbx_01J00000000000000000000000",
+  "operation_id": "sop_01J00000000000000000000000",
+  "attempt_id": "sat_01J00000000000000000000000",
+  "fencing_token": 1
+}

@@ -27,17 +27,75 @@ tags:
     description: Historical RuntimeSession playback manifests.
   - name: Artifacts
     description: Ingest, read, edit and convert Artifacts.
+  - name: BusinessControl
+    description: Accept immutable Business-owned authorization revocations.
 
 security:
   - ServiceOAuth:
       - work:read
 
 paths:
+  /v1/commercial-authorizations/{commercial_authorization_id}/revocations:
+    post:
+      tags: [BusinessControl]
+      operationId: revokeCommercialAuthorization
+      summary: Record an immutable Business authorization revocation
+      description: |
+        Only a sender-constrained, allowlisted Business workload may submit this
+        request. client_app_id and Platform tenant_id are derived server-side from
+        the authenticated client and external_tenant_id. The path ID, stored
+        CommercialAuthorization ID/digest and request body must match. Acceptance
+        atomically records the revocation receipt and fan-out intent; affected active
+        runs immediately stop receiving new execution/Gateway authorization and receive
+        newly fenced Platform-owned SystemSafetyControl Cancel records without creating
+        a new Business Grant or allowing any execution expansion. Cancellation remains
+        intent until Provider evidence confirms the terminal outcome.
+      x-max-encoded-body-bytes: 65536
+      security:
+        - ServiceOAuth:
+            - authorization:revoke
+      parameters:
+        - $ref: '#/components/parameters/CommercialAuthorizationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/Traceparent'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/commercial-authorization-revocation.schema.json
+      responses:
+        '202':
+          description: Revocation durably accepted for idempotent safety-control fan-out
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/commercial-authorization-revocation-accepted.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+
   /v1/artifact-ingest-sessions:
     post:
       tags: [Artifacts]
       operationId: createArtifactIngestSession
       summary: Create a constrained input Artifact upload session
+      x-max-encoded-body-bytes: 65536
       security:
         - ServiceOAuth:
             - artifact:write
@@ -82,6 +140,7 @@ paths:
       tags: [WorkOrders]
       operationId: createWorkOrder
       summary: Submit an asynchronous WorkOrder
+      x-max-encoded-body-bytes: 4194304
       description: |
         client_app_id is derived from the sender-constrained Service Access Token.
         The single-use ExecutionGrant is consumed atomically with WorkOrder creation.
@@ -117,6 +176,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '422':
           $ref: '#/components/responses/Unprocessable'
         '429':
@@ -328,6 +389,7 @@ paths:
       tags: [WorkSessions]
       operationId: createWorkSession
       summary: Create a one-time WorkSession exchange token
+      x-max-encoded-body-bytes: 262144
       security:
         - ServiceOAuth:
             - session:create
@@ -359,6 +421,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -367,6 +431,7 @@ paths:
       tags: [WorkSessions]
       operationId: exchangeWorkSession
       summary: Exchange a one-time token for an HttpOnly Workbench session cookie
+      x-max-encoded-body-bytes: 65536
       security: []
       parameters:
         - $ref: '#/components/parameters/Traceparent'
@@ -400,6 +465,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '429':
           $ref: '#/components/responses/TooManyRequests'
         '500':
@@ -518,6 +585,7 @@ paths:
       tags: [WorkOrders]
       operationId: decideApproval
       summary: Approve or reject a pending action
+      x-max-encoded-body-bytes: 65536
       x-required-work-session-scopes: [approval:decide]
       x-cookie-csrf-required: true
       security:
@@ -548,6 +616,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -560,6 +630,7 @@ paths:
       tags: [WorkSessions]
       operationId: createRuntimeSession
       summary: Create a short-lived Runtime Gateway session
+      x-max-encoded-body-bytes: 65536
       x-required-work-session-scopes: [runtime:view]
       x-cookie-csrf-required: true
       security:
@@ -590,6 +661,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '429':
           $ref: '#/components/responses/TooManyRequests'
         '500':
@@ -670,6 +743,7 @@ paths:
       tags: [Artifacts]
       operationId: createArtifactAccess
       summary: Create short-lived access to immutable Artifact content
+      x-max-encoded-body-bytes: 65536
       x-required-work-session-scopes: [artifact:read]
       x-cookie-csrf-required: true
       security:
@@ -700,6 +774,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '429':
           $ref: '#/components/responses/TooManyRequests'
         '500':
@@ -714,6 +790,7 @@ paths:
       tags: [Artifacts]
       operationId: createArtifactPreviewSession
       summary: Create a short-lived isolated Artifact preview
+      x-max-encoded-body-bytes: 262144
       x-required-work-session-scopes: [artifact:read]
       x-cookie-csrf-required: true
       security:
@@ -744,6 +821,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '500':
           $ref: '#/components/responses/InternalError'
         '503':
@@ -758,6 +837,7 @@ paths:
       tags: [Artifacts]
       operationId: createArtifactEditSession
       summary: Create an Artifact EditSession
+      x-max-encoded-body-bytes: 262144
       x-required-work-session-scopes: [artifact:edit]
       x-cookie-csrf-required: true
       security:
@@ -791,6 +871,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -805,6 +887,7 @@ paths:
       tags: [Artifacts]
       operationId: saveArtifactEditDraft
       summary: Save a new optimistic Draft revision
+      x-max-encoded-body-bytes: 8388608
       x-required-work-session-scopes: [artifact:edit]
       x-cookie-csrf-required: true
       security:
@@ -835,6 +918,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '422':
           $ref: '#/components/responses/Unprocessable'
         '500':
@@ -880,6 +965,7 @@ paths:
       tags: [Artifacts]
       operationId: commitArtifactEditSession
       summary: Commit an EditSession as a new ArtifactVersion
+      x-max-encoded-body-bytes: 262144
       x-required-work-session-scopes: [artifact:edit]
       x-cookie-csrf-required: true
       security:
@@ -913,6 +999,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '422':
           $ref: '#/components/responses/Unprocessable'
         '500':
@@ -928,6 +1016,7 @@ paths:
       tags: [Artifacts]
       operationId: createArtifactConversion
       summary: Create an asynchronous Artifact conversion
+      x-max-encoded-body-bytes: 1048576
       x-required-work-session-scopes: [artifact:export]
       x-cookie-csrf-required: true
       security:
@@ -961,6 +1050,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '422':
           $ref: '#/components/responses/Unprocessable'
         '429':
@@ -1032,6 +1123,7 @@ paths:
       tags: [Conversations]
       operationId: createConversation
       summary: Idempotently create a Conversation and durable Workspace
+      x-max-encoded-body-bytes: 262144
       security:
         - ServiceOAuth:
             - conversation:create
@@ -1059,6 +1151,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '429':
           $ref: '#/components/responses/TooManyRequests'
         '500':
@@ -1232,6 +1326,7 @@ paths:
       tags: [WorkSessions]
       operationId: createConversationWorkSession
       summary: Create a one-time exchange token bound to a Conversation
+      x-max-encoded-body-bytes: 262144
       security:
         - ServiceOAuth:
             - session:create
@@ -1258,6 +1353,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -1400,6 +1497,8 @@ components:
   securitySchemes:
     ServiceOAuth:
       type: oauth2
+      x-jws-header-contract-id: urn:agent-platform:service-access-token-jws-header:v1
+      x-jwt-claims-contract-id: urn:agent-platform:service-access-token-claims:v1
       description: |
         OAuth2 Client Credentials. Production access tokens follow RFC 9068,
         are audience-restricted, and use an approved sender-constraining profile
@@ -1412,6 +1511,7 @@ components:
             work:read: Read WorkOrders and events.
             work:cancel: Cancel WorkOrders.
             work:control: Pause, resume, approve and open Runtime sessions.
+            authorization:revoke: Revoke a previously signed CommercialAuthorization.
             session:create: Create browser WorkSessions.
             session:delegate: Create an explicitly audited delegated WorkSession.
             artifact:read: Read Artifacts.
@@ -1424,14 +1524,26 @@ components:
       type: apiKey
       in: cookie
       name: __Host-agent_session
+      x-jws-header-contract-id: urn:agent-platform:work-session-jws-header:v1
+      x-jwt-claims-contract-id: urn:agent-platform:work-session-claims:v1
       description: HttpOnly Secure browser session cookie bound to one Conversation and optionally narrowed to one WorkOrder.
     WorkSessionBearer:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      x-jws-header-contract-id: urn:agent-platform:work-session-jws-header:v1
+      x-jwt-claims-contract-id: urn:agent-platform:work-session-claims:v1
       description: In-memory token profile for trusted headless SDKs; never persist in browser storage.
 
   parameters:
+    CommercialAuthorizationId:
+      name: commercial_authorization_id
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 200
     IdempotencyKey:
       name: Idempotency-Key
       in: header

@@ -23,7 +23,7 @@
 | Event 与 Workbench | `06_EVENT_MODEL.md`、`10_FRONTEND_INTEGRATION.md` | `29_EVENT_TYPE_REGISTRY.md`、`48_RUNTIME_RECORDING_AND_PLAYBACK.md` |
 | Artifact 与 Delivery | `07_ARTIFACT_WORKSPACE.md`、`31_DELIVERY_AND_INGEST.md` | - |
 | Sandbox | `33_SANDBOX_PROVIDER_CONTRACT.md`、`34_SANDBOX_SECURITY_AND_ISOLATION.md` | `36_SANDBOX_CONFORMANCE_AND_MIGRATION.md` |
-| 部署与生产 | `11_DEPLOYMENT_AND_STACK.md`、`24_PRODUCTION_GOVERNANCE.md` | `13_ARCHITECTURE_ACCEPTANCE.md` |
+| 部署与生产 | `11_DEPLOYMENT_AND_STACK.md`、`51_PHASE0_TECHNOLOGY_SELECTION.md`、`24_PRODUCTION_GOVERNANCE.md` | `13_ARCHITECTURE_ACCEPTANCE.md` |
 | 契约治理 | `22_CONTRACT_GOVERNANCE.md`、`37_JCS_AND_IJSON_PROFILE.md` | - |
 | 路线图 | `../tasks/PHASE0.md`、`12_PHASE1_SCOPE.md` | `../prompts/CODEX_PHASE0_BOOTSTRAP.md` |
 
@@ -32,4 +32,4 @@
 - 查边界先读架构入口，查字段和迁移直接读 `contracts/`。
 - `09_DEERFLOW_INTEGRATION.md` 中的参考项目只用于选型，不构成平台依赖或准入结论。
 - `13_ARCHITECTURE_ACCEPTANCE.md` 将本地架构候选、Phase 0 实现、正式冻结和生产批准拆成四个独立层级，验收时不得混用。
-- `CONTRACT_VALIDATION_REPORT.md` 和 `VALIDATION.json` 是某次验证结果，不是可替代契约的事实源。
+- `CONTRACT_VALIDATION_REPORT.md` 和 `VALIDATION.json` 由同一次成功 Gate 的临时机器证据生成，是某次验证结果，不是可替代契约的事实源。

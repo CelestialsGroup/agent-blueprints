@@ -4,12 +4,14 @@
   "title": "ArtifactGatewayTokenClaims",
   "type": "object",
   "required": [
-    "jti", "iss", "aud", "iat", "nbf", "exp", "operation", "tenant_id", "work_order_id",
-    "invocation_id", "invocation_attempt_id", "fencing_token", "gateway_binding_digest", "request_digest"
+    "jti", "iss", "sub", "aud", "iat", "nbf", "exp", "operation", "tenant_id", "work_order_id",
+    "invocation_id", "invocation_attempt_id", "fencing_token", "gateway_binding_digest",
+    "operation_contract_id", "operation_digest_profile", "request_digest"
   ],
   "properties": {
     "jti": { "type": "string", "minLength": 1, "maxLength": 200 },
     "iss": { "const": "agent-platform" },
+    "sub": { "type": "string", "minLength": 1, "maxLength": 300 },
     "aud": { "type": "string", "minLength": 1, "maxLength": 300 },
     "iat": { "type": "integer", "minimum": 0 },
     "nbf": { "type": "integer", "minimum": 0 },
@@ -22,6 +24,20 @@
     "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "fencing_token": { "type": "integer", "minimum": 1 },
     "gateway_binding_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "operation_contract_id": {
+      "enum": [
+        "urn:agent-platform:artifact-read-operation-descriptor:v1",
+        "urn:agent-platform:artifact-staging-object-request:v1",
+        "urn:agent-platform:artifact-staging-commit-request:v1"
+      ]
+    },
+    "operation_digest_profile": {
+      "enum": [
+        "rfc8785-full-document-v1",
+        "rfc8785-artifact-stage-metadata-excluding-content-and-request-digest-v1",
+        "rfc8785-request-excluding-request-digest-v1"
+      ]
+    },
     "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "artifact_grant_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "staging_grant_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
@@ -38,11 +54,38 @@
         "required": ["staging_grant_digest"],
         "not": { "required": ["artifact_grant_digest"] }
       }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "read_content" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "operation_contract_id": { "const": "urn:agent-platform:artifact-read-operation-descriptor:v1" },
+          "operation_digest_profile": { "const": "rfc8785-full-document-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "stage_object" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "operation_contract_id": { "const": "urn:agent-platform:artifact-staging-object-request:v1" },
+          "operation_digest_profile": { "const": "rfc8785-artifact-stage-metadata-excluding-content-and-request-digest-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "commit_staging" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "operation_contract_id": { "const": "urn:agent-platform:artifact-staging-commit-request:v1" },
+          "operation_digest_profile": { "const": "rfc8785-request-excluding-request-digest-v1" }
+        }
+      }
     }
   ],
   "x-semantic-constraints": [
-    "iat <= nbf < exp, exp - iat <= 300 and exp is no later than the bound ArtifactGrant or ArtifactStagingGrant",
-    "aud and gateway_binding_digest match the admitted artifact Gateway Port and request_digest binds the exact HTTP operation descriptor",
+    "iat <= nbf < exp, exp - iat <= 300, nbf is no earlier than and exp is no later than the bound ArtifactGrant or ArtifactStagingGrant",
+    "sub matches the authenticated caller workload and aud/gateway_binding_digest match the admitted artifact Gateway Port while operation_contract_id, operation_digest_profile and request_digest bind the exact HTTP operation descriptor",
     "read_content requires an ArtifactGrant with read permission while staging operations require an ArtifactStagingGrant and neither token can finalize an ArtifactVersion"
   ]
 }

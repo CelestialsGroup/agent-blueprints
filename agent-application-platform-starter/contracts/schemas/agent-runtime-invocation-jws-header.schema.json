@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:agent-runtime-invocation-jws-header:v1",
+  "title": "AgentRuntimeInvocationJwsHeader",
+  "type": "object",
+  "required": ["alg", "kid", "typ"],
+  "properties": {
+    "alg": { "enum": ["EdDSA", "ES256"] },
+    "kid": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "typ": { "const": "agent-runtime-invocation+jwt" }
+  },
+  "additionalProperties": false
+}

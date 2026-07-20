@@ -1,0 +1,5 @@
+{
+  "alg": "EdDSA",
+  "kid": "agent-runtime-key-2026-07",
+  "typ": "agent-runtime-invocation+jwt"
+}

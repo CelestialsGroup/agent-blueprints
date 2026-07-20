@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:sandbox-operation-read-operation-descriptor:v1",
+  "title": "SandboxOperationReadOperationDescriptor",
+  "type": "object",
+  "required": ["operation", "sandbox_id", "operation_id", "attempt_id", "fencing_token"],
+  "properties": {
+    "operation": { "const": "read_operation" },
+    "sandbox_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "operation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "fencing_token": { "type": "integer", "minimum": 1 }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "request_digest is RFC 8785 JCS SHA-256 over this complete descriptor using rfc8785-full-document-v1",
+    "operation_id is synthesized from the HTTP path and all fields match the admitted SandboxOperation Attempt"
+  ]
+}

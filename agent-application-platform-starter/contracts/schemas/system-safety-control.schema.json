@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:system-safety-control:v1",
+  "title": "SystemSafetyControl",
+  "description": "Immutable Platform-owned authority to reduce an existing Runtime run when fresh Business authorization is unavailable or must not be required.",
+  "type": "object",
+  "required": [
+    "safety_control_id",
+    "tenant_id",
+    "work_order_id",
+    "runtime_run_id",
+    "action",
+    "reason",
+    "trigger_evidence",
+    "issued_by",
+    "issuer_subject_id",
+    "issued_at",
+    "control_digest"
+  ],
+  "properties": {
+    "safety_control_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "runtime_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "action": { "enum": ["pause", "cancel"] },
+    "reason": {
+      "enum": [
+        "commercial_authorization_expired",
+        "commercial_authorization_revoked",
+        "execution_deadline_exceeded",
+        "policy_revoked",
+        "tenant_suspended",
+        "provider_admission_revoked",
+        "budget_exhausted",
+        "reconciliation_stop",
+        "operator_emergency_stop",
+        "platform_shutdown"
+      ]
+    },
+    "trigger_evidence": {
+      "type": "object",
+      "required": ["evidence_id", "evidence_contract_id", "evidence_digest", "observed_at"],
+      "properties": {
+        "evidence_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "evidence_contract_id": { "type": "string", "pattern": "^urn:agent-platform:[a-z0-9-]+:v[0-9]+$" },
+        "evidence_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "observed_at": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "issued_by": { "const": "platform_safety_controller" },
+    "issuer_subject_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "issued_at": { "type": "string", "format": "date-time" },
+    "control_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "reason": {
+            "enum": [
+              "commercial_authorization_expired",
+              "commercial_authorization_revoked",
+              "execution_deadline_exceeded",
+              "tenant_suspended",
+              "provider_admission_revoked",
+              "budget_exhausted",
+              "platform_shutdown"
+            ]
+          }
+        },
+        "required": ["reason"]
+      },
+      "then": { "properties": { "action": { "const": "cancel" } } }
+    }
+  ],
+  "x-semantic-constraints": [
+    "control_digest is RFC 8785 JCS SHA-256 over the control excluding control_digest",
+    "tenant_id, work_order_id and runtime_run_id identify one existing active execution scope, and issued_by plus issuer_subject_id match the authenticated Platform Safety Controller",
+    "trigger_evidence is immutable and observed_at is not later than issued_at",
+    "SystemSafetyControl is append-only and repeated safety_control_id plus control_digest is idempotent",
+    "the only permitted actions are pause and cancel; hard expiry, revocation, deadline, suspension, budget and shutdown reasons require cancel, and this authority cannot resume execution, add input, approve, checkpoint or create another side effect"
+  ]
+}

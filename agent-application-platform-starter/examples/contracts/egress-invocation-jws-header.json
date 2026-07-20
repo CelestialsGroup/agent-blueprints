@@ -1,0 +1,5 @@
+{
+  "alg": "EdDSA",
+  "kid": "agent-egress-key-2026-07",
+  "typ": "agent-egress-invocation+jwt"
+}

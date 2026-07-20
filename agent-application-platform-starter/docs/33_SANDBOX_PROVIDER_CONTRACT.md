@@ -67,6 +67,23 @@ Provider 不拥有业务授权和 Artifact 元数据。
 
 具体语言接口由该 OpenAPI 生成或薄封装，不在叙述性文档中复制方法签名。
 
+## 传输授权与摘要绑定
+
+Capability 发现发生在 Sandbox 和 SandboxOperation 建立之前，因此 `/v1/capabilities` 只接受已准入控制面的 mTLS 身份，不接受也不要求无法构造的 Sandbox Operation Token。它不是用户或 Runtime 可直接调用的公共发现接口。
+
+其余 14 个操作同时要求 mTLS 与最长 300 秒的单操作 Token。Token 必须绑定：
+
+- 当前调用工作负载 `sub` 与唯一 Provider Instance audience；
+- Tenant、WorkOrder、ProviderRevision、Sandbox、Operation、Attempt 和 Fencing Token；
+- 唯一 `operation`、`request_contract_id`、`request_digest_profile` 与 `request_digest`；
+- Policy Digest 和本次授权 `deadline_at`。
+
+9 个写操作固定使用 `rfc8785-request-excluding-request-digest-v1`，摘要覆盖去除 `request_digest` 的完整请求体；路径中的 `sandbox_id` 还必须与 Token 一致。状态、Operation、Exec Result、Snapshot Manifest 和 Event Stream 5 个读操作固定使用各自正式 Descriptor 与 `rfc8785-full-document-v1`；Provider 从 Token、HTTP Path 和按 OpenAPI 默认值归一化后的 Query 合成 Descriptor 后再验证摘要。修改 Path、Operation、Attempt、Fencing 或 `after_sequence` 都必须拒绝，不能让一个合法 Token 跨接口重放。
+
+Capability 发现和每个受令牌保护的操作映射由 OpenAPI 扩展与静态 Gate 强制检查；真正的签名验证、`jti` 重放拒绝、旧 Fencing 拒绝和多节点一致性仍属于 Sandbox Conformance 与实现证据，不能由 Schema 通过替代。
+
+Sandbox Operation Token 的 `nbf` 不得早于所绑定 PolicyDecision，`exp` 不得晚于该 Operation Deadline。商业执行窗口结束后仍允许平台创建新的 Cancel/Terminate 治理 Operation，但不能复用旧执行 Token 或恢复执行权限。
+
 ## Capability 协商
 
 Provider 必须显式声明支持能力和版本：
@@ -252,6 +269,8 @@ runtime_endpoint_reference
 ```
 
 它们都是受权限控制的不透明引用。
+
+公共状态不得携带 `runtime_id`、Region、Cluster、Cell、Node、Pod、VM、Container 或原始 Endpoint；逻辑 `runtime_profile` 不属于后端身份，可以保留。拓扑和后端运行时身份只能存在于 Provider Adapter 私有存储。
 
 实际的 Pod、VM、Container 和 Endpoint 数据保存在 Adapter 私有存储，
 不得进入 CanonicalEvent、RunManifest、用户 API 或稳定内核表。

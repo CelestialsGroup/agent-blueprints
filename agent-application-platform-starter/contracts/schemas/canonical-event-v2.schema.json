@@ -245,11 +245,6 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 200
-        },
-        "runtime_id": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 200
         }
       },
       "additionalProperties": false
@@ -297,6 +292,6 @@
     "dedupe_key is RFC 8785 JCS SHA-256 over tenant_id, producer_id, source_stream_id and source_event_id",
     "Inbox uniqueness on tenant_id plus producer_id plus source_stream_id plus source_event_id rejects source retries before Projection",
     "producer_kind explicitly determines whether provider_revision_id and provider_instance_id are required or forbidden"
-    ,"event_registry identifies the immutable Platform Core Event Registry revision that admits type and data_version"
+    ,"event_registry identifies exactly one admitted Platform Core or Agent Runtime Core Registry revision whose ownership matches producer_kind and whose type, data_version and Payload Schema admit this event; Provider-private registries are forbidden"
   ]
 }

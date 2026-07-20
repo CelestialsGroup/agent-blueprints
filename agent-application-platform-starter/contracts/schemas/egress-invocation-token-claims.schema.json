@@ -4,34 +4,46 @@
   "title": "EgressInvocationTokenClaims",
   "type": "object",
   "required": [
-    "jti", "iss", "aud", "iat", "nbf", "exp", "tenant_id", "work_order_id", "runtime_run_id",
-    "invocation_id", "invocation_attempt_id", "fencing_token", "destination_id", "gateway_binding_digest",
-    "request_digest", "policy_decision_digest", "execution_budget_digest", "permissions_digest"
+    "jti", "iss", "sub", "aud", "iat", "nbf", "exp", "tenant_id", "client_app_id", "work_order_id", "runtime_run_id",
+    "invocation_id", "invocation_attempt_id", "fencing_token", "destination_id", "destination_revision_id",
+    "destination_revision_digest", "destination_class", "gateway_binding_digest",
+    "operation", "operation_contract_id", "operation_digest_profile", "request_digest",
+    "runtime_authorization_digest", "policy_decision_digest",
+    "execution_budget_digest", "permissions_digest"
   ],
   "properties": {
     "jti": { "type": "string", "minLength": 1, "maxLength": 200 },
     "iss": { "const": "agent-platform" },
+    "sub": { "type": "string", "minLength": 1, "maxLength": 300 },
     "aud": { "type": "string", "minLength": 1, "maxLength": 300 },
     "iat": { "type": "integer", "minimum": 0 },
     "nbf": { "type": "integer", "minimum": 0 },
     "exp": { "type": "integer", "minimum": 0 },
     "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "client_app_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "runtime_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "fencing_token": { "type": "integer", "minimum": 1 },
     "destination_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "destination_revision_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "destination_revision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "destination_class": { "type": "string", "pattern": "^[a-z][a-z0-9._-]{0,99}$" },
     "gateway_binding_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "operation": { "const": "http_exchange" },
+    "operation_contract_id": { "const": "urn:agent-platform:egress-http-request:v1" },
+    "operation_digest_profile": { "const": "rfc8785-request-excluding-request-digest-v1" },
     "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "runtime_authorization_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "policy_decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "execution_budget_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "permissions_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
   },
   "additionalProperties": false,
   "x-semantic-constraints": [
-    "iat <= nbf < exp and exp - iat <= 300",
-    "aud and gateway_binding_digest match the admitted Egress Gateway Port while every execution and request claim matches the exact EgressHttpRequest",
-    "destination_id is present in EffectivePermissions and the request cannot supply or override a raw origin"
+    "iat <= nbf < exp, exp - iat <= 300, nbf is no earlier than RuntimeAuthorization issuance and exp is no later than its expiration",
+    "sub matches the authenticated Runtime workload and aud/gateway_binding_digest match the admitted Egress Gateway Port while operation, Contract ID, Digest Profile and every execution/request claim match the exact EgressHttpRequest",
+    "destination_class is present in EffectivePermissions while the token binds an immutable owner-scoped DestinationRevision and the request cannot supply or override a raw origin"
   ]
 }

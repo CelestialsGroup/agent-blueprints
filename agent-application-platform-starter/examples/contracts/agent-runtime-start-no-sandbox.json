@@ -9,9 +9,9 @@
   "invocation_attempt_id": "iat_runtime_01J0000000000000000",
   "fencing_token": 1,
   "idempotency_key": "runtime-start-key-0001",
-  "request_digest": "sha256:5901f7399908cc184c859de6d9d435c8cf3fb9920e255f6107a2f8b2dd981b5d",
+  "request_digest": "sha256:6dd0c0a3533fd20e9b46e47833a7054f7566d6d98117ff9a4f6f091c2c26b660",
   "deadline_at": "2026-07-16T09:15:00Z",
-  "run_manifest_digest": "sha256:01b48ba9543ce6771d9b376ed5493cb745b8505ca4b0eeefe274ce70df75428b",
+  "run_manifest_digest": "sha256:22a43082feb6211b4f5fdfa682bff5cd8af5587efaa243bb7068b81b2ac1a5ca",
   "input_message_id": "msg_01J00000000000000000000000",
   "sandbox_bindings": [],
   "tenant_id": "ten_01J00000000000000000000000",
@@ -52,7 +52,7 @@
         "route_id": "model-route-work-order",
         "protocol_version": "v1",
         "contract_id": "urn:agent-platform:openapi:capability-provider:v1",
-        "contract_digest": "sha256:0a4c171f34ca1f997465d7a788595a9a3ba904a336cf65ddb5b34cb6bed74c42",
+        "contract_digest": "sha256:82ab68c671d838e1c3f0e3e31368c985c118120c8c474d21fc648e312ce7d500",
         "binding_digest": "sha256:40b36bc05f2e1cbc59351599a7436b71deb3c46864e304d2feac0acd4b871027",
         "audience": "agent-model-gateway"
       }
@@ -66,7 +66,7 @@
         "route_id": "tool-route-work-order",
         "protocol_version": "v1",
         "contract_id": "urn:agent-platform:openapi:capability-provider:v1",
-        "contract_digest": "sha256:0a4c171f34ca1f997465d7a788595a9a3ba904a336cf65ddb5b34cb6bed74c42",
+        "contract_digest": "sha256:82ab68c671d838e1c3f0e3e31368c985c118120c8c474d21fc648e312ce7d500",
         "binding_digest": "sha256:7785d40c2d4ba29996921defa096022fedf09ef5ebf127cf829d82e51b92d02b",
         "audience": "agent-tool-gateway"
       }
@@ -80,7 +80,7 @@
         "route_id": "artifact-route-work-order",
         "protocol_version": "v1",
         "contract_id": "urn:agent-platform:openapi:artifact-gateway:v1",
-        "contract_digest": "sha256:1f47bc91e199533c45f3a0c3b82cf3f3d2c27aedf52196ce9805e792e5a9b0c1",
+        "contract_digest": "sha256:b3cc84d2a5e07df5e0773c15d9a8a0824f2da6087cbc8833193d5cff8bdf6097",
         "binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
         "audience": "agent-artifact-gateway"
       }
@@ -94,7 +94,7 @@
         "route_id": "egress-route-work-order",
         "protocol_version": "v1",
         "contract_id": "urn:agent-platform:openapi:egress-gateway:v1",
-        "contract_digest": "sha256:e1ebb3223101e509ab01d68c797a9917f9af471ea7798169452f1f9e8040aaa2",
+        "contract_digest": "sha256:9b7d324c27be0bf9dc93234d6f8a5390bbdb75f6683fd1bd82668ad5ec4310e6",
         "binding_digest": "sha256:bc615a79dfe04287501e0127f2b48de9f22f1b6c8de879dfd93d9f83d4c82a5a",
         "audience": "agent-egress-gateway"
       }
@@ -114,7 +114,7 @@
     "tenant_id": "ten_01J00000000000000000000000",
     "work_order_id": "wrk_01J00000000000000000000000",
     "runtime_run_id": "rtr_01J00000000000000000000000",
-    "run_manifest_digest": "sha256:01b48ba9543ce6771d9b376ed5493cb745b8505ca4b0eeefe274ce70df75428b",
+    "run_manifest_digest": "sha256:22a43082feb6211b4f5fdfa682bff5cd8af5587efaa243bb7068b81b2ac1a5ca",
     "commercial_authorization": {
       "commercial_authorization_id": "cauth_01J00000000000000000000000",
       "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7",
@@ -150,7 +150,7 @@
     },
     "policy_decision": {
       "decision_id": "pol_01J00000000000000000000000",
-      "decision_digest": "sha256:cd3a9c725bb9bfeeda9cff65c0ca3320d60637d0d307c82bdc8cd6faf09c5e81",
+      "decision_digest": "sha256:01ce551eb16d4e2f1fee789c56ed0f630d1496fa7c5d80ab4c16454ee2015ea3",
       "tenant_id": "ten_01J00000000000000000000000",
       "work_order_id": "wrk_01J00000000000000000000000",
       "policy_bundle_digest": "sha256:6161616161616161616161616161616161616161616161616161616161616161",
@@ -173,7 +173,7 @@
         }
       ],
       "outcome": "allow",
-      "effective_permissions_digest": "sha256:1b22bb4691019c29f24a5c8cee8b0b793bdd1f0d9a5eea0478d8359a6f9a0088",
+      "effective_permissions_digest": "sha256:6eaf56c5e16acbcdad6c024efea4282211f5a4f5c0540332410e53c6536b5876",
       "decided_at": "2026-07-16T09:00:59Z",
       "expires_at": "2026-07-16T09:30:00Z",
       "decision_point": "run_admission",
@@ -182,7 +182,7 @@
     },
     "effective_permissions": {
       "permissions_id": "perm_01J00000000000000000000000",
-      "permissions_digest": "sha256:1b22bb4691019c29f24a5c8cee8b0b793bdd1f0d9a5eea0478d8359a6f9a0088",
+      "permissions_digest": "sha256:6eaf56c5e16acbcdad6c024efea4282211f5a4f5c0540332410e53c6536b5876",
       "tenant_id": "ten_01J00000000000000000000000",
       "work_order_id": "wrk_01J00000000000000000000000",
       "model": {
@@ -205,7 +205,7 @@
         "allowed_destination_classes": [
           "model_gateway",
           "artifact_gateway",
-          "public-docs-origin"
+          "public_documentation"
         ]
       },
       "sandbox_slots": []
@@ -235,15 +235,15 @@
           "route_id": "artifact-route-work-order",
           "protocol_version": "v1",
           "contract_id": "urn:agent-platform:openapi:artifact-gateway:v1",
-          "contract_digest": "sha256:1f47bc91e199533c45f3a0c3b82cf3f3d2c27aedf52196ce9805e792e5a9b0c1",
+          "contract_digest": "sha256:b3cc84d2a5e07df5e0773c15d9a8a0824f2da6087cbc8833193d5cff8bdf6097",
           "binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
           "audience": "agent-artifact-gateway"
         },
-        "grant_digest": "sha256:f939c6259c2569d3fcbde33df5ebbcba36e5bc697bf3e0eee0707aaefee6b5a2"
+        "grant_digest": "sha256:3705c3655495f76438427c10a63c0b820df854a09fcf0bd657dab6c3b21a9cad"
       }
     ],
     "issued_at": "2026-07-16T09:01:00Z",
     "expires_at": "2026-07-16T09:15:00Z",
-    "authorization_digest": "sha256:1a165dfcea3ce9aa7c050d4cb38066e576439a1700cfa4f61badb3ae9c7d3373"
+    "authorization_digest": "sha256:60740d552dc364a13925824e6cc68c1e51633985ad7ae87edd1f318262637724"
   }
 }

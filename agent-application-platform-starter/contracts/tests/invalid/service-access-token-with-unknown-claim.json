@@ -1,0 +1,15 @@
+{
+  "iss": "https://business.example.test",
+  "sub": "business-html-product",
+  "aud": "https://agent-api.agent-platform.internal",
+  "iat": 1784192400,
+  "nbf": 1784192400,
+  "exp": 1784192700,
+  "jti": "sat_01J00000000000000000000000",
+  "client_id": "html-product",
+  "scope": "conversation:create session:create",
+  "cnf": {
+    "jkt": "n4bQgYhMfWWaL-qgxVrQFaO_TxsrCkVJqkR1bQ"
+  },
+  "unregistered_claim": "must-fail"
+}

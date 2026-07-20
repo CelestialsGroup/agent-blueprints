@@ -1,0 +1,18 @@
+{
+  "safety_control_id": "ssc_01J00000000000000000000000",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "runtime_run_id": "rtr_01J00000000000000000000000",
+  "action": "resume",
+  "reason": "commercial_authorization_expired",
+  "trigger_evidence": {
+    "evidence_id": "rauth_01J000000000000000000000",
+    "evidence_contract_id": "urn:agent-platform:runtime-authorization:v1",
+    "evidence_digest": "sha256:e1afe2a4ca37353c6978dfa6dd3cc13a2b1a0015c87bd7dbbedb15eccae237ec",
+    "observed_at": "2026-07-16T09:15:01Z"
+  },
+  "issued_by": "platform_safety_controller",
+  "issuer_subject_id": "spn_agent_safety_controller",
+  "issued_at": "2026-07-16T09:16:00Z",
+  "control_digest": "sha256:494154f0f42952a06fa78d599666aa8969dd086a728a300b196139c98ab3b7bd"
+}

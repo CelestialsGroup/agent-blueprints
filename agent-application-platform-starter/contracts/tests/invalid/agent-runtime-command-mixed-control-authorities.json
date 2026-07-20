@@ -1,0 +1,16 @@
+{
+  "command_id": "rtcmd_safety_01J000000000000000000",
+  "command_digest": "sha256:73214ea6c40dce0745e5d471143ffac8bfe2783f60b5c12ceba875b0e49f7897",
+  "runtime_run_id": "rtr_01J00000000000000000000000",
+  "command_sequence": 3,
+  "type": "cancel",
+  "system_safety_control_id": "ssc_01J00000000000000000000000",
+  "system_safety_control_digest": "sha256:ef6231cea517c67ef5efdb59080e46b7357867e6f18a1934279022abb163ea0a",
+  "invocation_id": "inv_runtime_safety_01J00000000000",
+  "invocation_attempt_id": "iat_runtime_safety_01J0000000001",
+  "fencing_token": 3,
+  "idempotency_key": "runtime-safety-command-key-0003",
+  "deadline_at": "2026-07-16T09:21:00Z",
+  "reason": "Commercial authorization expired; stop the active run.",
+  "authorized_control_request_id": "ctl_01J00000000000000000000000"
+}

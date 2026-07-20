@@ -1,0 +1,8 @@
+{
+  "invocation_id": "inv_01J00000000000000000000000",
+  "provider_operation_id": "legacy-provider-operation-0001",
+  "fencing_token": 1,
+  "reason": "workflow cancelled",
+  "invocation_attempt_id": "att_01J00000000000000000000000",
+  "request_digest": "sha256:9b673dffcf22cf465cd167d64af04bcb8b0ace699275b7ce9b3f868ec75c17ff"
+}

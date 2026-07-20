@@ -1,10 +1,12 @@
 {
   "jti": "cit_01J00000000000000000000000",
   "iss": "agent-platform",
+  "sub": "spn_agent_capability_dispatcher",
   "aud": "urn:agent-platform:provider-instance:hpi_html_anything",
   "iat": 1784192470,
   "nbf": 1784192470,
   "exp": 1784192770,
+  "authority_mode": "execution",
   "operation": "invoke",
   "authorization_sequence": 1,
   "predecessor_jti": null,
@@ -21,10 +23,12 @@
   "invocation_id": "inv_cap_01J000000000000000000000",
   "invocation_attempt_id": "iat_cap_01J00000000000000000000",
   "fencing_token": 1,
-  "invocation_request_digest": "sha256:cb2db69bda6053cafb3313efcce2a07f3ae14ed2a1a1bf7f656ffc74f07ca4f9",
-  "operation_request_digest": "sha256:cb2db69bda6053cafb3313efcce2a07f3ae14ed2a1a1bf7f656ffc74f07ca4f9",
-  "policy_decision_digest": "sha256:107d8f6e3b3e491c0f65d81d13d4107ae72e2f4e02291fdb386c64d062e45380",
+  "invocation_request_digest": "sha256:df048cc01d41a452390e8386be75bbe09ce676ebe63dd9c1a3f6893d13d3db81",
+  "operation_contract_id": "urn:agent-platform:capability-invocation-request:v1",
+  "operation_digest_profile": "rfc8785-request-excluding-request-digest-v1",
+  "operation_request_digest": "sha256:df048cc01d41a452390e8386be75bbe09ce676ebe63dd9c1a3f6893d13d3db81",
+  "policy_decision_digest": "sha256:58994a9f827f42052f35d31cba637ba1d9e12b3966986e443cc07a717d9be3f4",
   "execution_budget_digest": "sha256:4e8aac35b4943db25ecbb3ea6fa2259cdb2f3c144bb837f1cc6c97b0b6f94096",
-  "permissions_digest": "sha256:87356194834eefdb7c53e91088046524c32e8bfdd929a45a6163dbfc05b588fb",
-  "staging_grant_digest": "sha256:9c63071f90f3b696780635191a6c755c49799434aa0eb90119e5a6fa075eac80"
+  "permissions_digest": "sha256:258682bb254cc4fafff41ccea043261e9c9381ca9a42e0efef0e3f20e9c1b70c",
+  "staging_grant_digest": "sha256:7e086f12b648800ef195e7f104095e102320db132164ee33cb27f97e81e16d01"
 }

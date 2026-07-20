@@ -7,7 +7,8 @@
     "invocation_id",
     "fencing_token",
     "reason",
-    "invocation_attempt_id"
+    "invocation_attempt_id",
+    "request_digest"
   ],
   "properties": {
     "invocation_id": {
@@ -25,7 +26,15 @@
     },
     "invocation_attempt_id": {
       "type": "string"
+    },
+    "request_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "request_digest is RFC 8785 JCS SHA-256 over the cancellation request excluding request_digest",
+    "cancellation is idempotent intent and does not prove that the Plugin effect stopped before completion"
+  ]
 }

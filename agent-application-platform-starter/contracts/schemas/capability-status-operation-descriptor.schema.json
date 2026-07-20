@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:capability-status-operation-descriptor:v1",
+  "title": "CapabilityStatusOperationDescriptor",
+  "type": "object",
+  "required": [
+    "operation", "invocation_id", "invocation_attempt_id", "fencing_token", "provider_operation_id"
+  ],
+  "properties": {
+    "operation": { "const": "status" },
+    "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "fencing_token": { "type": "integer", "minimum": 1 },
+    "provider_operation_id": { "type": "string", "minLength": 1, "maxLength": 500 }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "the operation_request_digest is RFC 8785 JCS SHA-256 over this complete descriptor using rfc8785-full-document-v1",
+    "all identifiers and fencing_token match the original admitted Capability InvocationAttempt"
+  ]
+}

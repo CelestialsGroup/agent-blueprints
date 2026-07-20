@@ -1,5 +1,6 @@
 .PHONY: bootstrap-contracts prepare-openapi validate-static validate-contracts validate-compatibility \
-	validate-jcs validate-supply-chain validate-architecture bundle-openapi validate-all clean-contracts
+	validate-jcs validate-supply-chain validate-architecture bundle-openapi \
+	validate-bundle-determinism validate-all clean-contracts
 
 PYTHON ?= .venv/bin/python
 PNPM ?= corepack pnpm
@@ -34,9 +35,13 @@ bundle-openapi: prepare-openapi
 	mkdir -p build
 	$(PNPM) run bundle:openapi
 
-validate-architecture: validate-static validate-contracts validate-compatibility validate-jcs bundle-openapi
+validate-bundle-determinism: prepare-openapi
+	$(PYTHON) scripts/verify_openapi_bundle_determinism.py
+
+validate-architecture: validate-static validate-contracts validate-compatibility validate-jcs validate-bundle-determinism
 	$(PYTHON) scripts/verify_contract_manifest.py
 	node scripts/verify_contract_manifest.mjs
+	$(PYTHON) scripts/generate_validation_evidence.py
 	@echo "Architecture contract, semantic, compatibility-comparator, JCS and OpenAPI gates passed."
 
 validate-all:

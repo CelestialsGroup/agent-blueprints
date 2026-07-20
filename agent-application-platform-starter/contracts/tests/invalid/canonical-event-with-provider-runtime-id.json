@@ -1,0 +1,43 @@
+{
+  "event_id": "evt_01J00000000000000000000000",
+  "schema_version": 2,
+  "tenant_id": "ten_01J00000000000000000000000",
+  "producer_kind": "provider",
+  "producer_id": "runtime-adapter",
+  "provider_revision_id": "apr_01J00000000000000000000000",
+  "source_stream_id": "runtime/provider-run-private",
+  "source_event_id": "provider-event-1",
+  "source_cursor": "1",
+  "dedupe_key": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "event_registry": {
+    "registry_id": "agent-runtime-core",
+    "registry_version": 1,
+    "registry_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "conversation_id": "conv_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "turn_id": "turn_01J00000000000000000000000",
+  "branch_id": "main",
+  "input_message_id": "msg_01J00000000000000000000000",
+  "work_sequence": 1,
+  "aggregate": {
+    "type": "agent_run",
+    "id": "agr_01J00000000000000000000000",
+    "sequence": 1
+  },
+  "type": "runtime.run.started",
+  "occurred_at": "2026-07-20T00:00:00Z",
+  "actor": {
+    "type": "provider",
+    "id": "runtime-adapter"
+  },
+  "data": {},
+  "metadata": {
+    "trace_id": "trace-001",
+    "correlation_id": "wrk_01J00000000000000000000000",
+    "provider_instance_id": "api_runtime",
+    "runtime_id": "provider-private-run-123"
+  },
+  "data_version": 1,
+  "recorded_at": "2026-07-20T00:00:01Z"
+}

@@ -59,6 +59,9 @@ paths:
       tags: [Runs]
       operationId: startAgentRuntimeRun
       summary: Idempotently start or restore one governed Agent Runtime run
+      x-required-runtime-token-operation: start
+      x-operation-contract-id: urn:agent-platform:agent-runtime-start-request:v1
+      x-operation-digest-profile: rfc8785-request-excluding-request-digest-v1
       x-max-encoded-body-bytes: 8388608
       parameters:
         - $ref: '#/components/parameters/Traceparent'
@@ -102,6 +105,10 @@ paths:
       tags: [Runs]
       operationId: getAgentRuntimeRun
       summary: Read the confirmed provider-local state of a runtime run
+      x-required-runtime-token-operation: read_status
+      x-operation-contract-id: urn:agent-platform:agent-runtime-status-operation-descriptor:v1
+      x-operation-digest-profile: rfc8785-full-document-v1
+      x-operation-descriptor-schema: ../schemas/agent-runtime-status-operation-descriptor.schema.json
       responses:
         '200':
           description: Current runtime state
@@ -128,6 +135,9 @@ paths:
       tags: [Runs]
       operationId: submitAgentRuntimeCommand
       summary: Append an idempotent input, control, approval or checkpoint command
+      x-required-runtime-token-operation: submit_command
+      x-operation-contract-id: urn:agent-platform:agent-runtime-command:v1
+      x-operation-digest-profile: rfc8785-command-excluding-command-digest-v1
       x-max-encoded-body-bytes: 262144
       requestBody:
         required: true
@@ -171,6 +181,10 @@ paths:
       tags: [Runs]
       operationId: readAgentRuntimeEvents
       summary: Read durable provider-local events after a runtime cursor
+      x-required-runtime-token-operation: read_events
+      x-operation-contract-id: urn:agent-platform:agent-runtime-event-read-operation-descriptor:v1
+      x-operation-digest-profile: rfc8785-full-document-v1
+      x-operation-descriptor-schema: ../schemas/agent-runtime-event-read-operation-descriptor.schema.json
       parameters:
         - name: after_event_sequence
           in: query
@@ -178,6 +192,8 @@ paths:
           schema:
             type: integer
             minimum: 0
+            maximum: 9007199254740991
+            default: 0
         - name: limit
           in: query
           required: false
@@ -185,6 +201,7 @@ paths:
             type: integer
             minimum: 1
             maximum: 1000
+            default: 1000
       responses:
         '200':
           description: Ordered runtime events
@@ -214,9 +231,11 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      x-jws-header-contract-id: urn:agent-platform:agent-runtime-invocation-jws-header:v1
+      x-jwt-claims-contract-id: urn:agent-platform:agent-runtime-invocation-token-claims:v1
       description: |
         Short-lived token bound to ProviderRevision, runtime_run_id, InvocationAttempt,
-        fencing token, RunManifest digest and approved permissions. Claims MUST validate
+        fencing token, operation Contract/Profile/Digest, RunManifest digest and approved permissions. Claims MUST validate
         against urn:agent-platform:agent-runtime-invocation-token-claims:v1 and match the
         request body or authenticated path before any state is read or mutated.
 

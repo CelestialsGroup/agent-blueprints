@@ -29,7 +29,7 @@
         "retryable": { "type": "boolean" },
         "outcome": { "enum": ["known_failed", "outcome_unknown"] },
         "provider_code": { "type": "string" },
-        "details": { "type": "object" }
+        "details": { "$ref": "urn:agent-platform:bounded-details:v1" }
       },
       "additionalProperties": false
     },

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:commercial-authorization-revocation-accepted:v1",
+  "title": "CommercialAuthorizationRevocationAccepted",
+  "type": "object",
+  "required": ["revocation_id", "revocation_receipt_id", "status", "accepted_at"],
+  "properties": {
+    "revocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "revocation_receipt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "status": { "const": "accepted" },
+    "accepted_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:plugin-event-read-operation-descriptor:v1",
+  "title": "PluginEventReadOperationDescriptor",
+  "type": "object",
+  "required": ["operation", "invocation_id", "invocation_attempt_id", "fencing_token", "after_sequence"],
+  "properties": {
+    "operation": { "const": "read_events" },
+    "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "fencing_token": { "type": "integer", "minimum": 1 },
+    "after_sequence": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "operation_request_digest is RFC 8785 JCS SHA-256 over this complete descriptor using rfc8785-full-document-v1",
+    "path and query values are normalized with OpenAPI defaults before digest validation and all identifiers match the bridged InvocationAttempt"
+  ]
+}

@@ -9,6 +9,7 @@
     "runtime_run_id",
     "command_sequence",
     "type",
+    "invocation_id",
     "invocation_attempt_id",
     "fencing_token",
     "idempotency_key",
@@ -21,11 +22,14 @@
     "command_sequence": { "type": "integer", "minimum": 1 },
     "type": { "enum": ["append_input", "interrupt", "pause", "resume", "cancel", "approval_decision", "checkpoint"] },
     "authorized_control_request_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "system_safety_control_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "system_safety_control_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "input_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "input_content_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "approval_id": { "type": "string", "minLength": 1 },
     "decision": { "$ref": "urn:agent-platform:approval-decision:v1" },
     "reason": { "type": "string", "minLength": 1, "maxLength": 1000 },
+    "invocation_id": { "type": "string", "minLength": 1 },
     "invocation_attempt_id": { "type": "string", "minLength": 1 },
     "fencing_token": { "type": "integer", "minimum": 1 },
     "idempotency_key": { "type": "string", "minLength": 16 },
@@ -37,29 +41,80 @@
       "if": { "properties": { "type": { "const": "append_input" } }, "required": ["type"] },
       "then": {
         "required": ["authorized_control_request_id", "input_id", "input_content_digest"],
-        "not": { "anyOf": [{ "required": ["approval_id"] }, { "required": ["decision"] }] }
+        "not": {
+          "anyOf": [
+            { "required": ["system_safety_control_id"] },
+            { "required": ["system_safety_control_digest"] },
+            { "required": ["approval_id"] },
+            { "required": ["decision"] }
+          ]
+        }
       }
     },
     {
       "if": { "properties": { "type": { "const": "interrupt" } }, "required": ["type"] },
       "then": {
         "required": ["authorized_control_request_id", "input_id", "input_content_digest"],
-        "not": { "anyOf": [{ "required": ["approval_id"] }, { "required": ["decision"] }] }
+        "not": {
+          "anyOf": [
+            { "required": ["system_safety_control_id"] },
+            { "required": ["system_safety_control_digest"] },
+            { "required": ["approval_id"] },
+            { "required": ["decision"] }
+          ]
+        }
       }
     },
     {
       "if": { "properties": { "type": { "const": "approval_decision" } }, "required": ["type"] },
       "then": {
         "required": ["authorized_control_request_id", "approval_id", "decision"],
-        "not": { "anyOf": [{ "required": ["input_id"] }, { "required": ["input_content_digest"] }] }
+        "not": {
+          "anyOf": [
+            { "required": ["system_safety_control_id"] },
+            { "required": ["system_safety_control_digest"] },
+            { "required": ["input_id"] },
+            { "required": ["input_content_digest"] }
+          ]
+        }
       }
     },
     {
-      "if": { "properties": { "type": { "enum": ["pause", "resume", "cancel"] } }, "required": ["type"] },
+      "if": { "properties": { "type": { "enum": ["pause", "cancel"] } }, "required": ["type"] },
+      "then": {
+        "oneOf": [
+          {
+            "required": ["authorized_control_request_id"],
+            "not": {
+              "anyOf": [
+                { "required": ["system_safety_control_id"] },
+                { "required": ["system_safety_control_digest"] }
+              ]
+            }
+          },
+          {
+            "required": ["system_safety_control_id", "system_safety_control_digest"],
+            "not": { "required": ["authorized_control_request_id"] }
+          }
+        ],
+        "not": {
+          "anyOf": [
+            { "required": ["input_id"] },
+            { "required": ["input_content_digest"] },
+            { "required": ["approval_id"] },
+            { "required": ["decision"] }
+          ]
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "resume" } }, "required": ["type"] },
       "then": {
         "required": ["authorized_control_request_id"],
         "not": {
           "anyOf": [
+            { "required": ["system_safety_control_id"] },
+            { "required": ["system_safety_control_digest"] },
             { "required": ["input_id"] },
             { "required": ["input_content_digest"] },
             { "required": ["approval_id"] },
@@ -74,6 +129,8 @@
         "not": {
           "anyOf": [
             { "required": ["authorized_control_request_id"] },
+            { "required": ["system_safety_control_id"] },
+            { "required": ["system_safety_control_digest"] },
             { "required": ["input_id"] },
             { "required": ["input_content_digest"] },
             { "required": ["approval_id"] },
@@ -88,7 +145,8 @@
     "command_sequence is contiguous per runtime_run_id",
     "commands are append-only and repeated command_id plus digest is idempotent",
     "a stale fencing_token cannot mutate runtime state",
-    "append_input and interrupt reference a persisted WorkOrderControlRequest and its immutable input; Runtime transport never accepts an unbound message ID",
-    "the RuntimeInvocation token request_digest equals command_digest"
+    "user-originated commands reference a persisted WorkOrderControlRequest with the same action and immutable input; Runtime transport never accepts an unbound message ID",
+    "pause and cancel use exactly one authority source; a SystemSafetyControl must match Tenant, WorkOrder, RuntimeRun, action and digest, while Resume, Append, Interrupt, Approval and Checkpoint cannot use it",
+    "the RuntimeInvocation token operation_request_digest equals command_digest and binds the same logical Invocation"
   ]
 }

@@ -1,6 +1,6 @@
 {
   "usage_report_id": "usr_invalid_first_correction",
-  "usage_report_digest": "sha256:04e5c7cf23e77fb5b7f3d6d0501dc2006b023ad853efca55b2b94175eb29c5b6",
+  "usage_report_digest": "sha256:4dc8eb9bdad54a9d03706576df6391262963cb82317a90fc2b2508737550568c",
   "tenant_id": "ten_01J00000000000000000000000",
   "work_order_id": "wrk_01J00000000000000000000000",
   "commercial_authorization_id": "cauth_01J00000000000000000000000",
@@ -26,7 +26,7 @@
         "type": "provider",
         "id": "api_deerflow_runtime",
         "provider_revision_id": "apr_01J00000000000000000000000",
-        "provider_revision_digest": "sha256:a8d4ff188608bd741bfc406616b21037b4fde246a6815c4b93e0d2b5cd571dfe"
+        "provider_revision_digest": "sha256:86b5143b00130794824f438e5c05adb35c219569d959a229cf567cb4914c0dda"
       },
       "provider_operation_id": "provider-op-model-001",
       "meter_source": "provider_reported",

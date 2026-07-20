@@ -51,6 +51,7 @@ def bytes_digest(value: bytes) -> str:
 
 
 suite_paths = {
+    "agent_access": "contracts/conformance/agent-access/v1/suite.json",
     "agent_runtime": "contracts/conformance/runtime/v1/suite.json",
     "sandbox": "contracts/conformance/sandbox/v1/suite.json",
     "runtime_gateway": "contracts/conformance/runtime-gateway/v1/suite.json",
@@ -405,9 +406,12 @@ sandbox_spec["workspace"]["base_revision_digest"] = workspace_revision["revision
 sandbox_spec["workspace"].pop("base_branch_version", None)
 sandbox_spec["workspace"]["base_workspace_head_version"] = conversation_branch["workspace_head_version"]
 sandbox_spec["workspace"]["commit_mode"] = "cas_new_revision"
+sandbox_spec["lease"]["expires_at"] = "2026-07-16T09:15:00Z"
+sandbox_spec["lease"]["max_extension_seconds"] = 600
 write("examples/contracts/sandbox-spec.json", sandbox_spec)
 sandbox_create = read("examples/contracts/sandbox-create-request.json")
 sandbox_create["spec"] = copy.deepcopy(sandbox_spec)
+sandbox_create["deadline_at"] = "2026-07-16T09:05:00Z"
 sandbox_create["request_digest"] = digest_without(sandbox_create, "request_digest")
 write("examples/contracts/sandbox-create-request.json", sandbox_create)
 sandbox_restore = read("examples/contracts/sandbox-restore-request.json")
@@ -420,6 +424,24 @@ sandbox_restore["spec"]["workspace"]["base_workspace_head_version"] = conversati
 sandbox_restore["spec"]["workspace"]["commit_mode"] = "cas_new_revision"
 sandbox_restore["request_digest"] = digest_without(sandbox_restore, "request_digest")
 write("examples/contracts/sandbox-restore-request.json", sandbox_restore)
+sandbox_requests: dict[str, tuple[str, dict[str, Any], str]] = {
+    "create": ("examples/contracts/sandbox-create-request.json", sandbox_create, sandbox_spec["sandbox_id"]),
+    "restore": ("examples/contracts/sandbox-restore-request.json", sandbox_restore, sandbox_restore["spec"]["sandbox_id"]),
+}
+for operation, filename in {
+    "set_desired_state": "sandbox-desired-state-request.json",
+    "extend_lease": "sandbox-lease-request.json",
+    "exec": "sandbox-exec-request.json",
+    "cancel_exec": "sandbox-cancel-exec-request.json",
+    "open_runtime_session": "sandbox-runtime-session-open-request.json",
+    "snapshot": "sandbox-snapshot-request.json",
+    "terminate": "sandbox-terminate-request.json",
+}.items():
+    path = f"examples/contracts/{filename}"
+    request = read(path)
+    request["request_digest"] = digest_without(request, "request_digest")
+    write(path, request)
+    sandbox_requests[operation] = (path, request, sandbox_spec["sandbox_id"])
 work_session = read("examples/contracts/work-session-request.json")
 work_session["commercial_authorization"] = commercial
 work_session["principal_context"] = copy.deepcopy(principal_context)
@@ -449,10 +471,186 @@ permissions["artifact"] = {
         "stage_new_version", legacy_artifact_permissions.get("write", False)
     ),
 }
-if "public-docs-origin" not in permissions["egress"]["allowed_destination_classes"]:
-    permissions["egress"]["allowed_destination_classes"].append("public-docs-origin")
+permissions["egress"]["allowed_destination_classes"] = [
+    value for value in permissions["egress"]["allowed_destination_classes"]
+    if value != "public-docs-origin"
+]
+if "public_documentation" not in permissions["egress"]["allowed_destination_classes"]:
+    permissions["egress"]["allowed_destination_classes"].append("public_documentation")
 permissions["permissions_digest"] = digest_without(permissions, "permissions_digest")
 write(permissions_path, permissions)
+
+service_access_token = {
+    "iss": "https://business.example.test",
+    "sub": "business-html-product",
+    "aud": "https://agent-api.agent-platform.internal",
+    "iat": 1784192400,
+    "nbf": 1784192400,
+    "exp": 1784192700,
+    "jti": "sat_01J00000000000000000000000",
+    "client_id": principal_context["client_app_id"],
+    "scope": "conversation:create session:create",
+    "cnf": {"jkt": "n4bQgYhMfWWaL-qgxVrQFaO_TxsrCkVJqkR1bQ"},
+}
+write("examples/contracts/service-access-token-claims.json", service_access_token)
+service_access_token_unknown = copy.deepcopy(service_access_token)
+service_access_token_unknown["unregistered_claim"] = "must-fail"
+write(
+    "contracts/tests/invalid/service-access-token-with-unknown-claim.json",
+    service_access_token_unknown,
+)
+
+work_session_claims = {
+    "jti": "wsc_01J00000000000000000000000",
+    "iss": "agent-platform",
+    "aud": "agent-workbench",
+    "iat": 1784192400,
+    "nbf": 1784192400,
+    "exp": 1784193300,
+    "session_id": "wss_01J00000000000000000000000",
+    "client_app_id": principal_context["client_app_id"],
+    "tenant_id": budget["tenant_id"],
+    "principal_id": work_session["external_principal_id"],
+    "conversation_id": grant["conversation_id"],
+    "commercial_authorization_id": commercial["commercial_authorization_id"],
+    "commercial_authorization_digest": commercial["commercial_authorization_digest"],
+    "commercial_authorization_expires_at": commercial["expires_at"],
+    "principal_context_digest": principal_context["principal_context_digest"],
+    "scopes": work_session["scopes"],
+    "session_version": 1,
+}
+write("examples/contracts/work-session-claims.json", work_session_claims)
+work_session_missing_context = copy.deepcopy(work_session_claims)
+work_session_missing_context.pop("principal_context_digest")
+write(
+    "contracts/tests/invalid/work-session-claims-missing-principal-context.json",
+    work_session_missing_context,
+)
+
+plugin_request = read("examples/contracts/plugin-invocation-request.json")
+plugin_request["tenant_id"] = budget["tenant_id"]
+plugin_request["client_app_id"] = principal_context["client_app_id"]
+plugin_request["work_order_id"] = budget["work_order_id"]
+plugin_request["deadline_at"] = "2026-07-16T09:20:00Z"
+for artifact in plugin_request["input_artifacts"]:
+    artifact["expires_at"] = "2026-07-16T09:10:00Z"
+plugin_request["output_staging"]["expires_at"] = "2026-07-16T09:20:00Z"
+plugin_request["request_digest"] = digest_without(plugin_request, "request_digest")
+write("examples/contracts/plugin-invocation-request.json", plugin_request)
+plugin_status_descriptor = {
+    "operation": "status",
+    "invocation_id": plugin_request["invocation_id"],
+    "invocation_attempt_id": plugin_request["invocation_attempt_id"],
+    "fencing_token": plugin_request["fencing_token"],
+}
+write("examples/contracts/plugin-status-operation-descriptor.json", plugin_status_descriptor)
+plugin_cancel_request = {
+    "invocation_id": plugin_request["invocation_id"],
+    "provider_operation_id": "legacy-provider-operation-0001",
+    "fencing_token": plugin_request["fencing_token"],
+    "reason": "workflow cancelled",
+    "invocation_attempt_id": plugin_request["invocation_attempt_id"],
+    "request_digest": "sha256:" + "0" * 64,
+}
+plugin_cancel_request["request_digest"] = digest_without(plugin_cancel_request, "request_digest")
+write("examples/contracts/plugin-cancellation-request.json", plugin_cancel_request)
+plugin_event_descriptor = {
+    "operation": "read_events",
+    "invocation_id": plugin_request["invocation_id"],
+    "invocation_attempt_id": plugin_request["invocation_attempt_id"],
+    "fencing_token": plugin_request["fencing_token"],
+    "after_sequence": 0,
+}
+write("examples/contracts/plugin-event-read-operation-descriptor.json", plugin_event_descriptor)
+plugin_token_base = {
+    "iss": "agent-platform",
+    "sub": "spn_agent_capability_bridge",
+    "aud": "urn:agent-platform:provider-instance:legacy-html-to-pptx",
+    "iat": 1784192460,
+    "nbf": 1784192460,
+    "exp": 1784192760,
+    "tenant_id": plugin_request["tenant_id"],
+    "client_app_id": plugin_request["client_app_id"],
+    "work_order_id": plugin_request["work_order_id"],
+    "plugin_id": "html-to-pptx",
+    "provider_revision_id": "legacypr_html_to_pptx_01",
+    "invocation_id": plugin_request["invocation_id"],
+    "invocation_attempt_id": plugin_request["invocation_attempt_id"],
+    "fencing_token": plugin_request["fencing_token"],
+    "capability_id": plugin_request["capability"]["id"],
+    "capability_version": plugin_request["capability"]["version"],
+    "staging_session_id": plugin_request["output_staging"]["session_id"],
+    "permissions_digest": permissions["permissions_digest"],
+    "invocation_request_digest": plugin_request["request_digest"],
+    "deadline_at": plugin_request["deadline_at"],
+}
+plugin_operations = {
+    "invoke": (
+        "examples/contracts/plugin-invocation-token-claims.json",
+        "urn:agent-platform:plugin-invocation-request:v1",
+        "rfc8785-request-excluding-request-digest-v1",
+        plugin_request["request_digest"],
+        plugin_request,
+    ),
+    "status": (
+        "examples/contracts/plugin-status-token-claims.json",
+        "urn:agent-platform:plugin-status-operation-descriptor:v1",
+        "rfc8785-full-document-v1",
+        digest(plugin_status_descriptor),
+        plugin_status_descriptor,
+    ),
+    "cancel": (
+        "examples/contracts/plugin-cancellation-token-claims.json",
+        "urn:agent-platform:plugin-cancellation-request:v1",
+        "rfc8785-request-excluding-request-digest-v1",
+        plugin_cancel_request["request_digest"],
+        plugin_cancel_request,
+    ),
+    "read_events": (
+        "examples/contracts/plugin-events-token-claims.json",
+        "urn:agent-platform:plugin-event-read-operation-descriptor:v1",
+        "rfc8785-full-document-v1",
+        digest(plugin_event_descriptor),
+        plugin_event_descriptor,
+    ),
+}
+plugin_tokens: dict[str, dict[str, Any]] = {}
+for index, (operation, (path, contract_id, profile, operation_digest, document)) in enumerate(
+    plugin_operations.items(), start=1
+):
+    plugin_token = copy.deepcopy(plugin_token_base)
+    plugin_token.update({
+        "jti": f"pit_{index:02d}_01J00000000000000000000000",
+        "authority_mode": "execution" if operation == "invoke" else "safety_control",
+        "operation": operation,
+        "operation_contract_id": contract_id,
+        "operation_digest_profile": profile,
+        "operation_request_digest": operation_digest,
+        "invocation_id": document["invocation_id"],
+        "invocation_attempt_id": document["invocation_attempt_id"],
+        "fencing_token": document["fencing_token"],
+    })
+    if operation != "invoke":
+        plugin_token.update({"iat": 1784193660, "nbf": 1784193660, "exp": 1784193960})
+    plugin_tokens[operation] = plugin_token
+    write(path, plugin_token)
+plugin_token_missing_contract = copy.deepcopy(plugin_tokens["invoke"])
+plugin_token_missing_contract.pop("operation_contract_id")
+write(
+    "contracts/tests/invalid/plugin-token-missing-operation-contract.json",
+    plugin_token_missing_contract,
+)
+plugin_token_contract_replay = copy.deepcopy(plugin_tokens["read_events"])
+plugin_token_contract_replay["operation_contract_id"] = (
+    "urn:agent-platform:plugin-status-operation-descriptor:v1"
+)
+write(
+    "contracts/tests/invalid/plugin-token-operation-contract-replay.json",
+    plugin_token_contract_replay,
+)
+plugin_safety_invoke = copy.deepcopy(plugin_tokens["invoke"])
+plugin_safety_invoke["authority_mode"] = "safety_control"
+write("contracts/tests/invalid/plugin-safety-token-authorizes-invoke.json", plugin_safety_invoke)
 
 runtime_input_path = "examples/contracts/runtime-input-envelope.json"
 runtime_input = read(runtime_input_path)
@@ -722,6 +920,7 @@ for sandbox in manifest["sandboxes"]:
     sandbox.pop("provider_revision", None)
     sandbox.pop("provider_instance_id", None)
     sandbox["resolution_id"] = "res_sandbox_exec_01J0000000000000"
+    sandbox["sandbox_spec_digest"] = digest(sandbox_spec)
 manifest["selected_experiences"] = [
     {
         "selection": {
@@ -769,6 +968,15 @@ manifest["event_registry"] = {
 }
 manifest["conversation"]["workspace_revision_id"] = workspace_revision["workspace_revision_id"]
 manifest["conversation"]["workspace_revision_digest"] = workspace_revision["revision_digest"]
+manifest["location"] = {
+    "placement_mode": "platform_managed",
+    "region_id": "ap-southeast-1",
+    "placement_policy_reference": "placement-policy/default-v1",
+    "placement_decision_digest": "sha256:" + "0" * 64,
+}
+manifest["location"]["placement_decision_digest"] = digest_without(
+    manifest["location"], "placement_decision_digest"
+)
 turn_request_for_manifest = read("examples/contracts/conversation-turn-request.json")
 manifest.pop("request_digest", None)
 manifest["request_binding"] = {
@@ -778,6 +986,12 @@ manifest["request_binding"] = {
 }
 manifest["run_manifest_digest"] = digest_without(manifest, "run_manifest_digest")
 write(manifest_path, manifest)
+manifest_with_provider_topology = copy.deepcopy(manifest)
+manifest_with_provider_topology["location"]["cluster_id"] = "cluster-a"
+write(
+    "contracts/tests/invalid/run-manifest-location-with-provider-topology.json",
+    manifest_with_provider_topology,
+)
 
 missing_sandbox_resolution = copy.deepcopy(manifest)
 missing_sandbox_resolution["sandboxes"][0].pop("resolution_id")
@@ -803,6 +1017,15 @@ no_sandbox_manifest["policy_decision"]["effective_permissions_digest"] = no_sand
 ]["permissions_digest"]
 no_sandbox_manifest["policy_decision"]["decision_digest"] = digest_without(
     no_sandbox_manifest["policy_decision"], "decision_digest"
+)
+no_sandbox_manifest["location"] = {
+    "placement_mode": "provider_managed",
+    "region_id": None,
+    "placement_policy_reference": "placement-policy/provider-managed-v1",
+    "placement_decision_digest": "sha256:" + "0" * 64,
+}
+no_sandbox_manifest["location"]["placement_decision_digest"] = digest_without(
+    no_sandbox_manifest["location"], "placement_decision_digest"
 )
 no_sandbox_manifest["run_manifest_digest"] = digest_without(no_sandbox_manifest, "run_manifest_digest")
 write("examples/contracts/run-manifest-no-sandbox.json", no_sandbox_manifest)
@@ -836,6 +1059,48 @@ for path, keys in scenario_reference_paths:
         target = target[key]
     target[keys[-1]] = scenario_digest
     write(path, value)
+
+conversation_create_unbounded_metadata = read("examples/contracts/conversation-create-request.json")
+conversation_create_unbounded_metadata["metadata"] = {"nested": {"unbounded": True}}
+write(
+    "contracts/tests/invalid/conversation-create-unbounded-metadata.json",
+    conversation_create_unbounded_metadata,
+)
+work_order_unbounded_metadata = read("examples/contracts/work-order.json")
+work_order_unbounded_metadata["metadata"] = {"nested": {"unbounded": True}}
+write(
+    "contracts/tests/invalid/work-order-unbounded-metadata.json",
+    work_order_unbounded_metadata,
+)
+
+sandbox_status = {
+    "sandbox_id": sandbox_spec["sandbox_id"],
+    "tenant_id": sandbox_spec["tenant_id"],
+    "work_order_id": sandbox_spec["work_order_id"],
+    "workspace_id": sandbox_spec["workspace_id"],
+    "provider_revision_id": sandbox_spec["provider_revision_id"],
+    "desired_state": "ready",
+    "observed_state": "ready",
+    "generation": 1,
+    "observed_generation": 1,
+    "runtime_profile": sandbox_spec["runtime_profile"],
+    "runtime_endpoint_reference": "provider-route:runtime-session-primary",
+    "provider_state_reference": "provider-state:sandbox-primary",
+    "lease_expires_at": sandbox_spec["lease"]["expires_at"],
+    "created_at": "2026-07-16T09:00:00Z",
+    "updated_at": "2026-07-16T09:01:00Z",
+    "sandbox_slot_key": sandbox_spec["sandbox_slot_key"],
+}
+write("examples/contracts/sandbox-status.json", sandbox_status)
+sandbox_status_with_topology = copy.deepcopy(sandbox_status)
+sandbox_status_with_topology.update({
+    "cluster_id": "cluster-a",
+    "node_id": "node-a",
+})
+write(
+    "contracts/tests/invalid/sandbox-status-with-provider-topology.json",
+    sandbox_status_with_topology,
+)
 
 template_reference_paths = [
     ("examples/contracts/conversation-turn-request.json", ("experience_selections", 0, "revision_digest")),
@@ -902,6 +1167,32 @@ for field in (
     control_grant.pop(field, None)
 control_grant["request_digest"] = digest_without(control_request, "execution_grant")
 write("examples/contracts/execution-grant-control-claims.json", control_grant)
+
+commercial_revocation_path = "examples/contracts/commercial-authorization-revocation.json"
+commercial_revocation = read(commercial_revocation_path)
+commercial_revocation.update({
+    "external_tenant_id": grant["external_tenant_id"],
+    "commercial_authorization_id": commercial["commercial_authorization_id"],
+    "commercial_authorization_digest": commercial["commercial_authorization_digest"],
+})
+commercial_revocation["revocation_digest"] = digest_without(
+    commercial_revocation, "revocation_digest"
+)
+write(commercial_revocation_path, commercial_revocation)
+commercial_revocation_accepted = read(
+    "examples/contracts/commercial-authorization-revocation-accepted.json"
+)
+commercial_revocation_accepted["revocation_id"] = commercial_revocation["revocation_id"]
+write(
+    "examples/contracts/commercial-authorization-revocation-accepted.json",
+    commercial_revocation_accepted,
+)
+invalid_commercial_revocation = copy.deepcopy(commercial_revocation)
+invalid_commercial_revocation["work_order_id"] = manifest["work_order_id"]
+write(
+    "contracts/tests/invalid/commercial-authorization-revocation-with-platform-command.json",
+    invalid_commercial_revocation,
+)
 
 recording_path = "examples/contracts/runtime-recording.json"
 recording = read(recording_path)
@@ -1026,6 +1317,8 @@ write("examples/contracts/agent-runtime-run-status.json", runtime_status)
 
 runtime_command = read("examples/contracts/agent-runtime-command.json")
 runtime_command["authorized_control_request_id"] = control_request["control_request_id"]
+runtime_command["invocation_id"] = "inv_runtime_command_01J0000000000000"
+runtime_command["deadline_at"] = "2026-07-16T09:14:00Z"
 control_runtime_input = read("examples/contracts/work-order-control-runtime-input.json")
 control_runtime_input["content"] = copy.deepcopy(control_request["content"]["content"])
 control_runtime_input["content_digest"] = control_request["content"]["content_digest"]
@@ -1034,6 +1327,53 @@ runtime_command["input_id"] = control_runtime_input["input_id"]
 runtime_command["input_content_digest"] = control_runtime_input["content_digest"]
 runtime_command["command_digest"] = digest_without(runtime_command, "command_digest")
 write("examples/contracts/agent-runtime-command.json", runtime_command)
+
+system_safety_control_path = "examples/contracts/system-safety-control.json"
+system_safety_control = read(system_safety_control_path)
+system_safety_control.update({
+    "tenant_id": manifest["tenant_id"],
+    "work_order_id": manifest["work_order_id"],
+    "runtime_run_id": runtime_start["runtime_run_id"],
+    "action": "cancel",
+    "reason": "commercial_authorization_expired",
+    "trigger_evidence": {
+        "evidence_id": runtime_authorization["authorization_id"],
+        "evidence_contract_id": "urn:agent-platform:runtime-authorization:v1",
+        "evidence_digest": runtime_authorization["authorization_digest"],
+        "observed_at": "2026-07-16T09:15:01Z",
+    },
+    "issued_by": "platform_safety_controller",
+    "issuer_subject_id": "spn_agent_safety_controller",
+    "issued_at": "2026-07-16T09:16:00Z",
+})
+system_safety_control["control_digest"] = digest_without(
+    system_safety_control, "control_digest"
+)
+write(system_safety_control_path, system_safety_control)
+
+system_safety_command_path = "examples/contracts/agent-runtime-system-safety-command.json"
+system_safety_command = read(system_safety_command_path)
+system_safety_command.update({
+    "runtime_run_id": runtime_start["runtime_run_id"],
+    "type": system_safety_control["action"],
+    "system_safety_control_id": system_safety_control["safety_control_id"],
+    "system_safety_control_digest": system_safety_control["control_digest"],
+    "deadline_at": "2026-07-16T09:21:00Z",
+})
+system_safety_command["command_digest"] = digest_without(
+    system_safety_command, "command_digest"
+)
+write(system_safety_command_path, system_safety_command)
+
+write("examples/contracts/platform-system-safety-control-event-data.json", {
+    "safety_control_id": system_safety_control["safety_control_id"],
+    "runtime_run_id": system_safety_control["runtime_run_id"],
+    "action": system_safety_control["action"],
+    "reason": system_safety_control["reason"],
+    "trigger_evidence_digest": system_safety_control["trigger_evidence"]["evidence_digest"],
+    "control_digest": system_safety_control["control_digest"],
+    "issued_at": system_safety_control["issued_at"],
+})
 
 runtime_capabilities = read("examples/contracts/agent-runtime-capabilities.json")
 runtime_capabilities.pop("event_schema_versions", None)
@@ -1044,8 +1384,18 @@ runtime_capabilities["event_registries"] = [{
 }]
 write("examples/contracts/agent-runtime-capabilities.json", runtime_capabilities)
 
-runtime_token = read("examples/contracts/agent-runtime-invocation-token-claims.json")
-runtime_token.update({
+runtime_token_base = read("examples/contracts/agent-runtime-invocation-token-claims.json")
+runtime_resolution = next(
+    item for item in manifest["capability_resolutions"]
+    if item["resolution_id"] == manifest["agent_runtime"]["resolution_id"]
+)
+runtime_token_base.pop("request_digest", None)
+runtime_token_base.update({
+    "iss": "agent-platform",
+    "iat": 1784192460,
+    "nbf": 1784192460,
+    "exp": 1784192760,
+    "aud": runtime_resolution["selected_provider_audience"],
     "tenant_id": manifest["tenant_id"],
     "provider_revision_id": revisions["apr_01J00000000000000000000000"]["provider_revision_id"],
     "runtime_run_id": runtime_start["runtime_run_id"],
@@ -1054,15 +1404,303 @@ runtime_token.update({
     "work_order_id": manifest["work_order_id"],
     "run_manifest_digest": manifest["run_manifest_digest"],
     "runtime_authorization_digest": runtime_authorization["authorization_digest"],
-    "request_digest": runtime_start["request_digest"],
-    "invocation_id": runtime_start["invocation_id"],
-    "invocation_attempt_id": runtime_start["invocation_attempt_id"],
-    "fencing_token": runtime_start["fencing_token"],
     "policy_decision_digest": runtime_authorization["policy_decision"]["decision_digest"],
     "execution_budget_digest": runtime_authorization["execution_budget"]["budget_digest"],
     "effective_permissions_digest": runtime_authorization["effective_permissions"]["permissions_digest"],
 })
-write("examples/contracts/agent-runtime-invocation-token-claims.json", runtime_token)
+runtime_status_descriptor = {
+    "operation": "read_status",
+    "runtime_run_id": runtime_start["runtime_run_id"],
+    "invocation_id": runtime_start["invocation_id"],
+    "invocation_attempt_id": runtime_start["invocation_attempt_id"],
+    "fencing_token": runtime_start["fencing_token"],
+}
+write("examples/contracts/agent-runtime-status-operation-descriptor.json", runtime_status_descriptor)
+runtime_event_descriptor = {
+    "operation": "read_events",
+    "runtime_run_id": runtime_start["runtime_run_id"],
+    "invocation_id": runtime_start["invocation_id"],
+    "invocation_attempt_id": runtime_start["invocation_attempt_id"],
+    "fencing_token": runtime_start["fencing_token"],
+    "after_event_sequence": 0,
+    "limit": 1000,
+}
+write("examples/contracts/agent-runtime-event-read-operation-descriptor.json", runtime_event_descriptor)
+runtime_operations = {
+    "start": (
+        "examples/contracts/agent-runtime-invocation-token-claims.json",
+        "urn:agent-platform:agent-runtime-start-request:v1",
+        "rfc8785-request-excluding-request-digest-v1",
+        runtime_start["request_digest"],
+        runtime_start,
+    ),
+    "submit_command": (
+        "examples/contracts/agent-runtime-command-token-claims.json",
+        "urn:agent-platform:agent-runtime-command:v1",
+        "rfc8785-command-excluding-command-digest-v1",
+        runtime_command["command_digest"],
+        runtime_command,
+    ),
+    "read_status": (
+        "examples/contracts/agent-runtime-status-token-claims.json",
+        "urn:agent-platform:agent-runtime-status-operation-descriptor:v1",
+        "rfc8785-full-document-v1",
+        digest(runtime_status_descriptor),
+        runtime_status_descriptor,
+    ),
+    "read_events": (
+        "examples/contracts/agent-runtime-events-token-claims.json",
+        "urn:agent-platform:agent-runtime-event-read-operation-descriptor:v1",
+        "rfc8785-full-document-v1",
+        digest(runtime_event_descriptor),
+        runtime_event_descriptor,
+    ),
+}
+runtime_tokens: dict[str, dict[str, Any]] = {}
+for index, (operation, (path, contract_id, profile, operation_digest, document)) in enumerate(
+    runtime_operations.items(), start=1
+):
+    runtime_token = copy.deepcopy(runtime_token_base)
+    runtime_token.update({
+        "jti": f"rit_{index:02d}_01J00000000000000000000000",
+        "authority_mode": (
+            "safety_control" if operation in {"read_status", "read_events"} else "execution"
+        ),
+        "operation": operation,
+        "operation_contract_id": contract_id,
+        "operation_digest_profile": profile,
+        "operation_request_digest": operation_digest,
+        "runtime_run_id": document["runtime_run_id"],
+        "invocation_id": document["invocation_id"],
+        "invocation_attempt_id": document["invocation_attempt_id"],
+        "fencing_token": document["fencing_token"],
+    })
+    if runtime_token["authority_mode"] == "safety_control":
+        runtime_token.update({"iat": 1784193360, "nbf": 1784193360, "exp": 1784193660})
+    runtime_tokens[operation] = runtime_token
+    write(path, runtime_token)
+system_safety_token = copy.deepcopy(runtime_token_base)
+system_safety_token.update({
+    "jti": "rit_safety_01J00000000000000000000",
+    "iat": 1784193360,
+    "nbf": 1784193360,
+    "exp": 1784193660,
+    "authority_mode": "safety_control",
+    "operation": "submit_command",
+    "operation_contract_id": "urn:agent-platform:agent-runtime-command:v1",
+    "operation_digest_profile": "rfc8785-command-excluding-command-digest-v1",
+    "operation_request_digest": system_safety_command["command_digest"],
+    "runtime_run_id": system_safety_command["runtime_run_id"],
+    "invocation_id": system_safety_command["invocation_id"],
+    "invocation_attempt_id": system_safety_command["invocation_attempt_id"],
+    "fencing_token": system_safety_command["fencing_token"],
+    "system_safety_control_id": system_safety_control["safety_control_id"],
+    "system_safety_control_digest": system_safety_control["control_digest"],
+})
+write(
+    "examples/contracts/agent-runtime-system-safety-command-token-claims.json",
+    system_safety_token,
+)
+runtime_token_missing_contract = copy.deepcopy(runtime_tokens["start"])
+runtime_token_missing_contract.pop("operation_contract_id")
+write(
+    "contracts/tests/invalid/agent-runtime-token-missing-operation-contract.json",
+    runtime_token_missing_contract,
+)
+runtime_token_contract_replay = copy.deepcopy(runtime_tokens["read_events"])
+runtime_token_contract_replay["operation_contract_id"] = (
+    "urn:agent-platform:agent-runtime-status-operation-descriptor:v1"
+)
+write(
+    "contracts/tests/invalid/agent-runtime-token-operation-contract-replay.json",
+    runtime_token_contract_replay,
+)
+runtime_safety_start = copy.deepcopy(runtime_tokens["start"])
+runtime_safety_start["authority_mode"] = "safety_control"
+write(
+    "contracts/tests/invalid/agent-runtime-safety-token-authorizes-start.json",
+    runtime_safety_start,
+)
+system_safety_token_missing_digest = copy.deepcopy(system_safety_token)
+system_safety_token_missing_digest.pop("system_safety_control_digest")
+write(
+    "contracts/tests/invalid/agent-runtime-system-safety-token-missing-digest.json",
+    system_safety_token_missing_digest,
+)
+
+mixed_control_authorities = copy.deepcopy(system_safety_command)
+mixed_control_authorities["authorized_control_request_id"] = control_request[
+    "control_request_id"
+]
+write(
+    "contracts/tests/invalid/agent-runtime-command-mixed-control-authorities.json",
+    mixed_control_authorities,
+)
+
+system_safety_resume = copy.deepcopy(system_safety_command)
+system_safety_resume["type"] = "resume"
+system_safety_resume["command_digest"] = digest_without(
+    system_safety_resume, "command_digest"
+)
+write(
+    "contracts/tests/invalid/agent-runtime-system-safety-resume.json",
+    system_safety_resume,
+)
+
+invalid_system_safety_action = copy.deepcopy(system_safety_control)
+invalid_system_safety_action["action"] = "resume"
+invalid_system_safety_action["control_digest"] = digest_without(
+    invalid_system_safety_action, "control_digest"
+)
+write(
+    "contracts/tests/invalid/system-safety-control-resume.json",
+    invalid_system_safety_action,
+)
+hard_revocation_pause = copy.deepcopy(system_safety_control)
+hard_revocation_pause["action"] = "pause"
+hard_revocation_pause["control_digest"] = digest_without(
+    hard_revocation_pause, "control_digest"
+)
+write(
+    "contracts/tests/invalid/system-safety-control-hard-revocation-pause.json",
+    hard_revocation_pause,
+)
+
+sandbox_resolution = next(
+    item for item in manifest["capability_resolutions"]
+    if item["resolution_id"] == sandbox_spec["provider_resolution_id"]
+)
+sandbox_contracts = {
+    "create": "urn:agent-platform:sandbox-create-request:v1",
+    "restore": "urn:agent-platform:sandbox-restore-request:v1",
+    "set_desired_state": "urn:agent-platform:sandbox-desired-state-request:v1",
+    "extend_lease": "urn:agent-platform:sandbox-lease-request:v1",
+    "exec": "urn:agent-platform:sandbox-exec-request:v1",
+    "cancel_exec": "urn:agent-platform:sandbox-cancel-exec-request:v1",
+    "open_runtime_session": "urn:agent-platform:sandbox-runtime-session-open-request:v1",
+    "snapshot": "urn:agent-platform:sandbox-snapshot-request:v1",
+    "terminate": "urn:agent-platform:sandbox-terminate-request:v1",
+    "read_sandbox": "urn:agent-platform:sandbox-status-operation-descriptor:v1",
+    "read_operation": "urn:agent-platform:sandbox-operation-read-operation-descriptor:v1",
+    "read_result": "urn:agent-platform:sandbox-exec-result-operation-descriptor:v1",
+    "read_snapshot_manifest": "urn:agent-platform:sandbox-snapshot-manifest-operation-descriptor:v1",
+    "read_events": "urn:agent-platform:sandbox-event-read-operation-descriptor:v1",
+}
+sandbox_read_descriptors = {
+    "read_sandbox": (
+        "examples/contracts/sandbox-status-operation-descriptor.json",
+        {
+            "operation": "read_sandbox",
+            "sandbox_id": sandbox_spec["sandbox_id"],
+            "operation_id": sandbox_create["operation_id"],
+            "attempt_id": sandbox_create["attempt_id"],
+            "fencing_token": sandbox_create["fencing_token"],
+        },
+        sandbox_create["deadline_at"],
+    ),
+    "read_operation": (
+        "examples/contracts/sandbox-operation-read-operation-descriptor.json",
+        {
+            "operation": "read_operation",
+            "sandbox_id": sandbox_spec["sandbox_id"],
+            "operation_id": sandbox_requests["exec"][1]["operation_id"],
+            "attempt_id": sandbox_requests["exec"][1]["attempt_id"],
+            "fencing_token": sandbox_requests["exec"][1]["fencing_token"],
+        },
+        sandbox_requests["exec"][1]["deadline_at"],
+    ),
+    "read_result": (
+        "examples/contracts/sandbox-exec-result-operation-descriptor.json",
+        {
+            "operation": "read_result",
+            "sandbox_id": sandbox_spec["sandbox_id"],
+            "operation_id": sandbox_requests["exec"][1]["operation_id"],
+            "attempt_id": sandbox_requests["exec"][1]["attempt_id"],
+            "fencing_token": sandbox_requests["exec"][1]["fencing_token"],
+        },
+        sandbox_requests["exec"][1]["deadline_at"],
+    ),
+    "read_snapshot_manifest": (
+        "examples/contracts/sandbox-snapshot-manifest-operation-descriptor.json",
+        {
+            "operation": "read_snapshot_manifest",
+            "sandbox_id": sandbox_spec["sandbox_id"],
+            "operation_id": sandbox_requests["snapshot"][1]["operation_id"],
+            "attempt_id": sandbox_requests["snapshot"][1]["attempt_id"],
+            "fencing_token": sandbox_requests["snapshot"][1]["fencing_token"],
+        },
+        sandbox_requests["snapshot"][1]["deadline_at"],
+    ),
+    "read_events": (
+        "examples/contracts/sandbox-event-read-operation-descriptor.json",
+        {
+            "operation": "read_events",
+            "sandbox_id": sandbox_spec["sandbox_id"],
+            "operation_id": sandbox_requests["exec"][1]["operation_id"],
+            "attempt_id": sandbox_requests["exec"][1]["attempt_id"],
+            "fencing_token": sandbox_requests["exec"][1]["fencing_token"],
+            "after_sequence": 0,
+        },
+        sandbox_requests["exec"][1]["deadline_at"],
+    ),
+}
+for descriptor_path, descriptor, _deadline in sandbox_read_descriptors.values():
+    write(descriptor_path, descriptor)
+
+sandbox_token_paths = {
+    "create": "examples/contracts/sandbox-operation-token-claims.json",
+    "restore": "examples/contracts/sandbox-restore-operation-token-claims.json",
+    "set_desired_state": "examples/contracts/sandbox-desired-state-operation-token-claims.json",
+    "extend_lease": "examples/contracts/sandbox-lease-operation-token-claims.json",
+    "exec": "examples/contracts/sandbox-exec-operation-token-claims.json",
+    "cancel_exec": "examples/contracts/sandbox-cancel-exec-operation-token-claims.json",
+    "open_runtime_session": "examples/contracts/sandbox-runtime-session-operation-token-claims.json",
+    "snapshot": "examples/contracts/sandbox-snapshot-operation-token-claims.json",
+    "terminate": "examples/contracts/sandbox-terminate-operation-token-claims.json",
+    "read_sandbox": "examples/contracts/sandbox-status-operation-token-claims.json",
+    "read_operation": "examples/contracts/sandbox-operation-read-token-claims.json",
+    "read_result": "examples/contracts/sandbox-exec-result-operation-token-claims.json",
+    "read_snapshot_manifest": "examples/contracts/sandbox-snapshot-manifest-operation-token-claims.json",
+    "read_events": "examples/contracts/sandbox-event-read-operation-token-claims.json",
+}
+sandbox_operation_documents: dict[str, tuple[dict[str, Any], str, str]] = {}
+for operation, (_path, request, sandbox_id) in sandbox_requests.items():
+    sandbox_operation_documents[operation] = (request, sandbox_id, request["deadline_at"])
+for operation, (_path, descriptor, deadline_at) in sandbox_read_descriptors.items():
+    sandbox_operation_documents[operation] = (descriptor, descriptor["sandbox_id"], deadline_at)
+
+for index, operation in enumerate(sandbox_token_paths, start=1):
+    operation_document, sandbox_id, deadline_at = sandbox_operation_documents[operation]
+    is_mutation = operation in sandbox_requests
+    request_digest = (
+        operation_document["request_digest"] if is_mutation else digest(operation_document)
+    )
+    sandbox_token = {
+        "jti": f"sot_{index:02d}_01J00000000000000000000000",
+        "iss": "agent-platform",
+        "sub": "spn_agent_sandbox_controller",
+        "aud": sandbox_resolution["selected_provider_audience"],
+        "iat": 1784192460,
+        "nbf": 1784192460,
+        "exp": 1784192700,
+        "operation": operation,
+        "provider_revision_id": sandbox_resolution["selected_provider_revision"]["provider_revision_id"],
+        "sandbox_id": sandbox_id,
+        "operation_id": operation_document["operation_id"],
+        "attempt_id": operation_document["attempt_id"],
+        "fencing_token": operation_document["fencing_token"],
+        "tenant_id": sandbox_spec["tenant_id"],
+        "work_order_id": sandbox_spec["work_order_id"],
+        "policy_digest": manifest["policy_decision"]["decision_digest"],
+        "request_contract_id": sandbox_contracts[operation],
+        "request_digest_profile": (
+            "rfc8785-request-excluding-request-digest-v1"
+            if is_mutation else "rfc8785-full-document-v1"
+        ),
+        "request_digest": request_digest,
+        "deadline_at": deadline_at,
+    }
+    write(sandbox_token_paths[operation], sandbox_token)
 
 capability_request = read("examples/contracts/capability-invocation-request.json")
 capability_resolution = next(
@@ -1134,10 +1772,12 @@ write("examples/contracts/capability-invocation-result.json", capability_result)
 capability_token = {
     "jti": "cit_01J00000000000000000000000",
     "iss": "agent-platform",
+    "sub": "spn_agent_capability_dispatcher",
     "aud": capability_resolution["selected_provider_audience"],
     "iat": 1784192470,
     "nbf": 1784192470,
     "exp": 1784192770,
+    "authority_mode": "execution",
     "operation": "invoke",
     "authorization_sequence": 1,
     "predecessor_jti": None,
@@ -1155,6 +1795,8 @@ capability_token = {
     "invocation_attempt_id": capability_request["invocation_attempt_id"],
     "fencing_token": capability_request["fencing_token"],
     "invocation_request_digest": capability_request["request_digest"],
+    "operation_contract_id": "urn:agent-platform:capability-invocation-request:v1",
+    "operation_digest_profile": "rfc8785-request-excluding-request-digest-v1",
     "operation_request_digest": capability_request["request_digest"],
     "policy_decision_digest": capability_request["policy_decision"]["decision_digest"],
     "execution_budget_digest": capability_request["execution_budget"]["budget_digest"],
@@ -1162,6 +1804,12 @@ capability_token = {
     "staging_grant_digest": staging_grant["grant_digest"],
 }
 write("examples/contracts/capability-invocation-token-claims.json", capability_token)
+capability_safety_invoke = copy.deepcopy(capability_token)
+capability_safety_invoke["authority_mode"] = "safety_control"
+write(
+    "contracts/tests/invalid/capability-safety-token-authorizes-invoke.json",
+    capability_safety_invoke,
+)
 
 capability_cancel = read("examples/contracts/capability-cancellation-request.json")
 capability_cancel["invocation_id"] = capability_request["invocation_id"]
@@ -1177,17 +1825,21 @@ status_operation = {
     "fencing_token": capability_request["fencing_token"],
     "provider_operation_id": "provider-op-html-0001",
 }
+write("examples/contracts/capability-status-operation-descriptor.json", status_operation)
 capability_status_token = copy.deepcopy(capability_token)
 capability_status_token.update({
     "jti": "cit_01J00000000000000000000001",
-    "iat": 1784193010,
-    "nbf": 1784193010,
-    "exp": 1784193310,
+    "iat": 1784193660,
+    "nbf": 1784193660,
+    "exp": 1784193960,
+    "authority_mode": "safety_control",
     "operation": "status",
     "authorization_sequence": 2,
     "predecessor_jti": capability_token["jti"],
     "renewal_reason": "status_query",
     "provider_operation_id": status_operation["provider_operation_id"],
+    "operation_contract_id": "urn:agent-platform:capability-status-operation-descriptor:v1",
+    "operation_digest_profile": "rfc8785-full-document-v1",
     "operation_request_digest": digest(status_operation),
 })
 write("examples/contracts/capability-invocation-status-token-claims.json", capability_status_token)
@@ -1195,16 +1847,46 @@ write("examples/contracts/capability-invocation-status-token-claims.json", capab
 capability_cancel_token = copy.deepcopy(capability_status_token)
 capability_cancel_token.update({
     "jti": "cit_01J00000000000000000000002",
-    "iat": 1784193320,
-    "nbf": 1784193320,
-    "exp": 1784193600,
+    "iat": 1784193720,
+    "nbf": 1784193720,
+    "exp": 1784194020,
+    "authority_mode": "safety_control",
     "operation": "cancel",
     "authorization_sequence": 3,
     "predecessor_jti": capability_status_token["jti"],
     "renewal_reason": "cancellation",
+    "operation_contract_id": "urn:agent-platform:capability-cancellation-request:v1",
+    "operation_digest_profile": "rfc8785-request-excluding-request-digest-v1",
     "operation_request_digest": capability_cancel["request_digest"],
 })
 write("examples/contracts/capability-cancellation-token-claims.json", capability_cancel_token)
+
+event_read_operation = {
+    "operation": "read_events",
+    "invocation_id": capability_request["invocation_id"],
+    "invocation_attempt_id": capability_request["invocation_attempt_id"],
+    "fencing_token": capability_request["fencing_token"],
+    "provider_operation_id": status_operation["provider_operation_id"],
+    "after_sequence": 0,
+    "limit": 1000,
+}
+write("examples/contracts/capability-event-read-operation-descriptor.json", event_read_operation)
+capability_event_token = copy.deepcopy(capability_cancel_token)
+capability_event_token.update({
+    "jti": "cit_01J00000000000000000000003",
+    "iat": 1784193780,
+    "nbf": 1784193780,
+    "exp": 1784194080,
+    "authority_mode": "safety_control",
+    "operation": "read_events",
+    "authorization_sequence": 4,
+    "predecessor_jti": capability_cancel_token["jti"],
+    "renewal_reason": "event_resume",
+    "operation_contract_id": "urn:agent-platform:capability-event-read-operation-descriptor:v1",
+    "operation_digest_profile": "rfc8785-full-document-v1",
+    "operation_request_digest": digest(event_read_operation),
+})
+write("examples/contracts/capability-invocation-events-token-claims.json", capability_event_token)
 
 for relative in (
     "examples/contracts/capability-invocation-accepted.json",
@@ -1238,6 +1920,7 @@ write("examples/contracts/artifact-staging-object-request.json", staging_object)
 artifact_stage_token = {
     "jti": "agt_01J00000000000000000000000",
     "iss": "agent-platform",
+    "sub": capability_resolution["selected_provider_audience"],
     "aud": staging_grant["gateway_binding"]["audience"],
     "iat": 1784192470,
     "nbf": 1784192470,
@@ -1249,6 +1932,8 @@ artifact_stage_token = {
     "invocation_attempt_id": capability_request["invocation_attempt_id"],
     "fencing_token": capability_request["fencing_token"],
     "gateway_binding_digest": staging_grant["gateway_binding"]["binding_digest"],
+    "operation_contract_id": "urn:agent-platform:artifact-staging-object-request:v1",
+    "operation_digest_profile": "rfc8785-artifact-stage-metadata-excluding-content-and-request-digest-v1",
     "request_digest": staging_object["request_digest"],
     "staging_grant_digest": staging_grant["grant_digest"],
 }
@@ -1264,9 +1949,11 @@ artifact_read_descriptor = {
     "artifact_id": capability_artifact_grant["artifact_id"],
     "version_id": capability_artifact_grant["version_id"],
 }
+write("examples/contracts/artifact-read-operation-descriptor.json", artifact_read_descriptor)
 artifact_read_token = {
     "jti": "agt_01J00000000000000000000002",
     "iss": "agent-platform",
+    "sub": capability_resolution["selected_provider_audience"],
     "aud": capability_artifact_grant["gateway_binding"]["audience"],
     "iat": 1784193070,
     "nbf": 1784193070,
@@ -1278,6 +1965,8 @@ artifact_read_token = {
     "invocation_attempt_id": capability_request["invocation_attempt_id"],
     "fencing_token": capability_request["fencing_token"],
     "gateway_binding_digest": capability_artifact_grant["gateway_binding"]["binding_digest"],
+    "operation_contract_id": "urn:agent-platform:artifact-read-operation-descriptor:v1",
+    "operation_digest_profile": "rfc8785-full-document-v1",
     "request_digest": digest(artifact_read_descriptor),
     "artifact_grant_digest": capability_artifact_grant["grant_digest"],
 }
@@ -1305,18 +1994,53 @@ artifact_commit_token = copy.deepcopy(artifact_stage_token)
 artifact_commit_token.update({
     "jti": "agt_01J00000000000000000000001",
     "operation": "commit_staging",
+    "operation_contract_id": "urn:agent-platform:artifact-staging-commit-request:v1",
+    "operation_digest_profile": "rfc8785-request-excluding-request-digest-v1",
     "request_digest": staging_commit["request_digest"],
 })
 write("examples/contracts/artifact-gateway-commit-token-claims.json", artifact_commit_token)
 
+egress_destination = {
+    "destination_id": "public-docs-origin",
+    "destination_revision_id": "edr_01J00000000000000000000000",
+    "destination_revision_digest": "sha256:" + "0" * 64,
+    "owner": {
+        "scope": "client_application",
+        "tenant_id": manifest["tenant_id"],
+        "client_app_id": capability_request["client_app_id"],
+    },
+    "destination_class": "public_documentation",
+    "origin": {"scheme": "https", "host": "docs.example.com", "port": 443},
+    "allowed_methods": ["GET", "HEAD"],
+    "allowed_path_prefixes": ["/reference/"],
+    "allowed_query_names": [],
+    "allowed_request_headers": ["accept"],
+    "redirect_policy": {"mode": "deny", "max_redirects": 0},
+    "dns_policy": {
+        "resolve_on_every_request": True,
+        "reject_private_networks": True,
+        "pin_connected_ip": True,
+        "max_addresses": 8,
+    },
+    "created_at": "2026-07-16T09:00:00Z",
+}
+egress_destination["destination_revision_digest"] = digest_without(
+    egress_destination, "destination_revision_digest"
+)
+write("examples/contracts/egress-destination-revision.json", egress_destination)
+
 egress_request = {
     "tenant_id": manifest["tenant_id"],
+    "client_app_id": capability_request["client_app_id"],
     "work_order_id": manifest["work_order_id"],
     "runtime_run_id": runtime_start["runtime_run_id"],
     "invocation_id": "inv_egress_01J0000000000000000000",
     "invocation_attempt_id": "iat_egress_01J000000000000000000",
     "fencing_token": 1,
-    "destination_id": "public-docs-origin",
+    "destination_id": egress_destination["destination_id"],
+    "destination_revision_id": egress_destination["destination_revision_id"],
+    "destination_revision_digest": egress_destination["destination_revision_digest"],
+    "destination_class": egress_destination["destination_class"],
     "method": "GET",
     "path": "/reference/index.json",
     "headers": [],
@@ -1345,24 +2069,45 @@ write("examples/contracts/egress-http-response.json", egress_response)
 egress_token = {
     "jti": "egt_01J00000000000000000000000",
     "iss": "agent-platform",
+    "sub": runtime_resolution["selected_provider_audience"],
     "aud": gateway_bindings["egress"]["port"]["audience"],
     "iat": 1784192470,
     "nbf": 1784192470,
     "exp": 1784192770,
     "tenant_id": egress_request["tenant_id"],
+    "client_app_id": egress_request["client_app_id"],
     "work_order_id": egress_request["work_order_id"],
     "runtime_run_id": egress_request["runtime_run_id"],
     "invocation_id": egress_request["invocation_id"],
     "invocation_attempt_id": egress_request["invocation_attempt_id"],
     "fencing_token": egress_request["fencing_token"],
     "destination_id": egress_request["destination_id"],
+    "destination_revision_id": egress_request["destination_revision_id"],
+    "destination_revision_digest": egress_request["destination_revision_digest"],
+    "destination_class": egress_request["destination_class"],
     "gateway_binding_digest": gateway_bindings["egress"]["port"]["binding_digest"],
+    "operation": "http_exchange",
+    "operation_contract_id": "urn:agent-platform:egress-http-request:v1",
+    "operation_digest_profile": "rfc8785-request-excluding-request-digest-v1",
     "request_digest": egress_request["request_digest"],
+    "runtime_authorization_digest": runtime_authorization["authorization_digest"],
     "policy_decision_digest": runtime_authorization["policy_decision"]["decision_digest"],
     "execution_budget_digest": runtime_authorization["execution_budget"]["budget_digest"],
     "permissions_digest": runtime_authorization["effective_permissions"]["permissions_digest"],
 }
 write("examples/contracts/egress-invocation-token-claims.json", egress_token)
+egress_token_missing_contract = copy.deepcopy(egress_token)
+egress_token_missing_contract.pop("operation_contract_id")
+write(
+    "contracts/tests/invalid/egress-token-missing-operation-contract.json",
+    egress_token_missing_contract,
+)
+egress_token_wrong_profile = copy.deepcopy(egress_token)
+egress_token_wrong_profile["operation_digest_profile"] = "rfc8785-full-document-v1"
+write(
+    "contracts/tests/invalid/egress-token-wrong-operation-profile.json",
+    egress_token_wrong_profile,
+)
 
 missing_runtime_input = copy.deepcopy(runtime_start)
 missing_runtime_input.pop("input")
@@ -1455,6 +2200,39 @@ gateway_control_extra = copy.deepcopy(gateway_control)
 gateway_control_extra["text"] = "unexpected for terminal.resize"
 write("contracts/tests/invalid/runtime-gateway-control-extra-fields.json", gateway_control_extra)
 
+runtime_session_response = read("examples/contracts/runtime-session-response.json")
+runtime_session_response["expires_at"] = "2026-07-16T09:20:00Z"
+write("examples/contracts/runtime-session-response.json", runtime_session_response)
+runtime_session_route = {
+    "runtime_session_id": runtime_session_response["runtime_session_id"],
+    "tenant_id": manifest["tenant_id"],
+    "client_app_id": grant["client_app_id"],
+    "principal_id": grant["sub"],
+    "work_order_id": manifest["work_order_id"],
+    "sandbox_id": manifest["sandboxes"][0]["sandbox_id"],
+    "sandbox_slot_key": runtime_session_response["sandbox_slot_key"],
+    "runtime_type": runtime_session_response["runtime_type"],
+    "gateway_route_id": "rgr_01J00000000000000000000000",
+    "provider_route_reference": "prr_AQIDBAUGBwgJCgsMDQ4PEA",
+    "provider_route_digest": "sha256:" + "0" * 64,
+    "expires_at": runtime_session_response["expires_at"],
+    "scopes": ["terminal:connect"],
+    "connection_generation": runtime_session_response["connection_generation"],
+}
+runtime_session_route["provider_route_digest"] = digest({
+    field: runtime_session_route[field]
+    for field in (
+        "runtime_session_id", "sandbox_id", "runtime_type", "provider_route_reference"
+    )
+})
+write("examples/contracts/runtime-session-route.json", runtime_session_route)
+runtime_session_route_with_endpoint = copy.deepcopy(runtime_session_route)
+runtime_session_route_with_endpoint["runtime_endpoint"] = "https://provider.internal/session"
+write(
+    "contracts/tests/invalid/runtime-session-route-with-raw-endpoint.json",
+    runtime_session_route_with_endpoint,
+)
+
 port_forward_recording = read("examples/contracts/runtime-session-request.json")
 port_forward_recording["runtime_type"] = "port_forward"
 write("contracts/tests/invalid/runtime-session-port-forward-recording.json", port_forward_recording)
@@ -1464,6 +2242,59 @@ runtime_event_page = read("examples/contracts/agent-runtime-event-page.json")
 runtime_event_page["events"] = [runtime_event]
 runtime_event_page["next_event_sequence"] = runtime_event["event_sequence"]
 write("examples/contracts/agent-runtime-event-page.json", runtime_event_page)
+runtime_resolution = next(
+    item for item in manifest["capability_resolutions"]
+    if item["resolution_id"] == manifest["agent_runtime"]["resolution_id"]
+)
+canonical_runtime_event = {
+    "event_id": "evt_runtime_01J000000000000000000",
+    "schema_version": 2,
+    "tenant_id": manifest["tenant_id"],
+    "producer_kind": "provider",
+    "producer_id": "agent-runtime-adapter",
+    "provider_revision_id": runtime_resolution["selected_provider_revision"]["provider_revision_id"],
+    "source_stream_id": f"agent-runtime/{runtime_event['runtime_run_id']}",
+    "source_event_id": runtime_event["event_id"],
+    "source_cursor": runtime_event["source_cursor"],
+    "dedupe_key": "sha256:" + "0" * 64,
+    "event_registry": {
+        "registry_id": event_registry["registry_id"],
+        "registry_version": event_registry["registry_version"],
+        "registry_digest": event_registry["registry_digest"],
+    },
+    "conversation_id": manifest["conversation"]["conversation_id"],
+    "work_order_id": manifest["work_order_id"],
+    "turn_id": manifest["conversation"]["turn_id"],
+    "branch_id": manifest["conversation"]["branch_id"],
+    "input_message_id": manifest["conversation"]["input_message_id"],
+    "work_sequence": 153,
+    "aggregate": {
+        "type": "agent_run",
+        "id": manifest["agent_run_id"],
+        "sequence": runtime_event["event_sequence"],
+    },
+    "references": {
+        "workflow_run_id": manifest["workflow_run_id"],
+        "agent_run_id": manifest["agent_run_id"],
+        "message_id": runtime_event["data"]["message_id"],
+    },
+    "type": runtime_event["type"],
+    "occurred_at": runtime_event["occurred_at"],
+    "actor": {"type": "provider", "id": "agent-runtime-adapter"},
+    "data": runtime_event["data"],
+    "metadata": {
+        "trace_id": "trace-runtime-001",
+        "correlation_id": manifest["work_order_id"],
+        "provider_instance_id": runtime_resolution["selected_provider_instance_id"],
+    },
+    "data_version": runtime_event["data_version"],
+    "recorded_at": "2026-07-15T10:10:00.100Z",
+}
+canonical_runtime_event["dedupe_key"] = digest({
+    field: canonical_runtime_event[field]
+    for field in ("tenant_id", "producer_id", "source_stream_id", "source_event_id")
+})
+write("examples/contracts/canonical-runtime-event-v2.json", canonical_runtime_event)
 
 workflow_run = {
     "workflow_run_id": manifest["workflow_run_id"],
@@ -1577,6 +2408,7 @@ traceability_profiles = {
         contract_check("run_manifest.gateway_binding"),
         contract_check("run_manifest.commercial_event_binding"),
         contract_check("run_manifest.orchestration_binding"),
+        contract_check("run_manifest.admission"),
     ],
     "agent-runtime-start-request.schema.json": [
         contract_check("runtime_start.execution_topology"),
@@ -1588,6 +2420,85 @@ traceability_profiles = {
         contract_check("runtime_authorization.scope") + contract_check("runtime_authorization.expiry") + contract_check("runtime_authorization.artifact_coverage"),
         implementation_check("conformance_test", "contracts/conformance/runtime/v1/suite.json", "start-encoded-body-limit"),
         contract_check("runtime_token.binding"),
+    ],
+    "agent-runtime-invocation-token-claims.schema.json": [
+        contract_check("runtime_token.lifetime"),
+        contract_check("runtime_token.audience"),
+        contract_check("runtime_token.binding"),
+        contract_check("runtime_token.binding"),
+        contract_check("runtime_token.binding") + implementation_check(
+            "conformance_test", "contracts/conformance/runtime/v1/suite.json",
+            "runtime-token-replay-and-expiry",
+        ),
+    ],
+    "agent-runtime-command.schema.json": [
+        contract_check("runtime_command.digest"),
+        contract_check("runtime_command.sequence"),
+        contract_check("runtime_command.idempotency") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "runtime_command_append_only_idempotency",
+        ),
+        contract_check("runtime_command.fencing"),
+        contract_check("runtime_command.user_control_binding") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "runtime_command_user_control_fk",
+        ),
+        contract_check("runtime_command.system_safety_binding") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "runtime_command_system_safety_fk",
+        ),
+        contract_check("runtime_token.binding"),
+    ],
+    "system-safety-control.schema.json": [
+        contract_check("system_safety_control.digest"),
+        contract_check("system_safety_control.scope"),
+        contract_check("system_safety_control.evidence") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "system_safety_control_trigger_evidence_fk",
+        ),
+        implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "system_safety_control_append_only_idempotency",
+        ),
+        contract_check("system_safety_control.reduction_only") + implementation_check(
+            "conformance_test", "contracts/conformance/runtime/v1/suite.json",
+            "system-safety-control",
+        ),
+    ],
+    "commercial-authorization-revocation.schema.json": [
+        contract_check("commercial_revocation.digest"),
+        contract_check("commercial_revocation.time_order"),
+        contract_check("commercial_revocation.sender_binding"),
+        contract_check("commercial_revocation.authorization_binding"),
+        implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "commercial_authorization_revocation_fanout",
+        ) + implementation_check(
+            "conformance_test", "contracts/conformance/agent-access/v1/suite.json",
+            "commercial-authorization-revocation-ingest",
+        ) + implementation_check(
+            "conformance_test", "contracts/conformance/runtime/v1/suite.json",
+            "system-safety-control",
+        ),
+    ],
+    "sandbox-operation-token-claims.schema.json": [
+        contract_check("sandbox_token.lifetime"),
+        contract_check("sandbox_token.binding"),
+        contract_check("sandbox_token.binding"),
+        contract_check("sandbox_token.binding") + implementation_check(
+            "conformance_test", "contracts/conformance/sandbox/v1/suite.json",
+            "operation-token-binding",
+        ),
+    ],
+    "sandbox-spec.schema.json": [
+        contract_check("sandbox_spec.execution_ceiling"),
+        contract_check("sandbox_spec.execution_ceiling"),
+        contract_check("sandbox_spec.execution_ceiling"),
+        contract_check("sandbox_spec.workspace_binding"),
+        contract_check("sandbox_spec.workspace_binding") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "branch_workspace_revision_fk",
+        ),
     ],
     "work-order-control-request.schema.json": [
         contract_check("work_order_control.grant_binding"),
@@ -1624,6 +2535,17 @@ traceability_profiles = {
         contract_check("capability_invocation.operation_binding"),
         contract_check("capability_invocation.token_binding"),
     ],
+    "capability-status-operation-descriptor.schema.json": [
+        contract_check("capability_invocation.operation_binding"),
+        contract_check("capability_invocation.operation_binding"),
+    ],
+    "capability-event-read-operation-descriptor.schema.json": [
+        contract_check("capability_invocation.operation_binding"),
+        contract_check("capability_invocation.operation_binding") + implementation_check(
+            "conformance_test", "contracts/conformance/capability/v1/suite.json",
+            "event-cursor-resume",
+        ),
+    ],
     "capability-cancellation-request.schema.json": [
         contract_check("capability_invocation.operation_binding"),
         contract_check("capability_invocation.operation_binding"),
@@ -1641,6 +2563,18 @@ traceability_profiles = {
         contract_check("runtime_session.scope_class"),
         implementation_check("conformance_test", "contracts/conformance/runtime-gateway/v1/suite.json", "platform-managed-recording-authority"),
         contract_check("runtime_session.channel_policy"),
+    ],
+    "runtime-session-route.schema.json": [
+        contract_check("runtime_session.route_digest"),
+        contract_check("runtime_session.route_scope") + implementation_check(
+            "conformance_test", "contracts/conformance/runtime-gateway/v1/suite.json",
+            "slot-scoped-runtime-session",
+        ),
+        contract_check("runtime_session.route_opaque"),
+        contract_check("runtime_session.route_scope") + implementation_check(
+            "conformance_test", "contracts/conformance/runtime-gateway/v1/suite.json",
+            "session-scope-enforced",
+        ),
     ],
     "canonical-event-v2.schema.json": [
         implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "conversation_event_omits_work_scope"),
@@ -1664,6 +2598,50 @@ traceability_profiles = {
         contract_check("execution_grant.request_identity"),
         contract_check("execution_grant.commercial_limits"),
         contract_check("execution_grant.snapshot_validity"),
+    ],
+    "service-access-token-claims.schema.json": [
+        contract_check("service_token.lifetime"),
+        contract_check("service_token.binding"),
+        contract_check("service_token.scope"),
+        contract_check("service_token.binding") + implementation_check(
+            "conformance_test", "docs/17_IDENTITY_AND_AUTHORIZATION.md",
+            "token_profile_signature_and_type_isolation",
+        ),
+        contract_check("service_token.binding") + implementation_check(
+            "conformance_test", "docs/17_IDENTITY_AND_AUTHORIZATION.md",
+            "service_token_sender_constraint_and_replay",
+        ),
+    ],
+    "work-session-claims.schema.json": [
+        contract_check("work_session.lifetime"),
+        contract_check("work_session.binding"),
+        contract_check("work_session.scope"),
+        contract_check("work_session.binding") + implementation_check(
+            "conformance_test", "docs/17_IDENTITY_AND_AUTHORIZATION.md",
+            "token_profile_signature_and_type_isolation",
+        ),
+        contract_check("work_session.binding"),
+        contract_check("work_session.lifetime") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "work_session_revocation_version",
+        ),
+    ],
+    "plugin-invocation-request.schema.json": [
+        contract_check("plugin_token.binding"),
+        contract_check("plugin_token.binding"),
+        contract_check("plugin_token.binding") + implementation_check(
+            "conformance_test", "contracts/conformance/capability/v1/suite.json",
+            "legacy-plugin-bridge-token-binding",
+        ),
+    ],
+    "plugin-invocation-token-claims.schema.json": [
+        contract_check("plugin_token.lifetime"),
+        contract_check("plugin_token.binding"),
+        contract_check("plugin_token.binding"),
+        contract_check("plugin_token.binding") + implementation_check(
+            "conformance_test", "contracts/conformance/capability/v1/suite.json",
+            "legacy-plugin-bridge-token-binding",
+        ),
     ],
     "runtime-authorization.schema.json": [
         contract_check("runtime_authorization.digest"),
@@ -1690,6 +2668,10 @@ traceability_profiles = {
         contract_check("artifact_gateway.token_binding"),
         contract_check("artifact_gateway.operation_binding"),
         contract_check("artifact_gateway.token_binding") + implementation_check("conformance_test", "contracts/conformance/execution-gateway/v1/suite.json", "artifact-operation-token-binding"),
+    ],
+    "artifact-read-operation-descriptor.schema.json": [
+        contract_check("artifact_gateway.operation_binding"),
+        contract_check("artifact_gateway.operation_binding"),
     ],
     "artifact-staging-object-request.schema.json": [
         contract_check("artifact_gateway.operation_binding"),
@@ -1718,6 +2700,18 @@ traceability_profiles = {
         contract_check("egress_gateway.request_binding"),
         implementation_check("conformance_test", "contracts/conformance/execution-gateway/v1/suite.json", "egress-address-revalidation"),
         implementation_check("conformance_test", "contracts/conformance/execution-gateway/v1/suite.json", "egress-header-and-body-limits"),
+    ],
+    "egress-destination-revision.schema.json": [
+        contract_check("egress_destination.digest") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "egress_destination_revision_immutable",
+        ),
+        contract_check("egress_destination.owner_scope"),
+        contract_check("egress_destination.request_policy"),
+        contract_check("egress_destination.request_policy") + implementation_check(
+            "conformance_test", "contracts/conformance/execution-gateway/v1/suite.json",
+            "egress-address-revalidation",
+        ),
     ],
     "egress-invocation-token-claims.schema.json": [
         contract_check("egress_gateway.token_binding"),

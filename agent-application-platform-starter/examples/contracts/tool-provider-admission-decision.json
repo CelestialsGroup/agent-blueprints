@@ -1,11 +1,11 @@
 {
   "decision_id": "pad_tool_01J000000000000000000",
   "provider_revision_id": "tpr_01J00000000000000000000000",
-  "provider_revision_digest": "sha256:78e9fcb4b86d8bd2dedd75a906fe19b1b42c524272284c872e2cfe8533839710",
+  "provider_revision_digest": "sha256:a1990f677bff2547a0d32c778f9c7b94e21b342a1c7865c3c5dea65887965afb",
   "decision_sequence": 1,
   "decision": "certified",
   "evidence_digest": "sha256:2828282828282828282828282828282828282828282828282828282828282828",
   "decided_by": "principal:platform-provider-certifier",
   "decided_at": "2026-07-16T09:00:50Z",
-  "decision_digest": "sha256:a95942713f209103c37a89d55b2d4fac823655c0ce9a164dd67155e3c9caa5c8"
+  "decision_digest": "sha256:22069932558cf10de47e777631f65499282c8716693dc006496afeb7347c7e2e"
 }

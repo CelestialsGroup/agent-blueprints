@@ -2,81 +2,53 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:agent-platform:runtime-session-route:v1",
   "title": "RuntimeSessionRoute",
+  "description": "Runtime Gateway-owned route. Provider topology and raw endpoints remain private to the Gateway adapter.",
   "type": "object",
   "required": [
-    "runtime_session_id",
-    "tenant_id",
-    "work_order_id",
-    "sandbox_id",
-    "runtime_type",
-    "expires_at",
-    "client_app_id",
-    "principal_id",
-    "scopes",
+    "runtime_session_id", "tenant_id", "client_app_id", "principal_id", "work_order_id",
+    "sandbox_id", "sandbox_slot_key", "runtime_type", "gateway_route_id",
+    "provider_route_reference", "provider_route_digest", "expires_at", "scopes",
     "connection_generation"
   ],
   "properties": {
-    "runtime_session_id": {
-      "type": "string"
-    },
-    "tenant_id": {
-      "type": "string"
-    },
-    "work_order_id": {
-      "type": "string"
-    },
-    "sandbox_id": {
-      "type": "string"
-    },
-    "runtime_type": {
-      "enum": [
-        "terminal",
-        "browser",
-        "desktop",
-        "port_forward"
-      ]
-    },
-    "cluster_id": {
-      "type": "string"
-    },
-    "runtime_endpoint": {
+    "runtime_session_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "client_app_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "principal_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "sandbox_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "sandbox_slot_key": {
       "type": "string",
-      "format": "uri"
+      "pattern": "^[a-z0-9][a-z0-9/_-]{0,127}$"
     },
+    "runtime_type": { "enum": ["terminal", "browser", "desktop", "port_forward"] },
+    "gateway_route_id": { "type": "string", "pattern": "^rgr_[A-Za-z0-9._:-]{8,196}$" },
+    "provider_route_reference": {
+      "type": "string",
+      "pattern": "^prr_[A-Za-z0-9_-]{16,496}$",
+      "description": "Opaque, Gateway-local reference; never a URL, Pod, VM, cluster, region or cell identifier."
+    },
+    "provider_route_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "scopes": {
       "type": "array",
+      "minItems": 1,
+      "maxItems": 6,
       "uniqueItems": true,
       "items": {
         "enum": [
-          "terminal:connect",
-          "browser:view",
-          "browser:control",
-          "desktop:view",
-          "desktop:control",
-          "port-forward:connect"
+          "terminal:connect", "browser:view", "browser:control", "desktop:view",
+          "desktop:control", "port-forward:connect"
         ]
       }
     },
-    "expires_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "client_app_id": {
-      "type": "string"
-    },
-    "principal_id": {
-      "type": "string"
-    },
-    "region_id": {
-      "type": "string"
-    },
-    "cell_id": {
-      "type": "string"
-    },
-    "connection_generation": {
-      "type": "integer",
-      "minimum": 1
-    }
+    "expires_at": { "type": "string", "format": "date-time" },
+    "connection_generation": { "type": "integer", "minimum": 1 }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "provider_route_digest is RFC 8785 JCS SHA-256 over runtime_session_id, sandbox_id, runtime_type and provider_route_reference",
+    "the route binds the authenticated Tenant, ClientApplication, Principal, WorkOrder and one admitted RunManifest sandbox slot",
+    "provider_route_reference is opaque and only Runtime Gateway may resolve it to provider-private topology or endpoints",
+    "connection_generation is fenced and every scope is compatible with runtime_type and the authorized RuntimeSession"
+  ]
 }

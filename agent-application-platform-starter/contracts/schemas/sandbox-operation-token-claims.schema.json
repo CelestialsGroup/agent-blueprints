@@ -6,10 +6,12 @@
   "required": [
     "jti",
     "iss",
+    "sub",
     "aud",
     "iat",
     "nbf",
     "exp",
+    "operation",
     "provider_revision_id",
     "sandbox_id",
     "operation_id",
@@ -17,17 +19,29 @@
     "fencing_token",
     "tenant_id",
     "work_order_id",
-    "policy_digest"
+    "policy_digest",
+    "request_contract_id",
+    "request_digest_profile",
+    "request_digest",
+    "deadline_at"
   ],
   "properties": {
     "jti": {
-      "type": "string"
+      "type": "string",
+      "minLength": 16,
+      "maxLength": 200
     },
     "iss": {
       "const": "agent-platform"
     },
+    "sub": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
     "aud": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^urn:agent-platform:provider-instance:[A-Za-z0-9._:-]{1,200}$"
     },
     "iat": {
       "type": "integer",
@@ -40,6 +54,13 @@
     "exp": {
       "type": "integer",
       "minimum": 0
+    },
+    "operation": {
+      "enum": [
+        "create", "restore", "set_desired_state", "extend_lease", "exec", "cancel_exec",
+        "open_runtime_session", "snapshot", "terminate", "read_sandbox", "read_operation",
+        "read_result", "read_snapshot_manifest", "read_events"
+      ]
     },
     "provider_revision_id": {
       "type": "string"
@@ -66,11 +87,159 @@
     "policy_digest": {
       "type": "string",
       "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "request_contract_id": {
+      "type": "string",
+      "pattern": "^urn:agent-platform:[a-z0-9-]+:v1$"
+    },
+    "request_digest_profile": {
+      "enum": [
+        "rfc8785-request-excluding-request-digest-v1",
+        "rfc8785-full-document-v1"
+      ]
+    },
+    "request_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "deadline_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
+  "allOf": [
+    {
+      "if": { "properties": { "operation": { "const": "create" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "request_contract_id": { "const": "urn:agent-platform:sandbox-create-request:v1" },
+          "request_digest_profile": { "const": "rfc8785-request-excluding-request-digest-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "restore" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "request_contract_id": { "const": "urn:agent-platform:sandbox-restore-request:v1" },
+          "request_digest_profile": { "const": "rfc8785-request-excluding-request-digest-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "set_desired_state" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "request_contract_id": { "const": "urn:agent-platform:sandbox-desired-state-request:v1" },
+          "request_digest_profile": { "const": "rfc8785-request-excluding-request-digest-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "extend_lease" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "request_contract_id": { "const": "urn:agent-platform:sandbox-lease-request:v1" },
+          "request_digest_profile": { "const": "rfc8785-request-excluding-request-digest-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "exec" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "request_contract_id": { "const": "urn:agent-platform:sandbox-exec-request:v1" },
+          "request_digest_profile": { "const": "rfc8785-request-excluding-request-digest-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "cancel_exec" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "request_contract_id": { "const": "urn:agent-platform:sandbox-cancel-exec-request:v1" },
+          "request_digest_profile": { "const": "rfc8785-request-excluding-request-digest-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "open_runtime_session" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "request_contract_id": { "const": "urn:agent-platform:sandbox-runtime-session-open-request:v1" },
+          "request_digest_profile": { "const": "rfc8785-request-excluding-request-digest-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "snapshot" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "request_contract_id": { "const": "urn:agent-platform:sandbox-snapshot-request:v1" },
+          "request_digest_profile": { "const": "rfc8785-request-excluding-request-digest-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "terminate" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "request_contract_id": { "const": "urn:agent-platform:sandbox-terminate-request:v1" },
+          "request_digest_profile": { "const": "rfc8785-request-excluding-request-digest-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "read_sandbox" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "request_contract_id": { "const": "urn:agent-platform:sandbox-status-operation-descriptor:v1" },
+          "request_digest_profile": { "const": "rfc8785-full-document-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "read_operation" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "request_contract_id": { "const": "urn:agent-platform:sandbox-operation-read-operation-descriptor:v1" },
+          "request_digest_profile": { "const": "rfc8785-full-document-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "read_result" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "request_contract_id": { "const": "urn:agent-platform:sandbox-exec-result-operation-descriptor:v1" },
+          "request_digest_profile": { "const": "rfc8785-full-document-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "read_snapshot_manifest" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "request_contract_id": { "const": "urn:agent-platform:sandbox-snapshot-manifest-operation-descriptor:v1" },
+          "request_digest_profile": { "const": "rfc8785-full-document-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "read_events" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "request_contract_id": { "const": "urn:agent-platform:sandbox-event-read-operation-descriptor:v1" },
+          "request_digest_profile": { "const": "rfc8785-full-document-v1" }
+        }
+      }
+    }
+  ],
   "additionalProperties": false,
   "x-semantic-constraints": [
-    "iat < exp",
-    "exp must not exceed operation deadline"
+    "iat <= nbf < exp, exp - iat <= 300, nbf is no earlier than the bound PolicyDecision and exp does not exceed deadline_at",
+    "audience and provider_revision_id exactly match the admitted Sandbox ProviderResolution",
+    "sub matches the authenticated Sandbox controller while operation, request_contract_id, request_digest_profile, request_digest, Sandbox, Tenant, WorkOrder, Attempt and fencing_token bind one exact Sandbox request or read descriptor",
+    "subsequent mutation or result acceptance rejects a stale fencing_token or replayed jti"
   ]
 }

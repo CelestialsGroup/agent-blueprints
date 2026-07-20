@@ -63,7 +63,7 @@ AgentRuntimeRun mutation -> Invocation 1 -> N Attempt
 - Artifact 和 Recording 大块字节只进入对象存储，数据库和 Event 只保存引用与摘要。
 - 核心 Runtime Event、PolicyDecision、TechnicalUsage 和 Runtime Gateway Frame 使用闭合 Schema；RunManifest 绑定 Event Registry ID/Version/Digest，未知 Provider Payload 不能驱动核心 Projection。
 - Runtime/Sandbox/Capability 认证绑定不可变 Conformance Suite/Profile/Digest；Runtime 调用令牌绑定 Tenant、Run、Attempt、Fencing、Policy、Budget 和请求摘要。
-- Capability Provider 是独立通用 Port，请求携带完整执行授权并绑定 ProviderResolution/Instance/Audience；Invoke、Status、Cancel、Event 使用不可跨操作重放且按前驱续期的 Token。Model/Tool 复用该 Port，Artifact/Egress 使用各自 OpenAPI 与短期操作 Token；Plugin 只是可选实现方式。
+- Capability Provider 是独立通用 Port，请求携带完整执行授权并绑定 ProviderResolution/Instance/Audience；Invoke、Status、Cancel、Event 以正式 Contract/Profile/Digest 绑定且使用不可跨操作重放、按前驱续期的 Token。Model/Tool 复用该 Port，Artifact/Egress 使用各自 OpenAPI 与短期操作 Token；Egress 绑定不可变 DestinationRevision/Class；Plugin 只是可选实现方式。
 - BusinessSettlementEnvelope 嵌入完整不可变 UsageReport，但不包含价格、货币、余额或商业结论。
 - 系统不承诺全局 Exactly-once。
 

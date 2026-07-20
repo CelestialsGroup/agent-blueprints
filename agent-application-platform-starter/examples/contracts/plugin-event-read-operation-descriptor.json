@@ -1,0 +1,7 @@
+{
+  "operation": "read_events",
+  "invocation_id": "inv_01J00000000000000000000000",
+  "invocation_attempt_id": "att_01J00000000000000000000000",
+  "fencing_token": 1,
+  "after_sequence": 0
+}

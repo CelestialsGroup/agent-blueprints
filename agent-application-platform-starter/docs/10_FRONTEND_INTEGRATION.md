@@ -43,7 +43,7 @@ Workbench 还提供 Approval、Pause/Resume、Cancel、Conversation 分支、Exp
 ## 实时与历史路径
 
 ```text
-实时状态：CanonicalEvent -> SSE -> Chat / Plan / Timeline
+实时状态：Platform/Runtime Core Registry -> CanonicalEvent -> SSE -> Chat / Plan / Timeline
 实时画面：Sandbox Endpoint -> Runtime Gateway -> Terminal / Browser / Desktop
 历史回放：CanonicalEvent + Recording Manifest + ArtifactVersion -> Workbench
 ```

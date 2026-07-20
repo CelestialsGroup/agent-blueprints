@@ -32,4 +32,17 @@ for (const vector of vectors.invalid) {
   if (!failed) throw new Error(`Expected invalid vector to fail: ${vector.id}`);
 }
 
+const evidenceDir = path.join(root, "build", "validation");
+const contractManifest = JSON.parse(fs.readFileSync(
+  path.join(root, "contracts", "compatibility", "v0.9.0-contract-manifest.json"), "utf8",
+));
+fs.mkdirSync(evidenceDir, { recursive: true });
+fs.writeFileSync(path.join(evidenceDir, "node-jcs.json"), `${JSON.stringify({
+  runtime: `Node.js ${process.versions.node}`,
+  canonicalization_vectors: vectors.valid.length,
+  strict_valid_vectors: vectors.strict_valid.length,
+  strict_invalid_vectors: vectors.invalid.length,
+  contract_manifest_digest: contractManifest.manifest_digest,
+  status: "passed",
+}, null, 2)}\n`);
 console.log(`Node JCS/Strict I-JSON: ${vectors.valid.length} canonicalization, ${vectors.strict_valid.length} strict-valid and ${vectors.invalid.length} strict-invalid vectors passed.`);

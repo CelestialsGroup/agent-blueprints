@@ -1,0 +1,6 @@
+{
+  "provider_code": "UPSTREAM_TIMEOUT",
+  "retry_after_seconds": 5,
+  "retryable": true,
+  "evidence_reference": "evidence://provider/errors/err-0001"
+}

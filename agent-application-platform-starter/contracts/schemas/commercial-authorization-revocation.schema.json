@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:commercial-authorization-revocation:v1",
+  "title": "CommercialAuthorizationRevocation",
+  "description": "Immutable Business-owned notice revoking a previously signed CommercialAuthorization. Agent Platform records a receipt and only reduces affected execution authority.",
+  "type": "object",
+  "required": [
+    "revocation_id",
+    "external_tenant_id",
+    "commercial_authorization_id",
+    "commercial_authorization_digest",
+    "reason",
+    "effective_at",
+    "issued_at",
+    "revocation_digest"
+  ],
+  "properties": {
+    "revocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "external_tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "commercial_authorization_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "commercial_authorization_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "reason": {
+      "enum": [
+        "entitlement_revoked",
+        "quota_reservation_revoked",
+        "business_account_suspended",
+        "fraud_hold",
+        "business_administrative_stop"
+      ]
+    },
+    "effective_at": { "type": "string", "format": "date-time" },
+    "issued_at": { "type": "string", "format": "date-time" },
+    "revocation_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "revocation_digest is RFC 8785 JCS SHA-256 over the notice excluding revocation_digest",
+    "effective_at is not later than issued_at, and issued_at is not later than Platform receipt time plus bounded clock skew",
+    "external_tenant_id and authenticated client_id resolve server-side to the same Tenant and ClientApplication that admitted the CommercialAuthorization",
+    "commercial_authorization_id and commercial_authorization_digest match one immutable stored Business snapshot; the Platform cannot synthesize or widen this Business fact",
+    "revocation receipt is append-only and idempotent, immediately denies matching WorkSessions and new execution or Gateway authorization, and durably fans out WorkSession revocation plus fenced SystemSafetyControl cancellation and Outbox for each affected active WorkOrder without requiring a new Business Grant"
+  ]
+}

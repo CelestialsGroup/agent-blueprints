@@ -62,8 +62,8 @@
     "base_workspace_head_version": 1
   },
   "lease": {
-    "expires_at": "2026-07-16T12:00:00Z",
-    "max_extension_seconds": 3600
+    "expires_at": "2026-07-16T09:15:00Z",
+    "max_extension_seconds": 600
   },
   "placement_constraints": {
     "region_id": "ap-southeast-1",

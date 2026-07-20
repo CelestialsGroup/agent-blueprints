@@ -1,7 +1,7 @@
 {
   "suite_id": "agent-runtime-provider",
   "suite_version": "1.0.0",
-  "suite_digest": "sha256:94f077f820aafce00d6c13bed73ae79d0de600870b537748d2128cfb3006654b",
+  "suite_digest": "sha256:dbd08a0071a03dd8355dadcbcbf5db9139e4c0e462675d02b919dc8603c293e8",
   "target_kind": "agent_runtime",
   "profiles": [
     {
@@ -90,6 +90,18 @@
           "category": "security",
           "evidence_type": "trace",
           "description": "Token expiry, Adapter restart and resume use a fresh append-only RuntimeAuthorization and ArtifactGrants for the same RunManifest; commercial expiry, internal Tenant/WorkOrder bindings, grant time windows and widening are enforced."
+        },
+        {
+          "test_id": "runtime-token-replay-and-expiry",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "Runtime tokens reject wrong typ, algorithm, key, audience or caller, stale fencing, replayed mutation jti and TTL above 300 seconds. Execution authority cannot predate or outlive RuntimeAuthorization and cannot outlive command deadline; post-expiry safety-control authority permits only exact Status/Event/Cancel/Pause and cannot continue execution or create side effects."
+        },
+        {
+          "test_id": "system-safety-control",
+          "category": "security",
+          "evidence_type": "trace",
+          "description": "After Business authorization expiry or a sender-constrained immutable revocation notice, the sole Platform Safety Controller can still issue an idempotent, newly fenced SystemSafetyControl bound to Tenant, WorkOrder, RuntimeRun, trigger evidence, issuer workload and digest. Hard expiry/revocation/deadline/suspension/budget/shutdown reasons require Cancel; review/reconciliation/operator reasons may Pause. Races with previously issued commands are measured and reconciled; cancellation intent is not reported as cancellation proof. The same authority is rejected for Resume, Append, Interrupt, Approval, Checkpoint or any new side effect."
         },
         {
           "test_id": "outcome-unknown-reconcile",

@@ -20,22 +20,27 @@ Phase 0 实现一条真实、可恢复的 Manus-like Conversation 链路。目�
 - 固化 Tenant-qualified `WorkOrder 1 -> 1 WorkflowRun -> 1 Root AgentRun + N Sub-agent AgentRun`，且一个 AgentRun 只绑定一个 RunManifest/AgentRuntimeRun；RunManifest Runtime 只引用一个 ProviderResolution；
 - 固化 ExecutionGrant `request_contract_id + digest_profile + request_digest`，分别闭合 WorkOrderRequest 与 ConversationTurnRequest；
 - 将 ConversationTurnRequest（新 Turn/WorkOrder）与 WorkOrderControlRequest（现有 Runtime 控制）分开；Interrupt-and-enqueue 建立明确后继，Runtime Command 只引用已授权 Control Input；
+- 增加 sender-constrained、幂等的 Business CommercialAuthorizationRevocation 入口和唯一 Platform Safety Controller；在商业授权到期/撤销、Deadline/预算触发或紧急停机时，仅追加 SystemSafetyControl 并只允许对精确 Tenant/WorkOrder/RuntimeRun 发出 Pause/Cancel；与用户 ControlRequest 授权互斥，禁止 Resume、Append、Interrupt、Approval、Checkpoint 和新副作用；
 - 固化 RunManifest 对已消费 ExecutionGrant 的 `request_contract_id + request_digest_profile + request_digest` 绑定，以及实际有界输入/不可变引用、ContextPackage、ArtifactAccessRequirement、初始 Budget/Policy/Permissions 上限、CommercialAuthorization ID/Digest/到期上限、授权续期规则和四类 Gateway Binding；Runtime Start 使用本 Attempt 内部作用域闭合且不越过商业期限的短期 RuntimeAuthorization/ArtifactGrant；
 - 固化 Conversation Workspace、Branch WorkspaceRevision Head、Fork 与 CAS 提交；Sandbox Slot 唯一范围是 WorkOrder，不允许并行 Branch 共享可变文件头；
 - 为 Chat、Plan、Tool、Approval、Artifact、Background Task、Usage 和终态定义核心 Event Payload，并由 RunManifest 绑定不可变 Registry ID/Version/Digest；
-- 固化 AgentRuntimeInvocation Token 对 Tenant、ProviderRevision、Run、Attempt、Fencing、Policy、Budget、Permissions 和请求摘要的绑定；
+- 固化 AgentRuntimeInvocation Token 对 Tenant、ProviderRevision、Run、Attempt、Fencing、Policy、Budget、Permissions 和请求摘要的绑定；执行授权到期后只允许 `safety_control` 做 Status/Event/Cancel/Pause，不允许恢复执行或产生副作用；
+- 固化 Service、ExecutionGrant、WorkSession、Plugin、Capability、Artifact、Egress、Runtime 与 Sandbox 的独立闭合 JWS Header Profile；每类唯一 `typ`，Header 与 Claims 同时验证，禁止跨 Profile 接受；
 - 固化 Terminal `runtime-gateway/v1` 的 Generation、按 Channel Cursor/Sequence、ACK/Window、Control ID + Digest、重连和 Recording Checkpoint；
 - 固化 TechnicalUsage 的 MeterDefinition、归属、Evidence、幂等、更正、连续 UsageReport，以及嵌入完整 Report 的 BusinessSettlementEnvelope/Callback；
 - 使用 Provider Implementation/BuildProvenance/Port Binding，禁止 Runtime 或 Sandbox 被迫伪装成 Plugin；
 - ProviderResolution 固化 Resolver/Input/Candidate/Evidence/Decision；Runtime 与 Sandbox Slot 只引用 Resolution；Sandbox 是否存在由 Capability 决定；
 - ProviderResolution 显式绑定 Tenant/ClientApplication/WorkOrder，并通过 identity_dependency 绑定 PrincipalContextSnapshot；幂等范围固定为 Tenant + ClientApplication + Operation + Key Digest；
-- 发布独立 `capability-provider-v1` 与操作级 Capability Token；请求携带完整执行授权值并绑定 ProviderResolution/Instance/Audience，Status/Cancel/Event Token 通过前驱链在原 deadline/CommercialAuthorization 内续期，禁止以 `plugin_id` 作为 Model/Tool/MCP/Skill/Renderer 等公共执行前提；
+- 发布独立 `capability-provider-v1` 与操作级 Capability Token；请求携带完整执行授权值并绑定 ProviderResolution/Instance/Audience，Invoke `execution` 不越过原 deadline/CommercialAuthorization，后续前驱链 `safety_control` 只做 Status/Cancel/Event 且无 Artifact/副作用权限；禁止以 `plugin_id` 作为 Model/Tool/MCP/Skill/Renderer 等公共执行前提；
 - Model/Tool Gateway 复用 Capability Port；发布 `artifact-gateway-v1`、`egress-gateway-v1`、ArtifactStagingGrant 与操作 Token，明确 Staging Commit 不能 Finalize ArtifactVersion；
+- Capability Status/Event 与 Artifact Read 使用正式 Operation Descriptor；所有 Capability/Artifact Token 绑定 Contract ID、Digest Profile 和摘要，并为 `read_events` 提供正反向 Cursor 证据；
+- Egress 使用不可变、Owner-scoped DestinationRevision，Token 绑定 Revision ID/Digest/Class，EffectivePermissions 按 Class 而不是 Destination ID 授权；
 - 拆分 Message/Workspace/Active Work CAS；发布 WorkspaceContentManifest，并要求 RuntimeSession 选择 `sandbox_slot_key`；
-- CanonicalEvent 固化 Producer/ProviderRevision/SourceStream/SourceEvent/Cursor/Dedupe Key，Metadata 闭合，持久化 Inbox 唯一责任机器可追踪；
+- CanonicalEvent 固化 Producer/ProviderRevision/SourceStream/SourceEvent/Cursor/Dedupe Key，Metadata 闭合；Platform/标准 Runtime Event 分别绑定所有权匹配的 Platform/Runtime Core Registry 并验证 Payload，持久化 Inbox 唯一责任机器可追踪；
+- RuntimeSessionRoute 只保存 Gateway Route 和带摘要的不透明 Provider Route Reference，不得保存或返回原始 Endpoint/Cluster/Region/Cell；
 - EffectiveExecutionLimits 全字段必填；写请求声明 encoded-byte 上限并在解析前返回 413；WorkOrder 支持 `accepted -> cancel_requested`，且 `queued`/`waiting`/`paused` 可依据结构化失败证据直接进入 `failed`；
 - 固化 PolicyDecision `deny > ask > allow`、Approval 和独立 Sandbox/Gateway Enforcement；
-- 发布 Runtime、Sandbox、Runtime Gateway、Capability Provider 和 Artifact/Egress Execution Gateway 的内容寻址 Conformance Suite Manifest；
+- 发布 Agent Access、Runtime、Sandbox、Runtime Gateway、Capability Provider 和 Artifact/Egress Execution Gateway 的内容寻址 Conformance Suite Manifest；
 - 保持 Temporal 为 Phase 0 实现选择，不把第三方私有模型提升为平台领域事实。
 
 验收证据：更新后的 Schema/OpenAPI/状态机、Event Registry、Conformance Suite、正反向夹具和兼容性审查通过本地 Gate。GitHub CI 与仓库准入在实施准备阶段补齐；该证据只关闭契约，不计为产品实现或生产证明。
@@ -47,29 +52,31 @@ Phase 0 实现一条真实、可恢复的 Manus-like Conversation 链路。目�
 3. Local Gate：在 `.tool-versions` 固定的 CPython 3.14.6、Node 24.18.0 Active LTS/pnpm 11.15.1、Go 1.26.5 上运行 `./scripts/bootstrap_contracts.sh && make validate-architecture`，八份 OpenAPI 0 Error/0 Warning、Manifest Python/Node 一致、`git diff --check` 全部通过；CPython 3.13 兼容通道另行验证。
 4. Implementation Entry Review：只允许把 0A.1 标记为“架构/契约验证通过”；产品实现、集成链路和生产可靠性仍为未完成。
 5. 进入 0B 后先实现 Migration/RLS/Repository/Outbox/Inbox 与空库升级回滚证据，再实现 Native Runtime Probe；不得用框架行为替代领域 Constraint。
+6. 0B 组件、语言与升级通道遵循 `docs/51_PHASE0_TECHNOLOGY_SELECTION.md`；其中标记为 Phase 0 候选或 Phase 1 延后的项目不得被误写为已冻结生产选择。
 
 ## 0B：持久化脊柱与 Native Runtime Probe
 
-先实现能支撑首条纵向链的 PostgreSQL Migration、事务 Repository、Outbox/Inbox、Temporal Worker、对象存储引用和 Redis 非权威通知路径。首批只包含 Access/Tenant、Conversation、Message、Branch、WorkspaceRevision、WorkOrder、GrantConsumption、WorkflowRun/AgentRun、ProviderResolution、RunManifest 和 CanonicalEvent；Artifact Ledger、TechnicalUsage、Delivery 与 Recording Metadata 随 0D/0E 引入，不在 0B 一次铺满。
+先实现能支撑首条纵向链的 PostgreSQL Migration、事务 Repository、Outbox/Inbox、Temporal Worker、对象存储引用和 Redis 非权威通知路径。首批只包含 Access/Tenant、Conversation、Message、Branch、WorkspaceRevision、WorkOrder、GrantConsumption、WorkflowRun/AgentRun、ProviderResolution、RunManifest、AgentRuntimeCommand/SystemSafetyControl Ledger 和 CanonicalEvent；Artifact Ledger、TechnicalUsage、Delivery 与 Recording Metadata 随 0D/0E 引入，不在 0B 一次铺满。
 
-同时实现一个独立进程的 Native Minimal AgentRuntimeProvider Contract Probe，覆盖 Start、Status、Cursor Event、Cancel、最小 Checkpoint/Restart 和无 Sandbox 模式，并完整通过 `runtime-core-v1`。它是反框架泄漏探针，不是生产主 Runtime；公共 Schema、Adapter SDK 和 Workbench Projection 不得先按 DeerFlow 定制。
+同时实现一个独立进程的 Native Minimal AgentRuntimeProvider Contract Probe，覆盖 Start、Status、Cursor Event、用户 Cancel、授权到期/Deadline 触发的 Platform Safety Controller + fenced SystemSafetyControl Cancel、最小 Checkpoint/Restart 和无 Sandbox 模式，并完整通过 `runtime-core-v1`。它是反框架泄漏探针，不是生产主 Runtime；公共 Schema、Adapter SDK 和 Workbench Projection 不得先按 DeerFlow 定制。
 
 验收证据：
 
 - Migration 可从空库升级并安全回滚；
 - 数据库 Constraint 实现 `26_DATA_MODEL_INVARIANTS.md` 中 Phase 0 使用的不变量；
 - WorkOrder 与 Workflow Start Outbox 原子提交；
+- SystemSafetyControl、Platform Event、Command/Control Outbox 同事务，旧 Fencing 或系统 Resume/Append/Approval 被拒绝；
 - Redis 清空不影响授权、状态、账本和游标正确性；
 - Temporal Workflow 可以 Replay；
 - Native Probe 可以在 `sandboxes=[]` 下完成一个可恢复 Run，并产生共享 Runtime Event。
 
 ## 0C：Business 到 Conversation
 
-实现参考 Business User、Organization、Free/Pro Membership、不可变 EntitlementRevision、幂等 QuotaReservation 和 CommercialAuthorizationSnapshot。完成 WorkSession Exchange，并用新的 ExecutionGrant 提交 Conversation Turn。
+实现参考 Business User、Organization、Free/Pro Membership、不可变 EntitlementRevision、幂等 QuotaReservation 和 CommercialAuthorizationSnapshot。完成 WorkSession Exchange，并用新的 ExecutionGrant 提交 Conversation Turn；同时实现 `authorization:revoke` Agent Access 入口、不可变 Revocation Receipt、同步 deny 索引以及 WorkSession/活动 WorkOrder 可恢复 fan-out。
 
 Turn 事务必须先按 `request_contract_id` 验证精确请求摘要，再原子完成 Message 追加、Message Sequence、Branch/WorkspaceRevision Head 校验、GrantConsumption、WorkOrder、Workflow Start Outbox 和 CanonicalEvent。平台从 Grant 使用 `turn_id`，并分配内部 `input_message_id`。
 
-验收证据：重复 Conversation/Turn 请求不会创建第二个 Message、WorkOrder、Reservation 或消费记录；Grant 不能跨 Turn、Tenant 或请求摘要重用；Platform 不查询 Business 会员数据库，也不修改商业余额。
+验收证据：重复 Conversation/Turn 请求不会创建第二个 Message、WorkOrder、Reservation 或消费记录；Grant 不能跨 Turn、Tenant 或请求摘要重用；Platform 不查询 Business 会员数据库，也不修改商业余额。重复 Revocation Notice 不重复撤销 Session 或创建第二个 SafetyControl，摘要冲突/跨 Tenant/Client/Authorization 被拒绝；收据提交后新授权和 Gateway 副作用 fail-closed，旧连接断开与 Runtime Cancel fan-out 可从数据库恢复。
 
 ## 0D：主 Runtime 与 Sandbox
 

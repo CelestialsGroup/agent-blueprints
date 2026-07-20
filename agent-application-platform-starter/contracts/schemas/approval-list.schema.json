@@ -54,7 +54,7 @@
             "type": "string"
           },
           "details": {
-            "type": "object"
+            "$ref": "urn:agent-platform:bounded-details:v1"
           },
           "requested_at": {
             "type": "string",

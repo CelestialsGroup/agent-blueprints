@@ -8,7 +8,7 @@
   "invocation_attempt_id": "iat_cap_01J00000000000000000000",
   "fencing_token": 1,
   "idempotency_key": "capability-invocation-key-0001",
-  "request_digest": "sha256:cb2db69bda6053cafb3313efcce2a07f3ae14ed2a1a1bf7f656ffc74f07ca4f9",
+  "request_digest": "sha256:df048cc01d41a452390e8386be75bbe09ce676ebe63dd9c1a3f6893d13d3db81",
   "provider_revision_id": "hpr_01J00000000000000000000000",
   "capability": {
     "id": "html.generate",
@@ -45,11 +45,11 @@
         "route_id": "artifact-route-work-order",
         "protocol_version": "v1",
         "contract_id": "urn:agent-platform:openapi:artifact-gateway:v1",
-        "contract_digest": "sha256:1f47bc91e199533c45f3a0c3b82cf3f3d2c27aedf52196ce9805e792e5a9b0c1",
+        "contract_digest": "sha256:b3cc84d2a5e07df5e0773c15d9a8a0824f2da6087cbc8833193d5cff8bdf6097",
         "binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
         "audience": "agent-artifact-gateway"
       },
-      "grant_digest": "sha256:d6177d2b303bb9d2fcb14226e1273b9cae363b8924f953d6eb9389793d107aff"
+      "grant_digest": "sha256:6fcd61f8e10cf4132c9cddb0940edf4a2c560c94b382aa79cdb3518589e2bcd2"
     }
   ],
   "trace_context": {
@@ -64,7 +64,7 @@
   },
   "policy_decision": {
     "decision_id": "pol_cap_01J000000000000000000000",
-    "decision_digest": "sha256:107d8f6e3b3e491c0f65d81d13d4107ae72e2f4e02291fdb386c64d062e45380",
+    "decision_digest": "sha256:58994a9f827f42052f35d31cba637ba1d9e12b3966986e443cc07a717d9be3f4",
     "tenant_id": "ten_01J00000000000000000000000",
     "work_order_id": "wrk_01J00000000000000000000000",
     "policy_bundle_digest": "sha256:6161616161616161616161616161616161616161616161616161616161616161",
@@ -87,7 +87,7 @@
       }
     ],
     "outcome": "allow",
-    "effective_permissions_digest": "sha256:87356194834eefdb7c53e91088046524c32e8bfdd929a45a6163dbfc05b588fb",
+    "effective_permissions_digest": "sha256:258682bb254cc4fafff41ccea043261e9c9381ca9a42e0efef0e3f20e9c1b70c",
     "decided_at": "2026-07-16T09:00:59Z",
     "expires_at": "2026-07-16T09:30:00Z",
     "decision_point": "invocation",
@@ -96,7 +96,7 @@
   },
   "effective_permissions": {
     "permissions_id": "perm_01J00000000000000000000000",
-    "permissions_digest": "sha256:87356194834eefdb7c53e91088046524c32e8bfdd929a45a6163dbfc05b588fb",
+    "permissions_digest": "sha256:258682bb254cc4fafff41ccea043261e9c9381ca9a42e0efef0e3f20e9c1b70c",
     "tenant_id": "ten_01J00000000000000000000000",
     "work_order_id": "wrk_01J00000000000000000000000",
     "model": {
@@ -119,7 +119,7 @@
       "allowed_destination_classes": [
         "model_gateway",
         "artifact_gateway",
-        "public-docs-origin"
+        "public_documentation"
       ]
     },
     "sandbox_slots": [
@@ -148,7 +148,7 @@
       "route_id": "artifact-route-work-order",
       "protocol_version": "v1",
       "contract_id": "urn:agent-platform:openapi:artifact-gateway:v1",
-      "contract_digest": "sha256:1f47bc91e199533c45f3a0c3b82cf3f3d2c27aedf52196ce9805e792e5a9b0c1",
+      "contract_digest": "sha256:b3cc84d2a5e07df5e0773c15d9a8a0824f2da6087cbc8833193d5cff8bdf6097",
       "binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
       "audience": "agent-artifact-gateway"
     },
@@ -160,6 +160,6 @@
     "max_total_bytes": 8388608,
     "issued_at": "2026-07-16T09:01:00Z",
     "expires_at": "2026-07-16T09:20:00Z",
-    "grant_digest": "sha256:9c63071f90f3b696780635191a6c755c49799434aa0eb90119e5a6fa075eac80"
+    "grant_digest": "sha256:7e086f12b648800ef195e7f104095e102320db132164ee33cb27f97e81e16d01"
   }
 }

@@ -8,6 +8,7 @@
     "iss",
     "aud",
     "iat",
+    "nbf",
     "exp",
     "session_id",
     "client_app_id",
@@ -16,6 +17,8 @@
     "conversation_id",
     "commercial_authorization_id",
     "commercial_authorization_digest",
+    "commercial_authorization_expires_at",
+    "principal_context_digest",
     "scopes",
     "session_version"
   ],
@@ -31,7 +34,13 @@
     },
     "iat": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "nbf": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
     },
     "exp": {
       "type": "integer",
@@ -63,8 +72,17 @@
       "type": "string",
       "pattern": "^sha256:[0-9a-f]{64}$"
     },
+    "commercial_authorization_expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "principal_context_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
     "scopes": {
       "type": "array",
+      "minItems": 1,
       "uniqueItems": true,
       "items": {
         "enum": [
@@ -93,10 +111,11 @@
   },
   "additionalProperties": false,
   "x-semantic-constraints": [
-    "iat < exp",
-    "exp - iat <= 3600",
+    "iat <= nbf < exp, exp - iat <= 3600 and exp is no later than commercial_authorization_expires_at",
+    "Tenant, ClientApplication, PrincipalContext, Conversation and optional WorkOrder match the authenticated WorkSession creation context",
+    "scopes are a non-empty subset of the requested and currently authorized scopes",
     "validation profile is mutually exclusive from ExecutionGrant and OAuth access tokens",
     "conversation_id is mandatory; work_order_id is an optional narrowing binding",
-    "commercial authorization is rechecked before every new Conversation turn"
+    "commercial authorization and session_version revocation are rechecked before every new Conversation turn and long-lived connection"
   ]
 }

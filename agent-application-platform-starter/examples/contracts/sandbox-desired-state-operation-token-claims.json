@@ -1,0 +1,22 @@
+{
+  "jti": "sot_03_01J00000000000000000000000",
+  "iss": "agent-platform",
+  "sub": "spn_agent_sandbox_controller",
+  "aud": "urn:agent-platform:provider-instance:spi_deerflow_builtin_sandbox",
+  "iat": 1784192460,
+  "nbf": 1784192460,
+  "exp": 1784192700,
+  "operation": "set_desired_state",
+  "provider_revision_id": "spr_01J00000000000000000000000",
+  "sandbox_id": "sbx_01J00000000000000000000000",
+  "operation_id": "sop_suspend_01",
+  "attempt_id": "sat_suspend_01",
+  "fencing_token": 5,
+  "tenant_id": "ten_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "policy_digest": "sha256:24066573c33b3c65f1ffddaa4be8600e9e8a27916dc94a647d0cfce3a3c1cfd5",
+  "request_contract_id": "urn:agent-platform:sandbox-desired-state-request:v1",
+  "request_digest_profile": "rfc8785-request-excluding-request-digest-v1",
+  "request_digest": "sha256:6cf1fa19709f0cdbf941da527ecfb8cb60a904291d9476f9b84475058b3b19cd",
+  "deadline_at": "2026-07-16T10:30:00Z"
+}

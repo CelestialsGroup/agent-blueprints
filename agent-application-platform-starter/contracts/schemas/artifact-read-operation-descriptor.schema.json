@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:artifact-read-operation-descriptor:v1",
+  "title": "ArtifactReadOperationDescriptor",
+  "type": "object",
+  "required": [
+    "operation", "tenant_id", "work_order_id", "invocation_id", "invocation_attempt_id",
+    "fencing_token", "artifact_id", "version_id"
+  ],
+  "properties": {
+    "operation": { "const": "read_content" },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "fencing_token": { "type": "integer", "minimum": 1 },
+    "artifact_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "version_id": { "type": "string", "minLength": 1, "maxLength": 200 }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "the token request_digest is RFC 8785 JCS SHA-256 over this complete descriptor using rfc8785-full-document-v1",
+    "the descriptor is synthesized from the authenticated token and HTTP path and exactly matches the bound ArtifactGrant"
+  ]
+}

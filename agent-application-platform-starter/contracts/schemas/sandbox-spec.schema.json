@@ -221,12 +221,6 @@
         "region_id": {
           "type": "string"
         },
-        "cluster_id": {
-          "type": "string"
-        },
-        "cell_id": {
-          "type": "string"
-        },
         "resource_class": {
           "enum": [
             "standard",

@@ -49,20 +49,27 @@ Scenario
 - WorkOrder、ExecutionGrant、RunManifest 与 Event 必须绑定 Conversation/Turn/Branch/Input Message。
 - 一个 WorkOrder 拥有一个平台 WorkflowRun；一个 WorkflowRun 拥有一个根 AgentRun 和零到多个显式父子关系的 Sub-agent AgentRun。一个 AgentRun 只绑定一个 RunManifest 和一个 AgentRuntimeRun；传输重试属于同一 Invocation 的 Attempt，不创建第二个逻辑 Run。
 - WorkflowRun、AgentRun、RunManifest 和 Runtime Start 显式携带同一 `tenant_id`；RunManifest 的 Runtime 与每个 Sandbox Slot 都只引用已固化的 ProviderResolution，不复制第二份 Revision/Conformance 事实。
+- RunManifest Location 只固化内容绑定的逻辑 Placement 决策；Provider-managed/External Runtime 可以没有 Region。Cluster、Cell、Pod、Node、Runtime ID 和 Endpoint 不得为满足公共 Schema 而伪造或写入稳定 Manifest/Status/Health。
 - 所有 Agent Runtime（包括 DeerFlow、LangGraph、OpenAI Agents SDK 或 Native Runtime）都只能通过 AgentRuntimeProvider v1 接入；框架原生 Agent/Thread/Run/Checkpoint/Event 原始载荷属于 Adapter 私有模型。
 - 不得把任何单一 Agent 框架设为稳定内核的编译时依赖、领域事实源或唯一合法实现。
 - 每个 Run 在准入时锁定 Agent Runtime ProviderRevision；运行中不得自动切换框架。Provider 原生 Checkpoint 只能在明确声明并通过测试的兼容范围内恢复。
 - 每个可执行后续输入都需要新的 Business ExecutionGrant；WorkSession 不能扩大商业授权。
 - `ConversationTurnRequest` 只创建新 Turn/WorkOrder；`WorkOrderControlRequest` 只控制现有 WorkOrder。`interrupt_and_enqueue` 先记录当前 WorkOrder 取消意图，再创建独立后继 WorkOrder；不得把 Append/Interrupt 偷换成新 Turn。
+- Business 授权到期、撤销、Deadline/预算触发或紧急停机不能阻止平台减权。Business 撤销使用 sender-constrained、幂等的不可变 `CommercialAuthorizationRevocation`，Platform 只保存收据和派生控制，不改写商业事实。唯一 Platform Safety Controller 可创建不可变 `SystemSafetyControl`，但只能绑定一个 Tenant/WorkOrder/RuntimeRun 的 Pause/Cancel 与内容寻址触发证据；它不能 Resume、Append、Interrupt、Approval、Checkpoint 或创建任何新副作用，也不能与用户 `WorkOrderControlRequest` 混用。
 - ExecutionGrant 必须声明 `request_contract_id` 与固定 Digest Profile，并绑定该精确请求去除 `execution_grant` 后的 JCS 摘要；Turn Grant 绑定 Turn/Message/Scenario，Control Grant 只绑定现有 WorkOrder/ControlRequest，不得携带陈旧 Turn 字段。Grant 内嵌有界 PrincipalContextSnapshot 并校验其摘要。
 - Runtime Command 与核心 Runtime Event Payload 必须使用类型化 Schema；Provider 私有 Event 不能直接驱动 Chat、Plan、Task、Usage 或终态 Projection。
 - RunManifest 通过 `request_contract_id + request_digest_profile + request_digest` 精确绑定已消费 ExecutionGrant 的原始请求，并固化实际有界输入或不可变引用、ContextPackage、ArtifactAccessRequirement、初始 Budget/Policy/Permissions 上限、授权续期规则和类型化 Model/Tool/Artifact/Egress Gateway Binding；不保存会过期的 bearer Grant。
 - Runtime Start 携带与 Manifest 一致的 Input/Context/Gateway，以及本 Attempt 的短期 RuntimeAuthorization。Authorization 以摘要和前驱链仅追加，内部 Budget/Policy/Permissions 必须绑定同一 Tenant/WorkOrder/CommercialAuthorization，且不能越过 RunManifest 固化的商业授权到期上限；Token 过期、Adapter 重启或 Resume 时只能等价/缩权续期并刷新同一授权时间窗内的 ArtifactGrant，扩权必须新建 WorkOrder、ExecutionGrant、ProviderResolution 和 RunManifest。
-- Runtime 调用使用短期 AgentRuntimeInvocation Token，绑定 Tenant、ProviderRevision、WorkflowRun/AgentRun/RuntimeRun、RunManifest、RuntimeAuthorization、InvocationAttempt、Fencing、Policy、Budget、Permissions 和请求摘要。
-- 通用 Capability 调用只使用 `capability-provider-v1`。请求携带完整 ExecutionBudget/PolicyDecision/EffectivePermissions 与 CommercialAuthorizationBinding，并显式绑定 ProviderResolution、ProviderInstance、ProviderRevision 和 admitted audience。独立 Token 只授权一个 Invoke/Status/Cancel/Event 操作，绑定原始请求与操作请求摘要，并以连续前驱 `jti` 在原 deadline/CommercialAuthorization 内等价续期；不得要求 `plugin_id`。Plugin Invocation 只保留为实现适配层。
+- Runtime 调用使用短期 AgentRuntimeInvocation Token，绑定 Tenant、ProviderRevision、WorkflowRun/AgentRun/RuntimeRun、RunManifest、RuntimeAuthorization、InvocationAttempt、Fencing、Policy、Budget、Permissions，以及当前 Start/Command/Status/Event 的 Operation、Contract、Digest Profile 和请求或规范化读描述符摘要。`execution` 不得早于 RuntimeAuthorization 签发或越过其到期/操作期限；`safety_control` 可以在执行授权到期后只读 Status/Event 或发送 Cancel/Pause，但不得 Start、Resume、Append、Interrupt、Approval、Checkpoint 或产生其他副作用。
+- 所有执行 Token 的 `sub` 必须匹配当前 mTLS/Workload Identity；Audience 只标识接收方，不能授权另一合法工作负载重放 Bearer Token。
+- Service、ExecutionGrant、WorkSession、Plugin、Capability、Artifact、Egress、Runtime 与 Sandbox Token 必须分别使用闭合 JWS Header Schema、互不相同的 `typ` 和显式 `alg/kid` allowlist；不能只校验 Claims 或依赖 JWT 库默认值。
+- 执行 Token 的 `nbf` 不得早于其绑定的 RuntimeAuthorization、PolicyDecision、ArtifactGrant/StagingGrant 等授权事实生效时间；最长 TTL 与到期上限不能替代签发下界校验。
+- 通用 Capability 调用只使用 `capability-provider-v1`。请求携带完整 ExecutionBudget/PolicyDecision/EffectivePermissions 与 CommercialAuthorizationBinding，并显式绑定 ProviderResolution、ProviderInstance、ProviderRevision 和 admitted audience。独立 Token 只授权一个 Invoke/Status/Cancel/Event 操作，以正式 Contract ID/Digest Profile/摘要绑定原始请求和操作描述符，并使用连续前驱 `jti`；`execution` Invoke 不越过原 deadline/CommercialAuthorization，后续 `safety_control` 只能 Status/Cancel/Event 且不继承 Artifact 或新副作用权限。不得要求 `plugin_id`，Plugin Invocation 只保留为实现适配层。
+- 兼容 Plugin Bridge 的 Invoke/Status/Cancel/Event Token 同样必须单操作绑定 Contract/Profile/Digest；Invoke 使用受 Deadline/Artifact 窗口约束的 `execution`，到期后仅 Status/Cancel/Event 可使用无 Artifact/副作用权限的 `safety_control`。“兼容层”不能成为跨操作、路径或游标重放的例外。
 - Model/Tool Gateway 复用 `capability-provider-v1`；Artifact 与 Egress 分别使用 `artifact-gateway-v1`、`egress-gateway-v1`。每个 Gateway Binding 必须携带 Contract ID/Digest、Route、Audience 与 Binding Digest。Provider 写入只使用 ArtifactStagingGrant 加更短期 Artifact Gateway 操作 Token，Staging Commit 不等于 ArtifactVersion Finalize。
-- RunManifest 绑定 EventTypeRegistry 的 ID/Version/Digest；只有该 Registry 准入的 Payload 可以进入核心 Projection。
-- Platform Core Registry 必须覆盖 Conversation、Message、WorkOrder/Control、WorkflowRun、AgentRun、GrantConsumption、Approval、Invocation、Artifact、Usage、Workspace、RuntimeSession/Recording 和 Delivery；Runtime Registry 只承载 Adapter 标准事件。
+- Egress 只解析不可变、Owner-scoped DestinationRevision；Request/Token 绑定 Revision ID/Digest/Class，EffectivePermissions 只按 Class 授权。RuntimeSessionRoute 只保存 Gateway Route 与带摘要的不透明 Provider Route Reference，不得泄漏 Endpoint/Cluster/Region/Cell。
+- RunManifest 绑定 Agent Runtime EventTypeRegistry 的 ID/Version/Digest；Platform 领域 Event 绑定 Platform Core Registry。CanonicalEvent 只能绑定二者中与 Producer 所有权匹配的精确 Revision，且 Payload 必须通过对应 Schema；Provider 私有 Registry 不能进入核心 Projection。
+- Platform Core Registry 必须覆盖 Conversation、Message、WorkOrder/Control/SystemSafetyControl、WorkflowRun、AgentRun、GrantConsumption、Approval、Invocation、Artifact、Usage、Workspace、RuntimeSession/Recording 和 Delivery；Runtime Registry 只承载 Adapter 标准事件。
 
 ## 可靠性
 
@@ -83,6 +90,7 @@ Temporal 决定编排历史；PostgreSQL 决定查询态和账本。任何双写
 逻辑 Invocation/Operation 与 Attempt 分离。每次网络尝试拥有唯一 `attempt_id` 和严格递增 `fencing_token`；Invocation Attempt 编号从 1 连续，`current_attempt_id`/`attempt_count`/`request_digest` 必须与仅追加历史一致。响应丢失或结果未知必须进入 `reconciling`；超时进入 `manual_review_required`；取消意图不等于取消证明。最终只能由证据解析为成功/失败/取消、重试，或以 `risk_accepted=true` 进入 `abandoned`。聚合记录必须引用 ReconciliationCase 和 ManualReviewDecision；Validator 从聚合状态推导决策/结果，并验证 Case 版本、摘要、证据及平台时间顺序。非幂等重试不得走自动重试事件。
 
 Sandbox Provider API 返回的是单次传输状态；平台的 SandboxOperation v2 才是持久化聚合状态机。
+Sandbox Capability 发现发生在具体 Operation 之前，只接受已准入控制面的 mTLS 身份；其余 14 个 Sandbox 操作必须使用单操作短期 Token，并以 `operation + request_contract_id + request_digest_profile + request_digest` 绑定请求体或规范化读描述符。路径、默认查询参数、Sandbox/Operation/Attempt/Fencing 不得脱离摘要绑定或跨操作重放。
 
 ## Sandbox 隔离
 

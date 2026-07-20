@@ -4,8 +4,8 @@
   "attempt_id": "sat_01J00000000000000000000000",
   "fencing_token": 1,
   "idempotency_key": "sandbox-create-example-0001",
-  "request_digest": "sha256:61e4c770352d13503b11277d9ea7913c2448188a8ffe517a21e40c1711d8bfa5",
-  "deadline_at": "2026-07-16T10:05:00Z",
+  "request_digest": "sha256:7570ca770ab27474e5c91f694386d0d9a030097926be29d18dc34d870f4767f9",
+  "deadline_at": "2026-07-16T09:05:00Z",
   "spec": {
     "sandbox_id": "sbx_01J00000000000000000000000",
     "tenant_id": "ten_01J00000000000000000000000",
@@ -70,8 +70,8 @@
       "base_workspace_head_version": 1
     },
     "lease": {
-      "expires_at": "2026-07-16T12:00:00Z",
-      "max_extension_seconds": 3600
+      "expires_at": "2026-07-16T09:15:00Z",
+      "max_extension_seconds": 600
     },
     "placement_constraints": {
       "region_id": "ap-southeast-1",

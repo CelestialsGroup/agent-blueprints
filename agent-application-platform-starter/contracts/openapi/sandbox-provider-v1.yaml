@@ -35,6 +35,9 @@ paths:
       - Capabilities
       operationId: getSandboxCapabilities
       summary: Return immutable capabilities for the active ProviderRevision
+      description: Capability negotiation is a control-plane operation performed before a SandboxOperation exists.
+      security:
+      - SandboxMutualTLS: []
       responses:
         '200':
           description: Provider capabilities
@@ -56,6 +59,10 @@ paths:
       - Sandboxes
       operationId: createSandbox
       summary: Idempotently create a Sandbox
+      x-required-sandbox-token-operation: create
+      x-operation-contract-id: urn:agent-platform:sandbox-create-request:v1
+      x-operation-digest-profile: rfc8785-request-excluding-request-digest-v1
+      x-max-encoded-body-bytes: 1048576
       description: 'Repeated requests with the same idempotency key and request digest
         return
 
@@ -86,6 +93,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '422':
           $ref: '#/components/responses/Unprocessable'
         '429':
@@ -100,6 +109,10 @@ paths:
       - Snapshots
       operationId: restoreSandbox
       summary: Create a Sandbox from a compatible Snapshot
+      x-required-sandbox-token-operation: restore
+      x-operation-contract-id: urn:agent-platform:sandbox-restore-request:v1
+      x-operation-digest-profile: rfc8785-request-excluding-request-digest-v1
+      x-max-encoded-body-bytes: 1048576
       requestBody:
         required: true
         content:
@@ -121,6 +134,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '422':
           $ref: '#/components/responses/Unprocessable'
         '500':
@@ -135,6 +150,10 @@ paths:
       - Sandboxes
       operationId: getSandbox
       summary: Read observed Sandbox state
+      x-required-sandbox-token-operation: read_sandbox
+      x-operation-contract-id: urn:agent-platform:sandbox-status-operation-descriptor:v1
+      x-operation-digest-profile: rfc8785-full-document-v1
+      x-operation-descriptor-schema: ../schemas/sandbox-status-operation-descriptor.schema.json
       responses:
         '200':
           description: Sandbox status
@@ -160,6 +179,10 @@ paths:
       - Sandboxes
       operationId: setSandboxDesiredState
       summary: Suspend or resume a Sandbox using generation-based concurrency control
+      x-required-sandbox-token-operation: set_desired_state
+      x-operation-contract-id: urn:agent-platform:sandbox-desired-state-request:v1
+      x-operation-digest-profile: rfc8785-request-excluding-request-digest-v1
+      x-max-encoded-body-bytes: 65536
       requestBody:
         required: true
         content:
@@ -181,6 +204,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '422':
           $ref: '#/components/responses/Unprocessable'
         '500':
@@ -195,6 +220,10 @@ paths:
       - Sandboxes
       operationId: extendSandboxLease
       summary: Idempotently extend a Sandbox lease
+      x-required-sandbox-token-operation: extend_lease
+      x-operation-contract-id: urn:agent-platform:sandbox-lease-request:v1
+      x-operation-digest-profile: rfc8785-request-excluding-request-digest-v1
+      x-max-encoded-body-bytes: 65536
       requestBody:
         required: true
         content:
@@ -216,6 +245,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '422':
           $ref: '#/components/responses/Unprocessable'
         '500':
@@ -230,6 +261,10 @@ paths:
       - Operations
       operationId: executeInSandbox
       summary: Execute a command inside /workspace
+      x-required-sandbox-token-operation: exec
+      x-operation-contract-id: urn:agent-platform:sandbox-exec-request:v1
+      x-operation-digest-profile: rfc8785-request-excluding-request-digest-v1
+      x-max-encoded-body-bytes: 262144
       requestBody:
         required: true
         content:
@@ -251,6 +286,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '422':
           $ref: '#/components/responses/Unprocessable'
         '429':
@@ -267,6 +304,10 @@ paths:
       - Operations
       operationId: cancelSandboxExec
       summary: Cancel a specific Exec Attempt
+      x-required-sandbox-token-operation: cancel_exec
+      x-operation-contract-id: urn:agent-platform:sandbox-cancel-exec-request:v1
+      x-operation-digest-profile: rfc8785-request-excluding-request-digest-v1
+      x-max-encoded-body-bytes: 65536
       requestBody:
         required: true
         content:
@@ -288,6 +329,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '500':
           $ref: '#/components/responses/InternalError'
   /v1/sandboxes/{sandbox_id}/runtime-sessions:
@@ -298,6 +341,10 @@ paths:
       - RuntimeSessions
       operationId: openSandboxRuntimeSession
       summary: Open an internal Terminal, Browser, Desktop or Port-forward endpoint
+      x-required-sandbox-token-operation: open_runtime_session
+      x-operation-contract-id: urn:agent-platform:sandbox-runtime-session-open-request:v1
+      x-operation-digest-profile: rfc8785-request-excluding-request-digest-v1
+      x-max-encoded-body-bytes: 65536
       description: 'The returned endpoint is internal and must never be returned directly
         to a
 
@@ -325,6 +372,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '422':
           $ref: '#/components/responses/Unprocessable'
         '500':
@@ -339,6 +388,10 @@ paths:
       - Snapshots
       operationId: createSandboxSnapshot
       summary: Create a Workspace, Filesystem or Process snapshot
+      x-required-sandbox-token-operation: snapshot
+      x-operation-contract-id: urn:agent-platform:sandbox-snapshot-request:v1
+      x-operation-digest-profile: rfc8785-request-excluding-request-digest-v1
+      x-max-encoded-body-bytes: 262144
       requestBody:
         required: true
         content:
@@ -360,6 +413,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '422':
           $ref: '#/components/responses/Unprocessable'
         '500':
@@ -374,6 +429,10 @@ paths:
       - Sandboxes
       operationId: terminateSandbox
       summary: Idempotently terminate a Sandbox
+      x-required-sandbox-token-operation: terminate
+      x-operation-contract-id: urn:agent-platform:sandbox-terminate-request:v1
+      x-operation-digest-profile: rfc8785-request-excluding-request-digest-v1
+      x-max-encoded-body-bytes: 65536
       requestBody:
         required: true
         content:
@@ -395,6 +454,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '500':
           $ref: '#/components/responses/InternalError'
         '503':
@@ -407,6 +468,10 @@ paths:
       - Operations
       operationId: getSandboxOperation
       summary: Read an asynchronous Sandbox operation
+      x-required-sandbox-token-operation: read_operation
+      x-operation-contract-id: urn:agent-platform:sandbox-operation-read-operation-descriptor:v1
+      x-operation-digest-profile: rfc8785-full-document-v1
+      x-operation-descriptor-schema: ../schemas/sandbox-operation-read-operation-descriptor.schema.json
       responses:
         '200':
           description: Operation status
@@ -432,6 +497,10 @@ paths:
       - Operations
       operationId: getSandboxExecResult
       summary: Read a confirmed Exec result
+      x-required-sandbox-token-operation: read_result
+      x-operation-contract-id: urn:agent-platform:sandbox-exec-result-operation-descriptor:v1
+      x-operation-digest-profile: rfc8785-full-document-v1
+      x-operation-descriptor-schema: ../schemas/sandbox-exec-result-operation-descriptor.schema.json
       responses:
         '200':
           description: Exec result
@@ -457,6 +526,10 @@ paths:
       - Snapshots
       operationId: getSandboxSnapshotManifest
       summary: Read a completed Snapshot manifest
+      x-required-sandbox-token-operation: read_snapshot_manifest
+      x-operation-contract-id: urn:agent-platform:sandbox-snapshot-manifest-operation-descriptor:v1
+      x-operation-digest-profile: rfc8785-full-document-v1
+      x-operation-descriptor-schema: ../schemas/sandbox-snapshot-manifest-operation-descriptor.schema.json
       responses:
         '200':
           description: Snapshot manifest
@@ -482,6 +555,10 @@ paths:
       - Sandboxes
       operationId: streamSandboxEvents
       summary: Stream provider-local durable Sandbox events
+      x-required-sandbox-token-operation: read_events
+      x-operation-contract-id: urn:agent-platform:sandbox-event-read-operation-descriptor:v1
+      x-operation-digest-profile: rfc8785-full-document-v1
+      x-operation-descriptor-schema: ../schemas/sandbox-event-read-operation-descriptor.schema.json
       parameters:
       - name: after_sequence
         in: query
@@ -489,6 +566,8 @@ paths:
         schema:
           type: integer
           minimum: 0
+          maximum: 9007199254740991
+          default: 0
       responses:
         '200':
           description: Sandbox event stream
@@ -524,8 +603,10 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: Short-lived token bound to ProviderRevision, operation, attempt
-        and approved policy.
+      x-jws-header-contract-id: urn:agent-platform:sandbox-operation-jws-header:v1
+      x-jwt-claims-contract-id: urn:agent-platform:sandbox-operation-token-claims:v1
+      description: Short-lived token bound to ProviderRevision, operation, exact request
+        Contract/Digest Profile, attempt and approved policy.
   parameters:
     SandboxId:
       name: sandbox_id
@@ -590,6 +671,12 @@ components:
           schema:
             type: integer
             minimum: 1
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    PayloadTooLarge:
+      description: Encoded request body exceeds the operation limit and is rejected before JSON parsing.
       content:
         application/json:
           schema:

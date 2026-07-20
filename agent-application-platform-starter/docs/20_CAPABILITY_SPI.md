@@ -73,7 +73,7 @@ Plugin 只是 Tool、Skill、Template 等实现的一种打包方式，PluginMan
 
 CapabilityInvocationRequest 必须携带完整 ExecutionBudget、PolicyDecision、EffectivePermissions 与 CommercialAuthorizationBinding，并绑定 Tenant、ClientApplication、PrincipalContextSnapshot Digest、WorkOrder、ProviderResolution、ProviderInstance、ProviderRevision、admitted audience、Capability Schema Digest、InvocationAttempt、Fencing、Request Digest、ArtifactGrant 与 ArtifactStagingGrant。Provider 不得依赖未定义的摘要反查接口获取真实执行值。
 
-Bearer Token 只授权一个 `invoke`、`status`、`cancel` 或 `read_events` 操作，同时绑定原始 Invocation Request Digest 和当前 Operation Request Digest。初始 Token 的 sequence 为 1；后续 Token 必须连续、引用紧邻前驱 `jti`，且不能越过原 request deadline 或 CommercialAuthorization。ArtifactGrant/ArtifactStagingGrant 是非 Bearer、可覆盖原长任务窗口的有界授权对象；每次读取、上传或 Commit 还必须使用最长 300 秒、绑定 Grant Digest 与操作摘要的 Artifact Gateway Token，因此 Capability Token 到期不要求扩大或重建 WorkOrder。Provider 不得接受只有 `plugin_id`、宽泛权限或未绑定摘要的令牌。写请求具有明确 encoded-byte 上限，超限必须在 JSON 解析前返回 413。
+Bearer Token 只授权一个 `invoke`、`status`、`cancel` 或 `read_events` 操作，同时绑定原始 Invocation Request Digest，以及当前操作的 `operation_contract_id + operation_digest_profile + operation_request_digest`。Status/Event 使用正式逻辑 Descriptor，HTTP 查询参数按 OpenAPI 默认值归一化后再计算摘要；初始 sequence 1 Token 使用 `execution` 且不越过原 request deadline/CommercialAuthorization，后续 Token 必须连续、引用紧邻前驱 `jti` 并固定为 `safety_control`，可在执行窗口结束后继续 Status/Cancel/Event 对账，但不继承已经过期的 ArtifactGrant/StagingGrant，也不能创建新副作用。所有 Token 最长 300 秒。ArtifactGrant/ArtifactStagingGrant 是非 Bearer 的有界执行授权；每次 Read/Stage/Commit 还必须使用绑定正式 Contract/Profile、Grant Digest 与操作摘要的 Artifact Gateway Token。Provider 不得接受只有 `plugin_id`、宽泛权限或未绑定摘要的令牌。写请求具有明确 encoded-byte 上限，超限必须在 JSON 解析前返回 413。
 
 Provider 输出只包含 Structured Result、StagedArtifact 和 UsageObservation。UsageObservation 没有 Platform `entry_id`、Tenant/WorkOrder 归属、Idempotency Key 或 `recorded_at`；Platform 校验 Meter/Evidence/Attempt 后才创建 TechnicalUsageEntry。Provider 只能读取已授权 ArtifactVersion 或写 Staging，不能 Finalize 正式 ArtifactVersion。
 
@@ -136,7 +136,7 @@ ProviderResolution 必须固化：
 
 用户可见的 Experience 在 Provider Resolution 之上增加不可变 Catalog Revision。只有可变 `template_id` 绝不足以支持 WorkOrder 准入或 Run 回放。
 
-Resolver 优先级是 Tenant Binding、ClientApplication Binding、Scenario Requirement、Platform Default、显式安全 Fallback。ProviderHealth 必须绑定精确 ProviderRevision 和 Health Generation；只保存可变 Instance 状态不能作为历史解析证据。Fallback 只有在 Capability 与 side-effect policy 允许时才能发生；非幂等外部操作禁止自动切换 Provider。
+Resolver 优先级是 Tenant Binding、ClientApplication Binding、Scenario Requirement、Platform Default、显式安全 Fallback。ProviderHealth 必须绑定精确 ProviderInstance、ProviderRevision 和 Health Generation；Cluster、Cell、Pod、Node 等可变部署拓扑不进入健康契约或历史解析证据。只保存可变 Instance 状态不能作为历史解析证据。Fallback 只有在 Capability 与 side-effect policy 允许时才能发生；非幂等外部操作禁止自动切换 Provider。
 
 空 `limits` 没有默认或无限语义。商业授权、ExecutionGrant、ExecutionBudget 与 Provider 请求使用全字段 EffectiveExecutionLimits；任何缺失或无法解释的版本都 fail-closed。
 

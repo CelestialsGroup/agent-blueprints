@@ -4,7 +4,6 @@
   "health_generation": 7,
   "status": "healthy",
   "observed_at": "2026-07-16T09:00:30Z",
-  "cluster_id": "cluster-a",
   "observations": [
     {
       "probe": "readiness",

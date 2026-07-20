@@ -1,6 +1,6 @@
 {
   "provider_revision_id": "apr_01J00000000000000000000000",
-  "provider_revision_digest": "sha256:a8d4ff188608bd741bfc406616b21037b4fde246a6815c4b93e0d2b5cd571dfe",
+  "provider_revision_digest": "sha256:86b5143b00130794824f438e5c05adb35c219569d959a229cf567cb4914c0dda",
   "provider_instance_id": "api_deerflow_runtime",
   "configuration_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   "approved_permissions_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
@@ -15,7 +15,7 @@
       "status": "passed",
       "report_digest": "sha256:1212121212121212121212121212121212121212121212121212121212121212",
       "suite_id": "agent-runtime-provider",
-      "suite_digest": "sha256:94f077f820aafce00d6c13bed73ae79d0de600870b537748d2128cfb3006654b",
+      "suite_digest": "sha256:dbd08a0071a03dd8355dadcbcbf5db9139e4c0e462675d02b919dc8603c293e8",
       "suite_profile_id": "governed-v1"
     },
     {
@@ -26,11 +26,11 @@
       "status": "passed",
       "report_digest": "sha256:1313131313131313131313131313131313131313131313131313131313131313",
       "suite_id": "agent-runtime-provider",
-      "suite_digest": "sha256:94f077f820aafce00d6c13bed73ae79d0de600870b537748d2128cfb3006654b",
+      "suite_digest": "sha256:dbd08a0071a03dd8355dadcbcbf5db9139e4c0e462675d02b919dc8603c293e8",
       "suite_profile_id": "runtime-general-v1"
     }
   ],
-  "conformance_set_digest": "sha256:2cd05cab3ad758a788b8a4f29b72e62b7a6814bcdf3569db018f4a9f9049e5ab",
+  "conformance_set_digest": "sha256:c41ef1aec0036e83dfda0106449a673a9d8437e7698715ea65f5e4dbd103aec4",
   "created_at": "2026-07-16T09:00:10Z",
   "implementation": {
     "implementation_id": "agent-runtime.deerflow",
@@ -51,7 +51,7 @@
   "port": {
     "protocol": "agent-runtime-provider",
     "protocol_version": "v1",
-    "contract_digest": "sha256:f10ab04af37edee9313f220331f2754afe8e968197a7f134b145d10ec07f44cb",
+    "contract_digest": "sha256:7eeb82e512220c3fe30ccd6d6748403a2c149c13e2db50a43e0b5c6b6092e03d",
     "binding_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
   }
 }

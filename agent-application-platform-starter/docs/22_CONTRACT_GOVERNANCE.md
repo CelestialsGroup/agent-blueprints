@@ -4,6 +4,8 @@
 
 JSON Schema、OpenAPI、状态机、JCS/I-JSON 向量、数据不变量和契约清单都是受治理契约。叙述性“必须”只有在 Schema、语义 Validator、数据库约束、状态机或 CI 中有对应执行点时才算完成。
 
+`VALIDATION.json` 与 `CONTRACT_VALIDATION_REPORT.md` 不手工维护。Architecture Gate 的各步骤先把成功证据写入 `build/validation/`，全部步骤和连续两次 Bundle 确定性验证通过后，`generate_validation_evidence.py` 才从同一机器结果原子生成两份报告；任一步失败都不得刷新“passed”状态。
+
 ## 准入 Gate
 
 | Gate | 强制执行方式 |

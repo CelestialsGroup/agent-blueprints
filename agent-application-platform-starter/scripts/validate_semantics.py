@@ -16,6 +16,35 @@ from referencing import Registry, Resource
 
 ROOT = Path(__file__).resolve().parents[1]
 
+SANDBOX_OPERATION_CONTRACTS = {
+    "create": ("urn:agent-platform:sandbox-create-request:v1", "rfc8785-request-excluding-request-digest-v1"),
+    "restore": ("urn:agent-platform:sandbox-restore-request:v1", "rfc8785-request-excluding-request-digest-v1"),
+    "set_desired_state": ("urn:agent-platform:sandbox-desired-state-request:v1", "rfc8785-request-excluding-request-digest-v1"),
+    "extend_lease": ("urn:agent-platform:sandbox-lease-request:v1", "rfc8785-request-excluding-request-digest-v1"),
+    "exec": ("urn:agent-platform:sandbox-exec-request:v1", "rfc8785-request-excluding-request-digest-v1"),
+    "cancel_exec": ("urn:agent-platform:sandbox-cancel-exec-request:v1", "rfc8785-request-excluding-request-digest-v1"),
+    "open_runtime_session": ("urn:agent-platform:sandbox-runtime-session-open-request:v1", "rfc8785-request-excluding-request-digest-v1"),
+    "snapshot": ("urn:agent-platform:sandbox-snapshot-request:v1", "rfc8785-request-excluding-request-digest-v1"),
+    "terminate": ("urn:agent-platform:sandbox-terminate-request:v1", "rfc8785-request-excluding-request-digest-v1"),
+    "read_sandbox": ("urn:agent-platform:sandbox-status-operation-descriptor:v1", "rfc8785-full-document-v1"),
+    "read_operation": ("urn:agent-platform:sandbox-operation-read-operation-descriptor:v1", "rfc8785-full-document-v1"),
+    "read_result": ("urn:agent-platform:sandbox-exec-result-operation-descriptor:v1", "rfc8785-full-document-v1"),
+    "read_snapshot_manifest": ("urn:agent-platform:sandbox-snapshot-manifest-operation-descriptor:v1", "rfc8785-full-document-v1"),
+    "read_events": ("urn:agent-platform:sandbox-event-read-operation-descriptor:v1", "rfc8785-full-document-v1"),
+}
+RUNTIME_OPERATION_CONTRACTS = {
+    "start": ("urn:agent-platform:agent-runtime-start-request:v1", "rfc8785-request-excluding-request-digest-v1", "request_digest"),
+    "submit_command": ("urn:agent-platform:agent-runtime-command:v1", "rfc8785-command-excluding-command-digest-v1", "command_digest"),
+    "read_status": ("urn:agent-platform:agent-runtime-status-operation-descriptor:v1", "rfc8785-full-document-v1", None),
+    "read_events": ("urn:agent-platform:agent-runtime-event-read-operation-descriptor:v1", "rfc8785-full-document-v1", None),
+}
+PLUGIN_OPERATION_CONTRACTS = {
+    "invoke": ("urn:agent-platform:plugin-invocation-request:v1", "rfc8785-request-excluding-request-digest-v1"),
+    "status": ("urn:agent-platform:plugin-status-operation-descriptor:v1", "rfc8785-full-document-v1"),
+    "cancel": ("urn:agent-platform:plugin-cancellation-request:v1", "rfc8785-request-excluding-request-digest-v1"),
+    "read_events": ("urn:agent-platform:plugin-event-read-operation-descriptor:v1", "rfc8785-full-document-v1"),
+}
+
 
 SCHEMA_REGISTRY = Registry()
 for schema_path in sorted((ROOT / "contracts/schemas").glob("*.json")):
@@ -38,6 +67,26 @@ KNOWN_CONTRACT_CHECKS = {
     "runtime_authorization.expiry",
     "runtime_authorization.artifact_coverage",
     "runtime_token.binding",
+    "runtime_token.lifetime",
+    "runtime_token.audience",
+    "runtime_command.digest",
+    "runtime_command.sequence",
+    "runtime_command.idempotency",
+    "runtime_command.fencing",
+    "runtime_command.user_control_binding",
+    "runtime_command.system_safety_binding",
+    "system_safety_control.digest",
+    "system_safety_control.scope",
+    "system_safety_control.evidence",
+    "system_safety_control.reduction_only",
+    "commercial_revocation.digest",
+    "commercial_revocation.time_order",
+    "commercial_revocation.sender_binding",
+    "commercial_revocation.authorization_binding",
+    "sandbox_token.binding",
+    "sandbox_token.lifetime",
+    "sandbox_spec.execution_ceiling",
+    "sandbox_spec.workspace_binding",
     "work_order.failure_paths",
     "work_order_control.grant_binding",
     "work_order_control.conditional_cas",
@@ -64,6 +113,9 @@ KNOWN_CONTRACT_CHECKS = {
     "runtime_session.sandbox_slot_binding",
     "runtime_session.scope_class",
     "runtime_session.channel_policy",
+    "runtime_session.route_digest",
+    "runtime_session.route_scope",
+    "runtime_session.route_opaque",
     "canonical_event.work_binding",
     "canonical_event.source_dedupe",
     "canonical_event.producer_binding",
@@ -76,6 +128,14 @@ KNOWN_CONTRACT_CHECKS = {
     "execution_grant.request_identity",
     "execution_grant.commercial_limits",
     "execution_grant.snapshot_validity",
+    "service_token.binding",
+    "service_token.lifetime",
+    "service_token.scope",
+    "work_session.binding",
+    "work_session.lifetime",
+    "work_session.scope",
+    "plugin_token.binding",
+    "plugin_token.lifetime",
     "principal_context.digest",
     "principal_context.time_window",
     "principal_context.closed_attributes",
@@ -106,6 +166,9 @@ KNOWN_CONTRACT_CHECKS = {
     "artifact_staging_grant.permissions",
     "artifact_gateway.operation_binding",
     "artifact_gateway.token_binding",
+    "egress_destination.digest",
+    "egress_destination.owner_scope",
+    "egress_destination.request_policy",
     "egress_gateway.request_binding",
     "egress_gateway.token_binding",
     "usage_observation.observation_identity",
@@ -257,6 +320,120 @@ def validate_execution_grant_request(
     )
     if contract_id == "urn:agent-platform:work-order-control-request:v1":
         mark_checks("work_order_control.grant_binding")
+
+
+def validate_service_access_token(
+    token: dict[str, Any], *, registered_issuer: str, authenticated_subject: str,
+    authenticated_client_id: str, allowed_scopes: set[str],
+) -> None:
+    audience = token["aud"] if isinstance(token["aud"], list) else [token["aud"]]
+    scopes = token["scope"].split(" ")
+    if not token["iat"] <= token["nbf"] < token["exp"] or token["exp"] - token["iat"] > 300:
+        raise AssertionError("Service Access Token lifetime is invalid")
+    if (
+        token["iss"] != registered_issuer
+        or token["sub"] != authenticated_subject
+        or token["client_id"] != authenticated_client_id
+        or audience != ["https://agent-api.agent-platform.internal"]
+    ):
+        raise AssertionError("Service Access Token differs from authenticated workload")
+    if len(scopes) != len(set(scopes)) or not set(scopes) <= allowed_scopes:
+        raise AssertionError("Service Access Token scopes are not allowlisted")
+    mark_checks("service_token.binding", "service_token.lifetime", "service_token.scope")
+
+
+def validate_work_session_claims(
+    claims: dict[str, Any], request: dict[str, Any], conversation: dict[str, Any],
+    *, tenant_id: str,
+) -> None:
+    commercial = request["commercial_authorization"]
+    principal = request["principal_context"]
+    validate_self_digest(commercial, "commercial_authorization_digest")
+    validate_principal_context(principal)
+    if request["external_principal_id"] != principal["external_principal_id"]:
+        raise AssertionError("WorkSession request and PrincipalContext identify different subjects")
+    expected = {
+        "client_app_id": principal["client_app_id"],
+        "tenant_id": tenant_id,
+        "principal_id": request["external_principal_id"],
+        "conversation_id": conversation["conversation_id"],
+        "commercial_authorization_id": commercial["commercial_authorization_id"],
+        "commercial_authorization_digest": commercial["commercial_authorization_digest"],
+        "commercial_authorization_expires_at": commercial["expires_at"],
+        "principal_context_digest": principal["principal_context_digest"],
+    }
+    if any(claims[field] != value for field, value in expected.items()):
+        raise AssertionError("WorkSession claims differ from the admitted creation context")
+    if (
+        not claims["iat"] <= claims["nbf"] < claims["exp"]
+        or claims["exp"] - claims["iat"] > min(request["ttl_seconds"], 3600)
+        or datetime.fromtimestamp(claims["exp"], tz=timezone.utc)
+        > parse_datetime(claims["commercial_authorization_expires_at"])
+    ):
+        raise AssertionError("WorkSession claims outlive the admitted authorization")
+    if not set(claims["scopes"]) <= set(request["scopes"]):
+        raise AssertionError("WorkSession claims widen requested scopes")
+    mark_checks("work_session.binding", "work_session.lifetime", "work_session.scope")
+
+
+def validate_plugin_compatibility_token(
+    request: dict[str, Any], token: dict[str, Any], *, plugin_id: str,
+    provider_revision_id: str, audience: str, permissions_digest: str,
+    operation_document: dict[str, Any] | None = None,
+) -> None:
+    validate_self_digest(request, "request_digest")
+    operation_document = operation_document or request
+    operation = token["operation"]
+    if operation not in PLUGIN_OPERATION_CONTRACTS:
+        raise AssertionError("Compatibility Plugin token authorizes an unknown operation")
+    contract_id, digest_profile = PLUGIN_OPERATION_CONTRACTS[operation]
+    if digest_profile == "rfc8785-request-excluding-request-digest-v1":
+        validate_self_digest(operation_document, "request_digest")
+        operation_digest = operation_document["request_digest"]
+    else:
+        operation_digest = canonical_digest(operation_document)
+    expected = {
+        "sub": "spn_agent_capability_bridge",
+        "aud": audience,
+        "tenant_id": request["tenant_id"],
+        "client_app_id": request["client_app_id"],
+        "work_order_id": request["work_order_id"],
+        "plugin_id": plugin_id,
+        "provider_revision_id": provider_revision_id,
+        "operation": operation,
+        "invocation_id": operation_document["invocation_id"],
+        "invocation_attempt_id": operation_document["invocation_attempt_id"],
+        "fencing_token": operation_document["fencing_token"],
+        "capability_id": request["capability"]["id"],
+        "capability_version": request["capability"]["version"],
+        "staging_session_id": request["output_staging"]["session_id"],
+        "permissions_digest": permissions_digest,
+        "invocation_request_digest": request["request_digest"],
+        "operation_contract_id": contract_id,
+        "operation_digest_profile": digest_profile,
+        "operation_request_digest": operation_digest,
+        "deadline_at": request["deadline_at"],
+    }
+    if any(token[field] != value for field, value in expected.items()):
+        raise AssertionError("Compatibility Plugin token differs from its bridged request")
+    expirations = [parse_datetime(request["deadline_at"])]
+    if operation == "invoke":
+        if token["authority_mode"] != "execution":
+            raise AssertionError("Compatibility Plugin Invoke requires execution authority")
+        expirations.extend([
+            parse_datetime(request["output_staging"]["expires_at"]),
+            *(parse_datetime(item["expires_at"]) for item in request["input_artifacts"]),
+        ])
+    elif token["authority_mode"] != "safety_control":
+        raise AssertionError("Compatibility Plugin control/read operation lacks safety-control authority")
+    if (
+        not token["iat"] <= token["nbf"] < token["exp"]
+        or token["exp"] - token["iat"] > 300
+        or operation == "invoke"
+        and datetime.fromtimestamp(token["exp"], tz=timezone.utc) > min(expirations)
+    ):
+        raise AssertionError("Compatibility Plugin token authority or lifetime is invalid")
+    mark_checks("plugin_token.binding", "plugin_token.lifetime")
 
 
 def validate_provider_resolution(resolution: dict[str, Any]) -> None:
@@ -607,21 +784,37 @@ def validate_execution_topology(
 
 def validate_runtime_token(
     token: dict[str, Any], manifest: dict[str, Any], agent_run: dict[str, Any],
-    runtime_start: dict[str, Any],
+    runtime_start: dict[str, Any], operation_document: dict[str, Any] | None = None,
+    system_safety_control: dict[str, Any] | None = None,
 ) -> None:
     authorization = runtime_start["runtime_authorization"]
+    operation_document = operation_document or runtime_start
+    operation = token["operation"]
+    authority_mode = token["authority_mode"]
+    if operation not in RUNTIME_OPERATION_CONTRACTS:
+        raise AssertionError("Agent Runtime token authorizes an unknown operation")
+    contract_id, digest_profile, digest_field = RUNTIME_OPERATION_CONTRACTS[operation]
+    if digest_field:
+        validate_self_digest(operation_document, digest_field)
+        operation_digest = operation_document[digest_field]
+    else:
+        operation_digest = canonical_digest(operation_document)
     expected = {
+        "sub": "spn_agent_runtime_controller",
         "tenant_id": manifest["tenant_id"],
-        "runtime_run_id": runtime_start["runtime_run_id"],
+        "runtime_run_id": operation_document["runtime_run_id"],
         "agent_run_id": manifest["agent_run_id"],
         "workflow_run_id": manifest["workflow_run_id"],
         "work_order_id": manifest["work_order_id"],
         "run_manifest_digest": manifest["run_manifest_digest"],
         "runtime_authorization_digest": authorization["authorization_digest"],
-        "request_digest": runtime_start["request_digest"],
-        "invocation_id": runtime_start["invocation_id"],
-        "invocation_attempt_id": runtime_start["invocation_attempt_id"],
-        "fencing_token": runtime_start["fencing_token"],
+        "operation": operation,
+        "operation_contract_id": contract_id,
+        "operation_digest_profile": digest_profile,
+        "operation_request_digest": operation_digest,
+        "invocation_id": operation_document["invocation_id"],
+        "invocation_attempt_id": operation_document["invocation_attempt_id"],
+        "fencing_token": operation_document["fencing_token"],
         "policy_decision_digest": authorization["policy_decision"]["decision_digest"],
         "execution_budget_digest": authorization["execution_budget"]["budget_digest"],
         "effective_permissions_digest": authorization["effective_permissions"]["permissions_digest"],
@@ -629,17 +822,200 @@ def validate_runtime_token(
     for field, value in expected.items():
         if token[field] != value:
             raise AssertionError(f"Agent Runtime token differs from execution context on {field}")
-    if token["operation"] != "start" or not token["iat"] <= token["nbf"] < token["exp"]:
+    if not token["iat"] <= token["nbf"] < token["exp"]:
         raise AssertionError("Agent Runtime token operation or lifetime is invalid")
+    if operation == "start" and authority_mode != "execution":
+        raise AssertionError("Agent Runtime Start requires execution authority")
+    if operation in {"read_status", "read_events"} and authority_mode != "safety_control":
+        raise AssertionError("Agent Runtime reads require safety-control authority")
+    if operation == "submit_command":
+        safety_commands = {"cancel", "pause"}
+        if (authority_mode == "safety_control") != (operation_document["type"] in safety_commands):
+            raise AssertionError("Agent Runtime safety-control authority only permits Cancel or Pause")
+        command_uses_system_control = "system_safety_control_id" in operation_document
+        token_uses_system_control = "system_safety_control_id" in token
+        if command_uses_system_control != token_uses_system_control:
+            raise AssertionError("Agent Runtime token and command disagree on SystemSafetyControl authority")
+        if command_uses_system_control:
+            if system_safety_control is None:
+                raise AssertionError("System-issued Runtime command lacks its SystemSafetyControl fact")
+            expected_safety_binding = {
+                "system_safety_control_id": system_safety_control["safety_control_id"],
+                "system_safety_control_digest": system_safety_control["control_digest"],
+            }
+            if any(token.get(field) != value for field, value in expected_safety_binding.items()):
+                raise AssertionError("Agent Runtime token binds a different SystemSafetyControl")
+            if datetime.fromtimestamp(token["nbf"], tz=timezone.utc) < parse_datetime(
+                system_safety_control["issued_at"]
+            ):
+                raise AssertionError("Agent Runtime safety token predates SystemSafetyControl issuance")
+    elif "system_safety_control_id" in token or "system_safety_control_digest" in token:
+        raise AssertionError("Only a system-issued Cancel/Pause command may bind SystemSafetyControl")
     if agent_run["runtime_run_id"] != token["runtime_run_id"]:
         raise AssertionError("Agent Runtime token binds a different AgentRun")
     runtime_resolution = next(
         item for item in manifest["capability_resolutions"]
         if item["resolution_id"] == manifest["agent_runtime"]["resolution_id"]
     )
-    if token["provider_revision_id"] != runtime_resolution["selected_provider_revision"]["provider_revision_id"]:
+    if (
+        token["provider_revision_id"] != runtime_resolution["selected_provider_revision"]["provider_revision_id"]
+        or token["aud"] != runtime_resolution["selected_provider_audience"]
+        or token["iss"] != "agent-platform"
+    ):
         raise AssertionError("Agent Runtime token binds a different ProviderRevision")
-    mark_checks("runtime_token.binding")
+    token_expiry = datetime.fromtimestamp(token["exp"], tz=timezone.utc)
+    if token["exp"] - token["iat"] > 300:
+        raise AssertionError("Agent Runtime token exceeds its maximum TTL")
+    operation_deadline = (
+        parse_datetime(operation_document["deadline_at"])
+        if "deadline_at" in operation_document else None
+    )
+    if operation_deadline is not None and token_expiry > operation_deadline:
+        raise AssertionError("Agent Runtime token outlives its operation deadline")
+    if authority_mode == "execution" and token_expiry > parse_datetime(authorization["expires_at"]):
+        raise AssertionError("Agent Runtime execution token outlives RuntimeAuthorization")
+    if authority_mode == "execution" and datetime.fromtimestamp(
+        token["nbf"], tz=timezone.utc
+    ) < parse_datetime(authorization["issued_at"]):
+        raise AssertionError("Agent Runtime execution token predates RuntimeAuthorization")
+    mark_checks("runtime_token.binding", "runtime_token.lifetime", "runtime_token.audience")
+
+
+def validate_sandbox_token(
+    token: dict[str, Any], operation_document: dict[str, Any], resolution: dict[str, Any],
+    manifest: dict[str, Any], *, sandbox_id: str | None = None,
+) -> None:
+    operation = token["operation"]
+    if operation not in SANDBOX_OPERATION_CONTRACTS:
+        raise AssertionError("Sandbox token authorizes an unknown operation")
+    contract_id, digest_profile = SANDBOX_OPERATION_CONTRACTS[operation]
+    if digest_profile == "rfc8785-request-excluding-request-digest-v1":
+        validate_self_digest(operation_document, "request_digest")
+        expected_request_digest = operation_document["request_digest"]
+        expected_deadline = operation_document["deadline_at"]
+    else:
+        expected_request_digest = canonical_digest(operation_document)
+        expected_deadline = token["deadline_at"]
+    document_sandbox_id = operation_document.get("sandbox_id")
+    if sandbox_id is None:
+        sandbox_id = document_sandbox_id or operation_document.get("spec", {}).get("sandbox_id")
+    if not sandbox_id or (document_sandbox_id and document_sandbox_id != sandbox_id):
+        raise AssertionError("Sandbox operation document crosses its HTTP Sandbox target")
+    spec = operation_document.get("spec")
+    if spec and (
+        spec["sandbox_id"] != sandbox_id
+        or spec["tenant_id"] != manifest["tenant_id"]
+        or spec["work_order_id"] != manifest["work_order_id"]
+    ):
+        raise AssertionError("Sandbox mutation spec crosses its admitted execution scope")
+    expected = {
+        "iss": "agent-platform",
+        "sub": "spn_agent_sandbox_controller",
+        "aud": resolution["selected_provider_audience"],
+        "operation": operation,
+        "provider_revision_id": resolution["selected_provider_revision"]["provider_revision_id"],
+        "sandbox_id": sandbox_id,
+        "operation_id": operation_document["operation_id"],
+        "attempt_id": operation_document["attempt_id"],
+        "fencing_token": operation_document["fencing_token"],
+        "tenant_id": manifest["tenant_id"],
+        "work_order_id": manifest["work_order_id"],
+        "policy_digest": manifest["policy_decision"]["decision_digest"],
+        "request_contract_id": contract_id,
+        "request_digest_profile": digest_profile,
+        "request_digest": expected_request_digest,
+        "deadline_at": expected_deadline,
+    }
+    if any(token[field] != value for field, value in expected.items()):
+        raise AssertionError("Sandbox token differs from its admitted operation")
+    if not token["iat"] <= token["nbf"] < token["exp"] or token["exp"] - token["iat"] > 300:
+        raise AssertionError("Sandbox token lifetime is invalid")
+    if datetime.fromtimestamp(token["exp"], tz=timezone.utc) > parse_datetime(token["deadline_at"]):
+        raise AssertionError("Sandbox token outlives its operation deadline")
+    if datetime.fromtimestamp(token["nbf"], tz=timezone.utc) < parse_datetime(
+        manifest["policy_decision"]["decided_at"]
+    ):
+        raise AssertionError("Sandbox operation token predates its PolicyDecision")
+    mark_checks("sandbox_token.binding", "sandbox_token.lifetime")
+
+
+def validate_sandbox_spec(
+    spec: dict[str, Any], manifest: dict[str, Any], capabilities: dict[str, Any],
+) -> None:
+    if (
+        spec["tenant_id"] != manifest["tenant_id"]
+        or spec["work_order_id"] != manifest["work_order_id"]
+        or spec["workspace"]["base_revision_id"] != manifest["conversation"]["workspace_revision_id"]
+        or spec["workspace"]["base_revision_digest"] != manifest["conversation"]["workspace_revision_digest"]
+    ):
+        raise AssertionError("SandboxSpec crosses its admitted WorkOrder or WorkspaceRevision")
+    lease_expiry = parse_datetime(spec["lease"]["expires_at"])
+    execution_ceiling = min(
+        parse_datetime(manifest["commercial_authorization"]["expires_at"]),
+        parse_datetime(manifest["execution_budget"]["expires_at"]),
+    )
+    budget_created_at = parse_datetime(manifest["execution_budget"]["created_at"])
+    maximum_lease_expiry = lease_expiry.timestamp() + spec["lease"]["max_extension_seconds"]
+    maximum_lease_seconds = maximum_lease_expiry - budget_created_at.timestamp()
+    if (
+        lease_expiry <= budget_created_at
+        or maximum_lease_expiry > execution_ceiling.timestamp()
+        or maximum_lease_seconds > manifest["execution_budget"]["limits"]["max_sandbox_seconds"]
+    ):
+        raise AssertionError("Sandbox lease outlives the admitted execution ceiling")
+    resolution = next(
+        (item for item in manifest["capability_resolutions"]
+         if item["resolution_id"] == spec["provider_resolution_id"]),
+        None,
+    )
+    slot = next(
+        (item for item in manifest["sandboxes"]
+         if item["sandbox_id"] == spec["sandbox_id"]
+         and item["sandbox_slot_key"] == spec["sandbox_slot_key"]),
+        None,
+    )
+    if resolution is None or slot is None:
+        raise AssertionError("SandboxSpec references an unadmitted ProviderResolution")
+    if (
+        resolution["selected_provider_revision"]["provider_revision_id"] != spec["provider_revision_id"]
+        or capabilities["provider_revision_id"] != spec["provider_revision_id"]
+        or capabilities["api_version"] != slot["provider_api_version"]
+        or slot["resolution_id"] != spec["provider_resolution_id"]
+        or slot["sandbox_spec_digest"] != canonical_digest(spec)
+        or slot["runtime_profile"] != spec["runtime_profile"]
+    ):
+        raise AssertionError("SandboxSpec differs from its admitted slot or ProviderRevision")
+    supported_capabilities = {
+        (item["id"], version)
+        for item in capabilities["capabilities"]
+        for version in item["versions"]
+    }
+    required_capabilities = {(item["id"], item["version"]) for item in spec["required_capabilities"]}
+    if not required_capabilities <= supported_capabilities:
+        raise AssertionError("SandboxSpec requires an unsupported Provider capability")
+    runtime_profiles = {item["id"] for item in capabilities["runtime_profiles"]}
+    limits = capabilities["limits"]
+    resource_limits = {
+        "cpu_millis": "max_cpu_millis",
+        "memory_bytes": "max_memory_bytes",
+        "ephemeral_storage_bytes": "max_ephemeral_storage_bytes",
+        "workspace_bytes": "max_workspace_bytes",
+        "gpu_count": "max_gpu_count",
+    }
+    if spec["runtime_profile"] not in runtime_profiles or any(
+        spec["resources"].get(resource, 0) > limits[limit]
+        for resource, limit in resource_limits.items()
+    ) or maximum_lease_seconds > limits["max_lease_seconds"]:
+        raise AssertionError("SandboxSpec exceeds Provider capabilities")
+    egress = manifest["effective_permissions"]["egress"]
+    if (
+        spec["network"]["mode"] != egress["mode"]
+        or spec["network"]["mode"] == "restricted"
+        and (not spec["network"].get("policy_reference")
+             or spec["network"].get("egress_gateway_required") is not True)
+    ):
+        raise AssertionError("Sandbox network policy differs from effective permissions")
+    mark_checks("sandbox_spec.execution_ceiling", "sandbox_spec.workspace_binding")
 
 
 def validate_capability_invocation(
@@ -716,16 +1092,38 @@ def validate_capability_invocation(
     if staging_expires <= staging_issued or staging_expires > min(request_deadline, parse_datetime(commercial["expires_at"])):
         raise AssertionError("ArtifactStagingGrant has an invalid authorization window")
 
+    operation_profiles = {
+        "invoke": (
+            "urn:agent-platform:capability-invocation-request:v1",
+            "rfc8785-request-excluding-request-digest-v1",
+        ),
+        "status": (
+            "urn:agent-platform:capability-status-operation-descriptor:v1",
+            "rfc8785-full-document-v1",
+        ),
+        "cancel": (
+            "urn:agent-platform:capability-cancellation-request:v1",
+            "rfc8785-request-excluding-request-digest-v1",
+        ),
+        "read_events": (
+            "urn:agent-platform:capability-event-read-operation-descriptor:v1",
+            "rfc8785-full-document-v1",
+        ),
+    }
     if operation_request is None:
         operation_request = request
     if token["operation"] == "invoke":
         operation_digest = request["request_digest"]
-    elif "request_digest" in operation_request:
+    elif token["operation"] == "cancel":
         validate_self_digest(operation_request, "request_digest")
         operation_digest = operation_request["request_digest"]
     else:
+        if operation_request.get("operation") != token["operation"]:
+            raise AssertionError("Capability operation descriptor has the wrong operation")
         operation_digest = canonical_digest(operation_request)
+    operation_contract_id, operation_digest_profile = operation_profiles[token["operation"]]
     expected = {
+        "sub": "spn_agent_capability_dispatcher",
         "aud": resolution["selected_provider_audience"],
         "tenant_id": request["tenant_id"],
         "client_app_id": request["client_app_id"],
@@ -740,6 +1138,8 @@ def validate_capability_invocation(
         "invocation_attempt_id": request["invocation_attempt_id"],
         "fencing_token": request["fencing_token"],
         "invocation_request_digest": request["request_digest"],
+        "operation_contract_id": operation_contract_id,
+        "operation_digest_profile": operation_digest_profile,
         "operation_request_digest": operation_digest,
         "policy_decision_digest": policy["decision_digest"],
         "execution_budget_digest": budget["budget_digest"],
@@ -749,11 +1149,24 @@ def validate_capability_invocation(
     for field, value in expected.items():
         if token[field] != value:
             raise AssertionError(f"Capability operation token differs from admitted context on {field}")
-    if not token["iat"] <= token["nbf"] < token["exp"] or token["exp"] - token["iat"] > 900:
+    if not token["iat"] <= token["nbf"] < token["exp"] or token["exp"] - token["iat"] > 300:
         raise AssertionError("Capability operation token lifetime is invalid")
     token_expiry = datetime.fromtimestamp(token["exp"], tz=timezone.utc)
-    if token_expiry > min(request_deadline, parse_datetime(commercial["expires_at"])):
-        raise AssertionError("Capability operation token outlives the admitted request")
+    if token["operation"] == "invoke":
+        if token["authority_mode"] != "execution" or token_expiry > min(
+            request_deadline, parse_datetime(commercial["expires_at"])
+        ):
+            raise AssertionError("Capability execution token outlives the admitted request")
+        execution_not_before = max(
+            parse_datetime(policy["decided_at"]),
+            parse_datetime(budget["created_at"]),
+            parse_datetime(staging_grant["issued_at"]),
+            *(parse_datetime(grant["issued_at"]) for grant in request["input_artifact_grants"]),
+        )
+        if datetime.fromtimestamp(token["nbf"], tz=timezone.utc) < execution_not_before:
+            raise AssertionError("Capability execution token predates its admitted authority")
+    elif token["authority_mode"] != "safety_control":
+        raise AssertionError("Capability control/read operation lacks safety-control authority")
     if token["authorization_sequence"] == 1:
         if predecessor is not None or token["predecessor_jti"] is not None or token["operation"] != "invoke":
             raise AssertionError("Initial Capability token has invalid lineage or operation")
@@ -764,7 +1177,9 @@ def validate_capability_invocation(
             raise AssertionError("Capability operation token sequence contains a gap")
         if token["predecessor_jti"] != predecessor["jti"]:
             raise AssertionError("Capability operation token predecessor mismatch")
-        invariant_fields = set(expected) - {"operation_request_digest"}
+        invariant_fields = set(expected) - {
+            "operation_contract_id", "operation_digest_profile", "operation_request_digest"
+        }
         if any(token[field] != predecessor[field] for field in invariant_fields):
             raise AssertionError("Renewed Capability operation token widens or changes Invocation scope")
         target_provider_operation_id = operation_request.get(
@@ -814,7 +1229,8 @@ def validate_capability_invocation(
 def validate_artifact_gateway(
     staging_grant: dict[str, Any], staging_object: dict[str, Any],
     stage_token: dict[str, Any], staging_commit: dict[str, Any], commit_token: dict[str, Any],
-    artifact_grant: dict[str, Any], read_token: dict[str, Any], capability_request: dict[str, Any],
+    artifact_grant: dict[str, Any], read_descriptor: dict[str, Any],
+    read_token: dict[str, Any], capability_request: dict[str, Any], *, caller_subject: str,
 ) -> None:
     validate_self_digest(staging_grant, "grant_digest")
     descriptor = copy.deepcopy(staging_object)
@@ -827,6 +1243,7 @@ def validate_artifact_gateway(
     if len(content) != staging_object["size_bytes"] or raw_digest != staging_object["digest"]:
         raise AssertionError("Artifact staging object content does not match declared bytes")
     expected_scope = {
+        "sub": caller_subject,
         "tenant_id": staging_grant["tenant_id"],
         "work_order_id": staging_grant["work_order_id"],
         "invocation_id": staging_grant["invocation_id"],
@@ -834,11 +1251,24 @@ def validate_artifact_gateway(
         "gateway_binding_digest": staging_grant["gateway_binding"]["binding_digest"],
         "staging_grant_digest": staging_grant["grant_digest"],
     }
-    for token, operation_request, operation in (
-        (stage_token, staging_object, "stage_object"),
-        (commit_token, staging_commit, "commit_staging"),
+    for token, operation_request, operation, contract_id, digest_profile in (
+        (
+            stage_token, staging_object, "stage_object",
+            "urn:agent-platform:artifact-staging-object-request:v1",
+            "rfc8785-artifact-stage-metadata-excluding-content-and-request-digest-v1",
+        ),
+        (
+            commit_token, staging_commit, "commit_staging",
+            "urn:agent-platform:artifact-staging-commit-request:v1",
+            "rfc8785-request-excluding-request-digest-v1",
+        ),
     ):
-        if token["operation"] != operation or token["aud"] != staging_grant["gateway_binding"]["audience"]:
+        if (
+            token["operation"] != operation
+            or token["operation_contract_id"] != contract_id
+            or token["operation_digest_profile"] != digest_profile
+            or token["aud"] != staging_grant["gateway_binding"]["audience"]
+        ):
             raise AssertionError("Artifact Gateway token operation or audience mismatch")
         if any(token[field] != value for field, value in expected_scope.items()):
             raise AssertionError("Artifact Gateway token crosses its StagingGrant scope")
@@ -850,6 +1280,8 @@ def validate_artifact_gateway(
             raise AssertionError("Artifact Gateway token lifetime is invalid")
         if datetime.fromtimestamp(token["exp"], tz=timezone.utc) > parse_datetime(staging_grant["expires_at"]):
             raise AssertionError("Artifact Gateway token outlives its StagingGrant")
+        if datetime.fromtimestamp(token["nbf"], tz=timezone.utc) < parse_datetime(staging_grant["issued_at"]):
+            raise AssertionError("Artifact Gateway token predates its StagingGrant")
     validate_self_digest(artifact_grant, "grant_digest")
     artifact_scope = artifact_grant["execution_scope"]
     if (
@@ -859,7 +1291,7 @@ def validate_artifact_gateway(
         or artifact_scope.get("invocation_attempt_id") != capability_request["invocation_attempt_id"]
     ):
         raise AssertionError("Artifact read Grant crosses its Capability InvocationAttempt")
-    read_descriptor = {
+    expected_read_descriptor = {
         "operation": "read_content",
         "tenant_id": capability_request["tenant_id"],
         "work_order_id": capability_request["work_order_id"],
@@ -869,8 +1301,13 @@ def validate_artifact_gateway(
         "artifact_id": artifact_grant["artifact_id"],
         "version_id": artifact_grant["version_id"],
     }
+    if read_descriptor != expected_read_descriptor:
+        raise AssertionError("Artifact read operation descriptor differs from its ArtifactGrant")
     read_expected = {
         "operation": "read_content",
+        "sub": caller_subject,
+        "operation_contract_id": "urn:agent-platform:artifact-read-operation-descriptor:v1",
+        "operation_digest_profile": "rfc8785-full-document-v1",
         "aud": artifact_grant["gateway_binding"]["audience"],
         "tenant_id": artifact_grant["tenant_id"],
         "work_order_id": artifact_grant["work_order_id"],
@@ -889,6 +1326,8 @@ def validate_artifact_gateway(
         raise AssertionError("Artifact read token lifetime is invalid")
     if datetime.fromtimestamp(read_token["exp"], tz=timezone.utc) > parse_datetime(artifact_grant["expires_at"]):
         raise AssertionError("Artifact read token outlives its ArtifactGrant")
+    if datetime.fromtimestamp(read_token["nbf"], tz=timezone.utc) < parse_datetime(artifact_grant["issued_at"]):
+        raise AssertionError("Artifact read token predates its ArtifactGrant")
     validate_self_digest(staging_commit, "request_digest")
     committed = staging_commit["objects"]
     if len(committed) > staging_grant["max_object_count"]:
@@ -905,37 +1344,89 @@ def validate_artifact_gateway(
 
 
 def validate_egress_gateway(
-    request: dict[str, Any], token: dict[str, Any], response: dict[str, Any],
-    binding: dict[str, Any], authorization: dict[str, Any],
+    destination: dict[str, Any], request: dict[str, Any], token: dict[str, Any], response: dict[str, Any],
+    binding: dict[str, Any], authorization: dict[str, Any], *, caller_subject: str,
 ) -> None:
+    validate_self_digest(destination, "destination_revision_digest")
     validate_self_digest(request, "request_digest")
+    destination_binding = {
+        field: destination[field]
+        for field in (
+            "destination_id", "destination_revision_id", "destination_revision_digest",
+            "destination_class",
+        )
+    }
+    if any(request[field] != value for field, value in destination_binding.items()):
+        raise AssertionError("Egress request binds a different DestinationRevision")
+    owner = destination["owner"]
+    if (
+        owner.get("tenant_id", request["tenant_id"]) != request["tenant_id"]
+        or owner.get("client_app_id", request["client_app_id"]) != request["client_app_id"]
+    ):
+        raise AssertionError("Egress DestinationRevision crosses its owner scope")
+    allowed_query_names = set(destination["allowed_query_names"])
+    allowed_headers = set(destination["allowed_request_headers"])
+    forbidden_headers = {
+        "authorization", "connection", "cookie", "host", "proxy-authorization",
+        "proxy-connection", "te", "trailer", "transfer-encoding", "upgrade",
+    }
+    if (
+        request["method"] not in destination["allowed_methods"]
+        or not any(request["path"].startswith(prefix) for prefix in destination["allowed_path_prefixes"])
+        or any(item["name"] not in allowed_query_names for item in request.get("query", []))
+        or any(
+            item["name"].lower() not in allowed_headers
+            or item["name"].lower() in forbidden_headers
+            for item in request["headers"]
+        )
+        or destination["redirect_policy"]["mode"] == "deny"
+        and destination["redirect_policy"]["max_redirects"] != 0
+    ):
+        raise AssertionError("Egress HTTP operation exceeds DestinationRevision policy")
     expected = {
+        "sub": caller_subject,
         "aud": binding["audience"],
         "tenant_id": request["tenant_id"],
+        "client_app_id": request["client_app_id"],
         "work_order_id": request["work_order_id"],
         "runtime_run_id": request["runtime_run_id"],
         "invocation_id": request["invocation_id"],
         "invocation_attempt_id": request["invocation_attempt_id"],
         "fencing_token": request["fencing_token"],
         "destination_id": request["destination_id"],
+        "destination_revision_id": request["destination_revision_id"],
+        "destination_revision_digest": request["destination_revision_digest"],
+        "destination_class": request["destination_class"],
         "gateway_binding_digest": binding["binding_digest"],
+        "operation": "http_exchange",
+        "operation_contract_id": "urn:agent-platform:egress-http-request:v1",
+        "operation_digest_profile": "rfc8785-request-excluding-request-digest-v1",
         "request_digest": request["request_digest"],
         "policy_decision_digest": authorization["policy_decision"]["decision_digest"],
         "execution_budget_digest": authorization["execution_budget"]["budget_digest"],
         "permissions_digest": authorization["effective_permissions"]["permissions_digest"],
+        "runtime_authorization_digest": authorization["authorization_digest"],
     }
     if any(token[field] != value for field, value in expected.items()):
         raise AssertionError("Egress token differs from the admitted HTTP request")
     if not token["iat"] <= token["nbf"] < token["exp"] or token["exp"] - token["iat"] > 300:
         raise AssertionError("Egress token lifetime is invalid")
-    if request["destination_id"] not in authorization["effective_permissions"]["egress"]["allowed_destination_classes"]:
-        raise AssertionError("Egress destination is absent from EffectivePermissions")
+    if datetime.fromtimestamp(token["exp"], tz=timezone.utc) > parse_datetime(authorization["expires_at"]):
+        raise AssertionError("Egress token outlives its RuntimeAuthorization")
+    if datetime.fromtimestamp(token["nbf"], tz=timezone.utc) < parse_datetime(authorization["issued_at"]):
+        raise AssertionError("Egress token predates its RuntimeAuthorization")
+    if request["destination_class"] not in authorization["effective_permissions"]["egress"]["allowed_destination_classes"]:
+        raise AssertionError("Egress destination class is absent from EffectivePermissions")
     if any(
         response[field] != request[field]
         for field in ("invocation_id", "invocation_attempt_id", "fencing_token", "request_digest")
     ):
         raise AssertionError("Egress response belongs to a different request")
-    mark_checks("egress_gateway.request_binding", "egress_gateway.token_binding")
+    mark_checks(
+        "egress_destination.digest", "egress_destination.owner_scope",
+        "egress_destination.request_policy", "egress_gateway.request_binding",
+        "egress_gateway.token_binding",
+    )
 
 
 def validate_workspace_content_manifest(manifest: dict[str, Any]) -> None:
@@ -997,14 +1488,22 @@ def validate_canonical_event_source(event: dict[str, Any]) -> None:
     )
 
 
-def validate_platform_event_registry_binding(event: dict[str, Any], registry: dict[str, Any]) -> None:
-    expected_registry = {
-        "registry_id": registry["registry_id"],
-        "registry_version": registry["registry_version"],
-        "registry_digest": registry["registry_digest"],
-    }
-    if event["event_registry"] != expected_registry:
-        raise AssertionError("CanonicalEvent binds a different Platform Core Event Registry")
+def validate_canonical_event_registry_binding(
+    event: dict[str, Any], registries: list[dict[str, Any]],
+) -> None:
+    registry = next((candidate for candidate in registries if event["event_registry"] == {
+        "registry_id": candidate["registry_id"],
+        "registry_version": candidate["registry_version"],
+        "registry_digest": candidate["registry_digest"],
+    }), None)
+    if registry is None:
+        raise AssertionError("CanonicalEvent does not bind an admitted core Event Registry revision")
+    expected_producer_kind = {
+        "platform-core": "platform",
+        "agent-runtime-core": "provider",
+    }.get(registry["registry_id"])
+    if expected_producer_kind is None or event["producer_kind"] != expected_producer_kind:
+        raise AssertionError("CanonicalEvent producer does not own the bound core Event Registry")
     definition = next(
         (item for item in registry["definitions"] if item["type"] == event["type"] and item["data_version"] == event["data_version"]),
         None,
@@ -1017,7 +1516,7 @@ def validate_platform_event_registry_binding(event: dict[str, Any], registry: di
         .iter_errors(event["data"])
     )
     if errors:
-        raise AssertionError("CanonicalEvent data does not validate against the admitted Platform Event schema")
+        raise AssertionError("CanonicalEvent data does not validate against the admitted core Event schema")
     mark_checks("canonical_event.registry_binding")
 
 
@@ -1100,6 +1599,58 @@ def validate_runtime_session_request(
         "runtime_session.sandbox_slot_binding",
         "runtime_session.scope_class",
         "runtime_session.channel_policy",
+    )
+
+
+def validate_runtime_session_route(
+    route: dict[str, Any], request: dict[str, Any], response: dict[str, Any],
+    manifest: dict[str, Any], grant: dict[str, Any],
+) -> None:
+    digest_input = {
+        field: route[field]
+        for field in (
+            "runtime_session_id", "sandbox_id", "runtime_type", "provider_route_reference"
+        )
+    }
+    if route["provider_route_digest"] != canonical_digest(digest_input):
+        raise AssertionError("RuntimeSessionRoute provider route digest mismatch")
+    slot = next(
+        (item for item in manifest["sandboxes"]
+         if item["sandbox_id"] == route["sandbox_id"]
+         and item["sandbox_slot_key"] == route["sandbox_slot_key"]),
+        None,
+    )
+    if slot is None or any((
+        route["tenant_id"] != manifest["tenant_id"],
+        route["client_app_id"] != grant["client_app_id"],
+        route["principal_id"] != grant["sub"],
+        route["work_order_id"] != manifest["work_order_id"],
+        route["runtime_session_id"] != response["runtime_session_id"],
+        route["sandbox_slot_key"] != request["sandbox_slot_key"],
+        route["runtime_type"] != request["runtime_type"],
+        route["connection_generation"] != response["connection_generation"],
+        route["expires_at"] != response["expires_at"],
+    )):
+        raise AssertionError("RuntimeSessionRoute crosses its admitted session scope")
+    scope_by_type = {
+        "terminal": {"terminal:connect"},
+        "browser": {"browser:view", "browser:control"},
+        "desktop": {"desktop:view", "desktop:control"},
+        "port_forward": {"port-forward:connect"},
+    }
+    if not set(route["scopes"]) <= scope_by_type[route["runtime_type"]]:
+        raise AssertionError("RuntimeSessionRoute contains incompatible scopes")
+    if (
+        "://" in route["provider_route_reference"]
+        or parse_datetime(route["expires_at"]) > min(
+            parse_datetime(manifest["commercial_authorization"]["expires_at"]),
+            parse_datetime(manifest["execution_budget"]["expires_at"]),
+        )
+    ):
+        raise AssertionError("RuntimeSessionRoute exposes an endpoint or outlives authorization")
+    mark_checks(
+        "runtime_session.route_digest", "runtime_session.route_scope",
+        "runtime_session.route_opaque",
     )
 
 
@@ -1291,6 +1842,16 @@ def revision_supports(revision: dict[str, Any], key: tuple[str, str, str | None]
 def validate_run_admission(manifest: dict[str, Any], context: dict[str, Any]) -> None:
     validate_self_digest(manifest, "run_manifest_digest")
     mark_checks("run_manifest.digest")
+    location = manifest["location"]
+    location_unsigned = {
+        key: value for key, value in location.items() if key != "placement_decision_digest"
+    }
+    if (
+        location["placement_decision_digest"] != canonical_digest(location_unsigned)
+        or {"cluster_id", "cell_id", "pod_id", "node_id", "runtime_id", "endpoint"} & set(location)
+        or location["placement_mode"] == "platform_managed" and not location["region_id"]
+    ):
+        raise AssertionError("RunManifest contains an invalid or topology-leaking placement decision")
     if manifest["scenario"] != context["scenario"]:
         raise AssertionError("RunManifest scenario does not bind the admitted Scenario definition")
     scenario_definition = context["scenario_definition"]
@@ -1639,29 +2200,81 @@ for case in work_order_failure_negative["cases"]:
 
 context = load("examples/contracts/run-admission-context.json")
 manifest = load("examples/contracts/run-manifest-v2.json")
+conversation = load("examples/contracts/conversation.json")
+work_session_request = load("examples/contracts/work-session-request.json")
+work_session_claims = load("examples/contracts/work-session-claims.json")
+service_access_token = load("examples/contracts/service-access-token-claims.json")
+plugin_request = load("examples/contracts/plugin-invocation-request.json")
+plugin_token = load("examples/contracts/plugin-invocation-token-claims.json")
+plugin_status_descriptor = load("examples/contracts/plugin-status-operation-descriptor.json")
+plugin_status_token = load("examples/contracts/plugin-status-token-claims.json")
+plugin_cancel_request = load("examples/contracts/plugin-cancellation-request.json")
+plugin_cancel_token = load("examples/contracts/plugin-cancellation-token-claims.json")
+plugin_event_descriptor = load("examples/contracts/plugin-event-read-operation-descriptor.json")
+plugin_event_token = load("examples/contracts/plugin-events-token-claims.json")
 no_sandbox_manifest = load("examples/contracts/run-manifest-no-sandbox.json")
 workflow_run = load("examples/contracts/workflow-run.json")
 agent_run = load("examples/contracts/agent-run.json")
 runtime_start = load("examples/contracts/agent-runtime-start-request.json")
 renewed_runtime_authorization = load("examples/contracts/runtime-authorization-renewed.json")
 runtime_token = load("examples/contracts/agent-runtime-invocation-token-claims.json")
+runtime_command = load("examples/contracts/agent-runtime-command.json")
+runtime_command_token = load("examples/contracts/agent-runtime-command-token-claims.json")
+system_safety_control = load("examples/contracts/system-safety-control.json")
+system_safety_command = load("examples/contracts/agent-runtime-system-safety-command.json")
+system_safety_token = load(
+    "examples/contracts/agent-runtime-system-safety-command-token-claims.json"
+)
+commercial_revocation = load("examples/contracts/commercial-authorization-revocation.json")
+commercial_revocation_accepted = load(
+    "examples/contracts/commercial-authorization-revocation-accepted.json"
+)
+control_request = load("examples/contracts/work-order-control-request.json")
+control_runtime_input = load("examples/contracts/work-order-control-runtime-input.json")
+runtime_status_descriptor = load("examples/contracts/agent-runtime-status-operation-descriptor.json")
+runtime_status_token = load("examples/contracts/agent-runtime-status-token-claims.json")
+runtime_event_descriptor = load("examples/contracts/agent-runtime-event-read-operation-descriptor.json")
+runtime_event_token = load("examples/contracts/agent-runtime-events-token-claims.json")
+sandbox_token = load("examples/contracts/sandbox-operation-token-claims.json")
+sandbox_create = load("examples/contracts/sandbox-create-request.json")
+sandbox_restore = load("examples/contracts/sandbox-restore-request.json")
+sandbox_desired_state = load("examples/contracts/sandbox-desired-state-request.json")
+sandbox_lease = load("examples/contracts/sandbox-lease-request.json")
+sandbox_exec = load("examples/contracts/sandbox-exec-request.json")
+sandbox_cancel_exec = load("examples/contracts/sandbox-cancel-exec-request.json")
+sandbox_runtime_session = load("examples/contracts/sandbox-runtime-session-open-request.json")
+sandbox_snapshot = load("examples/contracts/sandbox-snapshot-request.json")
+sandbox_terminate = load("examples/contracts/sandbox-terminate-request.json")
+sandbox_status_descriptor = load("examples/contracts/sandbox-status-operation-descriptor.json")
+sandbox_operation_read_descriptor = load("examples/contracts/sandbox-operation-read-operation-descriptor.json")
+sandbox_exec_result_descriptor = load("examples/contracts/sandbox-exec-result-operation-descriptor.json")
+sandbox_snapshot_manifest_descriptor = load("examples/contracts/sandbox-snapshot-manifest-operation-descriptor.json")
+sandbox_event_read_descriptor = load("examples/contracts/sandbox-event-read-operation-descriptor.json")
+sandbox_spec = load("examples/contracts/sandbox-spec.json")
+sandbox_capabilities = load("examples/contracts/sandbox-capabilities.json")
 capability_request = load("examples/contracts/capability-invocation-request.json")
 capability_token = load("examples/contracts/capability-invocation-token-claims.json")
 capability_status_token = load("examples/contracts/capability-invocation-status-token-claims.json")
+capability_status_operation = load("examples/contracts/capability-status-operation-descriptor.json")
 capability_cancel = load("examples/contracts/capability-cancellation-request.json")
 capability_cancel_token = load("examples/contracts/capability-cancellation-token-claims.json")
+capability_event_operation = load("examples/contracts/capability-event-read-operation-descriptor.json")
+capability_event_token = load("examples/contracts/capability-invocation-events-token-claims.json")
 capability_result = load("examples/contracts/capability-invocation-result.json")
 artifact_staging_grant = load("examples/contracts/artifact-staging-grant.json")
 artifact_staging_object = load("examples/contracts/artifact-staging-object-request.json")
 artifact_stage_token = load("examples/contracts/artifact-gateway-stage-token-claims.json")
 artifact_staging_commit = load("examples/contracts/artifact-staging-commit-request.json")
 artifact_commit_token = load("examples/contracts/artifact-gateway-commit-token-claims.json")
+artifact_read_descriptor = load("examples/contracts/artifact-read-operation-descriptor.json")
 artifact_read_token = load("examples/contracts/artifact-gateway-read-token-claims.json")
 egress_request = load("examples/contracts/egress-http-request.json")
+egress_destination = load("examples/contracts/egress-destination-revision.json")
 egress_response = load("examples/contracts/egress-http-response.json")
 egress_token = load("examples/contracts/egress-invocation-token-claims.json")
 workspace_content_manifest = load("examples/contracts/workspace-content-manifest.json")
 canonical_event = load("examples/contracts/canonical-event-v2.json")
+canonical_runtime_event = load("examples/contracts/canonical-runtime-event-v2.json")
 semantic_traceability = load("contracts/semantic-constraints-v1.json")
 event_registry = load("contracts/event-types/agent-runtime-core-v1.json")
 platform_event_registry = load("contracts/event-types/platform-core-v1.json")
@@ -1674,7 +2287,11 @@ execution_budget = load("examples/contracts/execution-budget.json")
 gateway_connect = load("examples/contracts/runtime-gateway-frame.json")
 gateway_control = load("examples/contracts/runtime-gateway-control-frame.json")
 runtime_session_request = load("examples/contracts/runtime-session-request.json")
+runtime_session_response = load("examples/contracts/runtime-session-response.json")
+runtime_session_route = load("examples/contracts/runtime-session-route.json")
+execution_grant = load("examples/contracts/execution-grant-claims.json")
 conformance_suites = [
+    load("contracts/conformance/agent-access/v1/suite.json"),
     load("contracts/conformance/runtime/v1/suite.json"),
     load("contracts/conformance/sandbox/v1/suite.json"),
     load("contracts/conformance/runtime-gateway/v1/suite.json"),
@@ -1695,6 +2312,66 @@ validate_runtime_authorization(
     runtime_start["runtime_authorization"],
 )
 validate_runtime_token(runtime_token, manifest, agent_run, runtime_start)
+validate_runtime_token(runtime_command_token, manifest, agent_run, runtime_start, runtime_command)
+validate_runtime_token(runtime_status_token, manifest, agent_run, runtime_start, runtime_status_descriptor)
+validate_runtime_token(runtime_event_token, manifest, agent_run, runtime_start, runtime_event_descriptor)
+validate_sandbox_spec(sandbox_spec, manifest, sandbox_capabilities)
+sandbox_resolution = next(
+    item for item in manifest["capability_resolutions"]
+    if item["resolution_id"] == sandbox_spec["provider_resolution_id"]
+)
+sandbox_token_cases = [
+    (sandbox_token, sandbox_create, sandbox_create["spec"]["sandbox_id"]),
+    (load("examples/contracts/sandbox-restore-operation-token-claims.json"), sandbox_restore, sandbox_restore["spec"]["sandbox_id"]),
+    (load("examples/contracts/sandbox-desired-state-operation-token-claims.json"), sandbox_desired_state, sandbox_spec["sandbox_id"]),
+    (load("examples/contracts/sandbox-lease-operation-token-claims.json"), sandbox_lease, sandbox_spec["sandbox_id"]),
+    (load("examples/contracts/sandbox-exec-operation-token-claims.json"), sandbox_exec, sandbox_spec["sandbox_id"]),
+    (load("examples/contracts/sandbox-cancel-exec-operation-token-claims.json"), sandbox_cancel_exec, sandbox_spec["sandbox_id"]),
+    (load("examples/contracts/sandbox-runtime-session-operation-token-claims.json"), sandbox_runtime_session, sandbox_spec["sandbox_id"]),
+    (load("examples/contracts/sandbox-snapshot-operation-token-claims.json"), sandbox_snapshot, sandbox_spec["sandbox_id"]),
+    (load("examples/contracts/sandbox-terminate-operation-token-claims.json"), sandbox_terminate, sandbox_spec["sandbox_id"]),
+    (load("examples/contracts/sandbox-status-operation-token-claims.json"), sandbox_status_descriptor, sandbox_spec["sandbox_id"]),
+    (load("examples/contracts/sandbox-operation-read-token-claims.json"), sandbox_operation_read_descriptor, sandbox_spec["sandbox_id"]),
+    (load("examples/contracts/sandbox-exec-result-operation-token-claims.json"), sandbox_exec_result_descriptor, sandbox_spec["sandbox_id"]),
+    (load("examples/contracts/sandbox-snapshot-manifest-operation-token-claims.json"), sandbox_snapshot_manifest_descriptor, sandbox_spec["sandbox_id"]),
+    (load("examples/contracts/sandbox-event-read-operation-token-claims.json"), sandbox_event_read_descriptor, sandbox_spec["sandbox_id"]),
+]
+for operation_token, operation_document, target_sandbox_id in sandbox_token_cases:
+    validate_sandbox_token(
+        operation_token, operation_document, sandbox_resolution, manifest,
+        sandbox_id=target_sandbox_id,
+    )
+validate_service_access_token(
+    service_access_token,
+    registered_issuer="https://business.example.test",
+    authenticated_subject="business-html-product",
+    authenticated_client_id="html-product",
+    allowed_scopes={"conversation:create", "session:create"},
+)
+validate_work_session_claims(
+    work_session_claims, work_session_request, conversation,
+    tenant_id=manifest["tenant_id"],
+)
+validate_plugin_compatibility_token(
+    plugin_request, plugin_token,
+    plugin_id="html-to-pptx",
+    provider_revision_id="legacypr_html_to_pptx_01",
+    audience="urn:agent-platform:provider-instance:legacy-html-to-pptx",
+    permissions_digest=manifest["effective_permissions"]["permissions_digest"],
+)
+for operation_token, operation_document in (
+    (plugin_status_token, plugin_status_descriptor),
+    (plugin_cancel_token, plugin_cancel_request),
+    (plugin_event_token, plugin_event_descriptor),
+):
+    validate_plugin_compatibility_token(
+        plugin_request, operation_token,
+        plugin_id="html-to-pptx",
+        provider_revision_id="legacypr_html_to_pptx_01",
+        audience="urn:agent-platform:provider-instance:legacy-html-to-pptx",
+        permissions_digest=manifest["effective_permissions"]["permissions_digest"],
+        operation_document=operation_document,
+    )
 capability_resolution = next(
     item for item in manifest["capability_resolutions"]
     if item["resolution_id"] == capability_request["provider_resolution_id"]
@@ -1702,13 +2379,6 @@ capability_resolution = next(
 validate_capability_invocation(
     capability_request, capability_token, capability_resolution, manifest
 )
-capability_status_operation = {
-    "operation": "status",
-    "invocation_id": capability_request["invocation_id"],
-    "invocation_attempt_id": capability_request["invocation_attempt_id"],
-    "fencing_token": capability_request["fencing_token"],
-    "provider_operation_id": capability_status_token["provider_operation_id"],
-}
 validate_capability_invocation(
     capability_request, capability_status_token, capability_resolution, manifest,
     capability_status_operation, capability_token,
@@ -1717,21 +2387,39 @@ validate_capability_invocation(
     capability_request, capability_cancel_token, capability_resolution, manifest,
     capability_cancel, capability_status_token,
 )
+validate_capability_invocation(
+    capability_request, capability_event_token, capability_resolution, manifest,
+    capability_event_operation, capability_cancel_token,
+)
 validate_artifact_gateway(
     artifact_staging_grant, artifact_staging_object, artifact_stage_token,
     artifact_staging_commit, artifact_commit_token,
-    capability_request["input_artifact_grants"][0], artifact_read_token, capability_request,
+    capability_request["input_artifact_grants"][0], artifact_read_descriptor,
+    artifact_read_token, capability_request,
+    caller_subject=capability_resolution["selected_provider_audience"],
+)
+runtime_caller_subject = next(
+    item["selected_provider_audience"]
+    for item in manifest["capability_resolutions"]
+    if item["resolution_id"] == manifest["agent_runtime"]["resolution_id"]
 )
 validate_egress_gateway(
-    egress_request, egress_token, egress_response,
+    egress_destination, egress_request, egress_token, egress_response,
     manifest["gateway_bindings"]["egress"]["port"], runtime_start["runtime_authorization"],
+    caller_subject=runtime_caller_subject,
 )
 validate_workspace_content_manifest(workspace_content_manifest)
 validate_canonical_event_source(canonical_event)
-validate_platform_event_registry_binding(canonical_event, platform_event_registry)
+validate_canonical_event_registry_binding(canonical_event, [platform_event_registry, event_registry])
+validate_canonical_event_source(canonical_runtime_event)
+validate_canonical_event_registry_binding(canonical_runtime_event, [platform_event_registry, event_registry])
 validate_gateway_frames(gateway_connect, gateway_control)
 validate_runtime_session_request(
     runtime_session_request, manifest, {"runtime:view", "runtime:control"}
+)
+validate_runtime_session_route(
+    runtime_session_route, runtime_session_request, runtime_session_response,
+    manifest, execution_grant,
 )
 validate_event_registry(event_registry)
 validate_event_registry(platform_event_registry)
@@ -1748,13 +2436,12 @@ for conformance_suite in conformance_suites:
     validate_conformance_suite(conformance_suite)
 validate_run_admission(manifest, context)
 validate_run_admission(no_sandbox_manifest, context)
-grant = load("examples/contracts/execution-grant-claims.json")
+grant = execution_grant
 work_order_grant = load("examples/contracts/execution-grant-work-order-claims.json")
 conversation_turn_request = load("examples/contracts/conversation-turn-request.json")
 work_order_request = load("examples/contracts/work-order.json")
 control_request = load("examples/contracts/work-order-control-request.json")
 control_grant = load("examples/contracts/execution-grant-control-claims.json")
-conversation = load("examples/contracts/conversation.json")
 validate_execution_grant_request(
     grant,
     conversation_turn_request,
@@ -1897,7 +2584,7 @@ for case in architecture_negative["cases"]:
             validate_gateway_frames(candidate, gateway_control)
         elif mutation == "runtime_token_request_digest_mismatch":
             candidate = copy.deepcopy(runtime_token)
-            candidate["request_digest"] = "sha256:" + "f" * 64
+            candidate["operation_request_digest"] = "sha256:" + "f" * 64
             validate_runtime_token(candidate, manifest, agent_run, runtime_start)
         elif mutation == "provider_resolution_decision_digest_mismatch":
             candidate = copy.deepcopy(manifest["capability_resolutions"][0])
@@ -2357,6 +3044,144 @@ def validate_runtime_command_sequence(commands: list[dict[str, Any]]) -> None:
     fencing = [item["fencing_token"] for item in commands]
     if any(current <= previous for previous, current in zip(fencing, fencing[1:])):
         raise AssertionError("Agent Runtime command fencing_token must strictly increase")
+    mark_checks(
+        "runtime_command.sequence",
+        "runtime_command.idempotency",
+        "runtime_command.fencing",
+    )
+
+
+def validate_system_safety_control(
+    control: dict[str, Any], manifest: dict[str, Any], runtime_start: dict[str, Any],
+    *, authenticated_issuer: str = "spn_agent_safety_controller",
+) -> None:
+    validate_self_digest(control, "control_digest")
+    if any((
+        control["tenant_id"] != manifest["tenant_id"],
+        control["work_order_id"] != manifest["work_order_id"],
+        control["runtime_run_id"] != runtime_start["runtime_run_id"],
+        control["issued_by"] != "platform_safety_controller",
+        control["issuer_subject_id"] != authenticated_issuer,
+    )):
+        raise AssertionError("SystemSafetyControl crosses its active execution scope")
+    evidence = control["trigger_evidence"]
+    observed_at = parse_datetime(evidence["observed_at"])
+    issued_at = parse_datetime(control["issued_at"])
+    if observed_at > issued_at:
+        raise AssertionError("SystemSafetyControl was issued before its trigger evidence was observed")
+    if control["reason"] == "commercial_authorization_expired":
+        authorization = runtime_start["runtime_authorization"]
+        if any((
+            evidence["evidence_id"] != authorization["authorization_id"],
+            evidence["evidence_contract_id"] != "urn:agent-platform:runtime-authorization:v1",
+            evidence["evidence_digest"] != authorization["authorization_digest"],
+            observed_at < parse_datetime(authorization["expires_at"]),
+        )):
+            raise AssertionError("Expired-authorization safety control lacks matching expiry evidence")
+    hard_cancel_reasons = {
+        "commercial_authorization_expired",
+        "commercial_authorization_revoked",
+        "execution_deadline_exceeded",
+        "tenant_suspended",
+        "provider_admission_revoked",
+        "budget_exhausted",
+        "platform_shutdown",
+    }
+    if (
+        control["action"] not in {"pause", "cancel"}
+        or control["reason"] in hard_cancel_reasons and control["action"] != "cancel"
+    ):
+        raise AssertionError("SystemSafetyControl can only reduce execution authority")
+    mark_checks(
+        "system_safety_control.digest",
+        "system_safety_control.scope",
+        "system_safety_control.evidence",
+        "system_safety_control.reduction_only",
+    )
+
+
+def validate_agent_runtime_command(
+    command: dict[str, Any], manifest: dict[str, Any], runtime_start: dict[str, Any],
+    *, control_request: dict[str, Any] | None = None,
+    persisted_input: dict[str, Any] | None = None,
+    system_safety_control: dict[str, Any] | None = None,
+) -> None:
+    validate_self_digest(command, "command_digest")
+    if command["runtime_run_id"] != runtime_start["runtime_run_id"]:
+        raise AssertionError("Agent Runtime command crosses its RuntimeRun")
+    user_authorized = "authorized_control_request_id" in command
+    system_authorized = "system_safety_control_id" in command
+    if user_authorized and system_authorized:
+        raise AssertionError("Agent Runtime command mixes user and system control authority")
+    if user_authorized:
+        if control_request is None:
+            raise AssertionError("User Runtime command lacks its persisted WorkOrderControlRequest")
+        if any((
+            command["authorized_control_request_id"] != control_request["control_request_id"],
+            command["type"] != control_request["action"],
+            control_request["work_order_id"] != manifest["work_order_id"],
+        )):
+            raise AssertionError("Agent Runtime command differs from its authorized control request")
+        if command["type"] in {"append_input", "interrupt"}:
+            if persisted_input is None:
+                raise AssertionError("Agent Runtime input command lacks its immutable persisted input")
+            if any((
+                command["input_id"] != persisted_input["input_id"],
+                command["input_content_digest"] != persisted_input["content_digest"],
+                control_request["content"]["content_digest"] != persisted_input["content_digest"],
+                persisted_input["content_digest"] != canonical_digest(persisted_input["content"]),
+            )):
+                raise AssertionError("Agent Runtime input command differs from persisted control input")
+        mark_checks("runtime_command.user_control_binding")
+    elif system_authorized:
+        if system_safety_control is None:
+            raise AssertionError("System Runtime command lacks its SystemSafetyControl")
+        if any((
+            command.get("system_safety_control_id") != system_safety_control["safety_control_id"],
+            command.get("system_safety_control_digest") != system_safety_control["control_digest"],
+            command["runtime_run_id"] != system_safety_control["runtime_run_id"],
+            command["type"] != system_safety_control["action"],
+            system_safety_control["tenant_id"] != manifest["tenant_id"],
+            system_safety_control["work_order_id"] != manifest["work_order_id"],
+        )):
+            raise AssertionError("Agent Runtime command differs from SystemSafetyControl")
+        mark_checks("runtime_command.system_safety_binding")
+    elif command["type"] != "checkpoint":
+        raise AssertionError("Agent Runtime command lacks an authorized control source")
+    mark_checks("runtime_command.digest")
+
+
+def validate_commercial_authorization_revocation(
+    notice: dict[str, Any], manifest: dict[str, Any], grant: dict[str, Any],
+    *, authenticated_client_id: str, path_authorization_id: str, received_at: str,
+) -> None:
+    validate_self_digest(notice, "revocation_digest")
+    if parse_datetime(notice["effective_at"]) > parse_datetime(notice["issued_at"]):
+        raise AssertionError("CommercialAuthorization revocation is not yet effective")
+    if parse_datetime(notice["issued_at"]) > parse_datetime(received_at):
+        raise AssertionError("CommercialAuthorization revocation exceeds allowed clock skew")
+    if any((
+        notice["external_tenant_id"] != grant["external_tenant_id"],
+        authenticated_client_id != grant["client_app_id"],
+    )):
+        raise AssertionError("CommercialAuthorization revocation crosses Business sender scope")
+    binding = manifest["commercial_authorization"]
+    if any((
+        notice["commercial_authorization_id"] != path_authorization_id,
+        notice["commercial_authorization_id"] != binding["commercial_authorization_id"],
+        notice["commercial_authorization_digest"] != binding["commercial_authorization_digest"],
+        grant["commercial_authorization"]["commercial_authorization_id"]
+        != binding["commercial_authorization_id"],
+        grant["commercial_authorization"]["commercial_authorization_digest"]
+        != binding["commercial_authorization_digest"],
+    )):
+        raise AssertionError("CommercialAuthorization revocation binds a different snapshot")
+    mark_checks(
+        "commercial_revocation.digest",
+        "commercial_revocation.time_order",
+        "commercial_revocation.sender_binding",
+        "commercial_revocation.authorization_binding",
+    )
 
 
 runtime_command_fixture = load("contracts/tests/semantic-invalid/agent-runtime-command-sequence.json")
@@ -2379,6 +3204,37 @@ for case in runtime_command_fixture["cases"]:
         pass
     else:
         raise AssertionError(f"Expected Agent Runtime command semantic fixture to fail: {case['id']}")
+
+validate_system_safety_control(system_safety_control, manifest, runtime_start)
+validate_agent_runtime_command(
+    runtime_command,
+    manifest,
+    runtime_start,
+    control_request=control_request,
+    persisted_input=control_runtime_input,
+)
+validate_agent_runtime_command(
+    system_safety_command,
+    manifest,
+    runtime_start,
+    system_safety_control=system_safety_control,
+)
+validate_runtime_token(
+    system_safety_token,
+    manifest,
+    agent_run,
+    runtime_start,
+    system_safety_command,
+    system_safety_control,
+)
+validate_commercial_authorization_revocation(
+    commercial_revocation,
+    manifest,
+    grant,
+    authenticated_client_id=grant["client_app_id"],
+    path_authorization_id=manifest["commercial_authorization"]["commercial_authorization_id"],
+    received_at=commercial_revocation_accepted["accepted_at"],
+)
 
 
 def validate_workspace_revision(workspace_revision: dict[str, Any]) -> None:
@@ -2556,6 +3412,21 @@ for case in phase0_closure_negative["cases"]:
             candidate["producer_kind"] = "provider"
             candidate["metadata"]["provider_instance_id"] = "provider-instance"
             validate_canonical_event_source(candidate)
+        elif mutation == "canonical_event_registry_mismatch":
+            candidate = copy.deepcopy(canonical_runtime_event)
+            candidate["event_registry"] = canonical_event["event_registry"]
+            validate_canonical_event_registry_binding(candidate, [platform_event_registry, event_registry])
+        elif mutation == "canonical_event_payload_mismatch":
+            candidate = copy.deepcopy(canonical_runtime_event)
+            candidate["data"].pop("content_digest")
+            validate_canonical_event_registry_binding(candidate, [platform_event_registry, event_registry])
+        elif mutation == "canonical_event_registry_owner_mismatch":
+            candidate = copy.deepcopy(canonical_runtime_event)
+            candidate["producer_kind"] = "platform"
+            candidate["provider_revision_id"] = None
+            candidate["metadata"].pop("provider_instance_id")
+            validate_canonical_event_source(candidate)
+            validate_canonical_event_registry_binding(candidate, [platform_event_registry, event_registry])
         elif mutation == "control_grant_work_order_mismatch":
             candidate = copy.deepcopy(control_grant)
             candidate["work_order_id"] = "wrk_other"
@@ -2739,6 +3610,13 @@ for case in phase0_closure_negative["cases"]:
             candidate = copy.deepcopy(manifest)
             candidate["request_binding"]["request_digest"] = "sha256:" + "f" * 64
             validate_run_manifest_request_binding(candidate, grant, conversation_turn_request)
+        elif mutation == "run_manifest_location_digest_mismatch":
+            candidate = copy.deepcopy(manifest)
+            candidate["location"]["region_id"] = "eu-west-1"
+            candidate["run_manifest_digest"] = canonical_digest({
+                key: value for key, value in candidate.items() if key != "run_manifest_digest"
+            })
+            validate_run_admission(candidate, context)
         elif mutation == "staging_grant_gateway_mismatch":
             candidate_request = copy.deepcopy(capability_request)
             candidate_token = copy.deepcopy(capability_token)
@@ -2766,8 +3644,9 @@ for case in phase0_closure_negative["cases"]:
             validate_artifact_gateway(
                 artifact_staging_grant, artifact_staging_object, candidate,
                 artifact_staging_commit, artifact_commit_token,
-                capability_request["input_artifact_grants"][0], artifact_read_token,
-                capability_request,
+                capability_request["input_artifact_grants"][0], artifact_read_descriptor,
+                artifact_read_token, capability_request,
+                caller_subject=capability_resolution["selected_provider_audience"],
             )
         elif mutation == "artifact_gateway_read_fencing_mismatch":
             candidate = copy.deepcopy(artifact_read_token)
@@ -2786,15 +3665,516 @@ for case in phase0_closure_negative["cases"]:
             validate_artifact_gateway(
                 artifact_staging_grant, artifact_staging_object, artifact_stage_token,
                 artifact_staging_commit, artifact_commit_token,
-                capability_request["input_artifact_grants"][0], candidate,
+                capability_request["input_artifact_grants"][0], descriptor, candidate,
                 capability_request,
+                caller_subject=capability_resolution["selected_provider_audience"],
             )
         elif mutation == "egress_token_destination_mismatch":
             candidate = copy.deepcopy(egress_token)
             candidate["destination_id"] = "other-destination"
             validate_egress_gateway(
-                egress_request, candidate, egress_response,
+                egress_destination, egress_request, candidate, egress_response,
                 manifest["gateway_bindings"]["egress"]["port"], runtime_start["runtime_authorization"],
+                caller_subject=runtime_caller_subject,
+            )
+        elif mutation == "egress_token_operation_contract_replay":
+            candidate = copy.deepcopy(egress_token)
+            candidate["operation_contract_id"] = "urn:agent-platform:plugin-invocation-request:v1"
+            validate_egress_gateway(
+                egress_destination, egress_request, candidate, egress_response,
+                manifest["gateway_bindings"]["egress"]["port"], runtime_start["runtime_authorization"],
+                caller_subject=runtime_caller_subject,
+            )
+        elif mutation == "egress_token_operation_profile_replay":
+            candidate = copy.deepcopy(egress_token)
+            candidate["operation_digest_profile"] = "rfc8785-full-document-v1"
+            validate_egress_gateway(
+                egress_destination, egress_request, candidate, egress_response,
+                manifest["gateway_bindings"]["egress"]["port"], runtime_start["runtime_authorization"],
+                caller_subject=runtime_caller_subject,
+            )
+        elif mutation == "runtime_token_audience_mismatch":
+            candidate = copy.deepcopy(runtime_token)
+            candidate["aud"] = "urn:agent-platform:provider-instance:other"
+            validate_runtime_token(candidate, manifest, agent_run, runtime_start)
+        elif mutation == "runtime_token_authorization_expiry_exceeded":
+            candidate = copy.deepcopy(runtime_token)
+            candidate["exp"] = int(parse_datetime(
+                runtime_start["runtime_authorization"]["expires_at"]
+            ).timestamp()) + 1
+            candidate["iat"] = candidate["exp"] - 300
+            candidate["nbf"] = candidate["iat"]
+            validate_runtime_token(candidate, manifest, agent_run, runtime_start)
+        elif mutation == "runtime_token_operation_contract_replay":
+            candidate = copy.deepcopy(runtime_event_token)
+            candidate["operation_contract_id"] = (
+                "urn:agent-platform:agent-runtime-status-operation-descriptor:v1"
+            )
+            validate_runtime_token(
+                candidate, manifest, agent_run, runtime_start, runtime_event_descriptor,
+            )
+        elif mutation == "runtime_event_cursor_digest_mismatch":
+            candidate = copy.deepcopy(runtime_event_descriptor)
+            candidate["after_event_sequence"] += 1
+            validate_runtime_token(
+                runtime_event_token, manifest, agent_run, runtime_start, candidate,
+            )
+        elif mutation == "runtime_command_token_digest_mismatch":
+            candidate = copy.deepcopy(runtime_command)
+            candidate["command_sequence"] += 1
+            validate_runtime_token(
+                runtime_command_token, manifest, agent_run, runtime_start, candidate,
+            )
+        elif mutation == "runtime_command_self_digest_mismatch":
+            candidate = copy.deepcopy(runtime_command)
+            candidate["command_sequence"] += 1
+            validate_agent_runtime_command(
+                candidate,
+                manifest,
+                runtime_start,
+                control_request=control_request,
+                persisted_input=control_runtime_input,
+            )
+        elif mutation == "runtime_user_command_control_action_mismatch":
+            candidate_request = copy.deepcopy(control_request)
+            candidate_request["action"] = "interrupt"
+            validate_agent_runtime_command(
+                runtime_command,
+                manifest,
+                runtime_start,
+                control_request=candidate_request,
+                persisted_input=control_runtime_input,
+            )
+        elif mutation == "system_safety_control_scope_mismatch":
+            candidate = copy.deepcopy(system_safety_control)
+            candidate["tenant_id"] = "ten_other"
+            candidate["control_digest"] = canonical_digest({
+                key: value for key, value in candidate.items() if key != "control_digest"
+            })
+            validate_system_safety_control(candidate, manifest, runtime_start)
+        elif mutation == "system_safety_control_issuer_mismatch":
+            validate_system_safety_control(
+                system_safety_control,
+                manifest,
+                runtime_start,
+                authenticated_issuer="spn_other_workload",
+            )
+        elif mutation == "system_safety_control_future_evidence":
+            candidate = copy.deepcopy(system_safety_control)
+            candidate["trigger_evidence"]["observed_at"] = "2026-07-16T09:16:01Z"
+            candidate["control_digest"] = canonical_digest({
+                key: value for key, value in candidate.items() if key != "control_digest"
+            })
+            validate_system_safety_control(candidate, manifest, runtime_start)
+        elif mutation == "system_safety_control_resume":
+            candidate = copy.deepcopy(system_safety_control)
+            candidate["action"] = "resume"
+            candidate["control_digest"] = canonical_digest({
+                key: value for key, value in candidate.items() if key != "control_digest"
+            })
+            validate_system_safety_control(candidate, manifest, runtime_start)
+        elif mutation == "system_safety_control_hard_reason_paused":
+            candidate = copy.deepcopy(system_safety_control)
+            candidate["action"] = "pause"
+            candidate["control_digest"] = canonical_digest({
+                key: value for key, value in candidate.items() if key != "control_digest"
+            })
+            validate_system_safety_control(candidate, manifest, runtime_start)
+        elif mutation == "runtime_system_safety_action_mismatch":
+            candidate = copy.deepcopy(system_safety_command)
+            candidate["type"] = "pause"
+            candidate["command_digest"] = canonical_digest({
+                key: value for key, value in candidate.items() if key != "command_digest"
+            })
+            validate_agent_runtime_command(
+                candidate,
+                manifest,
+                runtime_start,
+                system_safety_control=system_safety_control,
+            )
+        elif mutation == "runtime_system_safety_token_binding_mismatch":
+            candidate = copy.deepcopy(system_safety_token)
+            candidate["system_safety_control_digest"] = "sha256:" + "f" * 64
+            validate_runtime_token(
+                candidate,
+                manifest,
+                agent_run,
+                runtime_start,
+                system_safety_command,
+                system_safety_control,
+            )
+        elif mutation == "runtime_system_safety_token_predates_control":
+            candidate = copy.deepcopy(system_safety_token)
+            candidate["iat"] = 1784193359
+            candidate["nbf"] = 1784193359
+            validate_runtime_token(
+                candidate,
+                manifest,
+                agent_run,
+                runtime_start,
+                system_safety_command,
+                system_safety_control,
+            )
+        elif mutation == "commercial_revocation_digest_mismatch":
+            candidate = copy.deepcopy(commercial_revocation)
+            candidate["revocation_digest"] = "sha256:" + "f" * 64
+            validate_commercial_authorization_revocation(
+                candidate,
+                manifest,
+                grant,
+                authenticated_client_id=grant["client_app_id"],
+                path_authorization_id=manifest["commercial_authorization"]["commercial_authorization_id"],
+                received_at=commercial_revocation_accepted["accepted_at"],
+            )
+        elif mutation == "commercial_revocation_future_effective":
+            candidate = copy.deepcopy(commercial_revocation)
+            candidate["effective_at"] = "2026-07-16T09:10:02Z"
+            candidate["revocation_digest"] = canonical_digest({
+                key: value for key, value in candidate.items() if key != "revocation_digest"
+            })
+            validate_commercial_authorization_revocation(
+                candidate,
+                manifest,
+                grant,
+                authenticated_client_id=grant["client_app_id"],
+                path_authorization_id=manifest["commercial_authorization"]["commercial_authorization_id"],
+                received_at=commercial_revocation_accepted["accepted_at"],
+            )
+        elif mutation == "commercial_revocation_future_issued":
+            candidate = copy.deepcopy(commercial_revocation)
+            candidate["issued_at"] = "2026-07-16T09:20:00Z"
+            candidate["revocation_digest"] = canonical_digest({
+                key: value for key, value in candidate.items() if key != "revocation_digest"
+            })
+            validate_commercial_authorization_revocation(
+                candidate,
+                manifest,
+                grant,
+                authenticated_client_id=grant["client_app_id"],
+                path_authorization_id=manifest["commercial_authorization"]["commercial_authorization_id"],
+                received_at=commercial_revocation_accepted["accepted_at"],
+            )
+        elif mutation == "commercial_revocation_tenant_mismatch":
+            candidate = copy.deepcopy(commercial_revocation)
+            candidate["external_tenant_id"] = "org-other"
+            candidate["revocation_digest"] = canonical_digest({
+                key: value for key, value in candidate.items() if key != "revocation_digest"
+            })
+            validate_commercial_authorization_revocation(
+                candidate,
+                manifest,
+                grant,
+                authenticated_client_id=grant["client_app_id"],
+                path_authorization_id=manifest["commercial_authorization"]["commercial_authorization_id"],
+                received_at=commercial_revocation_accepted["accepted_at"],
+            )
+        elif mutation == "commercial_revocation_sender_mismatch":
+            validate_commercial_authorization_revocation(
+                commercial_revocation,
+                manifest,
+                grant,
+                authenticated_client_id="other-client",
+                path_authorization_id=manifest["commercial_authorization"]["commercial_authorization_id"],
+                received_at=commercial_revocation_accepted["accepted_at"],
+            )
+        elif mutation == "commercial_revocation_authorization_mismatch":
+            candidate = copy.deepcopy(commercial_revocation)
+            candidate["commercial_authorization_id"] = "cauth_other"
+            candidate["revocation_digest"] = canonical_digest({
+                key: value for key, value in candidate.items() if key != "revocation_digest"
+            })
+            validate_commercial_authorization_revocation(
+                candidate,
+                manifest,
+                grant,
+                authenticated_client_id=grant["client_app_id"],
+                path_authorization_id="cauth_other",
+                received_at=commercial_revocation_accepted["accepted_at"],
+            )
+        elif mutation == "sandbox_token_request_digest_mismatch":
+            candidate = copy.deepcopy(sandbox_token)
+            candidate["request_digest"] = "sha256:" + "f" * 64
+            validate_sandbox_token(candidate, sandbox_create, sandbox_resolution, manifest)
+        elif mutation == "sandbox_token_audience_mismatch":
+            candidate = copy.deepcopy(sandbox_token)
+            candidate["aud"] = "urn:agent-platform:provider-instance:other"
+            validate_sandbox_token(candidate, sandbox_create, sandbox_resolution, manifest)
+        elif mutation == "sandbox_token_deadline_exceeded":
+            candidate = copy.deepcopy(sandbox_token)
+            candidate["exp"] = int(parse_datetime(sandbox_create["deadline_at"]).timestamp()) + 1
+            candidate["iat"] = candidate["exp"] - 300
+            candidate["nbf"] = candidate["iat"]
+            validate_sandbox_token(candidate, sandbox_create, sandbox_resolution, manifest)
+        elif mutation == "sandbox_token_predates_policy":
+            candidate = copy.deepcopy(sandbox_token)
+            candidate["iat"] = int(parse_datetime(manifest["policy_decision"]["decided_at"]).timestamp()) - 1
+            candidate["nbf"] = candidate["iat"]
+            validate_sandbox_token(candidate, sandbox_create, sandbox_resolution, manifest)
+        elif mutation == "sandbox_token_operation_contract_replay":
+            candidate = copy.deepcopy(sandbox_token)
+            candidate["request_contract_id"] = "urn:agent-platform:sandbox-exec-request:v1"
+            validate_sandbox_token(candidate, sandbox_create, sandbox_resolution, manifest)
+        elif mutation == "sandbox_token_digest_profile_replay":
+            candidate = copy.deepcopy(sandbox_token)
+            candidate["request_digest_profile"] = "rfc8785-full-document-v1"
+            validate_sandbox_token(candidate, sandbox_create, sandbox_resolution, manifest)
+        elif mutation == "sandbox_status_path_mismatch":
+            candidate = copy.deepcopy(sandbox_status_descriptor)
+            candidate["sandbox_id"] = "sbx_other"
+            validate_sandbox_token(
+                sandbox_token_cases[9][0], candidate, sandbox_resolution, manifest,
+                sandbox_id=sandbox_spec["sandbox_id"],
+            )
+        elif mutation == "sandbox_event_cursor_digest_mismatch":
+            candidate = copy.deepcopy(sandbox_event_read_descriptor)
+            candidate["after_sequence"] += 1
+            validate_sandbox_token(
+                sandbox_token_cases[13][0], candidate, sandbox_resolution, manifest,
+                sandbox_id=sandbox_spec["sandbox_id"],
+            )
+        elif mutation == "sandbox_lease_budget_exceeded":
+            candidate = copy.deepcopy(sandbox_spec)
+            candidate["lease"]["expires_at"] = "2026-07-16T09:30:00Z"
+            candidate["lease"]["max_extension_seconds"] = 1
+            validate_sandbox_spec(candidate, manifest, sandbox_capabilities)
+        elif mutation == "capability_event_cursor_digest_mismatch":
+            candidate = copy.deepcopy(capability_event_operation)
+            candidate["after_sequence"] += 1
+            validate_capability_invocation(
+                capability_request, capability_event_token, capability_resolution, manifest,
+                candidate, capability_cancel_token,
+            )
+        elif mutation == "capability_token_operation_contract_replay":
+            candidate = copy.deepcopy(capability_event_token)
+            candidate["operation_contract_id"] = (
+                "urn:agent-platform:capability-status-operation-descriptor:v1"
+            )
+            validate_capability_invocation(
+                capability_request, candidate, capability_resolution, manifest,
+                capability_event_operation, capability_cancel_token,
+            )
+        elif mutation == "egress_destination_owner_mismatch":
+            candidate = copy.deepcopy(egress_destination)
+            candidate["owner"]["client_app_id"] = "other-client"
+            candidate["destination_revision_digest"] = canonical_digest({
+                key: value for key, value in candidate.items()
+                if key != "destination_revision_digest"
+            })
+            validate_egress_gateway(
+                candidate, egress_request, egress_token, egress_response,
+                manifest["gateway_bindings"]["egress"]["port"],
+                runtime_start["runtime_authorization"],
+                caller_subject=runtime_caller_subject,
+            )
+        elif mutation == "egress_destination_digest_mismatch":
+            candidate = copy.deepcopy(egress_destination)
+            candidate["destination_revision_digest"] = "sha256:" + "f" * 64
+            validate_egress_gateway(
+                candidate, egress_request, egress_token, egress_response,
+                manifest["gateway_bindings"]["egress"]["port"],
+                runtime_start["runtime_authorization"],
+                caller_subject=runtime_caller_subject,
+            )
+        elif mutation == "egress_destination_class_not_permitted":
+            candidate_destination = copy.deepcopy(egress_destination)
+            candidate_destination["destination_class"] = "unapproved_destination"
+            candidate_destination["destination_revision_digest"] = canonical_digest({
+                key: value for key, value in candidate_destination.items()
+                if key != "destination_revision_digest"
+            })
+            candidate_request = copy.deepcopy(egress_request)
+            candidate_request["destination_class"] = candidate_destination["destination_class"]
+            candidate_request["destination_revision_digest"] = candidate_destination[
+                "destination_revision_digest"
+            ]
+            candidate_request["request_digest"] = canonical_digest({
+                key: value for key, value in candidate_request.items()
+                if key != "request_digest"
+            })
+            candidate_token = copy.deepcopy(egress_token)
+            candidate_token["destination_class"] = candidate_request["destination_class"]
+            candidate_token["destination_revision_digest"] = candidate_request[
+                "destination_revision_digest"
+            ]
+            candidate_token["request_digest"] = candidate_request["request_digest"]
+            validate_egress_gateway(
+                candidate_destination, candidate_request, candidate_token, egress_response,
+                manifest["gateway_bindings"]["egress"]["port"],
+                runtime_start["runtime_authorization"],
+                caller_subject=runtime_caller_subject,
+            )
+        elif mutation == "runtime_session_route_digest_mismatch":
+            candidate = copy.deepcopy(runtime_session_route)
+            candidate["provider_route_digest"] = "sha256:" + "f" * 64
+            validate_runtime_session_route(
+                candidate, runtime_session_request, runtime_session_response,
+                manifest, execution_grant,
+            )
+        elif mutation == "runtime_session_route_slot_mismatch":
+            candidate = copy.deepcopy(runtime_session_route)
+            candidate["sandbox_slot_key"] = "isolated/other"
+            validate_runtime_session_route(
+                candidate, runtime_session_request, runtime_session_response,
+                manifest, execution_grant,
+            )
+        elif mutation == "service_token_extra_audience":
+            candidate = copy.deepcopy(service_access_token)
+            candidate["aud"] = [
+                "https://agent-api.agent-platform.internal",
+                "https://other-service.internal",
+            ]
+            validate_service_access_token(
+                candidate,
+                registered_issuer="https://business.example.test",
+                authenticated_subject="business-html-product",
+                authenticated_client_id="html-product",
+                allowed_scopes={"conversation:create", "session:create"},
+            )
+        elif mutation == "work_session_commercial_expiry_exceeded":
+            candidate = copy.deepcopy(work_session_claims)
+            candidate_request = copy.deepcopy(work_session_request)
+            candidate_request["commercial_authorization"]["expires_at"] = "2026-07-16T09:10:00Z"
+            candidate_request["commercial_authorization"]["commercial_authorization_digest"] = canonical_digest({
+                key: value for key, value in candidate_request["commercial_authorization"].items()
+                if key != "commercial_authorization_digest"
+            })
+            candidate["commercial_authorization_expires_at"] = "2026-07-16T09:10:00Z"
+            candidate["commercial_authorization_digest"] = candidate_request[
+                "commercial_authorization"
+            ]["commercial_authorization_digest"]
+            validate_work_session_claims(
+                candidate, candidate_request, conversation,
+                tenant_id=manifest["tenant_id"],
+            )
+        elif mutation == "plugin_token_request_digest_mismatch":
+            candidate = copy.deepcopy(plugin_token)
+            candidate["operation_request_digest"] = "sha256:" + "f" * 64
+            validate_plugin_compatibility_token(
+                plugin_request, candidate,
+                plugin_id="html-to-pptx",
+                provider_revision_id="legacypr_html_to_pptx_01",
+                audience="urn:agent-platform:provider-instance:legacy-html-to-pptx",
+                permissions_digest=manifest["effective_permissions"]["permissions_digest"],
+            )
+        elif mutation == "plugin_token_operation_contract_replay":
+            candidate = copy.deepcopy(plugin_event_token)
+            candidate["operation_contract_id"] = (
+                "urn:agent-platform:plugin-status-operation-descriptor:v1"
+            )
+            validate_plugin_compatibility_token(
+                plugin_request, candidate,
+                plugin_id="html-to-pptx",
+                provider_revision_id="legacypr_html_to_pptx_01",
+                audience="urn:agent-platform:provider-instance:legacy-html-to-pptx",
+                permissions_digest=manifest["effective_permissions"]["permissions_digest"],
+                operation_document=plugin_event_descriptor,
+            )
+        elif mutation == "plugin_event_cursor_digest_mismatch":
+            candidate = copy.deepcopy(plugin_event_descriptor)
+            candidate["after_sequence"] += 1
+            validate_plugin_compatibility_token(
+                plugin_request, plugin_event_token,
+                plugin_id="html-to-pptx",
+                provider_revision_id="legacypr_html_to_pptx_01",
+                audience="urn:agent-platform:provider-instance:legacy-html-to-pptx",
+                permissions_digest=manifest["effective_permissions"]["permissions_digest"],
+                operation_document=candidate,
+            )
+        elif mutation == "plugin_cancel_token_digest_mismatch":
+            candidate = copy.deepcopy(plugin_cancel_request)
+            candidate["reason"] = "different reason"
+            validate_plugin_compatibility_token(
+                plugin_request, plugin_cancel_token,
+                plugin_id="html-to-pptx",
+                provider_revision_id="legacypr_html_to_pptx_01",
+                audience="urn:agent-platform:provider-instance:legacy-html-to-pptx",
+                permissions_digest=manifest["effective_permissions"]["permissions_digest"],
+                operation_document=candidate,
+            )
+        elif mutation == "runtime_token_caller_mismatch":
+            candidate = copy.deepcopy(runtime_token)
+            candidate["sub"] = "spn_other_workload"
+            validate_runtime_token(candidate, manifest, agent_run, runtime_start)
+        elif mutation == "runtime_safety_token_authorizes_append":
+            candidate = copy.deepcopy(runtime_command_token)
+            candidate["authority_mode"] = "safety_control"
+            validate_runtime_token(candidate, manifest, agent_run, runtime_start, runtime_command)
+        elif mutation == "runtime_command_token_deadline_exceeded":
+            candidate = copy.deepcopy(runtime_command_token)
+            candidate["exp"] = int(parse_datetime(runtime_command["deadline_at"]).timestamp()) + 1
+            validate_runtime_token(candidate, manifest, agent_run, runtime_start, runtime_command)
+        elif mutation == "runtime_token_predates_authorization":
+            candidate = copy.deepcopy(runtime_token)
+            candidate["iat"] = int(parse_datetime(runtime_start["runtime_authorization"]["issued_at"]).timestamp()) - 1
+            candidate["nbf"] = candidate["iat"]
+            validate_runtime_token(candidate, manifest, agent_run, runtime_start)
+        elif mutation == "capability_token_predates_authority":
+            candidate = copy.deepcopy(capability_token)
+            candidate["iat"] = int(parse_datetime(capability_request["policy_decision"]["decided_at"]).timestamp()) - 1
+            candidate["nbf"] = candidate["iat"]
+            validate_capability_invocation(
+                capability_request, candidate, capability_resolution, manifest,
+            )
+        elif mutation == "artifact_token_predates_grant":
+            candidate = copy.deepcopy(artifact_stage_token)
+            candidate["iat"] = int(parse_datetime(artifact_staging_grant["issued_at"]).timestamp()) - 1
+            candidate["nbf"] = candidate["iat"]
+            validate_artifact_gateway(
+                artifact_staging_grant, artifact_staging_object, candidate,
+                artifact_staging_commit, artifact_commit_token,
+                capability_request["input_artifact_grants"][0], artifact_read_descriptor,
+                artifact_read_token, capability_request,
+                caller_subject=capability_resolution["selected_provider_audience"],
+            )
+        elif mutation == "egress_token_predates_authorization":
+            candidate = copy.deepcopy(egress_token)
+            candidate["iat"] = int(parse_datetime(runtime_start["runtime_authorization"]["issued_at"]).timestamp()) - 1
+            candidate["nbf"] = candidate["iat"]
+            validate_egress_gateway(
+                egress_destination, egress_request, candidate, egress_response,
+                manifest["gateway_bindings"]["egress"]["port"],
+                runtime_start["runtime_authorization"], caller_subject=runtime_caller_subject,
+            )
+        elif mutation == "sandbox_token_caller_mismatch":
+            candidate = copy.deepcopy(sandbox_token)
+            candidate["sub"] = "spn_other_workload"
+            validate_sandbox_token(candidate, sandbox_create, sandbox_resolution, manifest)
+        elif mutation == "capability_token_caller_mismatch":
+            candidate = copy.deepcopy(capability_token)
+            candidate["sub"] = "spn_other_workload"
+            validate_capability_invocation(
+                capability_request, candidate, capability_resolution, manifest
+            )
+        elif mutation == "artifact_token_caller_mismatch":
+            candidate = copy.deepcopy(artifact_stage_token)
+            candidate["sub"] = "spn_other_workload"
+            validate_artifact_gateway(
+                artifact_staging_grant, artifact_staging_object, candidate,
+                artifact_staging_commit, artifact_commit_token,
+                capability_request["input_artifact_grants"][0], artifact_read_descriptor,
+                artifact_read_token, capability_request,
+                caller_subject=capability_resolution["selected_provider_audience"],
+            )
+        elif mutation == "egress_token_caller_mismatch":
+            candidate = copy.deepcopy(egress_token)
+            candidate["sub"] = "spn_other_workload"
+            validate_egress_gateway(
+                egress_destination, egress_request, candidate, egress_response,
+                manifest["gateway_bindings"]["egress"]["port"],
+                runtime_start["runtime_authorization"],
+                caller_subject=runtime_caller_subject,
+            )
+        elif mutation == "egress_token_authorization_expiry_exceeded":
+            candidate = copy.deepcopy(egress_token)
+            candidate["exp"] = int(parse_datetime(
+                runtime_start["runtime_authorization"]["expires_at"]
+            ).timestamp()) + 1
+            candidate["iat"] = candidate["exp"] - 300
+            candidate["nbf"] = candidate["iat"]
+            validate_egress_gateway(
+                egress_destination, egress_request, candidate, egress_response,
+                manifest["gateway_bindings"]["egress"]["port"], runtime_start["runtime_authorization"],
+                caller_subject=runtime_caller_subject,
             )
         else:
             raise AssertionError(f"Unknown Phase 0 closure mutation: {mutation}")
@@ -2808,4 +4188,27 @@ negative_fixture_count = sum(
     len(json.loads(path.read_text(encoding="utf-8")).get("cases", []))
     for path in (ROOT / "contracts/tests/semantic-invalid").glob("*.json")
 )
+enforcements = [
+    enforcement
+    for constraint in semantic_traceability["constraints"]
+    for enforcement in constraint["enforcements"]
+]
+evidence_dir = ROOT / "build/validation"
+evidence_dir.mkdir(parents=True, exist_ok=True)
+(evidence_dir / "semantics.json").write_text(json.dumps({
+    "state_machines": len(list((ROOT / "contracts/state-machines").glob("*.json"))),
+    "state_machine_and_safety_checks": "deterministic_reachable_terminal_safe_and_schema_aligned",
+    "invalid_semantic_fixtures": negative_fixture_count,
+    "platform_core_event_types": len(platform_event_registry["definitions"]),
+    "agent_runtime_core_event_types": len(event_registry["definitions"]),
+    "critical_semantic_schemas": len(semantic_traceability["critical_schema_ids"]),
+    "semantic_constraints": len(semantic_traceability["constraints"]),
+    "semantic_contract_gate_mappings": sum(
+        item["status"] == "contract_gate" for item in enforcements
+    ),
+    "semantic_executed_unique_check_ids": len(EXECUTED_CONTRACT_CHECKS),
+    "semantic_phase0_implementation_mappings": sum(
+        item["status"] == "phase0_implementation_required" for item in enforcements
+    ),
+}, indent=2) + "\n", encoding="utf-8")
 print(f"Semantic validation passed with deterministic state-machine/safety checks and {negative_fixture_count} negative invariant fixtures.")

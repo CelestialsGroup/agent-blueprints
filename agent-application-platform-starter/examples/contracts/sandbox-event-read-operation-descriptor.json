@@ -1,0 +1,8 @@
+{
+  "operation": "read_events",
+  "sandbox_id": "sbx_01J00000000000000000000000",
+  "operation_id": "sop_exec_01",
+  "attempt_id": "sat_exec_01",
+  "fencing_token": 7,
+  "after_sequence": 0
+}

@@ -1,6 +1,6 @@
 {
   "decision_id": "pol_01J00000000000000000000000",
-  "decision_digest": "sha256:505956a09fc552627d9dfd96eb71a2c03365c7cb90868e451a8422ece887f5bb",
+  "decision_digest": "sha256:24066573c33b3c65f1ffddaa4be8600e9e8a27916dc94a647d0cfce3a3c1cfd5",
   "tenant_id": "ten_01J00000000000000000000000",
   "work_order_id": "wrk_01J00000000000000000000000",
   "policy_bundle_digest": "sha256:6161616161616161616161616161616161616161616161616161616161616161",
@@ -23,7 +23,7 @@
     }
   ],
   "outcome": "allow",
-  "effective_permissions_digest": "sha256:87356194834eefdb7c53e91088046524c32e8bfdd929a45a6163dbfc05b588fb",
+  "effective_permissions_digest": "sha256:258682bb254cc4fafff41ccea043261e9c9381ca9a42e0efef0e3f20e9c1b70c",
   "decided_at": "2026-07-16T09:00:59Z",
   "expires_at": "2026-07-16T09:30:00Z",
   "decision_point": "run_admission",

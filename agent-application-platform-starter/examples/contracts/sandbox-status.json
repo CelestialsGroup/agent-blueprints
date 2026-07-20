@@ -1,0 +1,18 @@
+{
+  "sandbox_id": "sbx_01J00000000000000000000000",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "workspace_id": "wsp_01J00000000000000000000000",
+  "provider_revision_id": "spr_01J00000000000000000000000",
+  "desired_state": "ready",
+  "observed_state": "ready",
+  "generation": 1,
+  "observed_generation": 1,
+  "runtime_profile": "hardened",
+  "runtime_endpoint_reference": "provider-route:runtime-session-primary",
+  "provider_state_reference": "provider-state:sandbox-primary",
+  "lease_expires_at": "2026-07-16T09:15:00Z",
+  "created_at": "2026-07-16T09:00:00Z",
+  "updated_at": "2026-07-16T09:01:00Z",
+  "sandbox_slot_key": "primary-code"
+}

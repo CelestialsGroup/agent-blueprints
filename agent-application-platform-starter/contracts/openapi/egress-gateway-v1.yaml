@@ -4,8 +4,9 @@ info:
   title: Egress Gateway Protocol
   version: 1.0.0
   description: |
-    Governed HTTP exchange against pre-registered destinations. Runtime requests never supply
-    a raw origin and every redirect, DNS answer and connected address remains policy checked.
+    Governed HTTP exchange against immutable, owner-scoped pre-registered DestinationRevisions.
+    Runtime requests never supply a raw origin; Tenant, ClientApplication, DestinationRevision
+    and class are token-bound, and every redirect, DNS answer and connected address remains checked.
   license:
     name: Proprietary
     identifier: LicenseRef-Proprietary
@@ -23,6 +24,9 @@ paths:
     post:
       operationId: createGovernedHttpExchange
       summary: Execute one policy-bound HTTP request against a registered destination
+      x-required-egress-token-operation: http_exchange
+      x-operation-contract-id: urn:agent-platform:egress-http-request:v1
+      x-operation-digest-profile: rfc8785-request-excluding-request-digest-v1
       x-max-encoded-body-bytes: 2097152
       requestBody:
         required: true
@@ -57,8 +61,10 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      x-jws-header-contract-id: urn:agent-platform:egress-invocation-jws-header:v1
+      x-jwt-claims-contract-id: urn:agent-platform:egress-invocation-token-claims:v1
       description: |
-        Short-lived request-bound token validated against
+        Short-lived operation/Contract/Profile/Digest-bound token validated against
         urn:agent-platform:egress-invocation-token-claims:v1.
 
   responses:

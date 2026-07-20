@@ -31,6 +31,7 @@ paths:
       tags: [Settlement]
       operationId: receiveAgentSettlement
       summary: Receive a signed BusinessSettlementEnvelope
+      x-max-encoded-body-bytes: 4194304
       description: |
         The embedded UsageReport is immutable technical evidence. The receiver owns price,
         balance and commercial settlement facts and must not mutate Platform TechnicalUsage.
@@ -70,6 +71,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '422':
           $ref: '#/components/responses/Unprocessable'
         '429':
@@ -84,6 +87,7 @@ paths:
       tags: [Delivery]
       operationId: receiveAgentDelivery
       summary: Receive a signed DeliveryPackage notification
+      x-max-encoded-body-bytes: 1048576
       parameters:
         - name: Content-Digest
           in: header
@@ -120,6 +124,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
         '429':
           $ref: '#/components/responses/TooManyRequests'
         '500':
@@ -159,6 +165,12 @@ components:
             $ref: ../schemas/standard-error.schema.json
     Unprocessable:
       description: The signed request is valid but violates the registered Business contract.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    PayloadTooLarge:
+      description: Encoded request body exceeds the operation limit and is rejected before JSON parsing.
       content:
         application/json:
           schema:

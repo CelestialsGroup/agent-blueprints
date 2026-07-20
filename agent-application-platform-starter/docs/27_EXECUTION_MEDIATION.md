@@ -33,11 +33,13 @@ CommercialAuthorization hard limits
 
 PolicyDecision 固化全部匹配规则摘要和 Effective Permissions Digest。`ask` 创建 Approval；任何匹配 Deny 都不能被 Tenant、用户记忆授权、Runtime 自报 Allow 或 Hook 覆盖。Policy Allow 之后仍必须通过 Invocation、Gateway、OS Sandbox、NetworkPolicy 和 Artifact Staging。
 
-AgentRuntimeProvider 的每次调用还必须使用短期 RuntimeInvocation Token。Token 将 Tenant、ProviderRevision、WorkflowRun/AgentRun/RuntimeRun、RunManifest、RuntimeAuthorization、InvocationAttempt、Fencing、PolicyDecision、ExecutionBudget、Effective Permissions 和请求摘要绑定为一个不可混用的授权上下文；mTLS 只证明工作负载身份，不能替代对象级绑定。
+AgentRuntimeProvider 的每次调用还必须使用短期 RuntimeInvocation Token。Token 将 Tenant、ProviderRevision、WorkflowRun/AgentRun/RuntimeRun、RunManifest、RuntimeAuthorization、InvocationAttempt、Fencing、PolicyDecision、ExecutionBudget、Effective Permissions 和请求摘要绑定为一个不可混用的授权上下文；mTLS 只证明工作负载身份，不能替代对象级绑定。执行权限到期不会取消平台的治理权限：`safety_control` 仍可短期读取或 Cancel/Pause，但不能恢复执行或产生新副作用。自动 Cancel/Pause 还必须绑定先于 Token 生效、由唯一 Platform Safety Controller workload 签发的不可变 SystemSafetyControl ID/Digest；该事实以闭合原因和触发证据证明平台为何拥有此次减权权限，不替代 Business ExecutionGrant，也不能授权任何扩权操作。
 
 RunManifest 固化初始 Budget/Policy/Permissions 上限、ArtifactAccessRequirement、CommercialAuthorizationBinding（ID/Digest/`expires_at`）和授权续期规则。Runtime Start 携带本 Attempt 的完整 RuntimeAuthorization 与类型化 Model/Tool/Artifact/Egress Gateway Binding；每个 Binding 固化可执行 Contract ID/Digest、Route、Audience 和 Binding Digest。Authorization 内部作用域与摘要必须闭合，不能越过商业授权期限，ArtifactGrant 必须落在 Authorization 时间窗内。Token 过期、Adapter 重启或 Resume 通过前驱摘要链刷新 Authorization/ArtifactGrant，只能等价或缩权。
 
-通用 Capability Provider 请求携带完整执行授权值并绑定 ProviderResolution/Instance/Audience。Invoke、Status、Cancel、Event Token 不可跨操作复用，续期使用连续 sequence 和前驱 `jti`，且不越过原 deadline/CommercialAuthorization。Model/Tool Gateway 复用该 Port；Artifact/Egress 使用独立 OpenAPI 和最长 300 秒的操作 Token。ArtifactStagingGrant 只允许受限 Quarantine 上传/Commit，不能 Finalize；`plugin_id` 不属于稳定授权边界。
+通用 Capability Provider 请求携带完整执行授权值并绑定 ProviderResolution/Instance/Audience。Invoke、Status、Cancel、Event Token 以 `operation_contract_id + operation_digest_profile + operation_request_digest` 绑定正式请求或操作描述符，不可跨操作复用；Invoke 的 `execution` 不越过原 deadline/CommercialAuthorization，后续连续 sequence/前驱 `jti` 的 `safety_control` 只用于 Status/Cancel/Event，不携带 Artifact 或新副作用权限。Model/Tool Gateway 复用该 Port；Artifact Read/Stage/Commit 同样绑定正式 Contract/Profile/Digest，Artifact/Egress 使用独立 OpenAPI 和最长 300 秒的操作 Token。ArtifactStagingGrant 只允许受限 Quarantine 上传/Commit，不能 Finalize；`plugin_id` 不属于稳定授权边界。
+
+所有执行操作 Token 还校验生效下界：Runtime/Egress 不早于 RuntimeAuthorization，Capability/Sandbox 不早于其 Policy/Budget/Grant 准入，Artifact 不早于对应 ArtifactGrant/StagingGrant。只校验 `exp` 会留下授权尚未生效却可提前使用的窗口。
 
 ## 模型 Gateway
 
@@ -79,7 +81,7 @@ HTTP/DNS 出站通过受控 Egress Proxy：
 - 审计
 - 数据分类策略
 
-稳定请求只携带预注册 `destination_id + relative path`，禁止由 Runtime 提供原始 Origin。权威传输契约为 `egress-gateway-v1`；Token 绑定 RuntimeRun、InvocationAttempt、Fencing、Destination、Gateway Binding、Request Digest、Policy、Budget 和 Permissions。
+稳定请求只携带预注册 `destination_id + destination_revision_id + destination_revision_digest + destination_class + relative path`，禁止由 Runtime 提供原始 Origin。EgressDestinationRevision 固化 Platform/Tenant/ClientApplication Owner、HTTPS Origin、方法/路径/头、Redirect 和 DNS Policy；EffectivePermissions 按 `destination_class` 授权，不能把 `destination_id` 当成类别。权威传输契约为 `egress-gateway-v1`；Token 绑定 `http_exchange` Operation、Egress Request Contract ID、Digest Profile、Tenant/ClientApplication、RuntimeRun、InvocationAttempt、Fencing、DestinationRevision、Gateway Binding、RuntimeAuthorization、Request Digest、Policy、Budget 和 Permissions。
 
 Kubernetes NetworkPolicy 不提供通用 FQDN 策略，因此不能单独承担域名 Allowlist。
 
@@ -124,3 +126,5 @@ ExecutionBudgetEnforcer 在创建 SandboxSpec 前计算：
 - 必需 Capability
 
 Provider 返回的 Usage 进入统一 Technical Usage，但平台仍可基于基础设施指标独立复核。
+
+Sandbox Capability 发现只使用已准入控制面 mTLS；创建、恢复、状态读取、期望状态、Lease、Exec/Cancel/Result、Runtime Session、Snapshot/Manifest、终止、Operation 查询和 Event Stream 共 14 个操作分别绑定单操作 Token。写操作摘要覆盖去除 `request_digest` 的请求体；读操作摘要覆盖正式描述符，描述符包含规范化路径、Attempt/Fencing 和查询游标。

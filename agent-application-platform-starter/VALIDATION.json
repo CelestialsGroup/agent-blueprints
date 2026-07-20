@@ -1,46 +1,89 @@
 {
   "baseline": "v0.9.0",
-  "status": "local_candidate_contract_gate_passed_repository_ci_deferred",
+  "status": "local_candidate_architecture_contract_gate_passed",
   "validated_at": "2026-07-20",
   "local_validation": {
-    "json_documents": 378,
-    "yaml_documents": 24,
-    "markdown_documents": 46,
-    "schemas": 183,
-    "valid_fixtures": 127,
-    "invalid_schema_fixtures": 33,
-    "invalid_semantic_fixtures": 105,
+    "json_documents": 513,
+    "yaml_documents": 26,
+    "openapi_documents": 8,
+    "markdown_documents": 47,
+    "schemas": 214,
+    "valid_fixtures": 196,
+    "invalid_schema_fixtures": 67,
+    "strict_ijson_fixture_validation": "passed",
     "state_machines": 6,
     "state_machine_and_safety_checks": "deterministic_reachable_terminal_safe_and_schema_aligned",
-    "architecture_closure": "control_identity_and_cas_split_discriminated_grants_snapshot_validity_commercial_expiry_runtime_authorization_internal_scope_artifact_grant_windows_artifact_and_usage_ownership_explicit_gateway_modes_platform_core_events_executable_traceability_passed",
-    "platform_core_event_types": 17,
-    "semantic_constraints": 77,
-    "semantic_contract_gate_mappings": 63,
-    "semantic_executed_unique_check_ids": 58,
-    "semantic_phase0_implementation_mappings": 24,
-    "strict_ijson_vectors_python_3_14_6": "5_canonicalization_3_strict_valid_10_strict_invalid_passed",
-    "strict_ijson_vectors_python_3_13_14_rollback_lane": "5_canonicalization_3_strict_valid_10_strict_invalid_passed",
-    "strict_ijson_vectors_node_24_18_0_pnpm_11_15_1": "5_canonicalization_3_strict_valid_10_strict_invalid_passed",
-    "strict_ijson_vectors_go_1_26_5": "passed",
-    "gofmt_gate": "passed",
-    "openapi_documents": 6,
+    "invalid_semantic_fixtures": 179,
+    "platform_core_event_types": 18,
+    "agent_runtime_core_event_types": 16,
+    "critical_semantic_schemas": 41,
+    "semantic_constraints": 193,
+    "semantic_contract_gate_mappings": 175,
+    "semantic_executed_unique_check_ids": 122,
+    "semantic_phase0_implementation_mappings": 59,
     "openapi_errors": 0,
     "openapi_warnings": 0,
+    "openapi_bundle_count": 8,
     "openapi_bundle_deterministic": true,
-    "contract_manifest_resources": 204,
+    "contract_manifest_resources": 239,
     "contract_manifest_python_node_consistent": "passed",
     "compatibility_self_tests": "passed",
     "compatibility_baseline": "not_applicable_no_frozen_baseline_explicit_local_pre_freeze_mode",
-    "package_supply_chain_standalone_docker": "passed_python_hashes_pnpm_integrity_pinned_actions_public_registries_file_hygiene"
+    "python_jcs_lanes": [
+      {
+        "runtime": "CPython 3.13.14",
+        "canonicalization_vectors": 5,
+        "strict_valid_vectors": 3,
+        "strict_invalid_vectors": 10,
+        "contract_manifest_digest": "sha256:2275be73681547eabb7fa5d6159901fbb95b68420188d1c57ebff7c285ea7ccc",
+        "status": "passed"
+      },
+      {
+        "runtime": "CPython 3.14.6",
+        "canonicalization_vectors": 5,
+        "strict_valid_vectors": 3,
+        "strict_invalid_vectors": 10,
+        "contract_manifest_digest": "sha256:2275be73681547eabb7fa5d6159901fbb95b68420188d1c57ebff7c285ea7ccc",
+        "status": "passed"
+      }
+    ],
+    "node_jcs": {
+      "runtime": "Node.js 24.18.0",
+      "canonicalization_vectors": 5,
+      "strict_valid_vectors": 3,
+      "strict_invalid_vectors": 10,
+      "contract_manifest_digest": "sha256:2275be73681547eabb7fa5d6159901fbb95b68420188d1c57ebff7c285ea7ccc",
+      "status": "passed"
+    },
+    "go_jcs_and_gofmt": "passed",
+    "pnpm_version": "11.15.1",
+    "go_version": "go version go1.26.5 linux/arm64",
+    "architecture_closure": [
+      "request-bound ExecutionGrant and RunManifest",
+      "separate Turn and WorkOrder control with split CAS ownership",
+      "sender-constrained Business revocation and Platform-only fenced safety cancellation",
+      "renewable RuntimeAuthorization and bounded Runtime/Sandbox/Egress tokens",
+      "closed purpose-specific JWS Header and Claims profiles",
+      "Runtime/Capability/Plugin/Sandbox/Artifact/Egress operation Contract/Profile/Digest binding",
+      "immutable owner-scoped EgressDestinationRevision with class authorization",
+      "opaque slot-scoped RuntimeSessionRoute and logical content-bound Placement",
+      "WorkspaceContentManifest and ownership-bound typed dual Event registries",
+      "source Inbox dedupe, bounded metadata and all JSON write encoded-body admission limits",
+      "ProviderRevision, BuildProvenance, admission and executable semantic traceability"
+    ]
   },
   "deferred_repository_and_external_evidence": [
-    "git_root_workflow",
     "repository_supply_chain_admission",
     "public_github_ci_run",
-    "protected_frozen_baseline_variable"
+    "protected_frozen_baseline_variable",
+    "production_oci_digest_and_sbom_admission"
   ],
-  "contract_candidate_ready_for_phase0_implementation": true,
-  "implementation_complete": false,
-  "production_ready": false,
-  "frozen": false
+  "maturity": {
+    "architecture_and_contract_validation": "passed_locally",
+    "component_implementation": "not_started",
+    "integrated_vertical_slice": "not_started",
+    "production_reliability": "not_proven",
+    "frozen": false
+  },
+  "contract_candidate_ready_for_phase0_implementation": true
 }

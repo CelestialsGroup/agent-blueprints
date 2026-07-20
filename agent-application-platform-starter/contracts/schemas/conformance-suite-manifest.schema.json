@@ -26,6 +26,7 @@
     },
     "target_kind": {
       "enum": [
+        "agent_access",
         "agent_runtime",
         "sandbox",
         "runtime_gateway",

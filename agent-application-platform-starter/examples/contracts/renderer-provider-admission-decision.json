@@ -1,11 +1,11 @@
 {
   "decision_id": "pad_renderer_01J0000000000000000",
   "provider_revision_id": "rpr_01J00000000000000000000000",
-  "provider_revision_digest": "sha256:b514d6d09a0733dbe4984cc618b46382a7d8bf188ad47257d6e66d28037975d6",
+  "provider_revision_digest": "sha256:f2730e7377bc8918460730328465d72a0da531e73350bdb1fbd76a7eabb6b5c3",
   "decision_sequence": 1,
   "decision": "certified",
   "evidence_digest": "sha256:3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d",
   "decided_by": "principal:platform-provider-certifier",
   "decided_at": "2026-07-16T09:00:52Z",
-  "decision_digest": "sha256:d4ad95db9715b81ad672c56ee691715c675714190b5dbb9352ba721143fe63c8"
+  "decision_digest": "sha256:894ef82e7650c43d5b7452b3ab8083f288f1836e27da5fb77e10fef00a1fb945"
 }

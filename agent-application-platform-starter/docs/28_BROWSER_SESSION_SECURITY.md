@@ -82,7 +82,12 @@ Cookie 认证的写操作要求：
 - WorkSession：`agent-work-session+jwt`
 - Plugin Invocation：`agent-plugin-invocation+jwt`
 - Capability Invocation：`agent-capability-invocation+jwt`
+- Artifact Gateway Operation：`agent-artifact-operation+jwt`
+- Egress Invocation：`agent-egress-invocation+jwt`
 - Agent Runtime Invocation：`agent-runtime-invocation+jwt`
+- Sandbox Operation：`agent-sandbox-operation+jwt`
+
+每类 Token 同时验证用途专属的闭合 JWS Header Schema 与 Claims Schema；服务端按当前端点选择固定 Profile，不能信任 Token 自报 `typ` 来选择验证器。
 
 ## 撤销
 
@@ -91,3 +96,5 @@ WorkSession 保存 session_version 和 revoked_at。
 权限变更、用户退出、商业授权失效或安全事件可以立即撤销 Conversation WorkSession；仅当 Session 被缩窄到该 WorkOrder 时，WorkOrder 终止才要求撤销。
 
 长连接必须在 Token 到期或 Session 撤销时关闭。
+
+WorkSession Claims 必须绑定 Tenant、ClientApplication、PrincipalContext Digest、Conversation、可选 WorkOrder、CommercialAuthorization ID/Digest/到期时间和当前 `session_version`；最长 3600 秒且不得越过创建请求的 TTL 或商业授权。`work_session_revocation_version` 由 PostgreSQL 权威状态执行，不能只依赖 Cookie 自身到期。

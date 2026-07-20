@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import math
+import sys
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -101,4 +102,18 @@ for vector in VECTORS["invalid"]:
         continue
     raise AssertionError(f"Expected invalid JCS vector to fail: {vector['id']}")
 
+version = ".".join(str(value) for value in sys.version_info[:3])
+contract_manifest = json.loads(
+    (ROOT / "contracts/compatibility/v0.9.0-contract-manifest.json").read_text(encoding="utf-8")
+)
+evidence_dir = ROOT / "build/validation"
+evidence_dir.mkdir(parents=True, exist_ok=True)
+(evidence_dir / f"python-jcs-{version}.json").write_text(json.dumps({
+    "runtime": f"CPython {version}",
+    "canonicalization_vectors": len(VECTORS["valid"]),
+    "strict_valid_vectors": len(VECTORS["strict_valid"]),
+    "strict_invalid_vectors": len(VECTORS["invalid"]),
+    "contract_manifest_digest": contract_manifest["manifest_digest"],
+    "status": "passed",
+}, indent=2) + "\n", encoding="utf-8")
 print(f"Python JCS/Strict I-JSON: {len(VECTORS['valid'])} canonicalization, {len(VECTORS['strict_valid'])} strict-valid and {len(VECTORS['invalid'])} strict-invalid vectors passed.")

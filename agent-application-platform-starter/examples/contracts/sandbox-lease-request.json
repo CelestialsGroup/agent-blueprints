@@ -3,7 +3,7 @@
   "attempt_id": "sat_lease_01",
   "fencing_token": 6,
   "idempotency_key": "sop_lease_01-idempotency-0001",
-  "request_digest": "sha256:93f9a82894b9bb2d98d5daa424938cbcd01b0eaab6506c3387b622f5d23911bc",
+  "request_digest": "sha256:a4e01f8e6bea25365c07e0dd94d9a100a48383532031717feafe8fb04e37c1dd",
   "deadline_at": "2026-07-16T10:30:00Z",
   "expected_generation": 4,
   "extend_seconds": 1800

@@ -1,7 +1,7 @@
 {
   "suite_id": "capability-provider",
   "suite_version": "1.0.0",
-  "suite_digest": "sha256:7819b9e4bee0d08a15a1fdc54862ba61a6ae705a6e9923d2d902355e47a06807",
+  "suite_digest": "sha256:261f8021c3a29cc0d21c1464ca5fa41166174c841278b6c4882459b78a86a791",
   "target_kind": "capability_provider",
   "profiles": [
     {
@@ -29,7 +29,7 @@
           "test_id": "token-binding",
           "category": "security",
           "evidence_type": "test_log",
-          "description": "The Provider rejects any mismatch in Tenant, ClientApplication, Principal context, WorkOrder, ProviderResolution/Instance/Revision/Audience, Attempt, fencing, request, executable policy/budget/permissions or StagingGrant claims."
+          "description": "The Provider rejects a wrong JWS typ, algorithm or key and any mismatch in Tenant, ClientApplication, Principal context, WorkOrder, ProviderResolution/Instance/Revision/Audience, Attempt, fencing, request, executable policy/budget/permissions or StagingGrant claims."
         },
         {
           "test_id": "fencing-and-source-ordering",
@@ -53,7 +53,19 @@
           "test_id": "timeout-cancel-status",
           "category": "lifecycle",
           "evidence_type": "trace",
-          "description": "Invoke, Status, Cancel and Event tokens are operation-bound; renewal sequence/predecessor lineage remains inside the original deadline and CommercialAuthorization."
+          "description": "Invoke, Status, Cancel and Event tokens are operation-bound. Invoke execution authority cannot predate Policy, Budget or Artifact grants and remains inside the original deadline and CommercialAuthorization; post-expiry safety-control lineage permits only Status, Cancel and Event reconciliation and cannot use expired Artifact grants or create new side effects."
+        },
+        {
+          "test_id": "event-cursor-resume",
+          "category": "recovery",
+          "evidence_type": "test_log",
+          "description": "Event reads bind a normalized attempt-local cursor descriptor and resume without gaps; unavailable history fails explicitly."
+        },
+        {
+          "test_id": "legacy-plugin-bridge-token-binding",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "A compatibility Plugin bridge preserves its closed JWS Header Profile, Tenant, ClientApplication, WorkOrder, original Invocation digest, deadline, Attempt and fencing bindings; Invoke execution stays inside Deadline/Artifact windows, while post-expiry safety-control permits only Status, Cancel and Event without Artifact or new side-effect authority. Distinct Contract/Profile/Digest values reject path, cursor and cross-operation replay."
         },
         {
           "test_id": "artifact-contract",

@@ -1,6 +1,6 @@
 {
   "provider_revision_id": "spr_01J00000000000000000000000",
-  "provider_revision_digest": "sha256:3d93cda252fe5977719c674d90d9d604ca77125bf7d1ef4210faf628cb2cdaca",
+  "provider_revision_digest": "sha256:5b549af23647d9567c0cdc9a0f8865e05f2e314c607009be1a64db721f7514ef",
   "provider_instance_id": "spi_deerflow_builtin_sandbox",
   "configuration_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
   "approved_permissions_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
@@ -15,11 +15,11 @@
       "status": "passed",
       "report_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
       "suite_id": "sandbox-provider",
-      "suite_digest": "sha256:42f7ce9cbc975ac765db65d42e4317353ac65f90e65e38c1d3efce3b69347764",
+      "suite_digest": "sha256:fd85653947c27723f6d260087f7d3eff49a2cd31306c3f153675ec79284928a9",
       "suite_profile_id": "sandbox-core-v1"
     }
   ],
-  "conformance_set_digest": "sha256:aaab809c47ec5d9f26b21859ce8c8a60393f94a3cdaba45f82c093c10ff21424",
+  "conformance_set_digest": "sha256:4d8889e6063f7704daeea3dc0f3c2663614def9aa05c622a0a6c0201a2773c89",
   "created_at": "2026-07-16T09:00:00Z",
   "implementation": {
     "implementation_id": "sandbox-provider.deerflow-built-in",
@@ -40,7 +40,7 @@
   "port": {
     "protocol": "sandbox-provider",
     "protocol_version": "v1",
-    "contract_digest": "sha256:e03a9bad19a1a7c8bb12068fa3ead11bb50772afe1857b5a4cb5b1bda76fb4d2",
+    "contract_digest": "sha256:592e6700b1983b9e0c824f760b23bd92c65afbd2d9fa31bd2561b14b75e8ee56",
     "binding_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666"
   }
 }

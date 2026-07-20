@@ -1,6 +1,6 @@
 {
   "settlement_envelope_id": "set_01J00000000000000000000000",
-  "settlement_envelope_digest": "sha256:8e313c57b003b77f675d0a3c23b9da9fc10fbf62568d1f62f8a31d02b648c53b",
+  "settlement_envelope_digest": "sha256:677483ce6f428a514af110172b4648d0820c74732e142d10d9261d19373f2ca7",
   "tenant_id": "ten_01J00000000000000000000000",
   "work_order_id": "wrk_01J00000000000000000000000",
   "commercial_authorization_id": "cauth_01J00000000000000000000000",
@@ -14,7 +14,7 @@
   "created_at": "2026-07-16T09:21:00Z",
   "usage_report": {
     "usage_report_id": "usr_01J00000000000000000000000",
-    "usage_report_digest": "sha256:f580fa3935e1d5d64008e196523bb6fa557845c23806adf737b848ad4e1aa54e",
+    "usage_report_digest": "sha256:8b36bd7ff350396b90b8655d386a9cf3c6e8fabcc490b660c657b7a14edabdd9",
     "tenant_id": "ten_01J00000000000000000000000",
     "work_order_id": "wrk_01J00000000000000000000000",
     "commercial_authorization_id": "cauth_01J00000000000000000000000",
@@ -40,7 +40,7 @@
           "type": "provider",
           "id": "api_deerflow_runtime",
           "provider_revision_id": "apr_01J00000000000000000000000",
-          "provider_revision_digest": "sha256:a8d4ff188608bd741bfc406616b21037b4fde246a6815c4b93e0d2b5cd571dfe"
+          "provider_revision_digest": "sha256:86b5143b00130794824f438e5c05adb35c219569d959a229cf567cb4914c0dda"
         },
         "provider_operation_id": "provider-op-model-001",
         "meter_source": "provider_reported",

@@ -1,14 +1,18 @@
 {
   "tenant_id": "ten_01J00000000000000000000000",
+  "client_app_id": "html-product",
   "work_order_id": "wrk_01J00000000000000000000000",
   "runtime_run_id": "rtr_01J00000000000000000000000",
   "invocation_id": "inv_egress_01J0000000000000000000",
   "invocation_attempt_id": "iat_egress_01J000000000000000000",
   "fencing_token": 1,
   "destination_id": "public-docs-origin",
+  "destination_revision_id": "edr_01J00000000000000000000000",
+  "destination_revision_digest": "sha256:1467ca9468c4e8e6c8e70c1f002b3b9370fe29c9fa5b0c3db59f83111851fffc",
+  "destination_class": "public_documentation",
   "method": "GET",
   "path": "/reference/index.json",
   "headers": [],
-  "request_digest": "sha256:aaa7748900f9476326662032368876f15e625cceca95dfaaff450906e0b0241a",
+  "request_digest": "sha256:2d7bac06ceaa63062386b2f2295225c36ab4d814c0c2ede3d1ae7d5d257be925",
   "origin": "https://unregistered.example"
 }

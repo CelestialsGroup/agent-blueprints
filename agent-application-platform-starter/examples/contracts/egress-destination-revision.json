@@ -1,0 +1,38 @@
+{
+  "destination_id": "public-docs-origin",
+  "destination_revision_id": "edr_01J00000000000000000000000",
+  "destination_revision_digest": "sha256:1467ca9468c4e8e6c8e70c1f002b3b9370fe29c9fa5b0c3db59f83111851fffc",
+  "owner": {
+    "scope": "client_application",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "client_app_id": "html-product"
+  },
+  "destination_class": "public_documentation",
+  "origin": {
+    "scheme": "https",
+    "host": "docs.example.com",
+    "port": 443
+  },
+  "allowed_methods": [
+    "GET",
+    "HEAD"
+  ],
+  "allowed_path_prefixes": [
+    "/reference/"
+  ],
+  "allowed_query_names": [],
+  "allowed_request_headers": [
+    "accept"
+  ],
+  "redirect_policy": {
+    "mode": "deny",
+    "max_redirects": 0
+  },
+  "dns_policy": {
+    "resolve_on_every_request": true,
+    "reject_private_networks": true,
+    "pin_connected_ip": true,
+    "max_addresses": 8
+  },
+  "created_at": "2026-07-16T09:00:00Z"
+}

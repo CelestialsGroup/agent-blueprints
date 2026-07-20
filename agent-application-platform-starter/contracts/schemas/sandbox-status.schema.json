@@ -66,21 +66,6 @@
     "runtime_profile": {
       "type": "string"
     },
-    "runtime_id": {
-      "type": "string"
-    },
-    "region_id": {
-      "type": "string"
-    },
-    "cluster_id": {
-      "type": "string"
-    },
-    "cell_id": {
-      "type": "string"
-    },
-    "node_id": {
-      "type": "string"
-    },
     "runtime_endpoint_reference": {
       "type": "string",
       "description": "Opaque internal reference resolved only by Runtime Gateway through the Provider Adapter."
@@ -121,7 +106,7 @@
           "type": "string"
         },
         "details": {
-          "type": "object"
+          "$ref": "urn:agent-platform:bounded-details:v1"
         }
       },
       "additionalProperties": false
@@ -147,5 +132,9 @@
       "description": "Opaque reference into the Provider Adapter private state store."
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "public SandboxStatus contains no Pod, VM, Container, Node, Cluster, Cell, Region or raw runtime identity",
+    "provider_state_reference and runtime_endpoint_reference are opaque Provider Adapter references and are never interpreted by the stable kernel"
+  ]
 }

@@ -45,3 +45,10 @@ for (const document of documents) {
   }
   console.log(`${document}: 0 errors, 0 warnings`);
 }
+const evidenceDir = path.join(root, "build", "validation");
+fs.mkdirSync(evidenceDir, { recursive: true });
+fs.writeFileSync(path.join(evidenceDir, "openapi.json"), `${JSON.stringify({
+  openapi_documents: documents.length,
+  openapi_errors: 0,
+  openapi_warnings: 0,
+}, null, 2)}\n`);

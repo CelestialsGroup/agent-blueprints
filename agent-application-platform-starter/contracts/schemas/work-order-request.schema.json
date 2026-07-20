@@ -206,7 +206,10 @@
     },
     "metadata": {
       "type": "object",
-      "description": "Behavior-affecting metadata is included in request_digest; trace transport headers are not."
+      "maxProperties": 32,
+      "propertyNames": { "type": "string", "minLength": 1, "maxLength": 100 },
+      "additionalProperties": { "type": "string", "maxLength": 1000 },
+      "description": "Bounded behavior-affecting metadata is included in request_digest; trace transport headers are not."
     }
   },
   "additionalProperties": false,

@@ -1,0 +1,37 @@
+{
+  "suite_id": "agent-access",
+  "suite_version": "1.0.0",
+  "suite_digest": "sha256:bf1fa328984b835fd69a86db40bb4cab6a3738e49f71c6abddeb68a9a3d56425",
+  "target_kind": "agent_access",
+  "profiles": [
+    {
+      "profile_id": "agent-access-core-v1",
+      "tests": [
+        {
+          "test_id": "service-token-sender-constraint-and-replay",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "Mutation requests reject unregistered issuers, wrong audience, subject/client mismatch, missing sender constraint, replayed jti and Idempotency-Key reuse with a different request digest."
+        },
+        {
+          "test_id": "tenant-client-context-derived",
+          "category": "security",
+          "evidence_type": "trace",
+          "description": "ClientApplication and Platform Tenant are derived server-side from the authenticated workload plus external tenant mapping; body or path identifiers cannot override TenantContext."
+        },
+        {
+          "test_id": "commercial-authorization-revocation-ingest",
+          "category": "security",
+          "evidence_type": "trace",
+          "description": "A sender-constrained Business revocation is accepted only when path, external tenant, client, bounded issue time and stored CommercialAuthorization ID/digest match. Receipt and fan-out intent are durable and idempotent; matching WorkSessions and new execution/Gateway authorization fail closed immediately, Platform Gateways deny new side effects from old authorization, and every affected active run receives a newly fenced SystemSafetyControl cancellation."
+        },
+        {
+          "test_id": "encoded-body-limits",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "Every JSON mutation enforces its declared encoded-byte limit before parsing and returns 413 without allocating an unbounded body."
+        }
+      ]
+    }
+  ]
+}

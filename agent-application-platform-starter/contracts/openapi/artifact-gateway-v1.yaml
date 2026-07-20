@@ -23,6 +23,10 @@ paths:
     get:
       operationId: readArtifactVersionContent
       summary: Read one immutable ArtifactVersion through an ArtifactGrant
+      x-required-artifact-token-operation: read_content
+      x-operation-contract-id: urn:agent-platform:artifact-read-operation-descriptor:v1
+      x-operation-descriptor-schema: ../schemas/artifact-read-operation-descriptor.schema.json
+      x-operation-digest-profile: rfc8785-full-document-v1
       parameters:
         - name: artifact_id
           in: path
@@ -53,6 +57,9 @@ paths:
     post:
       operationId: stageArtifactObject
       summary: Upload one bounded object into an authorized quarantine session
+      x-required-artifact-token-operation: stage_object
+      x-operation-contract-id: urn:agent-platform:artifact-staging-object-request:v1
+      x-operation-digest-profile: rfc8785-artifact-stage-metadata-excluding-content-and-request-digest-v1
       x-max-encoded-body-bytes: 6291456
       requestBody:
         required: true
@@ -80,6 +87,9 @@ paths:
     post:
       operationId: commitArtifactStagingSession
       summary: Commit immutable quarantined staging metadata without finalizing an ArtifactVersion
+      x-required-artifact-token-operation: commit_staging
+      x-operation-contract-id: urn:agent-platform:artifact-staging-commit-request:v1
+      x-operation-digest-profile: rfc8785-request-excluding-request-digest-v1
       x-max-encoded-body-bytes: 4194304
       parameters:
         - name: staging_session_id
@@ -120,6 +130,8 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      x-jws-header-contract-id: urn:agent-platform:artifact-gateway-jws-header:v1
+      x-jwt-claims-contract-id: urn:agent-platform:artifact-gateway-token-claims:v1
       description: |
         Short-lived operation token validated against
         urn:agent-platform:artifact-gateway-token-claims:v1.

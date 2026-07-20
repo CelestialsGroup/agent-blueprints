@@ -1,0 +1,22 @@
+{
+  "jti": "sot_02_01J00000000000000000000000",
+  "iss": "agent-platform",
+  "sub": "spn_agent_sandbox_controller",
+  "aud": "urn:agent-platform:provider-instance:spi_deerflow_builtin_sandbox",
+  "iat": 1784192460,
+  "nbf": 1784192460,
+  "exp": 1784192700,
+  "operation": "restore",
+  "provider_revision_id": "spr_01J00000000000000000000000",
+  "sandbox_id": "sbx_01J00000000000000000000001",
+  "operation_id": "sop_restore_01",
+  "attempt_id": "sat_restore_01",
+  "fencing_token": 12,
+  "tenant_id": "ten_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "policy_digest": "sha256:24066573c33b3c65f1ffddaa4be8600e9e8a27916dc94a647d0cfce3a3c1cfd5",
+  "request_contract_id": "urn:agent-platform:sandbox-restore-request:v1",
+  "request_digest_profile": "rfc8785-request-excluding-request-digest-v1",
+  "request_digest": "sha256:b8670e4b540eb1a7003c88b465b631bd77ee5f83016f53223de51fb7388f9607",
+  "deadline_at": "2026-07-16T10:30:00Z"
+}

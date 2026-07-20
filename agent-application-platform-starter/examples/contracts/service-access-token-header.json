@@ -1,0 +1,5 @@
+{
+  "alg": "ES256",
+  "kid": "business-idp-key-2026-07",
+  "typ": "at+jwt"
+}

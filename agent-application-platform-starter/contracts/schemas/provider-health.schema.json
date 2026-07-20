@@ -9,7 +9,6 @@
     "health_generation",
     "status",
     "observed_at",
-    "cluster_id",
     "observations"
   ],
   "properties": {
@@ -30,9 +29,6 @@
     "observed_at": {
       "type": "string",
       "format": "date-time"
-    },
-    "cluster_id": {
-      "type": "string"
     },
     "observations": {
       "type": "array",
@@ -79,5 +75,9 @@
       "type": "string"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "ProviderHealth binds one ProviderInstance, immutable ProviderRevision and monotonic Health Generation",
+    "cluster, cell, Pod, Node and other mutable deployment topology remain operations-private and never enter Resolution evidence"
+  ]
 }

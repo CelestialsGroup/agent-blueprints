@@ -90,14 +90,20 @@
     },
     "location": {
       "type": "object",
-      "required": ["region_id", "cluster_id", "cell_id"],
+      "required": ["placement_mode", "region_id", "placement_policy_reference", "placement_decision_digest"],
       "properties": {
-        "region_id": { "type": "string" },
-        "cluster_id": { "type": "string" },
-        "cell_id": { "type": "string" },
-        "runtime_id": { "type": "string" }
+        "placement_mode": { "enum": ["platform_managed", "provider_managed", "external"] },
+        "region_id": { "type": ["string", "null"] },
+        "placement_policy_reference": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "placement_decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "placement_mode": { "const": "platform_managed" } }, "required": ["placement_mode"] },
+          "then": { "properties": { "region_id": { "type": "string", "minLength": 1 } } }
+        }
+      ]
     },
     "request_binding": { "$ref": "urn:agent-platform:admitted-request-binding:v1" },
     "input": { "$ref": "urn:agent-platform:runtime-input-envelope:v1" },
@@ -219,6 +225,7 @@
     ,"execution_budget, policy_decision and effective_permissions are immutable initial ceilings; short-lived RuntimeAuthorization revisions may remain equal or narrow them without changing the RunManifest"
     ,"gateway_bindings and authorization_renewal_policy are complete, typed and immutable for this Run"
     ,"commercial_authorization binds the exact immutable ID, digest and expiration ceiling while event_registry binds its exact immutable ID, version and digest"
-    ,"orchestration_binding equals the WorkflowRun binding and contains no engine-native endpoint or mutable infrastructure identity"
+    ,"orchestration_binding equals the WorkflowRun binding and contains no engine-native endpoint or mutable infrastructure identity",
+    "location is a content-bound logical placement decision and contains no Cluster, Cell, Pod, Node, Runtime or Endpoint identity"
   ]
 }

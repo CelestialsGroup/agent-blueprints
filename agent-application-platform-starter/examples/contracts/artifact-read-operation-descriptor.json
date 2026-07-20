@@ -1,0 +1,10 @@
+{
+  "operation": "read_content",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "invocation_id": "inv_cap_01J000000000000000000000",
+  "invocation_attempt_id": "iat_cap_01J00000000000000000000",
+  "fencing_token": 1,
+  "artifact_id": "art_workspace_manifest_01J000000000000000",
+  "version_id": "ver_workspace_manifest_01J00000000000000"
+}

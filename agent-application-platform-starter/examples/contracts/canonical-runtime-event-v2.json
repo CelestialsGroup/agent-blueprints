@@ -1,0 +1,51 @@
+{
+  "event_id": "evt_runtime_01J000000000000000000",
+  "schema_version": 2,
+  "tenant_id": "ten_01J00000000000000000000000",
+  "producer_kind": "provider",
+  "producer_id": "agent-runtime-adapter",
+  "provider_revision_id": "apr_01J00000000000000000000000",
+  "source_stream_id": "agent-runtime/rtr_01J00000000000000000000000",
+  "source_event_id": "rtevt_01J0000000000000000000000",
+  "source_cursor": "deerflow-event-42",
+  "dedupe_key": "sha256:8321a02f72524956780638da6065536711e7ccc5aca01c8af88e8c4b0c8f5a70",
+  "event_registry": {
+    "registry_id": "agent-runtime-core",
+    "registry_version": 1,
+    "registry_digest": "sha256:b664808d1a63374a78b5002e5fd58b1c04ea43aa866c2faf5c2027f42f692f2b"
+  },
+  "conversation_id": "conv_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "turn_id": "turn_01J00000000000000000000000",
+  "branch_id": "main",
+  "input_message_id": "msg_01J00000000000000000000000",
+  "work_sequence": 153,
+  "aggregate": {
+    "type": "agent_run",
+    "id": "agr_01J00000000000000000000000",
+    "sequence": 42
+  },
+  "references": {
+    "workflow_run_id": "wfr_01J00000000000000000000000",
+    "agent_run_id": "agr_01J00000000000000000000000",
+    "message_id": "msg_01J00000000000000000000002"
+  },
+  "type": "runtime.message.completed",
+  "occurred_at": "2026-07-15T10:10:00Z",
+  "actor": {
+    "type": "provider",
+    "id": "agent-runtime-adapter"
+  },
+  "data": {
+    "message_id": "msg_01J00000000000000000000002",
+    "content_reference": "artifact://art_message/ver_01",
+    "content_digest": "sha256:9191919191919191919191919191919191919191919191919191919191919191"
+  },
+  "metadata": {
+    "trace_id": "trace-runtime-001",
+    "correlation_id": "wrk_01J00000000000000000000000",
+    "provider_instance_id": "api_deerflow_runtime"
+  },
+  "data_version": 1,
+  "recorded_at": "2026-07-15T10:10:00.100Z"
+}

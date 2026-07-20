@@ -46,7 +46,7 @@
           "type": "string"
         },
         "details": {
-          "type": "object"
+          "$ref": "urn:agent-platform:bounded-details:v1"
         }
       },
       "additionalProperties": false

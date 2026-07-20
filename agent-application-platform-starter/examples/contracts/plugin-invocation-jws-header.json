@@ -1,0 +1,5 @@
+{
+  "alg": "EdDSA",
+  "kid": "agent-plugin-key-2026-07",
+  "typ": "agent-plugin-invocation+jwt"
+}

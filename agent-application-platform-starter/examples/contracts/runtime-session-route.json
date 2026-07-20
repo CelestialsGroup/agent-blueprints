@@ -1,0 +1,18 @@
+{
+  "runtime_session_id": "rts_01J00000000000000000000000",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "client_app_id": "html-product",
+  "principal_id": "user-123",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "sandbox_id": "sbx_01J00000000000000000000000",
+  "sandbox_slot_key": "primary-code",
+  "runtime_type": "terminal",
+  "gateway_route_id": "rgr_01J00000000000000000000000",
+  "provider_route_reference": "prr_AQIDBAUGBwgJCgsMDQ4PEA",
+  "provider_route_digest": "sha256:fe2b4990e35844efecd4187aa60af047fef6450b55ffc566dbc14700ea0b6dca",
+  "expires_at": "2026-07-16T09:20:00Z",
+  "scopes": [
+    "terminal:connect"
+  ],
+  "connection_generation": 1
+}

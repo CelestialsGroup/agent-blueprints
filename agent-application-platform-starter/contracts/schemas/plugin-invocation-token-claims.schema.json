@@ -6,10 +6,14 @@
   "required": [
     "jti",
     "iss",
+    "sub",
     "aud",
     "iat",
     "nbf",
     "exp",
+    "tenant_id",
+    "client_app_id",
+    "work_order_id",
     "plugin_id",
     "provider_revision_id",
     "invocation_id",
@@ -18,7 +22,14 @@
     "capability_id",
     "capability_version",
     "staging_session_id",
-    "permissions_digest"
+    "permissions_digest",
+    "authority_mode",
+    "operation",
+    "invocation_request_digest",
+    "operation_contract_id",
+    "operation_digest_profile",
+    "operation_request_digest",
+    "deadline_at"
   ],
   "properties": {
     "jti": {
@@ -27,8 +38,10 @@
     "iss": {
       "const": "agent-platform"
     },
+    "sub": { "type": "string", "minLength": 1, "maxLength": 200 },
     "aud": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^urn:agent-platform:provider-instance:[A-Za-z0-9._:-]{1,200}$"
     },
     "iat": {
       "type": "integer",
@@ -42,6 +55,9 @@
       "type": "integer",
       "minimum": 0
     },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "client_app_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "plugin_id": {
       "type": "string"
     },
@@ -70,11 +86,65 @@
     "permissions_digest": {
       "type": "string",
       "pattern": "^sha256:[0-9a-f]{64}$"
-    }
+    },
+    "authority_mode": { "enum": ["execution", "safety_control"] },
+    "operation": { "enum": ["invoke", "status", "cancel", "read_events"] },
+    "invocation_request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "operation_contract_id": { "type": "string", "pattern": "^urn:agent-platform:[a-z0-9-]+:v1$" },
+    "operation_digest_profile": {
+      "enum": ["rfc8785-request-excluding-request-digest-v1", "rfc8785-full-document-v1"]
+    },
+    "operation_request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "deadline_at": { "type": "string", "format": "date-time" }
   },
+  "allOf": [
+    {
+      "if": { "properties": { "operation": { "const": "invoke" } }, "required": ["operation"] },
+      "then": { "properties": { "authority_mode": { "const": "execution" } } },
+      "else": { "properties": { "authority_mode": { "const": "safety_control" } } }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "invoke" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "operation_contract_id": { "const": "urn:agent-platform:plugin-invocation-request:v1" },
+          "operation_digest_profile": { "const": "rfc8785-request-excluding-request-digest-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "status" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "operation_contract_id": { "const": "urn:agent-platform:plugin-status-operation-descriptor:v1" },
+          "operation_digest_profile": { "const": "rfc8785-full-document-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "cancel" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "operation_contract_id": { "const": "urn:agent-platform:plugin-cancellation-request:v1" },
+          "operation_digest_profile": { "const": "rfc8785-request-excluding-request-digest-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "read_events" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "operation_contract_id": { "const": "urn:agent-platform:plugin-event-read-operation-descriptor:v1" },
+          "operation_digest_profile": { "const": "rfc8785-full-document-v1" }
+        }
+      }
+    }
+  ],
   "additionalProperties": false,
   "x-semantic-constraints": [
-    "iat < exp",
-    "exp - iat <= 900"
+    "iat <= nbf < exp and exp - iat <= 300; invoke execution authority never outlives deadline_at or its Artifact windows, while post-expiry safety_control authorizes only exact Status, Cancel or Event operations and does not inherit Artifact or new side-effect authority",
+    "sub matches the authenticated compatibility bridge and audience/Plugin/ProviderRevision match its admission while Tenant, ClientApplication, WorkOrder, InvocationAttempt and fencing_token match the original request",
+    "operation, operation_contract_id, operation_digest_profile and operation_request_digest bind the exact Invoke body, Status target, Cancel body or normalized Event cursor descriptor",
+    "a stale fencing_token or replayed jti cannot authorize compatibility Plugin execution"
   ]
 }

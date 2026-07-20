@@ -29,7 +29,9 @@ SaaS Runtime 必须通过受治理 Profile，支持预算注入、Model Gateway�
 - Checkpoint Manifest；
 - Artifact Staging 和 Usage。
 
-每次调用使用短期 RuntimeInvocation Token，并绑定 Tenant、ProviderRevision、WorkflowRun/AgentRun/RuntimeRun、RunManifest、RuntimeAuthorization、InvocationAttempt、幂等请求摘要、Fencing、Policy、Budget 和 Permissions。取消意图不等于取消证明；`outcome_unknown` 必须通过 Invocation Ledger 查询或对账后才能进入终态。
+Start、Command、Status 与 Event 分别使用单操作 Runtime Token。Token 固定 Operation Contract、Digest Profile 与 Body/Path/规范化 Cursor 摘要；Runtime Command 显式携带平台逻辑 `invocation_id`，DeerFlow 的 Thread/Checkpoint ID 不能替代 `runtime_run_id + invocation_id + invocation_attempt_id + fencing_token` 绑定。
+
+每次调用使用短期 RuntimeInvocation Token，并绑定已认证 Runtime Controller `sub`、Tenant、ProviderRevision、WorkflowRun/AgentRun/RuntimeRun、RunManifest、RuntimeAuthorization、InvocationAttempt、幂等请求摘要、Fencing、Policy、Budget 和 Permissions。`execution` Token 的 `iat/nbf` 不得早于 RuntimeAuthorization 签发，也不得越过 RuntimeAuthorization 或命令期限；执行授权到期后，平台仍可签发最长 300 秒的 `safety_control`，但它只能读取 Status/Event 或发送 Cancel/Pause，不能 Start、Resume、Append、Interrupt、Approval、Checkpoint、调用 Gateway 或产生其他副作用。取消意图不等于取消证明；`outcome_unknown` 必须通过 Invocation Ledger 查询或对账后才能进入终态。
 
 Start 请求不是只有 Message ID 的通知。Adapter 必须收到实际有界输入或不可变输入引用、ContextPackage、四类带 Contract ID/Digest/Audience 的 Gateway Binding、请求体 Admission Limits，以及本 Attempt 的完整 RuntimeAuthorization/ArtifactGrant。Input/Context/Gateway 必须与 RunManifest 相等；Authorization 必须覆盖 Manifest 的 ArtifactAccessRequirement，闭合同一 Tenant/WorkOrder/CommercialAuthorization 的 Budget/Policy/Permissions 绑定，不超过初始上限或商业授权 `expires_at`，并拒绝早于 Authorization 签发或晚于其到期的 ArtifactGrant。Model/Tool 调用复用 Capability Port，Artifact/Egress 调用使用各自操作 Token；任何缺失、过期、扩权或摘要不匹配都拒绝执行。
 

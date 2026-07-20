@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:agent-runtime-status-operation-descriptor:v1",
+  "title": "AgentRuntimeStatusOperationDescriptor",
+  "type": "object",
+  "required": ["operation", "runtime_run_id", "invocation_id", "invocation_attempt_id", "fencing_token"],
+  "properties": {
+    "operation": { "const": "read_status" },
+    "runtime_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "fencing_token": { "type": "integer", "minimum": 1 }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "operation_request_digest is RFC 8785 JCS SHA-256 over this complete descriptor using rfc8785-full-document-v1",
+    "runtime_run_id is synthesized from the HTTP path and all identifiers match the admitted Runtime InvocationAttempt"
+  ]
+}

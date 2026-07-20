@@ -59,6 +59,41 @@
         }
       ]
     },
+    "systemSafetyControlIssued": {
+      "type": "object",
+      "required": [
+        "safety_control_id",
+        "runtime_run_id",
+        "action",
+        "reason",
+        "trigger_evidence_digest",
+        "control_digest",
+        "issued_at"
+      ],
+      "properties": {
+        "safety_control_id": { "type": "string", "minLength": 1 },
+        "runtime_run_id": { "type": "string", "minLength": 1 },
+        "action": { "enum": ["pause", "cancel"] },
+        "reason": {
+          "enum": [
+            "commercial_authorization_expired",
+            "commercial_authorization_revoked",
+            "execution_deadline_exceeded",
+            "policy_revoked",
+            "tenant_suspended",
+            "provider_admission_revoked",
+            "budget_exhausted",
+            "reconciliation_stop",
+            "operator_emergency_stop",
+            "platform_shutdown"
+          ]
+        },
+        "trigger_evidence_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "control_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "issued_at": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
     "workOrderStateChanged": {
       "type": "object",
       "required": ["previous_state", "state", "transition", "state_version"],
@@ -212,6 +247,7 @@
     { "$ref": "#/$defs/messageAppended" },
     { "$ref": "#/$defs/workOrderAccepted" },
     { "$ref": "#/$defs/workOrderControlAccepted" },
+    { "$ref": "#/$defs/systemSafetyControlIssued" },
     { "$ref": "#/$defs/workOrderStateChanged" },
     { "$ref": "#/$defs/workflowRunStarted" },
     { "$ref": "#/$defs/agentRunStarted" },

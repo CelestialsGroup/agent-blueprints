@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:bounded-details:v1",
+  "title": "BoundedDetails",
+  "description": "Small diagnostic or approval attributes. Nested payloads use typed contracts or immutable evidence references.",
+  "type": "object",
+  "maxProperties": 32,
+  "propertyNames": {
+    "type": "string",
+    "minLength": 1,
+    "maxLength": 100,
+    "pattern": "^[A-Za-z0-9._-]+$"
+  },
+  "additionalProperties": {
+    "oneOf": [
+      { "type": "string", "maxLength": 2000 },
+      { "type": "number" },
+      { "type": "boolean" },
+      { "type": "null" }
+    ]
+  }
+}

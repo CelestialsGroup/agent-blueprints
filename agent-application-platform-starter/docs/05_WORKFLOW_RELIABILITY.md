@@ -33,6 +33,8 @@ Conversation Turn 事务先原子追加 Message、分配 message_sequence、创�
 
 控制现有 WorkOrder 不创建新 Turn。`WorkOrderControlRequest` 与新的单次 ExecutionGrant 先原子保存控制输入和 Control Outbox，再由 Worker 发送只引用 `control_request_id` 的 Runtime Command。`interrupt_and_enqueue` 属于新 Turn 路径：先记录当前 WorkOrder 取消意图，再创建独立后继 WorkOrder。`accepted` 在尚未入队时也允许直接进入 `cancel_requested`。
 
+平台安全减权不依赖新的 Business Grant。Business 通过 sender-constrained Service Token 提交不可变 `CommercialAuthorizationRevocation`；Platform 原子保存 Inbox/收据和 fan-out intent，不修改 Business 快照。商业授权到期/撤销、执行 Deadline 或预算触发、Tenant/Provider 准入撤销、对账止损或操作员紧急停机时，唯一 Platform Safety Controller 的幂等 Domain Activity 在同一事务仅追加 `SystemSafetyControl`、`work_order.safety_control.issued` 和 Control Outbox。硬到期、撤销、Deadline、Tenant/Provider 撤销、预算耗尽与平台停机必须 Cancel；只有策略复核、对账止损和操作员介入可以选择 Pause。Runtime Command 的 Pause/Cancel 必须在 `authorized_control_request_id` 与 `system_safety_control_id + system_safety_control_digest` 之间二选一；系统路径绑定 Tenant/WorkOrder/RuntimeRun、枚举原因和不可变触发证据，绝不能用于 Resume、Append、Interrupt、Approval、Checkpoint 或任何新副作用。
+
 ## 权威状态
 
 PostgreSQL 是 API 当前状态事实源。
@@ -98,4 +100,4 @@ Workflow 必须：
 
 需要 Sandbox 的 AgentRun 按以下顺序执行：ProviderResolution 与证据固化 → 从 Branch WorkspaceRevision 创建 Sandbox → 固化含实际 Sandbox ID 的 RunManifest → Start Runtime。不得在 Sandbox 身份尚未知时伪造完整 RunManifest。
 
-RunManifest 精确绑定已消费 ExecutionGrant 的请求 Contract/Profile/Digest，并固化实际有界输入或不可变输入引用、ContextPackage、ArtifactAccessRequirement、初始 ExecutionBudget/PolicyDecision/EffectivePermissions 上限、CommercialAuthorizationBinding（ID/Digest/`expires_at`）、授权续期规则以及 Model/Tool/Artifact/Egress Gateway Binding。Start Runtime 携带本 InvocationAttempt 的短期 RuntimeAuthorization 和 ArtifactGrant；Authorization 的内部 Tenant/WorkOrder/Commercial 绑定必须闭合，且自身与 ArtifactGrant 均不得越过商业授权期限。到期、Adapter 重启或 Resume 时以连续前驱摘要创建等价/缩权 Revision，扩权必须新建 WorkOrder。Capability 长任务使用操作级 Token：Invoke、Status、Cancel 和 Event 各自绑定操作摘要，续期必须引用前驱 `jti` 且不越过原 request deadline 或 CommercialAuthorization。Temporal History 只传内容寻址引用和必要控制字段，不复制大 Payload；Provider 收到摘要占位但拿不到执行值必须 fail-closed。
+RunManifest 精确绑定已消费 ExecutionGrant 的请求 Contract/Profile/Digest，并固化实际有界输入或不可变输入引用、ContextPackage、ArtifactAccessRequirement、初始 ExecutionBudget/PolicyDecision/EffectivePermissions 上限、CommercialAuthorizationBinding（ID/Digest/`expires_at`）、授权续期规则以及 Model/Tool/Artifact/Egress Gateway Binding。Start Runtime 携带本 InvocationAttempt 的短期 RuntimeAuthorization 和 ArtifactGrant；Authorization 的内部 Tenant/WorkOrder/Commercial 绑定必须闭合，且自身与 ArtifactGrant 均不得越过商业授权期限。到期、Adapter 重启或 Resume 时以连续前驱摘要创建等价/缩权 Revision，扩权必须新建 WorkOrder。Capability 长任务使用操作级 Token：Invoke、Status、Cancel 和 Event 各自绑定正式 Contract/Profile/Digest；Invoke `execution` 不越过原 request deadline/CommercialAuthorization，后续前驱 `jti` 链只提供无 Artifact/副作用权限的 `safety_control` 以完成取消和对账。所有 Token 的 `sub` 匹配当前 Workload Identity。Temporal History 只传内容寻址引用和必要控制字段，不复制大 Payload；Provider 收到摘要占位但拿不到执行值必须 fail-closed。

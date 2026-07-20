@@ -1,6 +1,7 @@
 {
   "jti": "agt_01J00000000000000000000000",
   "iss": "agent-platform",
+  "sub": "urn:agent-platform:provider-instance:hpi_html_anything",
   "aud": "agent-artifact-gateway",
   "iat": 1784192470,
   "nbf": 1784192470,
@@ -12,6 +13,8 @@
   "invocation_attempt_id": "iat_cap_01J00000000000000000000",
   "fencing_token": 1,
   "gateway_binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
+  "operation_contract_id": "urn:agent-platform:artifact-staging-object-request:v1",
+  "operation_digest_profile": "rfc8785-artifact-stage-metadata-excluding-content-and-request-digest-v1",
   "request_digest": "sha256:687577dd7304f41ea1cc6d1a2e294474142e4b862547966ef1aab414d73c3635",
-  "staging_grant_digest": "sha256:9c63071f90f3b696780635191a6c755c49799434aa0eb90119e5a6fa075eac80"
+  "staging_grant_digest": "sha256:7e086f12b648800ef195e7f104095e102320db132164ee33cb27f97e81e16d01"
 }

@@ -1,0 +1,9 @@
+{
+  "safety_control_id": "ssc_01J00000000000000000000000",
+  "runtime_run_id": "rtr_01J00000000000000000000000",
+  "action": "cancel",
+  "reason": "commercial_authorization_expired",
+  "trigger_evidence_digest": "sha256:e1afe2a4ca37353c6978dfa6dd3cc13a2b1a0015c87bd7dbbedb15eccae237ec",
+  "control_digest": "sha256:ef6231cea517c67ef5efdb59080e46b7357867e6f18a1934279022abb163ea0a",
+  "issued_at": "2026-07-16T09:16:00Z"
+}

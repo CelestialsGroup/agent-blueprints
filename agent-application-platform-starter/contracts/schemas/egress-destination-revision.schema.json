@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:egress-destination-revision:v1",
+  "title": "EgressDestinationRevision",
+  "type": "object",
+  "required": [
+    "destination_id", "destination_revision_id", "destination_revision_digest", "owner",
+    "destination_class", "origin", "allowed_methods", "allowed_path_prefixes",
+    "allowed_query_names", "allowed_request_headers", "redirect_policy", "dns_policy", "created_at"
+  ],
+  "properties": {
+    "destination_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "destination_revision_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "destination_revision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "owner": {
+      "type": "object",
+      "required": ["scope"],
+      "properties": {
+        "scope": { "enum": ["platform", "tenant", "client_application"] },
+        "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "client_app_id": { "type": "string", "minLength": 1, "maxLength": 200 }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "scope": { "const": "platform" } }, "required": ["scope"] },
+          "then": { "not": { "anyOf": [{ "required": ["tenant_id"] }, { "required": ["client_app_id"] }] } }
+        },
+        {
+          "if": { "properties": { "scope": { "const": "tenant" } }, "required": ["scope"] },
+          "then": { "required": ["tenant_id"], "not": { "required": ["client_app_id"] } }
+        },
+        {
+          "if": { "properties": { "scope": { "const": "client_application" } }, "required": ["scope"] },
+          "then": { "required": ["tenant_id", "client_app_id"] }
+        }
+      ]
+    },
+    "destination_class": { "type": "string", "pattern": "^[a-z][a-z0-9._-]{0,99}$" },
+    "origin": {
+      "type": "object",
+      "required": ["scheme", "host", "port"],
+      "properties": {
+        "scheme": { "const": "https" },
+        "host": {
+          "type": "string",
+          "pattern": "^(?=.{1,253}$)(?![0-9.]+$)(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.)+[A-Za-z]{2,63}$"
+        },
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 }
+      },
+      "additionalProperties": false
+    },
+    "allowed_methods": {
+      "type": "array", "minItems": 1, "maxItems": 6, "uniqueItems": true,
+      "items": { "enum": ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE"] }
+    },
+    "allowed_path_prefixes": {
+      "type": "array", "minItems": 1, "maxItems": 128, "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^/", "maxLength": 4096 }
+    },
+    "allowed_query_names": {
+      "type": "array", "maxItems": 256, "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 200 }
+    },
+    "allowed_request_headers": {
+      "type": "array", "maxItems": 128, "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z0-9-]+$", "maxLength": 200 }
+    },
+    "redirect_policy": {
+      "type": "object",
+      "required": ["mode", "max_redirects"],
+      "properties": {
+        "mode": { "enum": ["deny", "same_origin"] },
+        "max_redirects": { "type": "integer", "minimum": 0, "maximum": 10 }
+      },
+      "additionalProperties": false
+    },
+    "dns_policy": {
+      "type": "object",
+      "required": ["resolve_on_every_request", "reject_private_networks", "pin_connected_ip", "max_addresses"],
+      "properties": {
+        "resolve_on_every_request": { "const": true },
+        "reject_private_networks": { "const": true },
+        "pin_connected_ip": { "const": true },
+        "max_addresses": { "type": "integer", "minimum": 1, "maximum": 32 }
+      },
+      "additionalProperties": false
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "destination_revision_digest is RFC 8785 JCS SHA-256 over the revision excluding destination_revision_digest and a revision is immutable after creation",
+    "owner scope is enforced against the authenticated Tenant and ClientApplication before resolution",
+    "destination_class, method, path, query and request headers are allowed by both this revision and EffectivePermissions",
+    "redirects and every DNS answer and connected IP are revalidated by the Egress Gateway without exposing the raw origin to the caller"
+  ]
+}

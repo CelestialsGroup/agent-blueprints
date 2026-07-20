@@ -20,7 +20,11 @@
     "work_order_id",
     "run_manifest_digest",
     "runtime_authorization_digest",
+    "authority_mode",
     "operation",
+    "operation_contract_id",
+    "operation_digest_profile",
+    "operation_request_digest",
     "invocation_id",
     "invocation_attempt_id",
     "fencing_token",
@@ -29,9 +33,9 @@
     "effective_permissions_digest"
   ],
   "properties": {
-    "iss": { "type": "string", "minLength": 1 },
+    "iss": { "const": "agent-platform" },
     "sub": { "type": "string", "minLength": 1 },
-    "aud": { "type": "string", "minLength": 1 },
+    "aud": { "type": "string", "pattern": "^urn:agent-platform:provider-instance:[A-Za-z0-9._:-]{1,200}$" },
     "jti": { "type": "string", "minLength": 16 },
     "iat": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
     "nbf": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
@@ -44,27 +48,93 @@
     "work_order_id": { "type": "string", "minLength": 1 },
     "run_manifest_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "runtime_authorization_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "authority_mode": { "enum": ["execution", "safety_control"] },
     "operation": { "enum": ["start", "read_status", "submit_command", "read_events"] },
-    "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "operation_contract_id": { "type": "string", "pattern": "^urn:agent-platform:[a-z0-9-]+:v1$" },
+    "operation_digest_profile": {
+      "enum": [
+        "rfc8785-request-excluding-request-digest-v1",
+        "rfc8785-command-excluding-command-digest-v1",
+        "rfc8785-full-document-v1"
+      ]
+    },
+    "operation_request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "invocation_id": { "type": "string", "minLength": 1 },
     "invocation_attempt_id": { "type": "string", "minLength": 1 },
     "fencing_token": { "type": "integer", "minimum": 1 },
     "policy_decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "execution_budget_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
-    "effective_permissions_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+    "effective_permissions_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "system_safety_control_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "system_safety_control_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
   },
   "additionalProperties": false,
   "allOf": [
     {
-      "if": { "properties": { "operation": { "enum": ["start", "submit_command"] } }, "required": ["operation"] },
-      "then": { "required": ["request_digest"] }
+      "if": { "properties": { "operation": { "const": "start" } }, "required": ["operation"] },
+      "then": { "properties": { "authority_mode": { "const": "execution" } } }
+    },
+    {
+      "if": { "properties": { "operation": { "enum": ["read_status", "read_events"] } }, "required": ["operation"] },
+      "then": { "properties": { "authority_mode": { "const": "safety_control" } } }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "start" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "operation_contract_id": { "const": "urn:agent-platform:agent-runtime-start-request:v1" },
+          "operation_digest_profile": { "const": "rfc8785-request-excluding-request-digest-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "submit_command" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "operation_contract_id": { "const": "urn:agent-platform:agent-runtime-command:v1" },
+          "operation_digest_profile": { "const": "rfc8785-command-excluding-command-digest-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "read_status" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "operation_contract_id": { "const": "urn:agent-platform:agent-runtime-status-operation-descriptor:v1" },
+          "operation_digest_profile": { "const": "rfc8785-full-document-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "read_events" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "operation_contract_id": { "const": "urn:agent-platform:agent-runtime-event-read-operation-descriptor:v1" },
+          "operation_digest_profile": { "const": "rfc8785-full-document-v1" }
+        }
+      }
+    },
+    {
+      "if": {
+        "anyOf": [
+          { "required": ["system_safety_control_id"] },
+          { "required": ["system_safety_control_digest"] }
+        ]
+      },
+      "then": {
+        "required": ["system_safety_control_id", "system_safety_control_digest"],
+        "properties": {
+          "authority_mode": { "const": "safety_control" },
+          "operation": { "const": "submit_command" }
+        }
+      }
     }
   ],
   "x-semantic-constraints": [
-    "the token lifetime is short, nbf is not before iat, and exp is after nbf",
-    "audience and provider_revision_id identify the admitted Agent Runtime ProviderRevision",
+    "iat <= nbf < exp and exp - iat <= 300; execution iat/nbf are no earlier than RuntimeAuthorization issuance and never outlive RuntimeAuthorization or the operation deadline, while safety_control may outlive execution authorization only for exact Status/Event reads or Cancel/Pause and never authorizes Start, Resume, Append, Interrupt, Approval, Checkpoint or another side effect",
+    "audience and provider_revision_id exactly match the admitted Agent Runtime ProviderResolution",
     "tenant, execution IDs and immutable digests match the request, RunManifest, RuntimeAuthorization and InvocationAttempt",
-    "request_digest equals the Start request_digest or AgentRuntimeCommand command_digest for mutation operations",
-    "a stale fencing_token or replayed jti cannot authorize a mutation"
+    "operation, operation_contract_id, operation_digest_profile and operation_request_digest bind the exact Start body, Command body, Status target or normalized Event cursor descriptor; a system-issued Cancel/Pause token also binds its SystemSafetyControl ID and digest",
+    "sub matches the authenticated caller workload and a stale fencing_token or replayed jti cannot authorize a mutation"
   ]
 }

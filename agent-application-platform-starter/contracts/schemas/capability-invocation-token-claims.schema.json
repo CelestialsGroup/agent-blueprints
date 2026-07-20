@@ -5,20 +5,23 @@
   "description": "Operation-scoped, renewable bearer claims for one admitted Capability InvocationAttempt.",
   "type": "object",
   "required": [
-    "jti", "iss", "aud", "iat", "nbf", "exp", "operation", "authorization_sequence",
+    "jti", "iss", "sub", "aud", "iat", "nbf", "exp", "authority_mode", "operation", "authorization_sequence",
     "predecessor_jti", "renewal_reason", "tenant_id", "client_app_id", "principal_context_digest",
     "work_order_id", "provider_resolution_id", "provider_instance_id", "provider_revision_id",
     "capability_id", "capability_version", "invocation_id", "invocation_attempt_id", "fencing_token",
-    "invocation_request_digest", "operation_request_digest", "policy_decision_digest",
+    "invocation_request_digest", "operation_contract_id", "operation_digest_profile",
+    "operation_request_digest", "policy_decision_digest",
     "execution_budget_digest", "permissions_digest", "staging_grant_digest"
   ],
   "properties": {
     "jti": { "type": "string", "minLength": 1, "maxLength": 200 },
     "iss": { "const": "agent-platform" },
+    "sub": { "type": "string", "minLength": 1, "maxLength": 200 },
     "aud": { "type": "string", "minLength": 1, "maxLength": 300 },
     "iat": { "type": "integer", "minimum": 0 },
     "nbf": { "type": "integer", "minimum": 0 },
     "exp": { "type": "integer", "minimum": 0 },
+    "authority_mode": { "enum": ["execution", "safety_control"] },
     "operation": { "enum": ["invoke", "status", "cancel", "read_events"] },
     "authorization_sequence": { "type": "integer", "minimum": 1 },
     "predecessor_jti": { "type": ["string", "null"], "maxLength": 200 },
@@ -38,6 +41,20 @@
     "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "fencing_token": { "type": "integer", "minimum": 1 },
     "invocation_request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "operation_contract_id": {
+      "enum": [
+        "urn:agent-platform:capability-invocation-request:v1",
+        "urn:agent-platform:capability-status-operation-descriptor:v1",
+        "urn:agent-platform:capability-cancellation-request:v1",
+        "urn:agent-platform:capability-event-read-operation-descriptor:v1"
+      ]
+    },
+    "operation_digest_profile": {
+      "enum": [
+        "rfc8785-request-excluding-request-digest-v1",
+        "rfc8785-full-document-v1"
+      ]
+    },
     "operation_request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "provider_operation_id": { "type": "string", "minLength": 1, "maxLength": 500 },
     "policy_decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
@@ -56,6 +73,7 @@
         "properties": {
           "predecessor_jti": { "type": "null" },
           "renewal_reason": { "const": "initial_dispatch" },
+          "authority_mode": { "const": "execution" },
           "operation": { "const": "invoke" }
         },
         "not": { "required": ["provider_operation_id"] }
@@ -64,16 +82,53 @@
         "properties": {
           "predecessor_jti": { "type": "string", "minLength": 1 },
           "renewal_reason": { "not": { "const": "initial_dispatch" } },
+          "authority_mode": { "const": "safety_control" },
           "operation": { "not": { "const": "invoke" } }
         },
         "required": ["provider_operation_id"]
       }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "invoke" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "operation_contract_id": { "const": "urn:agent-platform:capability-invocation-request:v1" },
+          "operation_digest_profile": { "const": "rfc8785-request-excluding-request-digest-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "status" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "operation_contract_id": { "const": "urn:agent-platform:capability-status-operation-descriptor:v1" },
+          "operation_digest_profile": { "const": "rfc8785-full-document-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "cancel" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "operation_contract_id": { "const": "urn:agent-platform:capability-cancellation-request:v1" },
+          "operation_digest_profile": { "const": "rfc8785-request-excluding-request-digest-v1" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "operation": { "const": "read_events" } }, "required": ["operation"] },
+      "then": {
+        "properties": {
+          "operation_contract_id": { "const": "urn:agent-platform:capability-event-read-operation-descriptor:v1" },
+          "operation_digest_profile": { "const": "rfc8785-full-document-v1" }
+        }
+      }
     }
   ],
   "x-semantic-constraints": [
-    "iat <= nbf < exp, exp - iat <= 900 and exp is no later than the Capability request deadline or CommercialAuthorization expiration",
+    "iat <= nbf < exp and exp - iat <= 300; execution nbf is no earlier than the bound Policy, Budget and Artifact grants and never outlives the Capability request deadline or CommercialAuthorization, while post-expiry safety_control authorizes only exact Status, Cancel or Event operations and carries no Artifact or new side-effect authority",
     "authorization_sequence starts at one and renewed operation tokens name the immediate predecessor jti without widening the original Invocation scope",
-    "operation and operation_request_digest bind the exact Invoke body, Status target, Cancel body or Event cursor descriptor and cannot authorize another operation",
-    "every claim, audience and executable context digest matches the exact CapabilityInvocationRequest, ArtifactStagingGrant and admitted ProviderResolution before execution"
+    "operation, operation_contract_id, operation_digest_profile and operation_request_digest bind the exact Invoke body, Status target, Cancel body or Event cursor descriptor and cannot authorize another operation",
+    "sub matches the authenticated caller workload while every claim, audience and executable context digest matches the exact CapabilityInvocationRequest, ArtifactStagingGrant and admitted ProviderResolution before execution"
   ]
 }

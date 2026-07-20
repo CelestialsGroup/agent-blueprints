@@ -1,7 +1,7 @@
 {
   "suite_id": "sandbox-provider",
   "suite_version": "1.0.0",
-  "suite_digest": "sha256:42f7ce9cbc975ac765db65d42e4317353ac65f90e65e38c1d3efce3b69347764",
+  "suite_digest": "sha256:fd85653947c27723f6d260087f7d3eff49a2cd31306c3f153675ec79284928a9",
   "target_kind": "sandbox",
   "profiles": [
     {
@@ -48,6 +48,24 @@
           "category": "ordering",
           "evidence_type": "test_log",
           "description": "Stale operation attempts cannot mutate Sandbox state."
+        },
+        {
+          "test_id": "operation-token-binding",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "All 14 token-protected Sandbox operations reject wrong JWS typ, algorithm, key, Provider audience, caller, operation, Contract ID, Digest Profile, request or descriptor digest, Tenant, WorkOrder, Sandbox, Attempt, a token predating PolicyDecision or exceeding deadline, stale fencing and replayed mutation jti."
+        },
+        {
+          "test_id": "read-descriptor-binding",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "Status, operation, Exec result, Snapshot manifest and Event reads bind normalized path and query values to operation-specific read descriptors; cursor and target substitution are rejected."
+        },
+        {
+          "test_id": "capability-discovery-mtls-only",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "Capability discovery requires admitted control-plane mTLS identity and does not accept or require a nonexistent SandboxOperation token."
         },
         {
           "test_id": "outcome-unknown-reconcile",

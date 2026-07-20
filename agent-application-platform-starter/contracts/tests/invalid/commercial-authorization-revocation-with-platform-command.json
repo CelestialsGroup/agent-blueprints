@@ -1,0 +1,11 @@
+{
+  "revocation_id": "carev_01J0000000000000000000000",
+  "external_tenant_id": "org-456",
+  "commercial_authorization_id": "cauth_01J00000000000000000000000",
+  "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7",
+  "reason": "entitlement_revoked",
+  "effective_at": "2026-07-16T09:10:00Z",
+  "issued_at": "2026-07-16T09:10:01Z",
+  "revocation_digest": "sha256:f49dc09ad972c4cfcb5351ae20d15a11002515f8a245c29f5d820e5373e2e680",
+  "work_order_id": "wrk_01J00000000000000000000000"
+}

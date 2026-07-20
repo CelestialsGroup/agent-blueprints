@@ -1,0 +1,26 @@
+{
+  "jti": "wsc_01J00000000000000000000000",
+  "iss": "agent-platform",
+  "aud": "agent-workbench",
+  "iat": 1784192400,
+  "nbf": 1784192400,
+  "exp": 1784193300,
+  "session_id": "wss_01J00000000000000000000000",
+  "client_app_id": "html-product",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "principal_id": "user-123",
+  "conversation_id": "conv_01J00000000000000000000000",
+  "commercial_authorization_id": "cauth_01J00000000000000000000000",
+  "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7",
+  "commercial_authorization_expires_at": "2026-07-16T09:30:00Z",
+  "scopes": [
+    "work:read",
+    "conversation:read",
+    "conversation:write",
+    "catalog:read",
+    "event:subscribe",
+    "artifact:read",
+    "recording:read"
+  ],
+  "session_version": 1
+}

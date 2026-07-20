@@ -1,0 +1,5 @@
+{
+  "provider_payload": {
+    "secret": "unversioned nested data"
+  }
+}

@@ -5,6 +5,9 @@
   "type": "object",
   "required": [
     "protocol_version",
+    "tenant_id",
+    "client_app_id",
+    "work_order_id",
     "invocation_id",
     "idempotency_key",
     "fencing_token",
@@ -14,12 +17,16 @@
     "input_artifacts",
     "output_staging",
     "trace_context",
-    "invocation_attempt_id"
+    "invocation_attempt_id",
+    "request_digest"
   ],
   "properties": {
     "protocol_version": {
       "const": "v1"
     },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "client_app_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "invocation_id": {
       "type": "string"
     },
@@ -124,7 +131,16 @@
     },
     "invocation_attempt_id": {
       "type": "string"
+    },
+    "request_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "request_digest is RFC 8785 JCS SHA-256 over the compatibility request excluding request_digest",
+    "Tenant, ClientApplication, WorkOrder, InvocationAttempt and fencing_token match the admitted outer Capability Invocation",
+    "Artifact read and staging URLs are minted by the trusted bridge, expire no later than deadline_at and cannot grant ArtifactVersion finalize"
+  ]
 }

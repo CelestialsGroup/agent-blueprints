@@ -20,6 +20,8 @@
 - mTLS Certificate Bound Token，或
 - DPoP
 
+Service Access Token 的接受 Profile 是闭合的：最长 300 秒、Issuer 预注册、Audience 只能是 Agent Access、`sub/client_id` 匹配已认证工作负载、Scope 按 Client allowlist 解析，未知 Claim 拒绝。`token_profile_signature_and_type_isolation` 与 `service_token_sender_constraint_and_replay` 必须在 Phase 0 身份集成测试中覆盖签名、`typ/alg/kid`、时钟偏差、Sender Constraint、`jti` 重放和 Mutation 幂等。
+
 `client_app_id` 只从认证上下文产生。
 
 ## WorkSession Principal 身份
@@ -53,6 +55,7 @@ Service 权限：
 - work:read
 - work:cancel
 - work:control
+- authorization:revoke
 - session:create
 - session:delegate
 - artifact:read
@@ -61,6 +64,8 @@ Service 权限：
 - conversation:create
 - conversation:read
 - catalog:read
+
+`commercial_authorization_revocation_ingest`：`authorization:revoke` 只授予预注册且 sender-constrained 的 Business workload。Agent Access 从认证上下文派生 ClientApplication，以请求中的 `external_tenant_id` 解析 Platform Tenant，并要求 Path ID、已存 CommercialAuthorization ID/Digest 和 Revocation Notice 完全一致；`revocation_id + revocation_digest` 重放幂等，摘要冲突、跨 Client/Tenant、未来生效时间或超过允许 Clock Skew 的未来签发时间均拒绝。收据是 WorkSession 鉴权的同步 deny 索引，并以可恢复 intent 驱动 Session Version 撤销/断连和活动 WorkOrder SystemSafetyControl；浏览器 WorkSession 永远不能获得该 Scope。
 
 WorkSession 权限：
 
@@ -123,5 +128,12 @@ OpenAPI 使用 `x-required-work-session-scopes` 表达 Bearer/Cookie Scheme 无�
 - Artifact Gateway Operation：`agent-artifact-operation+jwt`
 - Egress Invocation：`agent-egress-invocation+jwt`
 - Agent Runtime Invocation：`agent-runtime-invocation+jwt`
+- Sandbox Operation：`agent-sandbox-operation+jwt`
 
 新 Provider 使用 Capability Invocation Profile；Artifact/Egress 使用独立操作 Profile；Plugin Profile 只用于兼容 Adapter。未知 typ、alg、iss、aud 或 kid 必须拒绝，Capability audience 必须来自 admitted ProviderResolution，Gateway audience 必须来自 RunManifest Port Binding。
+
+九类 Profile 分别由 `service-access-token-jws-header`、`execution-grant-jws-header`、`work-session-jws-header`、`plugin-invocation-jws-header`、`capability-invocation-jws-header`、`artifact-gateway-jws-header`、`egress-invocation-jws-header`、`agent-runtime-invocation-jws-header` 和 `sandbox-operation-jws-header` 执行。验证器必须先按预期用途选择唯一 Profile，再同时验证闭合 Header 与 Claims；不得根据不受信任的 `typ` 动态选择验证器，也不得接受缺失 `kid`、未知 Algorithm 或额外 Header 参数。
+
+所有 Runtime、Sandbox、Capability、Artifact、Egress 和兼容 Plugin 操作 Token 还必须用 `sub` 绑定当前 mTLS/Workload Identity；验证 Audience 不能替代验证 Caller Subject，另一合法工作负载取得 Token 时也必须拒绝。Sandbox Capability 发现是先于 Operation 的控制面协商，只允许已准入控制面 mTLS 身份，不接受也不要求伪造 Sandbox Operation Token。
+
+执行 Token 的时间窗是双向包含关系：`nbf` 不早于所绑定 RuntimeAuthorization、PolicyDecision 或 Artifact Grant 生效，`exp` 不晚于对应执行期限。Runtime/Capability/Plugin 的 `safety_control` 只保留取消与对账权，不重新激活已经过期的执行或 Artifact 权限。

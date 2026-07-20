@@ -1,0 +1,9 @@
+{
+  "operation": "read_events",
+  "runtime_run_id": "rtr_01J00000000000000000000000",
+  "invocation_id": "inv_runtime_01J000000000000000000",
+  "invocation_attempt_id": "iat_runtime_01J0000000000000000",
+  "fencing_token": 1,
+  "after_event_sequence": 0,
+  "limit": 1000
+}
