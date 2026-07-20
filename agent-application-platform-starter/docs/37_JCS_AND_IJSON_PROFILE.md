@@ -1,6 +1,6 @@
 # RFC 8785 JCS 与 Strict I-JSON Profile — v0.9.0
 
-ExecutionGrant request_digest、SchemaReference、ProviderRevision、ProviderResolution、AdmissionDecision、WorkspaceRevision、WorkspaceContentManifest、RunManifest、CapabilityInvocation 和人工 Decision 的安全摘要都使用 RFC 8785 JCS + SHA-256。ExecutionGrant 额外声明请求 Contract ID 与 `rfc8785-request-excluding-execution-grant-v1`，不得在 WorkOrderRequest、ConversationTurnRequest 与 WorkOrderControlRequest 之间复用摘要解释。
+ExecutionGrant request_digest、SchemaReference、ProviderRevision、ProviderResolution、AdmissionDecision、WorkspaceRevision、WorkspaceContentManifest、RunManifest、Capability/Artifact/Egress Operation 和人工 Decision 的安全摘要都使用 RFC 8785 JCS + SHA-256。ExecutionGrant 声明请求 Contract ID 与 `rfc8785-request-excluding-execution-grant-v1`；RunManifest 保存同一三元组，不得在 WorkOrderRequest、ConversationTurnRequest 与 WorkOrderControlRequest 之间复用摘要解释。Capability Token 同时区分原始 Invocation Request Digest 与当前 Operation Request Digest。
 
 进入安全摘要前必须从原始字节严格拒绝：重复键、NaN/Infinity、单独 Surrogate、非 UTF-8，以及数学值为整数且超出 ±(2^53-1) 的任何 Number Token。词法检查使用十进制系数/Scale 的精确运算，因此 `9007199254740992.0`、`9007199254740992e0`、`1000000000000000000000` 和 `1e21` 都必须拒绝。更大整数和 Decimal 使用字符串/领域定点类型；不执行 Unicode 规范化。
 

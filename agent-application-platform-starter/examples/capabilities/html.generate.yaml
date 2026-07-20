@@ -41,7 +41,7 @@ compatibility:
 conformance:
   suite_id: capability-provider
   suite_version: 1.0.0
-  suite_digest: sha256:f5906e48557a9cbe53c8424b570269a19339db7524b79f2d1fc11a814bfdb037
+  suite_digest: sha256:7819b9e4bee0d08a15a1fdc54862ba61a6ae705a6e9923d2d902355e47a06807
   suite_profile_id: capability-core-v1
 namespace_owner: agent-platform
 lifecycle:

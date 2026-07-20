@@ -3,11 +3,12 @@
   "$id": "urn:agent-platform:capability-invocation-event:v1",
   "title": "CapabilityInvocationEvent",
   "type": "object",
-  "required": ["invocation_id", "invocation_attempt_id", "fencing_token", "sequence", "event_id", "type", "occurred_at", "data"],
+  "required": ["invocation_id", "invocation_attempt_id", "fencing_token", "invocation_request_digest", "sequence", "event_id", "type", "occurred_at", "data"],
   "properties": {
     "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "fencing_token": { "type": "integer", "minimum": 1 },
+    "invocation_request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "sequence": { "type": "integer", "minimum": 1 },
     "event_id": { "type": "string", "minLength": 1, "maxLength": 500 },
     "type": { "enum": ["progress", "log", "output_delta", "usage_delta"] },

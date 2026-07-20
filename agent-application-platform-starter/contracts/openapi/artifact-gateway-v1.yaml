@@ -1,0 +1,154 @@
+openapi: 3.1.1
+
+info:
+  title: Artifact Gateway Protocol
+  version: 1.0.0
+  description: |
+    Short-lived, operation-scoped access to immutable ArtifactVersion content and quarantined
+    Artifact Staging. A successful staging commit does not finalize an ArtifactVersion.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+
+servers:
+  - url: https://artifact-gateway.agent-platform.internal
+    description: Registered Artifact Gateway endpoint
+
+security:
+  - ArtifactMutualTLS: []
+    ArtifactOperationBearer: []
+
+paths:
+  /v1/artifacts/{artifact_id}/versions/{version_id}/content:
+    get:
+      operationId: readArtifactVersionContent
+      summary: Read one immutable ArtifactVersion through an ArtifactGrant
+      parameters:
+        - name: artifact_id
+          in: path
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 200 }
+        - name: version_id
+          in: path
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 200 }
+      responses:
+        '200':
+          description: Verified immutable ArtifactVersion bytes
+          headers:
+            Digest:
+              required: true
+              schema: { type: string, pattern: '^sha-256=:[A-Za-z0-9+/=]+:$' }
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '500': { $ref: '#/components/responses/InternalError' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+
+  /v1/staging-objects:
+    post:
+      operationId: stageArtifactObject
+      summary: Upload one bounded object into an authorized quarantine session
+      x-max-encoded-body-bytes: 6291456
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/artifact-staging-object-request.schema.json
+      responses:
+        '202':
+          description: Object accepted into quarantine
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/artifact-staging.schema.json
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '500': { $ref: '#/components/responses/InternalError' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+
+  /v1/staging-sessions/{staging_session_id}/commit:
+    post:
+      operationId: commitArtifactStagingSession
+      summary: Commit immutable quarantined staging metadata without finalizing an ArtifactVersion
+      x-max-encoded-body-bytes: 4194304
+      parameters:
+        - name: staging_session_id
+          in: path
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 200 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/artifact-staging-commit-request.schema.json
+      responses:
+        '200':
+          description: Quarantined staging metadata committed idempotently
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000000
+                items:
+                  $ref: ../schemas/artifact-staging.schema.json
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '500': { $ref: '#/components/responses/InternalError' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+
+components:
+  securitySchemes:
+    ArtifactMutualTLS:
+      type: mutualTLS
+      description: Registered Agent Platform or Provider workload identity.
+    ArtifactOperationBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Short-lived operation token validated against
+        urn:agent-platform:artifact-gateway-token-claims:v1.
+
+  responses:
+    BadRequest:
+      description: Malformed operation descriptor.
+      content: { application/json: { schema: { $ref: ../schemas/standard-error.schema.json } } }
+    Unauthorized:
+      description: Missing or invalid workload identity or operation token.
+      content: { application/json: { schema: { $ref: ../schemas/standard-error.schema.json } } }
+    Forbidden:
+      description: Grant, route, audience, scope, digest, limit or permission mismatch.
+      content: { application/json: { schema: { $ref: ../schemas/standard-error.schema.json } } }
+    NotFound:
+      description: ArtifactVersion or staging object does not exist in the authenticated scope.
+      content: { application/json: { schema: { $ref: ../schemas/standard-error.schema.json } } }
+    Conflict:
+      description: Stale fencing token, digest conflict or staging state conflict.
+      content: { application/json: { schema: { $ref: ../schemas/standard-error.schema.json } } }
+    PayloadTooLarge:
+      description: Encoded request exceeds the declared limit and was rejected before parsing.
+      content: { application/json: { schema: { $ref: ../schemas/standard-error.schema.json } } }
+    Unprocessable:
+      description: Object media type, length, digest or grant limits are invalid.
+      content: { application/json: { schema: { $ref: ../schemas/standard-error.schema.json } } }
+    InternalError:
+      description: Internal Artifact Gateway error.
+      content: { application/json: { schema: { $ref: ../schemas/standard-error.schema.json } } }
+    Unavailable:
+      description: Artifact Gateway is temporarily unavailable.
+      content: { application/json: { schema: { $ref: ../schemas/standard-error.schema.json } } }

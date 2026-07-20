@@ -35,6 +35,8 @@ Attempt 属性：
 
 同一个逻辑操作的重试复用 Invocation ID，但创建新的 Attempt。
 
+Capability Provider 的长任务控制不创建新的逻辑 Invocation。Invoke、Status、Cancel 和 Event 各使用操作级短期 Token；Token 同时绑定原始 Invocation Request Digest 与当前操作摘要，续期 sequence 连续并引用紧邻前驱 `jti`。这属于授权续期，不是传输重试，也不能改变 ProviderResolution、Tenant、WorkOrder、Policy、Budget、Permissions 或原 deadline。
+
 ## 准备 Attempt
 
 数据库事务：
@@ -60,7 +62,7 @@ Attempt 属性：
 - cancellation context
 - Artifact grants
 - Tenant、ClientApplication、Principal Context 和 WorkOrder
-- ProviderRevision、PolicyDecision、ExecutionBudget、Permissions、Request Digest 和 Staging Session
+- ProviderResolution/Instance/Revision/Audience、完整 PolicyDecision/ExecutionBudget/Permissions、原始与操作 Request Digest、ArtifactGrant 和 ArtifactStagingGrant
 
 通用 Model/Tool/MCP/Skill/Renderer/Converter 调用使用 `capability-provider-v1` 和独立 Capability Invocation Token；`plugin_id` 只允许出现在兼容 Adapter 私有映射中。幂等唯一范围是 `(tenant_id, client_app_id, operation_id, idempotency_key_digest)`，同范围不同 Request Digest 必须返回 409。
 

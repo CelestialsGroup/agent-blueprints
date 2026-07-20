@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:artifact-staging-commit-request:v1",
+  "title": "ArtifactStagingCommitRequest",
+  "type": "object",
+  "required": [
+    "staging_session_id", "invocation_id", "invocation_attempt_id", "fencing_token", "objects", "request_digest"
+  ],
+  "properties": {
+    "staging_session_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "fencing_token": { "type": "integer", "minimum": 1 },
+    "objects": {
+      "type": "array", "minItems": 1, "maxItems": 1000000, "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": ["object_key", "name", "media_type", "role", "size_bytes", "digest"],
+        "properties": {
+          "object_key": { "type": "string", "minLength": 1, "maxLength": 1024 },
+          "name": { "type": "string", "minLength": 1, "maxLength": 1024 },
+          "media_type": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "role": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "size_bytes": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+          "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "request_digest is RFC 8785 JCS SHA-256 over the request excluding request_digest and equals the operation-scoped Artifact Gateway token request_digest",
+    "every object was uploaded under the same unexpired StagingGrant and the object count, media types and cumulative bytes remain within the grant",
+    "commit makes immutable quarantined StagedArtifact metadata visible but never finalizes an ArtifactVersion"
+  ]
+}

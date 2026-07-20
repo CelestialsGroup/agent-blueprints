@@ -2,12 +2,15 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:agent-platform:capability-invocation-token-claims:v1",
   "title": "CapabilityInvocationTokenClaims",
+  "description": "Operation-scoped, renewable bearer claims for one admitted Capability InvocationAttempt.",
   "type": "object",
   "required": [
-    "jti", "iss", "aud", "iat", "nbf", "exp", "tenant_id", "client_app_id", "principal_context_digest",
-    "work_order_id", "provider_revision_id", "capability_id", "capability_version", "invocation_id",
-    "invocation_attempt_id", "fencing_token", "request_digest", "policy_decision_digest",
-    "execution_budget_digest", "permissions_digest", "staging_session_id"
+    "jti", "iss", "aud", "iat", "nbf", "exp", "operation", "authorization_sequence",
+    "predecessor_jti", "renewal_reason", "tenant_id", "client_app_id", "principal_context_digest",
+    "work_order_id", "provider_resolution_id", "provider_instance_id", "provider_revision_id",
+    "capability_id", "capability_version", "invocation_id", "invocation_attempt_id", "fencing_token",
+    "invocation_request_digest", "operation_request_digest", "policy_decision_digest",
+    "execution_budget_digest", "permissions_digest", "staging_grant_digest"
   ],
   "properties": {
     "jti": { "type": "string", "minLength": 1, "maxLength": 200 },
@@ -16,25 +19,61 @@
     "iat": { "type": "integer", "minimum": 0 },
     "nbf": { "type": "integer", "minimum": 0 },
     "exp": { "type": "integer", "minimum": 0 },
+    "operation": { "enum": ["invoke", "status", "cancel", "read_events"] },
+    "authorization_sequence": { "type": "integer", "minimum": 1 },
+    "predecessor_jti": { "type": ["string", "null"], "maxLength": 200 },
+    "renewal_reason": {
+      "enum": ["initial_dispatch", "token_expiry", "status_query", "cancellation", "event_resume"]
+    },
     "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "client_app_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "principal_context_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "provider_resolution_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "provider_instance_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "provider_revision_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "capability_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "capability_version": { "type": "string", "minLength": 1, "maxLength": 100 },
     "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "fencing_token": { "type": "integer", "minimum": 1 },
-    "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "invocation_request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "operation_request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "provider_operation_id": { "type": "string", "minLength": 1, "maxLength": 500 },
     "policy_decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "execution_budget_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "permissions_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
-    "staging_session_id": { "type": "string", "minLength": 1, "maxLength": 200 }
+    "staging_grant_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
   },
   "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": { "authorization_sequence": { "const": 1 } },
+        "required": ["authorization_sequence"]
+      },
+      "then": {
+        "properties": {
+          "predecessor_jti": { "type": "null" },
+          "renewal_reason": { "const": "initial_dispatch" },
+          "operation": { "const": "invoke" }
+        },
+        "not": { "required": ["provider_operation_id"] }
+      },
+      "else": {
+        "properties": {
+          "predecessor_jti": { "type": "string", "minLength": 1 },
+          "renewal_reason": { "not": { "const": "initial_dispatch" } },
+          "operation": { "not": { "const": "invoke" } }
+        },
+        "required": ["provider_operation_id"]
+      }
+    }
+  ],
   "x-semantic-constraints": [
-    "iat <= nbf < exp and exp - iat <= 900",
-    "every claim matches the exact CapabilityInvocationRequest and admitted ProviderResolution before execution"
+    "iat <= nbf < exp, exp - iat <= 900 and exp is no later than the Capability request deadline or CommercialAuthorization expiration",
+    "authorization_sequence starts at one and renewed operation tokens name the immediate predecessor jti without widening the original Invocation scope",
+    "operation and operation_request_digest bind the exact Invoke body, Status target, Cancel body or Event cursor descriptor and cannot authorize another operation",
+    "every claim, audience and executable context digest matches the exact CapabilityInvocationRequest, ArtifactStagingGrant and admitted ProviderResolution before execution"
   ]
 }

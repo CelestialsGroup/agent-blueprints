@@ -9,9 +9,9 @@
   "invocation_attempt_id": "iat_runtime_01J0000000000000000",
   "fencing_token": 1,
   "idempotency_key": "runtime-start-key-0001",
-  "request_digest": "sha256:8f74502b57a4d680b05198bdf9f84f4a8342c547d411fab1e1a033387b63d8fb",
+  "request_digest": "sha256:5901f7399908cc184c859de6d9d435c8cf3fb9920e255f6107a2f8b2dd981b5d",
   "deadline_at": "2026-07-16T09:15:00Z",
-  "run_manifest_digest": "sha256:6af3fa5c10bf40f1064f6d606ebdf3f192b58c5dbacda21f347323f8f6f88403",
+  "run_manifest_digest": "sha256:01b48ba9543ce6771d9b376ed5493cb745b8505ca4b0eeefe274ce70df75428b",
   "input_message_id": "msg_01J00000000000000000000000",
   "sandbox_bindings": [],
   "tenant_id": "ten_01J00000000000000000000000",
@@ -45,39 +45,59 @@
   "gateway_bindings": {
     "model": {
       "kind": "model",
-      "gateway_id": "model-gateway",
-      "route_id": "model-route-general-balanced",
-      "protocol_version": "v1",
-      "binding_digest": "sha256:7171717171717171717171717171717171717171717171717171717171717171",
-      "audience": "agent-model-gateway",
-      "mode": "enabled"
+      "mode": "enabled",
+      "port": {
+        "gateway_kind": "model",
+        "gateway_id": "model-gateway",
+        "route_id": "model-route-work-order",
+        "protocol_version": "v1",
+        "contract_id": "urn:agent-platform:openapi:capability-provider:v1",
+        "contract_digest": "sha256:0a4c171f34ca1f997465d7a788595a9a3ba904a336cf65ddb5b34cb6bed74c42",
+        "binding_digest": "sha256:40b36bc05f2e1cbc59351599a7436b71deb3c46864e304d2feac0acd4b871027",
+        "audience": "agent-model-gateway"
+      }
     },
     "tool": {
       "kind": "tool",
-      "gateway_id": "tool-gateway",
-      "route_id": "tool-route-work-order",
-      "protocol_version": "v1",
-      "binding_digest": "sha256:7272727272727272727272727272727272727272727272727272727272727272",
-      "audience": "agent-tool-gateway",
-      "mode": "enabled"
+      "mode": "enabled",
+      "port": {
+        "gateway_kind": "tool",
+        "gateway_id": "tool-gateway",
+        "route_id": "tool-route-work-order",
+        "protocol_version": "v1",
+        "contract_id": "urn:agent-platform:openapi:capability-provider:v1",
+        "contract_digest": "sha256:0a4c171f34ca1f997465d7a788595a9a3ba904a336cf65ddb5b34cb6bed74c42",
+        "binding_digest": "sha256:7785d40c2d4ba29996921defa096022fedf09ef5ebf127cf829d82e51b92d02b",
+        "audience": "agent-tool-gateway"
+      }
     },
     "artifact": {
       "kind": "artifact",
-      "gateway_id": "artifact-gateway",
-      "route_id": "artifact-route-work-order",
-      "protocol_version": "v1",
-      "binding_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
-      "audience": "agent-artifact-gateway",
-      "mode": "enabled"
+      "mode": "enabled",
+      "port": {
+        "gateway_kind": "artifact",
+        "gateway_id": "artifact-gateway",
+        "route_id": "artifact-route-work-order",
+        "protocol_version": "v1",
+        "contract_id": "urn:agent-platform:openapi:artifact-gateway:v1",
+        "contract_digest": "sha256:1f47bc91e199533c45f3a0c3b82cf3f3d2c27aedf52196ce9805e792e5a9b0c1",
+        "binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
+        "audience": "agent-artifact-gateway"
+      }
     },
     "egress": {
       "kind": "egress",
-      "gateway_id": "egress-gateway",
-      "route_id": "egress-route-restricted",
-      "protocol_version": "v1",
-      "binding_digest": "sha256:7474747474747474747474747474747474747474747474747474747474747474",
-      "audience": "agent-egress-gateway",
-      "mode": "enabled"
+      "mode": "enabled",
+      "port": {
+        "gateway_kind": "egress",
+        "gateway_id": "egress-gateway",
+        "route_id": "egress-route-work-order",
+        "protocol_version": "v1",
+        "contract_id": "urn:agent-platform:openapi:egress-gateway:v1",
+        "contract_digest": "sha256:e1ebb3223101e509ab01d68c797a9917f9af471ea7798169452f1f9e8040aaa2",
+        "binding_digest": "sha256:bc615a79dfe04287501e0127f2b48de9f22f1b6c8de879dfd93d9f83d4c82a5a",
+        "audience": "agent-egress-gateway"
+      }
     }
   },
   "admission_limits": {
@@ -94,7 +114,7 @@
     "tenant_id": "ten_01J00000000000000000000000",
     "work_order_id": "wrk_01J00000000000000000000000",
     "runtime_run_id": "rtr_01J00000000000000000000000",
-    "run_manifest_digest": "sha256:6af3fa5c10bf40f1064f6d606ebdf3f192b58c5dbacda21f347323f8f6f88403",
+    "run_manifest_digest": "sha256:01b48ba9543ce6771d9b376ed5493cb745b8505ca4b0eeefe274ce70df75428b",
     "commercial_authorization": {
       "commercial_authorization_id": "cauth_01J00000000000000000000000",
       "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7",
@@ -130,7 +150,7 @@
     },
     "policy_decision": {
       "decision_id": "pol_01J00000000000000000000000",
-      "decision_digest": "sha256:c4b3dd89f6a9ee317fbae803cdfa6cc236d920e9c94508de6847469cc3b9c6ae",
+      "decision_digest": "sha256:cd3a9c725bb9bfeeda9cff65c0ca3320d60637d0d307c82bdc8cd6faf09c5e81",
       "tenant_id": "ten_01J00000000000000000000000",
       "work_order_id": "wrk_01J00000000000000000000000",
       "policy_bundle_digest": "sha256:6161616161616161616161616161616161616161616161616161616161616161",
@@ -153,7 +173,7 @@
         }
       ],
       "outcome": "allow",
-      "effective_permissions_digest": "sha256:5375e066f65c68283787a4cd581f1413865b4ae87a65c7882d063b07b25abcf4",
+      "effective_permissions_digest": "sha256:1b22bb4691019c29f24a5c8cee8b0b793bdd1f0d9a5eea0478d8359a6f9a0088",
       "decided_at": "2026-07-16T09:00:59Z",
       "expires_at": "2026-07-16T09:30:00Z",
       "decision_point": "run_admission",
@@ -162,7 +182,7 @@
     },
     "effective_permissions": {
       "permissions_id": "perm_01J00000000000000000000000",
-      "permissions_digest": "sha256:5375e066f65c68283787a4cd581f1413865b4ae87a65c7882d063b07b25abcf4",
+      "permissions_digest": "sha256:1b22bb4691019c29f24a5c8cee8b0b793bdd1f0d9a5eea0478d8359a6f9a0088",
       "tenant_id": "ten_01J00000000000000000000000",
       "work_order_id": "wrk_01J00000000000000000000000",
       "model": {
@@ -184,7 +204,8 @@
         "mode": "restricted",
         "allowed_destination_classes": [
           "model_gateway",
-          "artifact_gateway"
+          "artifact_gateway",
+          "public-docs-origin"
         ]
       },
       "sandbox_slots": []
@@ -200,7 +221,6 @@
         "permissions": [
           "read"
         ],
-        "gateway_route_id": "artifact-route-workspace-manifest",
         "issued_at": "2026-07-16T09:01:00Z",
         "expires_at": "2026-07-16T09:15:00Z",
         "execution_scope": {
@@ -208,11 +228,22 @@
           "runtime_run_id": "rtr_01J00000000000000000000000",
           "invocation_id": "inv_runtime_01J000000000000000000",
           "invocation_attempt_id": "iat_runtime_01J0000000000000000"
-        }
+        },
+        "gateway_binding": {
+          "gateway_kind": "artifact",
+          "gateway_id": "artifact-gateway",
+          "route_id": "artifact-route-work-order",
+          "protocol_version": "v1",
+          "contract_id": "urn:agent-platform:openapi:artifact-gateway:v1",
+          "contract_digest": "sha256:1f47bc91e199533c45f3a0c3b82cf3f3d2c27aedf52196ce9805e792e5a9b0c1",
+          "binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
+          "audience": "agent-artifact-gateway"
+        },
+        "grant_digest": "sha256:f939c6259c2569d3fcbde33df5ebbcba36e5bc697bf3e0eee0707aaefee6b5a2"
       }
     ],
     "issued_at": "2026-07-16T09:01:00Z",
     "expires_at": "2026-07-16T09:15:00Z",
-    "authorization_digest": "sha256:05b32377f9163f3698ae50617a286054c419138d2a5ed287d1eab50284994fbf"
+    "authorization_digest": "sha256:1a165dfcea3ce9aa7c050d4cb38066e576439a1700cfa4f61badb3ae9c7d3373"
   }
 }

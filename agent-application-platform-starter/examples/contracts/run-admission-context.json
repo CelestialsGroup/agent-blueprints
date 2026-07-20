@@ -37,10 +37,10 @@
       "template_revision_id": "tmplrev_01J00000000000000000000000",
       "template_id": "html-anything/landing-saas-dark",
       "version": "1.0.0",
-      "revision_digest": "sha256:20017f0bfa23b5eb5d2b957a8f22a7ed481e5d21fbd728d69efc15f46fd57c34",
+      "revision_digest": "sha256:06fa3119e7a8194f72d1091438b159e1535d89044dbae4b09df6ff4be39e89ff",
       "provider_revision": {
         "provider_revision_id": "tplpr_01J0000000000000000000000",
-        "provider_revision_digest": "sha256:8324669a083e9c43c8cb0064e25e7bb34435a9a1a5fadbe9da3de31c397a470f",
+        "provider_revision_digest": "sha256:e2a469e25064978215ae645d62c35fc7c2ba6487a0c440743df940bf6ae152b5",
         "provider_kind": "template",
         "implementation": {
           "implementation_id": "template-provider.html-anything",
@@ -60,15 +60,15 @@
         "port": {
           "protocol": "capability-provider",
           "protocol_version": "v1",
-          "contract_digest": "sha256:bc2e091e79a4f04cde57189adfbef05ee447ef4c1173754cfe0535feec2f5b62",
+          "contract_digest": "sha256:0a4c171f34ca1f997465d7a788595a9a3ba904a336cf65ddb5b34cb6bed74c42",
           "binding_digest": "sha256:8585858585858585858585858585858585858585858585858585858585858585"
         },
         "configuration_digest": "sha256:8383838383838383838383838383838383838383838383838383838383838383",
         "approved_permissions_digest": "sha256:8484848484848484848484848484848484848484848484848484848484848484",
         "credential_binding_digest": "sha256:8686868686868686868686868686868686868686868686868686868686868686",
-        "conformance_set_digest": "sha256:717cddea2f0cbb8fd11afe436b4f3b6eb428f152e62039354643679cb1ad2e5d",
+        "conformance_set_digest": "sha256:212ed97ab13f6b9d934c381266eef8c2f435715b8ec3d513c59519bf6103fc2d",
         "admission_decision_id": "tplad_01J0000000000000000000000",
-        "admission_decision_digest": "sha256:b7a5fe55bbd4a4f64f090adcb4cec3642f9cd3d5811558c68a8158ef8738dab6",
+        "admission_decision_digest": "sha256:aa2fb827ce346d1c8539d070d2b73181b43600693e5556a00d5ca62ea27b5734",
         "admission_status": "certified"
       },
       "capability": {
@@ -213,7 +213,7 @@
     },
     {
       "provider_revision_id": "apr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:9c35dcaee06dd5d56bdf3297c493f9752c16f752b6ddc323e5f7dfcc49f7c252",
+      "provider_revision_digest": "sha256:a8d4ff188608bd741bfc406616b21037b4fde246a6815c4b93e0d2b5cd571dfe",
       "provider_instance_id": "api_deerflow_runtime",
       "configuration_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
       "approved_permissions_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
@@ -228,7 +228,7 @@
           "status": "passed",
           "report_digest": "sha256:1212121212121212121212121212121212121212121212121212121212121212",
           "suite_id": "agent-runtime-provider",
-          "suite_digest": "sha256:9523bc839ccb04e303e8879080835ee32d2128e262de7d6d09bedf2c32087ac8",
+          "suite_digest": "sha256:94f077f820aafce00d6c13bed73ae79d0de600870b537748d2128cfb3006654b",
           "suite_profile_id": "governed-v1"
         },
         {
@@ -239,11 +239,11 @@
           "status": "passed",
           "report_digest": "sha256:1313131313131313131313131313131313131313131313131313131313131313",
           "suite_id": "agent-runtime-provider",
-          "suite_digest": "sha256:9523bc839ccb04e303e8879080835ee32d2128e262de7d6d09bedf2c32087ac8",
+          "suite_digest": "sha256:94f077f820aafce00d6c13bed73ae79d0de600870b537748d2128cfb3006654b",
           "suite_profile_id": "runtime-general-v1"
         }
       ],
-      "conformance_set_digest": "sha256:746724cd96890e564d2c5a1ce6ba3091015888b207eaa179f93b6428b5ec4597",
+      "conformance_set_digest": "sha256:2cd05cab3ad758a788b8a4f29b72e62b7a6814bcdf3569db018f4a9f9049e5ab",
       "created_at": "2026-07-16T09:00:10Z",
       "implementation": {
         "implementation_id": "agent-runtime.deerflow",
@@ -270,7 +270,7 @@
     },
     {
       "provider_revision_id": "tpr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:095db7c909c92e04d76604ec72115c6e47beeb28aa406d4a473ae8de186b1b67",
+      "provider_revision_digest": "sha256:78e9fcb4b86d8bd2dedd75a906fe19b1b42c524272284c872e2cfe8533839710",
       "provider_instance_id": "tpi_echo",
       "configuration_digest": "sha256:2323232323232323232323232323232323232323232323232323232323232323",
       "approved_permissions_digest": "sha256:2424242424242424242424242424242424242424242424242424242424242424",
@@ -285,11 +285,11 @@
           "status": "passed",
           "report_digest": "sha256:2727272727272727272727272727272727272727272727272727272727272727",
           "suite_id": "capability-provider",
-          "suite_digest": "sha256:f5906e48557a9cbe53c8424b570269a19339db7524b79f2d1fc11a814bfdb037",
+          "suite_digest": "sha256:7819b9e4bee0d08a15a1fdc54862ba61a6ae705a6e9923d2d902355e47a06807",
           "suite_profile_id": "capability-core-v1"
         }
       ],
-      "conformance_set_digest": "sha256:1b8db273b8f33ec7cc654bdaf41f775047e4e088b97aaf7d9e8d06a42d0d430f",
+      "conformance_set_digest": "sha256:bd0e932e68f800b86ff0bf53487dc18317397589d89421fc3180f4d8ba1876ba",
       "created_at": "2026-07-16T09:00:20Z",
       "implementation": {
         "implementation_id": "tool-provider.echo",
@@ -309,13 +309,13 @@
       "port": {
         "protocol": "capability-provider",
         "protocol_version": "v1",
-        "contract_digest": "sha256:bc2e091e79a4f04cde57189adfbef05ee447ef4c1173754cfe0535feec2f5b62",
+        "contract_digest": "sha256:0a4c171f34ca1f997465d7a788595a9a3ba904a336cf65ddb5b34cb6bed74c42",
         "binding_digest": "sha256:2525252525252525252525252525252525252525252525252525252525252525"
       }
     },
     {
       "provider_revision_id": "hpr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:461bd865248862fe13ef3f831295ebbfb6e6b830e83e2fa75cea45211f2f76c8",
+      "provider_revision_digest": "sha256:2c7840c85efb444003ce8f84798012ebe78a55a00c8acb576586a73cf28c3c68",
       "provider_instance_id": "hpi_html_anything",
       "configuration_digest": "sha256:4343434343434343434343434343434343434343434343434343434343434343",
       "approved_permissions_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
@@ -330,11 +330,11 @@
           "status": "passed",
           "report_digest": "sha256:4747474747474747474747474747474747474747474747474747474747474747",
           "suite_id": "capability-provider",
-          "suite_digest": "sha256:f5906e48557a9cbe53c8424b570269a19339db7524b79f2d1fc11a814bfdb037",
+          "suite_digest": "sha256:7819b9e4bee0d08a15a1fdc54862ba61a6ae705a6e9923d2d902355e47a06807",
           "suite_profile_id": "capability-core-v1"
         }
       ],
-      "conformance_set_digest": "sha256:57b7c1b5d781e7fab81aeae59b9ee6c82b866ee186629b44e2edc0fa32851352",
+      "conformance_set_digest": "sha256:7925a543a9e266bdf3145ac20a025c737aa2cee1288eb3f2af83daf111c82a08",
       "created_at": "2026-07-16T09:00:21Z",
       "implementation": {
         "implementation_id": "skill-provider.html-anything",
@@ -354,13 +354,13 @@
       "port": {
         "protocol": "capability-provider",
         "protocol_version": "v1",
-        "contract_digest": "sha256:bc2e091e79a4f04cde57189adfbef05ee447ef4c1173754cfe0535feec2f5b62",
+        "contract_digest": "sha256:0a4c171f34ca1f997465d7a788595a9a3ba904a336cf65ddb5b34cb6bed74c42",
         "binding_digest": "sha256:4545454545454545454545454545454545454545454545454545454545454545"
       }
     },
     {
       "provider_revision_id": "rpr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:a1bf035a29dbb36190cbd84c795fcb385b40c95f65a4b7ef6dadad0d83772732",
+      "provider_revision_digest": "sha256:b514d6d09a0733dbe4984cc618b46382a7d8bf188ad47257d6e66d28037975d6",
       "provider_instance_id": "rpi_html_preview",
       "configuration_digest": "sha256:3838383838383838383838383838383838383838383838383838383838383838",
       "approved_permissions_digest": "sha256:3939393939393939393939393939393939393939393939393939393939393939",
@@ -375,11 +375,11 @@
           "status": "passed",
           "report_digest": "sha256:3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c",
           "suite_id": "capability-provider",
-          "suite_digest": "sha256:f5906e48557a9cbe53c8424b570269a19339db7524b79f2d1fc11a814bfdb037",
+          "suite_digest": "sha256:7819b9e4bee0d08a15a1fdc54862ba61a6ae705a6e9923d2d902355e47a06807",
           "suite_profile_id": "capability-core-v1"
         }
       ],
-      "conformance_set_digest": "sha256:7fe9d23b104e2ad89666acb51693599dbcf4b70cab640654f12cd278158745ca",
+      "conformance_set_digest": "sha256:d7c5f6bcf49c0eb294b2f25749bdb77454f60559612c207eb9a6ace4141787be",
       "created_at": "2026-07-16T09:00:22Z",
       "implementation": {
         "implementation_id": "renderer-provider.html-preview",
@@ -399,13 +399,13 @@
       "port": {
         "protocol": "capability-provider",
         "protocol_version": "v1",
-        "contract_digest": "sha256:bc2e091e79a4f04cde57189adfbef05ee447ef4c1173754cfe0535feec2f5b62",
+        "contract_digest": "sha256:0a4c171f34ca1f997465d7a788595a9a3ba904a336cf65ddb5b34cb6bed74c42",
         "binding_digest": "sha256:3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a"
       }
     },
     {
       "provider_revision_id": "tplpr_01J0000000000000000000000",
-      "provider_revision_digest": "sha256:8324669a083e9c43c8cb0064e25e7bb34435a9a1a5fadbe9da3de31c397a470f",
+      "provider_revision_digest": "sha256:e2a469e25064978215ae645d62c35fc7c2ba6487a0c440743df940bf6ae152b5",
       "provider_instance_id": "tpli_html_anything",
       "configuration_digest": "sha256:8383838383838383838383838383838383838383838383838383838383838383",
       "approved_permissions_digest": "sha256:8484848484848484848484848484848484848484848484848484848484848484",
@@ -420,11 +420,11 @@
           "status": "passed",
           "report_digest": "sha256:8787878787878787878787878787878787878787878787878787878787878787",
           "suite_id": "capability-provider",
-          "suite_digest": "sha256:f5906e48557a9cbe53c8424b570269a19339db7524b79f2d1fc11a814bfdb037",
+          "suite_digest": "sha256:7819b9e4bee0d08a15a1fdc54862ba61a6ae705a6e9923d2d902355e47a06807",
           "suite_profile_id": "capability-core-v1"
         }
       ],
-      "conformance_set_digest": "sha256:717cddea2f0cbb8fd11afe436b4f3b6eb428f152e62039354643679cb1ad2e5d",
+      "conformance_set_digest": "sha256:212ed97ab13f6b9d934c381266eef8c2f435715b8ec3d513c59519bf6103fc2d",
       "created_at": "2026-07-16T09:00:25Z",
       "implementation": {
         "implementation_id": "template-provider.html-anything",
@@ -444,7 +444,7 @@
       "port": {
         "protocol": "capability-provider",
         "protocol_version": "v1",
-        "contract_digest": "sha256:bc2e091e79a4f04cde57189adfbef05ee447ef4c1173754cfe0535feec2f5b62",
+        "contract_digest": "sha256:0a4c171f34ca1f997465d7a788595a9a3ba904a336cf65ddb5b34cb6bed74c42",
         "binding_digest": "sha256:8585858585858585858585858585858585858585858585858585858585858585"
       }
     }
@@ -464,57 +464,57 @@
     {
       "decision_id": "pad_runtime_01J00000000000000000",
       "provider_revision_id": "apr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:9c35dcaee06dd5d56bdf3297c493f9752c16f752b6ddc323e5f7dfcc49f7c252",
+      "provider_revision_digest": "sha256:a8d4ff188608bd741bfc406616b21037b4fde246a6815c4b93e0d2b5cd571dfe",
       "decision_sequence": 1,
       "decision": "certified",
       "evidence_digest": "sha256:1414141414141414141414141414141414141414141414141414141414141414",
       "decided_by": "principal:platform-provider-certifier",
       "decided_at": "2026-07-16T09:00:40Z",
-      "decision_digest": "sha256:835372b205ccccdc9185838bea600fb5bdb14de5cfc6b7d5689a137abb283d0a"
+      "decision_digest": "sha256:818b6624ef83d2c636f2aad85aff59af80c1ef0c1f97404bab245e27a36d55be"
     },
     {
       "decision_id": "pad_tool_01J000000000000000000",
       "provider_revision_id": "tpr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:095db7c909c92e04d76604ec72115c6e47beeb28aa406d4a473ae8de186b1b67",
+      "provider_revision_digest": "sha256:78e9fcb4b86d8bd2dedd75a906fe19b1b42c524272284c872e2cfe8533839710",
       "decision_sequence": 1,
       "decision": "certified",
       "evidence_digest": "sha256:2828282828282828282828282828282828282828282828282828282828282828",
       "decided_by": "principal:platform-provider-certifier",
       "decided_at": "2026-07-16T09:00:50Z",
-      "decision_digest": "sha256:0bfaad69d91297599d038b3d3337e1c68ff7af5d6d3c95774ae1f75bc184cacd"
+      "decision_digest": "sha256:a95942713f209103c37a89d55b2d4fac823655c0ce9a164dd67155e3c9caa5c8"
     },
     {
       "decision_id": "pad_html_skill_01J000000000000000",
       "provider_revision_id": "hpr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:461bd865248862fe13ef3f831295ebbfb6e6b830e83e2fa75cea45211f2f76c8",
+      "provider_revision_digest": "sha256:2c7840c85efb444003ce8f84798012ebe78a55a00c8acb576586a73cf28c3c68",
       "decision_sequence": 1,
       "decision": "certified",
       "evidence_digest": "sha256:4848484848484848484848484848484848484848484848484848484848484848",
       "decided_by": "principal:platform-provider-certifier",
       "decided_at": "2026-07-16T09:00:51Z",
-      "decision_digest": "sha256:bd27f283d71da4ee4af8a58c5fb83a96910c79fd4ba22e0e376ccb1b5a4dc65d"
+      "decision_digest": "sha256:8d7dcd5a2911a8cc05abe574138e68b895c01338ade1dc17a30b5d51332169d4"
     },
     {
       "decision_id": "pad_renderer_01J0000000000000000",
       "provider_revision_id": "rpr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:a1bf035a29dbb36190cbd84c795fcb385b40c95f65a4b7ef6dadad0d83772732",
+      "provider_revision_digest": "sha256:b514d6d09a0733dbe4984cc618b46382a7d8bf188ad47257d6e66d28037975d6",
       "decision_sequence": 1,
       "decision": "certified",
       "evidence_digest": "sha256:3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d",
       "decided_by": "principal:platform-provider-certifier",
       "decided_at": "2026-07-16T09:00:52Z",
-      "decision_digest": "sha256:6fcb26b3fa1304e339ec760a7cb0d3ca32c59a6f997a702a5b02ca02167f0d5c"
+      "decision_digest": "sha256:d4ad95db9715b81ad672c56ee691715c675714190b5dbb9352ba721143fe63c8"
     },
     {
       "decision_id": "tplad_01J0000000000000000000000",
       "provider_revision_id": "tplpr_01J0000000000000000000000",
-      "provider_revision_digest": "sha256:8324669a083e9c43c8cb0064e25e7bb34435a9a1a5fadbe9da3de31c397a470f",
+      "provider_revision_digest": "sha256:e2a469e25064978215ae645d62c35fc7c2ba6487a0c440743df940bf6ae152b5",
       "decision_sequence": 1,
       "decision": "certified",
       "evidence_digest": "sha256:8989898989898989898989898989898989898989898989898989898989898989",
       "decided_by": "principal:platform-provider-certifier",
       "decided_at": "2026-07-16T09:00:55Z",
-      "decision_digest": "sha256:b7a5fe55bbd4a4f64f090adcb4cec3642f9cd3d5811558c68a8158ef8738dab6"
+      "decision_digest": "sha256:aa2fb827ce346d1c8539d070d2b73181b43600693e5556a00d5ca62ea27b5734"
     }
   ],
   "commercial_authorization": {

@@ -6,7 +6,7 @@ JSON 状态机是状态名称与迁移的权威事实源；Schema 定义允许�
 
 权威文件：`contracts/state-machines/work-order-v1.json`。状态集合与 `work-order-state.schema.json` 完全一致：accepted、queued、running、waiting、paused、cancel_requested、cancelling、completed、partial、failed、cancelled。
 
-`waiting` 的具体原因（Input/Approval/Resource）属于等待原因，不拆成冲突的顶层状态。`accepted`、`queued`、`running`、`waiting` 和 `paused` 都可记录取消意图；取消经过 `cancel_requested`/`cancelling`，完成与取消竞态以实际持久化结果为准。
+`waiting` 的具体原因（Input/Approval/Resource）属于等待原因，不拆成冲突的顶层状态。`accepted`、`queued`、`running`、`waiting` 和 `paused` 都可记录取消意图；取消经过 `cancel_requested`/`cancelling`，完成与取消竞态以实际持久化结果为准。`queued`、`waiting` 和 `paused` 收到结构化且已确认的失败证据时可直接进入 `failed`，不得先制造虚假的 `running` 迁移。
 
 ## Invocation
 

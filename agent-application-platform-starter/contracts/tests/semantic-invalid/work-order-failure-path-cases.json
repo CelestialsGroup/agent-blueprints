@@ -1,0 +1,7 @@
+{
+  "cases": [
+    { "id": "queued-cannot-fail", "remove_failure_from": "queued" },
+    { "id": "waiting-cannot-fail", "remove_failure_from": "waiting" },
+    { "id": "paused-cannot-fail", "remove_failure_from": "paused" }
+  ]
+}

@@ -180,6 +180,17 @@ valid_cases = [
     ("capability-invocation-event.schema.json", "examples/contracts/capability-invocation-event.json"),
     ("capability-cancellation-request.schema.json", "examples/contracts/capability-cancellation-request.json"),
     ("capability-invocation-token-claims.schema.json", "examples/contracts/capability-invocation-token-claims.json"),
+    ("capability-invocation-token-claims.schema.json", "examples/contracts/capability-invocation-status-token-claims.json"),
+    ("capability-invocation-token-claims.schema.json", "examples/contracts/capability-cancellation-token-claims.json"),
+    ("artifact-staging-grant.schema.json", "examples/contracts/artifact-staging-grant.json"),
+    ("artifact-staging-object-request.schema.json", "examples/contracts/artifact-staging-object-request.json"),
+    ("artifact-staging-commit-request.schema.json", "examples/contracts/artifact-staging-commit-request.json"),
+    ("artifact-gateway-token-claims.schema.json", "examples/contracts/artifact-gateway-stage-token-claims.json"),
+    ("artifact-gateway-token-claims.schema.json", "examples/contracts/artifact-gateway-commit-token-claims.json"),
+    ("artifact-gateway-token-claims.schema.json", "examples/contracts/artifact-gateway-read-token-claims.json"),
+    ("egress-http-request.schema.json", "examples/contracts/egress-http-request.json"),
+    ("egress-http-response.schema.json", "examples/contracts/egress-http-response.json"),
+    ("egress-invocation-token-claims.schema.json", "examples/contracts/egress-invocation-token-claims.json"),
     ("work-session-request.schema.json", "examples/contracts/work-session-request.json"),
     ("sandbox-capabilities.schema.json", "examples/contracts/sandbox-capabilities.json"),
     ("sandbox-spec.schema.json", "examples/contracts/sandbox-spec.json"),
@@ -279,6 +290,7 @@ valid_cases = [
     ("conformance-suite-manifest.schema.json", "contracts/conformance/sandbox/v1/suite.json"),
     ("conformance-suite-manifest.schema.json", "contracts/conformance/runtime-gateway/v1/suite.json"),
     ("conformance-suite-manifest.schema.json", "contracts/conformance/capability/v1/suite.json"),
+    ("conformance-suite-manifest.schema.json", "contracts/conformance/execution-gateway/v1/suite.json"),
     ("ui-extension-manifest.schema.json", "examples/contracts/ui-extension-manifest.json"),
     ("semantic-constraint-traceability.schema.json", "contracts/semantic-constraints-v1.json"),
 ]
@@ -316,6 +328,12 @@ invalid_cases = [
     ("artifact-grant.schema.json", "contracts/tests/invalid/artifact-grant-provider-finalize.json"),
     ("runtime-authorization.schema.json", "contracts/tests/invalid/runtime-authorization-first-with-predecessor.json"),
     ("runtime-gateway-bindings.schema.json", "contracts/tests/invalid/runtime-gateway-disabled-with-route.json"),
+    ("capability-invocation-request.schema.json", "contracts/tests/invalid/capability-request-missing-execution-budget.json"),
+    ("capability-invocation-token-claims.schema.json", "contracts/tests/invalid/capability-token-first-authorizes-status.json"),
+    ("capability-invocation-token-claims.schema.json", "contracts/tests/invalid/capability-token-renewed-without-predecessor.json"),
+    ("run-manifest-v2.schema.json", "contracts/tests/invalid/run-manifest-missing-request-binding.json"),
+    ("artifact-gateway-token-claims.schema.json", "contracts/tests/invalid/artifact-gateway-read-with-staging-grant.json"),
+    ("egress-http-request.schema.json", "contracts/tests/invalid/egress-request-with-raw-origin.json"),
 ]
 for case in valid_cases:
     validate(*case, True)
@@ -368,12 +386,18 @@ for relative, field in [
     ("examples/contracts/workspace-content-manifest.json", "manifest_digest"),
     ("examples/contracts/context-package.json", "context_package_digest"),
     ("examples/contracts/capability-invocation-request.json", "request_digest"),
+    ("examples/contracts/capability-cancellation-request.json", "request_digest"),
+    ("examples/contracts/artifact-grant.json", "grant_digest"),
+    ("examples/contracts/artifact-staging-grant.json", "grant_digest"),
+    ("examples/contracts/artifact-staging-commit-request.json", "request_digest"),
+    ("examples/contracts/egress-http-request.json", "request_digest"),
     ("contracts/event-types/agent-runtime-core-v1.json", "registry_digest"),
     ("contracts/event-types/platform-core-v1.json", "registry_digest"),
     ("contracts/conformance/runtime/v1/suite.json", "suite_digest"),
     ("contracts/conformance/sandbox/v1/suite.json", "suite_digest"),
     ("contracts/conformance/runtime-gateway/v1/suite.json", "suite_digest"),
     ("contracts/conformance/capability/v1/suite.json", "suite_digest"),
+    ("contracts/conformance/execution-gateway/v1/suite.json", "suite_digest"),
 ]:
     value = load(ROOT / relative)
     expected = value[field]

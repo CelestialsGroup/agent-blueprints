@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import base64
 import hashlib
 import json
 import posixpath
@@ -37,6 +38,7 @@ KNOWN_CONTRACT_CHECKS = {
     "runtime_authorization.expiry",
     "runtime_authorization.artifact_coverage",
     "runtime_token.binding",
+    "work_order.failure_paths",
     "work_order_control.grant_binding",
     "work_order_control.conditional_cas",
     "conversation_branch.head_consistency",
@@ -46,9 +48,14 @@ KNOWN_CONTRACT_CHECKS = {
     "provider_resolution.identity_dependency",
     "provider_resolution.selected_candidate",
     "capability_invocation.request_digest",
+    "capability_invocation.resolution_binding",
+    "capability_invocation.execution_context",
     "capability_invocation.token_binding",
     "capability_invocation.token_lifetime",
+    "capability_invocation.token_lineage",
+    "capability_invocation.operation_binding",
     "capability_invocation.artifact_grant_expiry",
+    "capability_invocation.staging_grant",
     "workspace_manifest.digest",
     "workspace_manifest.path_policy",
     "workspace_manifest.counts",
@@ -73,10 +80,34 @@ KNOWN_CONTRACT_CHECKS = {
     "principal_context.time_window",
     "principal_context.closed_attributes",
     "gateway_binding.closed_modes",
+    "gateway_binding.port_contract",
     "gateway_binding.policy_alignment",
+    "gateway_port.contract_mapping",
+    "gateway_port.audience_binding",
     "artifact_grant.expiry",
+    "artifact_grant.digest",
     "artifact_grant.scope",
     "artifact_grant.provider_permissions",
+    "run_manifest.digest",
+    "run_manifest.request_binding",
+    "run_manifest.admission",
+    "run_manifest.runtime_resolution",
+    "run_manifest.sandbox_resolution",
+    "run_manifest.experience_binding",
+    "run_manifest.conversation_binding",
+    "run_manifest.execution_inputs",
+    "run_manifest.authorization_ceiling",
+    "run_manifest.gateway_binding",
+    "run_manifest.commercial_event_binding",
+    "run_manifest.orchestration_binding",
+    "artifact_staging_grant.digest",
+    "artifact_staging_grant.scope",
+    "artifact_staging_grant.expiry",
+    "artifact_staging_grant.permissions",
+    "artifact_gateway.operation_binding",
+    "artifact_gateway.token_binding",
+    "egress_gateway.request_binding",
+    "egress_gateway.token_binding",
     "usage_observation.observation_identity",
     "usage_observation.meter_and_evidence",
     "usage_observation.incomplete_status",
@@ -232,7 +263,7 @@ def validate_provider_resolution(resolution: dict[str, Any]) -> None:
     validate_self_digest(resolution, "decision_digest")
     evaluations = resolution["candidate_evaluations"]
     candidate_keys = [
-        (item["provider_instance_id"], item["provider_revision_id"])
+        (item["provider_instance_id"], item["provider_revision_id"], item["provider_audience"])
         for item in evaluations
     ]
     if len(candidate_keys) != len(set(candidate_keys)):
@@ -245,6 +276,8 @@ def validate_provider_resolution(resolution: dict[str, Any]) -> None:
         raise AssertionError("ProviderResolution selected instance conflicts with candidate evidence")
     if selected[0]["provider_revision_id"] != snapshot["provider_revision_id"]:
         raise AssertionError("ProviderResolution selected revision conflicts with candidate evidence")
+    if selected[0]["provider_audience"] != resolution["selected_provider_audience"]:
+        raise AssertionError("ProviderResolution selected audience conflicts with candidate evidence")
     if resolution["execution_scope"] != "work_order" or not resolution["tenant_id"] or not resolution["client_app_id"] or not resolution["work_order_id"]:
         raise AssertionError("ProviderResolution is missing its Tenant, ClientApplication or WorkOrder scope")
     identity_mode = resolution["identity_dependency"]["mode"]
@@ -310,13 +343,39 @@ def permissions_are_subset(current: dict[str, Any], ceiling: dict[str, Any]) -> 
 def validate_gateway_bindings(
     bindings: dict[str, Any], budget: dict[str, Any], permissions: dict[str, Any],
 ) -> None:
+    expected_contracts = {
+        "model": (
+            "urn:agent-platform:openapi:capability-provider:v1",
+            ROOT / "contracts/openapi/capability-provider-v1.yaml",
+        ),
+        "tool": (
+            "urn:agent-platform:openapi:capability-provider:v1",
+            ROOT / "contracts/openapi/capability-provider-v1.yaml",
+        ),
+        "artifact": (
+            "urn:agent-platform:openapi:artifact-gateway:v1",
+            ROOT / "contracts/openapi/artifact-gateway-v1.yaml",
+        ),
+        "egress": (
+            "urn:agent-platform:openapi:egress-gateway:v1",
+            ROOT / "contracts/openapi/egress-gateway-v1.yaml",
+        ),
+    }
     for kind, binding in bindings.items():
         if binding["kind"] != kind:
             raise AssertionError("Runtime Gateway binding is stored under the wrong kind")
-        if binding["mode"] == "disabled" and any(
-            field in binding for field in ("gateway_id", "route_id", "protocol_version", "binding_digest", "audience")
-        ):
+        if binding["mode"] == "disabled" and "port" in binding:
             raise AssertionError("Disabled Runtime Gateway binding exposes a routable identity")
+        if binding["mode"] == "enabled":
+            port = binding["port"]
+            expected_contract_id, contract_path = expected_contracts[kind]
+            contract_digest = "sha256:" + hashlib.sha256(contract_path.read_bytes()).hexdigest()
+            if port["gateway_kind"] != kind:
+                raise AssertionError("Runtime Gateway Port kind differs from its binding")
+            if port["contract_id"] != expected_contract_id or port["contract_digest"] != contract_digest:
+                raise AssertionError("Runtime Gateway Port does not bind the admitted executable contract")
+            if not port["audience"] or not port["binding_digest"]:
+                raise AssertionError("Runtime Gateway Port lacks audience or immutable binding digest")
     required_modes = {
         "model": budget["policies"]["model_gateway_required"]
         or bool(permissions["model"]["allowed_model_profiles"]),
@@ -329,7 +388,13 @@ def validate_gateway_bindings(
     for kind, required in required_modes.items():
         if required and bindings[kind]["mode"] != "enabled":
             raise AssertionError(f"Required {kind} Gateway binding is disabled")
-    mark_checks("gateway_binding.closed_modes", "gateway_binding.policy_alignment")
+    mark_checks(
+        "gateway_binding.closed_modes",
+        "gateway_binding.port_contract",
+        "gateway_binding.policy_alignment",
+        "gateway_port.contract_mapping",
+        "gateway_port.audience_binding",
+    )
 
 
 def validate_runtime_authorization(
@@ -423,6 +488,7 @@ def validate_runtime_authorization(
     }
     covered: set[tuple[str, str, str]] = set()
     for grant in authorization["artifact_grants"]:
+        validate_self_digest(grant, "grant_digest")
         grant_issued_at = parse_datetime(grant["issued_at"])
         grant_expires_at = parse_datetime(grant["expires_at"])
         if grant_expires_at <= grant_issued_at:
@@ -441,6 +507,9 @@ def validate_runtime_authorization(
             raise AssertionError("Runtime ArtifactGrant is not bound to the current InvocationAttempt")
         if not set(grant["permissions"]) <= set(requirement["allowed_permissions"]):
             raise AssertionError("Runtime ArtifactGrant exceeds admitted permissions")
+        artifact_binding = manifest["gateway_bindings"]["artifact"]
+        if artifact_binding["mode"] != "enabled" or grant["gateway_binding"] != artifact_binding["port"]:
+            raise AssertionError("Runtime ArtifactGrant uses a Gateway outside the admitted RunManifest")
         covered.add(key)
     if covered != set(requirements) or len(authorization["artifact_grants"]) != len(requirements):
         raise AssertionError("Runtime ArtifactGrants do not exactly cover admitted requirements")
@@ -456,6 +525,7 @@ def validate_runtime_authorization(
         "runtime_authorization.expiry",
         "runtime_authorization.artifact_coverage",
         "artifact_grant.expiry",
+        "artifact_grant.digest",
         "artifact_grant.scope",
         "artifact_grant.provider_permissions",
     )
@@ -527,6 +597,11 @@ def validate_execution_topology(
         "runtime_start.request_digest",
         "runtime_start.input_binding",
         "runtime_start.immutable_context_binding",
+        "run_manifest.conversation_binding",
+        "run_manifest.execution_inputs",
+        "run_manifest.authorization_ceiling",
+        "run_manifest.gateway_binding",
+        "run_manifest.orchestration_binding",
     )
 
 
@@ -567,33 +642,139 @@ def validate_runtime_token(
     mark_checks("runtime_token.binding")
 
 
-def validate_capability_invocation(request: dict[str, Any], token: dict[str, Any]) -> None:
+def validate_capability_invocation(
+    request: dict[str, Any], token: dict[str, Any], resolution: dict[str, Any],
+    manifest: dict[str, Any], operation_request: dict[str, Any] | None = None,
+    predecessor: dict[str, Any] | None = None,
+) -> None:
     validate_self_digest(request, "request_digest")
+    validate_provider_resolution(resolution)
+    for value, digest_field in (
+        (request["execution_budget"], "budget_digest"),
+        (request["policy_decision"], "decision_digest"),
+        (request["effective_permissions"], "permissions_digest"),
+        (request["output_staging_grant"], "grant_digest"),
+    ):
+        validate_self_digest(value, digest_field)
+    selected_revision = resolution["selected_provider_revision"]
+    if (
+        request["provider_resolution_id"] != resolution["resolution_id"]
+        or request["provider_instance_id"] != resolution["selected_provider_instance_id"]
+        or request["provider_revision_id"] != selected_revision["provider_revision_id"]
+        or resolution["tenant_id"] != request["tenant_id"]
+        or resolution["client_app_id"] != request["client_app_id"]
+        or resolution["work_order_id"] != request["work_order_id"]
+        or resolution["capability"] != {
+            "id": request["capability"]["id"],
+            "version": request["capability"]["version"],
+            "profile": request["capability"].get("profile"),
+        }
+    ):
+        raise AssertionError("Capability request differs from its admitted ProviderResolution")
+    budget = request["execution_budget"]
+    policy = request["policy_decision"]
+    permissions = request["effective_permissions"]
+    commercial = request["commercial_authorization"]
+    for component in (budget, policy, permissions):
+        if component["tenant_id"] != request["tenant_id"] or component["work_order_id"] != request["work_order_id"]:
+            raise AssertionError("Capability executable authorization crosses Tenant or WorkOrder")
+    if (
+        policy["execution_budget_id"] != budget["budget_id"]
+        or policy["execution_budget_digest"] != budget["budget_digest"]
+        or policy["effective_permissions_digest"] != permissions["permissions_digest"]
+        or policy["commercial_authorization_id"] != commercial["commercial_authorization_id"]
+        or policy["commercial_authorization_digest"] != commercial["commercial_authorization_digest"]
+    ):
+        raise AssertionError("Capability executable Budget, Policy, Permissions or Commercial binding is not closed")
+    if any(
+        budget["limits"][name] > manifest["execution_budget"]["limits"][name]
+        for name in budget["limits"]
+    ) or not permissions_are_subset(permissions, manifest["effective_permissions"]):
+        raise AssertionError("Capability executable authorization widens the RunManifest ceiling")
+    if request["capability"]["id"] not in permissions["tool"]["allowed_capabilities"]:
+        raise AssertionError("Capability is absent from EffectivePermissions")
+    request_deadline = parse_datetime(request["deadline_at"])
+    authorization_expiry = min(
+        parse_datetime(commercial["expires_at"]),
+        parse_datetime(budget["expires_at"]),
+        parse_datetime(policy["expires_at"]),
+    )
+    if request_deadline > authorization_expiry:
+        raise AssertionError("Capability request deadline outlives executable authorization")
+
+    staging_grant = request["output_staging_grant"]
+    if any(
+        staging_grant[field] != request[field]
+        for field in ("tenant_id", "work_order_id", "invocation_id", "invocation_attempt_id")
+    ):
+        raise AssertionError("ArtifactStagingGrant crosses its Capability InvocationAttempt")
+    artifact_binding = manifest["gateway_bindings"]["artifact"]
+    if artifact_binding["mode"] != "enabled" or staging_grant["gateway_binding"] != artifact_binding["port"]:
+        raise AssertionError("ArtifactStagingGrant uses a Gateway outside the admitted RunManifest")
+    staging_issued = parse_datetime(staging_grant["issued_at"])
+    staging_expires = parse_datetime(staging_grant["expires_at"])
+    if staging_expires <= staging_issued or staging_expires > min(request_deadline, parse_datetime(commercial["expires_at"])):
+        raise AssertionError("ArtifactStagingGrant has an invalid authorization window")
+
+    if operation_request is None:
+        operation_request = request
+    if token["operation"] == "invoke":
+        operation_digest = request["request_digest"]
+    elif "request_digest" in operation_request:
+        validate_self_digest(operation_request, "request_digest")
+        operation_digest = operation_request["request_digest"]
+    else:
+        operation_digest = canonical_digest(operation_request)
     expected = {
+        "aud": resolution["selected_provider_audience"],
         "tenant_id": request["tenant_id"],
         "client_app_id": request["client_app_id"],
         "principal_context_digest": request["principal_context_digest"],
         "work_order_id": request["work_order_id"],
+        "provider_resolution_id": request["provider_resolution_id"],
+        "provider_instance_id": request["provider_instance_id"],
         "provider_revision_id": request["provider_revision_id"],
         "capability_id": request["capability"]["id"],
         "capability_version": request["capability"]["version"],
         "invocation_id": request["invocation_id"],
         "invocation_attempt_id": request["invocation_attempt_id"],
         "fencing_token": request["fencing_token"],
-        "request_digest": request["request_digest"],
-        "policy_decision_digest": request["policy_decision_digest"],
-        "execution_budget_digest": request["execution_budget_digest"],
-        "permissions_digest": request["permissions_digest"],
-        "staging_session_id": request["output_staging_session_id"],
+        "invocation_request_digest": request["request_digest"],
+        "operation_request_digest": operation_digest,
+        "policy_decision_digest": policy["decision_digest"],
+        "execution_budget_digest": budget["budget_digest"],
+        "permissions_digest": permissions["permissions_digest"],
+        "staging_grant_digest": staging_grant["grant_digest"],
     }
     for field, value in expected.items():
         if token[field] != value:
-            raise AssertionError(f"Capability Invocation token differs from request on {field}")
+            raise AssertionError(f"Capability operation token differs from admitted context on {field}")
     if not token["iat"] <= token["nbf"] < token["exp"] or token["exp"] - token["iat"] > 900:
-        raise AssertionError("Capability Invocation token lifetime is invalid")
-    request_deadline = parse_datetime(request["deadline_at"])
+        raise AssertionError("Capability operation token lifetime is invalid")
     token_expiry = datetime.fromtimestamp(token["exp"], tz=timezone.utc)
+    if token_expiry > min(request_deadline, parse_datetime(commercial["expires_at"])):
+        raise AssertionError("Capability operation token outlives the admitted request")
+    if token["authorization_sequence"] == 1:
+        if predecessor is not None or token["predecessor_jti"] is not None or token["operation"] != "invoke":
+            raise AssertionError("Initial Capability token has invalid lineage or operation")
+    else:
+        if predecessor is None:
+            raise AssertionError("Renewed Capability operation token lacks its predecessor")
+        if token["authorization_sequence"] != predecessor["authorization_sequence"] + 1:
+            raise AssertionError("Capability operation token sequence contains a gap")
+        if token["predecessor_jti"] != predecessor["jti"]:
+            raise AssertionError("Capability operation token predecessor mismatch")
+        invariant_fields = set(expected) - {"operation_request_digest"}
+        if any(token[field] != predecessor[field] for field in invariant_fields):
+            raise AssertionError("Renewed Capability operation token widens or changes Invocation scope")
+        target_provider_operation_id = operation_request.get(
+            "provider_operation_id", predecessor.get("provider_operation_id")
+        )
+        if token.get("provider_operation_id") != target_provider_operation_id:
+            raise AssertionError("Capability operation token targets a different Provider operation")
+
     for grant in request["input_artifact_grants"]:
+        validate_self_digest(grant, "grant_digest")
         scope = grant["execution_scope"]
         if scope.get("kind") != "capability_invocation" or any(
             scope[field] != request[field] for field in ("invocation_id", "invocation_attempt_id")
@@ -603,21 +784,158 @@ def validate_capability_invocation(request: dict[str, Any], token: dict[str, Any
             raise AssertionError("Capability ArtifactGrant crosses its Tenant or WorkOrder")
         grant_issued_at = parse_datetime(grant["issued_at"])
         grant_expires_at = parse_datetime(grant["expires_at"])
-        if grant_expires_at <= grant_issued_at:
-            raise AssertionError("Capability ArtifactGrant expiry is not later than issuance")
-        if grant_expires_at > min(request_deadline, token_expiry):
-            raise AssertionError("Capability ArtifactGrant outlives the request or bearer token")
-        if "finalize" in grant["permissions"]:
-            raise AssertionError("Capability Provider cannot finalize ArtifactVersion")
+        if grant_expires_at <= grant_issued_at or grant_expires_at > min(
+            request_deadline, parse_datetime(commercial["expires_at"])
+        ):
+            raise AssertionError("Capability ArtifactGrant has an invalid request window")
+        if grant["gateway_binding"] != artifact_binding["port"] or "finalize" in grant["permissions"]:
+            raise AssertionError("Capability Provider has invalid Artifact Gateway or finalize authority")
     mark_checks(
         "capability_invocation.request_digest",
+        "capability_invocation.resolution_binding",
+        "capability_invocation.execution_context",
         "capability_invocation.token_binding",
         "capability_invocation.token_lifetime",
+        "capability_invocation.token_lineage",
+        "capability_invocation.operation_binding",
         "capability_invocation.artifact_grant_expiry",
+        "capability_invocation.staging_grant",
+        "artifact_staging_grant.digest",
+        "artifact_staging_grant.scope",
+        "artifact_staging_grant.expiry",
+        "artifact_staging_grant.permissions",
+        "artifact_grant.digest",
         "artifact_grant.expiry",
         "artifact_grant.scope",
         "artifact_grant.provider_permissions",
     )
+
+
+def validate_artifact_gateway(
+    staging_grant: dict[str, Any], staging_object: dict[str, Any],
+    stage_token: dict[str, Any], staging_commit: dict[str, Any], commit_token: dict[str, Any],
+    artifact_grant: dict[str, Any], read_token: dict[str, Any], capability_request: dict[str, Any],
+) -> None:
+    validate_self_digest(staging_grant, "grant_digest")
+    descriptor = copy.deepcopy(staging_object)
+    descriptor.pop("request_digest")
+    encoded_content = descriptor.pop("content_base64")
+    if staging_object["request_digest"] != canonical_digest(descriptor):
+        raise AssertionError("Artifact staging object request digest mismatch")
+    content = base64.b64decode(encoded_content, validate=True)
+    raw_digest = "sha256:" + hashlib.sha256(content).hexdigest()
+    if len(content) != staging_object["size_bytes"] or raw_digest != staging_object["digest"]:
+        raise AssertionError("Artifact staging object content does not match declared bytes")
+    expected_scope = {
+        "tenant_id": staging_grant["tenant_id"],
+        "work_order_id": staging_grant["work_order_id"],
+        "invocation_id": staging_grant["invocation_id"],
+        "invocation_attempt_id": staging_grant["invocation_attempt_id"],
+        "gateway_binding_digest": staging_grant["gateway_binding"]["binding_digest"],
+        "staging_grant_digest": staging_grant["grant_digest"],
+    }
+    for token, operation_request, operation in (
+        (stage_token, staging_object, "stage_object"),
+        (commit_token, staging_commit, "commit_staging"),
+    ):
+        if token["operation"] != operation or token["aud"] != staging_grant["gateway_binding"]["audience"]:
+            raise AssertionError("Artifact Gateway token operation or audience mismatch")
+        if any(token[field] != value for field, value in expected_scope.items()):
+            raise AssertionError("Artifact Gateway token crosses its StagingGrant scope")
+        if token["fencing_token"] != operation_request["fencing_token"]:
+            raise AssertionError("Artifact Gateway token fencing differs from the operation")
+        if token["request_digest"] != operation_request["request_digest"]:
+            raise AssertionError("Artifact Gateway token request digest mismatch")
+        if not token["iat"] <= token["nbf"] < token["exp"] or token["exp"] - token["iat"] > 300:
+            raise AssertionError("Artifact Gateway token lifetime is invalid")
+        if datetime.fromtimestamp(token["exp"], tz=timezone.utc) > parse_datetime(staging_grant["expires_at"]):
+            raise AssertionError("Artifact Gateway token outlives its StagingGrant")
+    validate_self_digest(artifact_grant, "grant_digest")
+    artifact_scope = artifact_grant["execution_scope"]
+    if (
+        artifact_grant["tenant_id"] != capability_request["tenant_id"]
+        or artifact_grant["work_order_id"] != capability_request["work_order_id"]
+        or artifact_scope.get("invocation_id") != capability_request["invocation_id"]
+        or artifact_scope.get("invocation_attempt_id") != capability_request["invocation_attempt_id"]
+    ):
+        raise AssertionError("Artifact read Grant crosses its Capability InvocationAttempt")
+    read_descriptor = {
+        "operation": "read_content",
+        "tenant_id": capability_request["tenant_id"],
+        "work_order_id": capability_request["work_order_id"],
+        "invocation_id": capability_request["invocation_id"],
+        "invocation_attempt_id": capability_request["invocation_attempt_id"],
+        "fencing_token": capability_request["fencing_token"],
+        "artifact_id": artifact_grant["artifact_id"],
+        "version_id": artifact_grant["version_id"],
+    }
+    read_expected = {
+        "operation": "read_content",
+        "aud": artifact_grant["gateway_binding"]["audience"],
+        "tenant_id": artifact_grant["tenant_id"],
+        "work_order_id": artifact_grant["work_order_id"],
+        "invocation_id": artifact_scope["invocation_id"],
+        "invocation_attempt_id": artifact_scope["invocation_attempt_id"],
+        "fencing_token": capability_request["fencing_token"],
+        "gateway_binding_digest": artifact_grant["gateway_binding"]["binding_digest"],
+        "request_digest": canonical_digest(read_descriptor),
+        "artifact_grant_digest": artifact_grant["grant_digest"],
+    }
+    if artifact_scope.get("kind") != "capability_invocation" or "read" not in artifact_grant["permissions"]:
+        raise AssertionError("Artifact read requires a Capability ArtifactGrant with read permission")
+    if any(read_token[field] != value for field, value in read_expected.items()):
+        raise AssertionError("Artifact read token differs from its ArtifactGrant or operation descriptor")
+    if not read_token["iat"] <= read_token["nbf"] < read_token["exp"] or read_token["exp"] - read_token["iat"] > 300:
+        raise AssertionError("Artifact read token lifetime is invalid")
+    if datetime.fromtimestamp(read_token["exp"], tz=timezone.utc) > parse_datetime(artifact_grant["expires_at"]):
+        raise AssertionError("Artifact read token outlives its ArtifactGrant")
+    validate_self_digest(staging_commit, "request_digest")
+    committed = staging_commit["objects"]
+    if len(committed) > staging_grant["max_object_count"]:
+        raise AssertionError("Artifact staging commit exceeds object-count limit")
+    if sum(item["size_bytes"] for item in committed) > staging_grant["max_total_bytes"]:
+        raise AssertionError("Artifact staging commit exceeds total-byte limit")
+    if any(
+        item["media_type"] not in staging_grant["allowed_media_types"]
+        or item["size_bytes"] > staging_grant["max_object_bytes"]
+        for item in committed
+    ):
+        raise AssertionError("Artifact staging commit exceeds media or object-byte limits")
+    mark_checks("artifact_gateway.operation_binding", "artifact_gateway.token_binding")
+
+
+def validate_egress_gateway(
+    request: dict[str, Any], token: dict[str, Any], response: dict[str, Any],
+    binding: dict[str, Any], authorization: dict[str, Any],
+) -> None:
+    validate_self_digest(request, "request_digest")
+    expected = {
+        "aud": binding["audience"],
+        "tenant_id": request["tenant_id"],
+        "work_order_id": request["work_order_id"],
+        "runtime_run_id": request["runtime_run_id"],
+        "invocation_id": request["invocation_id"],
+        "invocation_attempt_id": request["invocation_attempt_id"],
+        "fencing_token": request["fencing_token"],
+        "destination_id": request["destination_id"],
+        "gateway_binding_digest": binding["binding_digest"],
+        "request_digest": request["request_digest"],
+        "policy_decision_digest": authorization["policy_decision"]["decision_digest"],
+        "execution_budget_digest": authorization["execution_budget"]["budget_digest"],
+        "permissions_digest": authorization["effective_permissions"]["permissions_digest"],
+    }
+    if any(token[field] != value for field, value in expected.items()):
+        raise AssertionError("Egress token differs from the admitted HTTP request")
+    if not token["iat"] <= token["nbf"] < token["exp"] or token["exp"] - token["iat"] > 300:
+        raise AssertionError("Egress token lifetime is invalid")
+    if request["destination_id"] not in authorization["effective_permissions"]["egress"]["allowed_destination_classes"]:
+        raise AssertionError("Egress destination is absent from EffectivePermissions")
+    if any(
+        response[field] != request[field]
+        for field in ("invocation_id", "invocation_attempt_id", "fencing_token", "request_digest")
+    ):
+        raise AssertionError("Egress response belongs to a different request")
+    mark_checks("egress_gateway.request_binding", "egress_gateway.token_binding")
 
 
 def validate_workspace_content_manifest(manifest: dict[str, Any]) -> None:
@@ -972,6 +1290,7 @@ def revision_supports(revision: dict[str, Any], key: tuple[str, str, str | None]
 
 def validate_run_admission(manifest: dict[str, Any], context: dict[str, Any]) -> None:
     validate_self_digest(manifest, "run_manifest_digest")
+    mark_checks("run_manifest.digest")
     if manifest["scenario"] != context["scenario"]:
         raise AssertionError("RunManifest scenario does not bind the admitted Scenario definition")
     scenario_definition = context["scenario_definition"]
@@ -1191,6 +1510,41 @@ def validate_run_admission(manifest: dict[str, Any], context: dict[str, Any]) ->
             raise AssertionError("primary_sandbox_slot_key must reference exactly one Sandbox")
     elif "primary_sandbox_slot_key" in manifest:
         raise AssertionError("A Sandbox-free RunManifest cannot declare primary_sandbox_slot_key")
+    mark_checks(
+        "run_manifest.admission",
+        "run_manifest.runtime_resolution",
+        "run_manifest.sandbox_resolution",
+        "run_manifest.experience_binding",
+        "run_manifest.commercial_event_binding",
+    )
+
+
+def validate_run_manifest_request_binding(
+    manifest: dict[str, Any], grant: dict[str, Any], request: dict[str, Any],
+) -> None:
+    expected = {
+        "request_contract_id": grant["request_contract_id"],
+        "request_digest_profile": grant["request_digest_profile"],
+        "request_digest": grant["request_digest"],
+    }
+    if manifest["request_binding"] != expected:
+        raise AssertionError("RunManifest request binding differs from the consumed ExecutionGrant")
+    if grant["request_digest"] != canonical_digest({
+        key: value for key, value in request.items() if key != "execution_grant"
+    }):
+        raise AssertionError("RunManifest source ExecutionGrant does not bind the submitted request")
+    if (
+        manifest["conversation"]["conversation_id"] != grant["conversation_id"]
+        or manifest["conversation"]["turn_id"] != grant["turn_id"]
+        or manifest["conversation"]["branch_id"] != grant["branch_id"]
+        or any(
+            resolution["client_app_id"] != grant["client_app_id"]
+            or resolution["principal_context_digest"] != grant["principal_context_digest"]
+            for resolution in manifest["capability_resolutions"]
+        )
+    ):
+        raise AssertionError("RunManifest source request crosses its admitted execution scope")
+    mark_checks("run_manifest.request_binding", "run_manifest.conversation_binding")
 
 
 def validate_state_machine(machine: dict[str, Any], allowed_states: set[str]) -> None:
@@ -1220,11 +1574,21 @@ def validate_state_machine(machine: dict[str, Any], allowed_states: set[str]) ->
         raise AssertionError(f"Unreachable states: {allowed_states-reachable}")
 
 
+def validate_work_order_failure_paths(machine: dict[str, Any]) -> None:
+    transitions = {(item["from"], item["event"], item["to"]) for item in machine["transitions"]}
+    required = {(state, "fail", "failed") for state in ("queued", "waiting", "paused")}
+    if not required <= transitions:
+        raise AssertionError("WorkOrder lacks a truthful failure path from queued, waiting or paused")
+    mark_checks("work_order.failure_paths")
+
+
 def status_enum(schema_path: str) -> set[str]:
     return set(load(schema_path)["properties"]["status"]["enum"])
 
 
-validate_state_machine(load("contracts/state-machines/work-order-v1.json"), status_enum("contracts/schemas/work-order-state.schema.json"))
+work_order_machine = load("contracts/state-machines/work-order-v1.json")
+validate_state_machine(work_order_machine, status_enum("contracts/schemas/work-order-state.schema.json"))
+validate_work_order_failure_paths(work_order_machine)
 validate_state_machine(load("contracts/state-machines/conversation-v1.json"), status_enum("contracts/schemas/conversation.schema.json"))
 validate_state_machine(load("contracts/state-machines/agent-runtime-run-v1.json"), status_enum("contracts/schemas/agent-runtime-run-status.schema.json"))
 validate_state_machine(load("contracts/state-machines/runtime-recording-v1.json"), status_enum("contracts/schemas/runtime-recording.schema.json"))
@@ -1259,6 +1623,20 @@ except AssertionError:
 else:
     raise AssertionError("Expected unreachable non-terminal state fixture to fail")
 
+work_order_failure_negative = load("contracts/tests/semantic-invalid/work-order-failure-path-cases.json")
+for case in work_order_failure_negative["cases"]:
+    candidate = copy.deepcopy(work_order_machine)
+    candidate["transitions"] = [
+        transition for transition in candidate["transitions"]
+        if not (transition["from"] == case["remove_failure_from"] and transition["event"] == "fail")
+    ]
+    try:
+        validate_work_order_failure_paths(candidate)
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError(f"Expected WorkOrder failure-path fixture to fail: {case['id']}")
+
 context = load("examples/contracts/run-admission-context.json")
 manifest = load("examples/contracts/run-manifest-v2.json")
 no_sandbox_manifest = load("examples/contracts/run-manifest-no-sandbox.json")
@@ -1269,7 +1647,19 @@ renewed_runtime_authorization = load("examples/contracts/runtime-authorization-r
 runtime_token = load("examples/contracts/agent-runtime-invocation-token-claims.json")
 capability_request = load("examples/contracts/capability-invocation-request.json")
 capability_token = load("examples/contracts/capability-invocation-token-claims.json")
+capability_status_token = load("examples/contracts/capability-invocation-status-token-claims.json")
+capability_cancel = load("examples/contracts/capability-cancellation-request.json")
+capability_cancel_token = load("examples/contracts/capability-cancellation-token-claims.json")
 capability_result = load("examples/contracts/capability-invocation-result.json")
+artifact_staging_grant = load("examples/contracts/artifact-staging-grant.json")
+artifact_staging_object = load("examples/contracts/artifact-staging-object-request.json")
+artifact_stage_token = load("examples/contracts/artifact-gateway-stage-token-claims.json")
+artifact_staging_commit = load("examples/contracts/artifact-staging-commit-request.json")
+artifact_commit_token = load("examples/contracts/artifact-gateway-commit-token-claims.json")
+artifact_read_token = load("examples/contracts/artifact-gateway-read-token-claims.json")
+egress_request = load("examples/contracts/egress-http-request.json")
+egress_response = load("examples/contracts/egress-http-response.json")
+egress_token = load("examples/contracts/egress-invocation-token-claims.json")
 workspace_content_manifest = load("examples/contracts/workspace-content-manifest.json")
 canonical_event = load("examples/contracts/canonical-event-v2.json")
 semantic_traceability = load("contracts/semantic-constraints-v1.json")
@@ -1289,6 +1679,7 @@ conformance_suites = [
     load("contracts/conformance/sandbox/v1/suite.json"),
     load("contracts/conformance/runtime-gateway/v1/suite.json"),
     load("contracts/conformance/capability/v1/suite.json"),
+    load("contracts/conformance/execution-gateway/v1/suite.json"),
 ]
 validate_provider_architecture(context, conformance_suites)
 validate_execution_topology(manifest, workflow_run, agent_run, runtime_start)
@@ -1304,7 +1695,37 @@ validate_runtime_authorization(
     runtime_start["runtime_authorization"],
 )
 validate_runtime_token(runtime_token, manifest, agent_run, runtime_start)
-validate_capability_invocation(capability_request, capability_token)
+capability_resolution = next(
+    item for item in manifest["capability_resolutions"]
+    if item["resolution_id"] == capability_request["provider_resolution_id"]
+)
+validate_capability_invocation(
+    capability_request, capability_token, capability_resolution, manifest
+)
+capability_status_operation = {
+    "operation": "status",
+    "invocation_id": capability_request["invocation_id"],
+    "invocation_attempt_id": capability_request["invocation_attempt_id"],
+    "fencing_token": capability_request["fencing_token"],
+    "provider_operation_id": capability_status_token["provider_operation_id"],
+}
+validate_capability_invocation(
+    capability_request, capability_status_token, capability_resolution, manifest,
+    capability_status_operation, capability_token,
+)
+validate_capability_invocation(
+    capability_request, capability_cancel_token, capability_resolution, manifest,
+    capability_cancel, capability_status_token,
+)
+validate_artifact_gateway(
+    artifact_staging_grant, artifact_staging_object, artifact_stage_token,
+    artifact_staging_commit, artifact_commit_token,
+    capability_request["input_artifact_grants"][0], artifact_read_token, capability_request,
+)
+validate_egress_gateway(
+    egress_request, egress_token, egress_response,
+    manifest["gateway_bindings"]["egress"]["port"], runtime_start["runtime_authorization"],
+)
 validate_workspace_content_manifest(workspace_content_manifest)
 validate_canonical_event_source(canonical_event)
 validate_platform_event_registry_binding(canonical_event, platform_event_registry)
@@ -1339,6 +1760,7 @@ validate_execution_grant_request(
     conversation_turn_request,
     authenticated_conversation_id=conversation["conversation_id"],
 )
+validate_run_manifest_request_binding(manifest, grant, conversation_turn_request)
 validate_execution_grant_request(
     work_order_grant,
     work_order_request,
@@ -2083,11 +2505,15 @@ for case in phase0_closure_negative["cases"]:
         elif mutation == "capability_token_tenant_mismatch":
             candidate = copy.deepcopy(capability_token)
             candidate["tenant_id"] = "ten_other"
-            validate_capability_invocation(capability_request, candidate)
+            validate_capability_invocation(
+                capability_request, candidate, capability_resolution, manifest
+            )
         elif mutation == "capability_token_request_digest_mismatch":
             candidate = copy.deepcopy(capability_token)
-            candidate["request_digest"] = "sha256:" + "f" * 64
-            validate_capability_invocation(capability_request, candidate)
+            candidate["invocation_request_digest"] = "sha256:" + "f" * 64
+            validate_capability_invocation(
+                capability_request, candidate, capability_resolution, manifest
+            )
         elif mutation == "provider_resolution_work_order_mismatch":
             candidate_manifest = copy.deepcopy(manifest)
             candidate = candidate_manifest["capability_resolutions"][0]
@@ -2253,13 +2679,20 @@ for case in phase0_closure_negative["cases"]:
         elif mutation == "capability_artifact_grant_outlives_deadline":
             candidate_request = copy.deepcopy(capability_request)
             candidate_token = copy.deepcopy(capability_token)
-            candidate_request["input_artifact_grants"][0]["expires_at"] = "2026-07-16T09:10:01Z"
+            candidate_request["input_artifact_grants"][0]["expires_at"] = "2026-07-16T09:20:01Z"
+            candidate_request["input_artifact_grants"][0]["grant_digest"] = canonical_digest({
+                key: value for key, value in candidate_request["input_artifact_grants"][0].items()
+                if key != "grant_digest"
+            })
             candidate_request["request_digest"] = canonical_digest({
                 key: value for key, value in candidate_request.items() if key != "request_digest"
             })
-            candidate_token["request_digest"] = candidate_request["request_digest"]
+            candidate_token["invocation_request_digest"] = candidate_request["request_digest"]
+            candidate_token["operation_request_digest"] = candidate_request["request_digest"]
             candidate_token["exp"] = 1784193060
-            validate_capability_invocation(candidate_request, candidate_token)
+            validate_capability_invocation(
+                candidate_request, candidate_token, capability_resolution, manifest
+            )
         elif mutation == "required_gateway_disabled":
             candidate_start = copy.deepcopy(runtime_start)
             candidate_start["gateway_bindings"]["model"] = {
@@ -2274,6 +2707,95 @@ for case in phase0_closure_negative["cases"]:
             candidate = copy.deepcopy(capability_result)
             candidate["usage"][0]["entry_id"] = "platform-owned"
             validate_usage_observations(candidate, meter, usage_entry)
+        elif mutation == "capability_request_resolution_mismatch":
+            candidate_request = copy.deepcopy(capability_request)
+            candidate_request["provider_resolution_id"] = "res_other"
+            candidate_request["request_digest"] = canonical_digest({
+                key: value for key, value in candidate_request.items() if key != "request_digest"
+            })
+            validate_capability_invocation(
+                candidate_request, capability_token, capability_resolution, manifest
+            )
+        elif mutation == "capability_token_audience_mismatch":
+            candidate = copy.deepcopy(capability_token)
+            candidate["aud"] = "urn:agent-platform:provider-instance:other"
+            validate_capability_invocation(
+                capability_request, candidate, capability_resolution, manifest
+            )
+        elif mutation == "capability_token_operation_replay":
+            candidate = copy.deepcopy(capability_token)
+            candidate["operation"] = "cancel"
+            validate_capability_invocation(
+                capability_request, candidate, capability_resolution, manifest
+            )
+        elif mutation == "capability_token_lineage_gap":
+            candidate = copy.deepcopy(capability_status_token)
+            candidate["authorization_sequence"] += 1
+            validate_capability_invocation(
+                capability_request, candidate, capability_resolution, manifest,
+                capability_status_operation, capability_token,
+            )
+        elif mutation == "run_manifest_request_binding_mismatch":
+            candidate = copy.deepcopy(manifest)
+            candidate["request_binding"]["request_digest"] = "sha256:" + "f" * 64
+            validate_run_manifest_request_binding(candidate, grant, conversation_turn_request)
+        elif mutation == "staging_grant_gateway_mismatch":
+            candidate_request = copy.deepcopy(capability_request)
+            candidate_token = copy.deepcopy(capability_token)
+            staging = candidate_request["output_staging_grant"]
+            staging["gateway_binding"]["route_id"] = "artifact-route-other"
+            staging["grant_digest"] = canonical_digest({
+                key: value for key, value in staging.items() if key != "grant_digest"
+            })
+            candidate_request["request_digest"] = canonical_digest({
+                key: value for key, value in candidate_request.items() if key != "request_digest"
+            })
+            candidate_token["staging_grant_digest"] = staging["grant_digest"]
+            candidate_token["invocation_request_digest"] = candidate_request["request_digest"]
+            candidate_token["operation_request_digest"] = candidate_request["request_digest"]
+            validate_capability_invocation(
+                candidate_request, candidate_token, capability_resolution, manifest
+            )
+        elif mutation == "gateway_contract_digest_mismatch":
+            candidate = copy.deepcopy(manifest["gateway_bindings"])
+            candidate["artifact"]["port"]["contract_digest"] = "sha256:" + "f" * 64
+            validate_gateway_bindings(candidate, execution_budget, manifest["effective_permissions"])
+        elif mutation == "artifact_gateway_request_digest_mismatch":
+            candidate = copy.deepcopy(artifact_stage_token)
+            candidate["request_digest"] = "sha256:" + "f" * 64
+            validate_artifact_gateway(
+                artifact_staging_grant, artifact_staging_object, candidate,
+                artifact_staging_commit, artifact_commit_token,
+                capability_request["input_artifact_grants"][0], artifact_read_token,
+                capability_request,
+            )
+        elif mutation == "artifact_gateway_read_fencing_mismatch":
+            candidate = copy.deepcopy(artifact_read_token)
+            candidate["fencing_token"] += 1
+            descriptor = {
+                "operation": "read_content",
+                "tenant_id": candidate["tenant_id"],
+                "work_order_id": candidate["work_order_id"],
+                "invocation_id": candidate["invocation_id"],
+                "invocation_attempt_id": candidate["invocation_attempt_id"],
+                "fencing_token": candidate["fencing_token"],
+                "artifact_id": capability_request["input_artifact_grants"][0]["artifact_id"],
+                "version_id": capability_request["input_artifact_grants"][0]["version_id"],
+            }
+            candidate["request_digest"] = canonical_digest(descriptor)
+            validate_artifact_gateway(
+                artifact_staging_grant, artifact_staging_object, artifact_stage_token,
+                artifact_staging_commit, artifact_commit_token,
+                capability_request["input_artifact_grants"][0], candidate,
+                capability_request,
+            )
+        elif mutation == "egress_token_destination_mismatch":
+            candidate = copy.deepcopy(egress_token)
+            candidate["destination_id"] = "other-destination"
+            validate_egress_gateway(
+                egress_request, candidate, egress_response,
+                manifest["gateway_bindings"]["egress"]["port"], runtime_start["runtime_authorization"],
+            )
         else:
             raise AssertionError(f"Unknown Phase 0 closure mutation: {mutation}")
     except AssertionError:

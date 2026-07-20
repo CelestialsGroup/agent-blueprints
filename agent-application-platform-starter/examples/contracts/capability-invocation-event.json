@@ -8,5 +8,6 @@
   "occurred_at": "2026-07-16T09:01:30Z",
   "data": {
     "percent": 50
-  }
+  },
+  "invocation_request_digest": "sha256:cb2db69bda6053cafb3313efcce2a07f3ae14ed2a1a1bf7f656ffc74f07ca4f9"
 }

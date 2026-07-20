@@ -2,10 +2,10 @@
   "template_revision_id": "tmplrev_01J00000000000000000000000",
   "template_id": "html-anything/landing-saas-dark",
   "version": "1.0.0",
-  "revision_digest": "sha256:20017f0bfa23b5eb5d2b957a8f22a7ed481e5d21fbd728d69efc15f46fd57c34",
+  "revision_digest": "sha256:06fa3119e7a8194f72d1091438b159e1535d89044dbae4b09df6ff4be39e89ff",
   "provider_revision": {
     "provider_revision_id": "tplpr_01J0000000000000000000000",
-    "provider_revision_digest": "sha256:8324669a083e9c43c8cb0064e25e7bb34435a9a1a5fadbe9da3de31c397a470f",
+    "provider_revision_digest": "sha256:e2a469e25064978215ae645d62c35fc7c2ba6487a0c440743df940bf6ae152b5",
     "provider_kind": "template",
     "implementation": {
       "implementation_id": "template-provider.html-anything",
@@ -25,15 +25,15 @@
     "port": {
       "protocol": "capability-provider",
       "protocol_version": "v1",
-      "contract_digest": "sha256:bc2e091e79a4f04cde57189adfbef05ee447ef4c1173754cfe0535feec2f5b62",
+      "contract_digest": "sha256:0a4c171f34ca1f997465d7a788595a9a3ba904a336cf65ddb5b34cb6bed74c42",
       "binding_digest": "sha256:8585858585858585858585858585858585858585858585858585858585858585"
     },
     "configuration_digest": "sha256:8383838383838383838383838383838383838383838383838383838383838383",
     "approved_permissions_digest": "sha256:8484848484848484848484848484848484848484848484848484848484848484",
     "credential_binding_digest": "sha256:8686868686868686868686868686868686868686868686868686868686868686",
-    "conformance_set_digest": "sha256:717cddea2f0cbb8fd11afe436b4f3b6eb428f152e62039354643679cb1ad2e5d",
+    "conformance_set_digest": "sha256:212ed97ab13f6b9d934c381266eef8c2f435715b8ec3d513c59519bf6103fc2d",
     "admission_decision_id": "tplad_01J0000000000000000000000",
-    "admission_decision_digest": "sha256:b7a5fe55bbd4a4f64f090adcb4cec3642f9cd3d5811558c68a8158ef8738dab6",
+    "admission_decision_digest": "sha256:aa2fb827ce346d1c8539d070d2b73181b43600693e5556a00d5ca62ea27b5734",
     "admission_status": "certified"
   },
   "capability": {

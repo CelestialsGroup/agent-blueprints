@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:egress-http-request:v1",
+  "title": "EgressHttpRequest",
+  "type": "object",
+  "required": [
+    "tenant_id", "work_order_id", "runtime_run_id", "invocation_id", "invocation_attempt_id",
+    "fencing_token", "destination_id", "method", "path", "headers", "request_digest"
+  ],
+  "properties": {
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "runtime_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "fencing_token": { "type": "integer", "minimum": 1 },
+    "destination_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "method": { "enum": ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE"] },
+    "path": { "type": "string", "pattern": "^/", "maxLength": 4096 },
+    "query": {
+      "type": "array", "maxItems": 256,
+      "items": {
+        "type": "object", "required": ["name", "value"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "value": { "type": "string", "maxLength": 8192 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "headers": {
+      "type": "array", "maxItems": 128,
+      "items": {
+        "type": "object", "required": ["name", "value"],
+        "properties": {
+          "name": { "type": "string", "pattern": "^[A-Za-z0-9-]+$", "maxLength": 200 },
+          "value": { "type": "string", "maxLength": 8192 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "body": {
+      "type": "object",
+      "required": ["media_type", "encoding", "data", "size_bytes", "digest"],
+      "properties": {
+        "media_type": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "encoding": { "const": "base64" },
+        "data": { "type": "string", "maxLength": 1398104 },
+        "size_bytes": { "type": "integer", "minimum": 0, "maximum": 1048576 },
+        "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "request_digest is RFC 8785 JCS SHA-256 over the request excluding request_digest and equals the operation-scoped Egress token request_digest",
+    "destination_id resolves to one immutable pre-registered origin and redirects, DNS answers and every connected IP remain within policy",
+    "forbidden hop-by-hop, credential and host headers are rejected and the body digest and decoded size are verified before dispatch"
+  ]
+}

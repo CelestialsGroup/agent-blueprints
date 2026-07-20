@@ -1,11 +1,11 @@
 {
   "decision_id": "tplad_01J0000000000000000000000",
   "provider_revision_id": "tplpr_01J0000000000000000000000",
-  "provider_revision_digest": "sha256:8324669a083e9c43c8cb0064e25e7bb34435a9a1a5fadbe9da3de31c397a470f",
+  "provider_revision_digest": "sha256:e2a469e25064978215ae645d62c35fc7c2ba6487a0c440743df940bf6ae152b5",
   "decision_sequence": 1,
   "decision": "certified",
   "evidence_digest": "sha256:8989898989898989898989898989898989898989898989898989898989898989",
   "decided_by": "principal:platform-provider-certifier",
   "decided_at": "2026-07-16T09:00:55Z",
-  "decision_digest": "sha256:b7a5fe55bbd4a4f64f090adcb4cec3642f9cd3d5811558c68a8158ef8738dab6"
+  "decision_digest": "sha256:aa2fb827ce346d1c8539d070d2b73181b43600693e5556a00d5ca62ea27b5734"
 }

@@ -1,6 +1,6 @@
 {
   "provider_revision_id": "hpr_01J00000000000000000000000",
-  "provider_revision_digest": "sha256:461bd865248862fe13ef3f831295ebbfb6e6b830e83e2fa75cea45211f2f76c8",
+  "provider_revision_digest": "sha256:2c7840c85efb444003ce8f84798012ebe78a55a00c8acb576586a73cf28c3c68",
   "provider_instance_id": "hpi_html_anything",
   "configuration_digest": "sha256:4343434343434343434343434343434343434343434343434343434343434343",
   "approved_permissions_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
@@ -15,11 +15,11 @@
       "status": "passed",
       "report_digest": "sha256:4747474747474747474747474747474747474747474747474747474747474747",
       "suite_id": "capability-provider",
-      "suite_digest": "sha256:f5906e48557a9cbe53c8424b570269a19339db7524b79f2d1fc11a814bfdb037",
+      "suite_digest": "sha256:7819b9e4bee0d08a15a1fdc54862ba61a6ae705a6e9923d2d902355e47a06807",
       "suite_profile_id": "capability-core-v1"
     }
   ],
-  "conformance_set_digest": "sha256:57b7c1b5d781e7fab81aeae59b9ee6c82b866ee186629b44e2edc0fa32851352",
+  "conformance_set_digest": "sha256:7925a543a9e266bdf3145ac20a025c737aa2cee1288eb3f2af83daf111c82a08",
   "created_at": "2026-07-16T09:00:21Z",
   "implementation": {
     "implementation_id": "skill-provider.html-anything",
@@ -39,7 +39,7 @@
   "port": {
     "protocol": "capability-provider",
     "protocol_version": "v1",
-    "contract_digest": "sha256:bc2e091e79a4f04cde57189adfbef05ee447ef4c1173754cfe0535feec2f5b62",
+    "contract_digest": "sha256:0a4c171f34ca1f997465d7a788595a9a3ba904a336cf65ddb5b34cb6bed74c42",
     "binding_digest": "sha256:4545454545454545454545454545454545454545454545454545454545454545"
   }
 }

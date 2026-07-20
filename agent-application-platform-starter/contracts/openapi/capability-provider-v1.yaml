@@ -32,6 +32,7 @@ paths:
       tags: [Invocations]
       operationId: createCapabilityInvocation
       summary: Submit one idempotent Capability InvocationAttempt
+      x-required-capability-token-operation: invoke
       x-max-encoded-body-bytes: 4194304
       parameters:
         - $ref: '#/components/parameters/Traceparent'
@@ -75,6 +76,10 @@ paths:
       tags: [Invocations]
       operationId: getCapabilityInvocation
       summary: Read the current confirmed Provider operation state
+      x-required-capability-token-operation: status
+      parameters:
+        - $ref: '#/components/parameters/InvocationAttemptId'
+        - $ref: '#/components/parameters/ProviderOperationId'
       responses:
         '200':
           description: Current InvocationAttempt state
@@ -101,6 +106,7 @@ paths:
       tags: [Invocations]
       operationId: cancelCapabilityInvocation
       summary: Record idempotent cancellation intent for one InvocationAttempt
+      x-required-capability-token-operation: cancel
       x-max-encoded-body-bytes: 65536
       requestBody:
         required: true
@@ -138,14 +144,10 @@ paths:
       tags: [Invocations]
       operationId: readCapabilityInvocationEvents
       summary: Read durable attempt-local progress after a sequence
+      x-required-capability-token-operation: read_events
       parameters:
-        - name: invocation_attempt_id
-          in: query
-          required: true
-          schema:
-            type: string
-            minLength: 1
-            maxLength: 200
+        - $ref: '#/components/parameters/InvocationAttemptId'
+        - $ref: '#/components/parameters/ProviderOperationId'
         - name: after_sequence
           in: query
           required: false
@@ -189,9 +191,11 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: |
-        Short-lived token with typ agent-capability-invocation+jwt. Claims validate
-        against urn:agent-platform:capability-invocation-token-claims:v1 and bind the
-        complete request and staging authority without requiring plugin_id.
+        Short-lived operation token with typ agent-capability-invocation+jwt. Claims
+        validate against urn:agent-platform:capability-invocation-token-claims:v1,
+        bind the admitted ProviderResolution/Instance audience and authorize exactly
+        one Invoke, Status, Cancel or Event request. Equivalent tokens may be renewed
+        inside the original request deadline and CommercialAuthorization window.
 
   parameters:
     InvocationId:
@@ -202,6 +206,22 @@ components:
         type: string
         minLength: 1
         maxLength: 200
+    InvocationAttemptId:
+      name: invocation_attempt_id
+      in: query
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 200
+    ProviderOperationId:
+      name: provider_operation_id
+      in: query
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 500
     Traceparent:
       name: traceparent
       in: header

@@ -120,6 +120,8 @@ OpenAPI 使用 `x-required-work-session-scopes` 表达 Bearer/Cookie Scheme 无�
 - WorkSession：`agent-work-session+jwt`
 - Plugin Invocation：`agent-plugin-invocation+jwt`
 - Capability Invocation：`agent-capability-invocation+jwt`
+- Artifact Gateway Operation：`agent-artifact-operation+jwt`
+- Egress Invocation：`agent-egress-invocation+jwt`
 - Agent Runtime Invocation：`agent-runtime-invocation+jwt`
 
-新 Provider 使用 Capability Invocation Profile；Plugin Profile 只用于兼容 Adapter。未知 typ、alg、iss、aud 或 kid 必须拒绝。
+新 Provider 使用 Capability Invocation Profile；Artifact/Egress 使用独立操作 Profile；Plugin Profile 只用于兼容 Adapter。未知 typ、alg、iss、aud 或 kid 必须拒绝，Capability audience 必须来自 admitted ProviderResolution，Gateway audience 必须来自 RunManifest Port Binding。

@@ -8,7 +8,6 @@
   "permissions": [
     "read"
   ],
-  "gateway_route_id": "artifact-route-workspace-manifest",
   "issued_at": "2026-07-16T09:01:00Z",
   "expires_at": "2026-07-16T09:15:00Z",
   "execution_scope": {
@@ -16,5 +15,16 @@
     "runtime_run_id": "rtr_01J00000000000000000000000",
     "invocation_id": "inv_runtime_01J000000000000000000",
     "invocation_attempt_id": "iat_runtime_01J0000000000000000"
-  }
+  },
+  "gateway_binding": {
+    "gateway_kind": "artifact",
+    "gateway_id": "artifact-gateway",
+    "route_id": "artifact-route-work-order",
+    "protocol_version": "v1",
+    "contract_id": "urn:agent-platform:openapi:artifact-gateway:v1",
+    "contract_digest": "sha256:1f47bc91e199533c45f3a0c3b82cf3f3d2c27aedf52196ce9805e792e5a9b0c1",
+    "binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
+    "audience": "agent-artifact-gateway"
+  },
+  "grant_digest": "sha256:f939c6259c2569d3fcbde33df5ebbcba36e5bc697bf3e0eee0707aaefee6b5a2"
 }

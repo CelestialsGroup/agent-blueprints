@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:admitted-request-binding:v1",
+  "title": "AdmittedRequestBinding",
+  "description": "Exact client request accepted by an ExecutionGrant and used to create a RunManifest.",
+  "type": "object",
+  "required": ["request_contract_id", "request_digest_profile", "request_digest"],
+  "properties": {
+    "request_contract_id": {
+      "enum": [
+        "urn:agent-platform:work-order-request:v1",
+        "urn:agent-platform:conversation-turn-request:v1"
+      ]
+    },
+    "request_digest_profile": { "const": "rfc8785-request-excluding-execution-grant-v1" },
+    "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false
+}

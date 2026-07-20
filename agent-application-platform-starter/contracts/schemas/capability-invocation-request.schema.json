@@ -6,8 +6,9 @@
   "required": [
     "protocol_version", "tenant_id", "client_app_id", "principal_context_digest", "work_order_id",
     "invocation_id", "invocation_attempt_id", "fencing_token", "idempotency_key", "request_digest",
-    "provider_revision_id", "capability", "deadline_at", "input", "input_artifact_grants",
-    "output_staging_session_id", "policy_decision_digest", "execution_budget_digest", "permissions_digest", "trace_context"
+    "provider_resolution_id", "provider_instance_id", "provider_revision_id", "capability", "deadline_at",
+    "input", "input_artifact_grants", "output_staging_grant", "commercial_authorization",
+    "execution_budget", "policy_decision", "effective_permissions", "trace_context"
   ],
   "properties": {
     "protocol_version": { "const": "v1" },
@@ -20,6 +21,8 @@
     "fencing_token": { "type": "integer", "minimum": 1 },
     "idempotency_key": { "type": "string", "minLength": 16, "maxLength": 500 },
     "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "provider_resolution_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "provider_instance_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "provider_revision_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "capability": {
       "type": "object",
@@ -41,10 +44,11 @@
       "uniqueItems": true,
       "items": { "$ref": "urn:agent-platform:artifact-grant:v1" }
     },
-    "output_staging_session_id": { "type": "string", "minLength": 1, "maxLength": 200 },
-    "policy_decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
-    "execution_budget_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
-    "permissions_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "output_staging_grant": { "$ref": "urn:agent-platform:artifact-staging-grant:v1" },
+    "commercial_authorization": { "$ref": "urn:agent-platform:commercial-authorization-binding:v1" },
+    "execution_budget": { "$ref": "urn:agent-platform:execution-budget:v1" },
+    "policy_decision": { "$ref": "urn:agent-platform:policy-decision:v1" },
+    "effective_permissions": { "$ref": "urn:agent-platform:effective-permissions:v1" },
     "trace_context": {
       "type": "object",
       "required": ["traceparent"],
@@ -59,7 +63,9 @@
   "x-semantic-constraints": [
     "request_digest is RFC 8785 JCS SHA-256 over the request excluding request_digest",
     "input validates against the immutable admitted CapabilityDefinition input schema digest before dispatch",
-    "the Capability Invocation Token matches Tenant, ClientApplication, Principal context, WorkOrder, ProviderRevision, InvocationAttempt, Fencing, request digest, policy, budget and staging bindings",
-    "every input ArtifactGrant binds the same Tenant, WorkOrder and InvocationAttempt and expires no later than the request deadline or bearer-token expiration"
+    "the request ProviderResolution, ProviderInstance, ProviderRevision and bearer audience exactly match the admitted immutable resolution before execution",
+    "execution_budget, policy_decision and effective_permissions carry complete executable values, close over the same Tenant, WorkOrder and CommercialAuthorization, and their self-digests match the operation token",
+    "the operation-scoped Capability token matches Tenant, ClientApplication, Principal context, WorkOrder, ProviderResolution, ProviderRevision, InvocationAttempt, Fencing, request digest, policy, budget, permissions and StagingGrant",
+    "every input ArtifactGrant and the output ArtifactStagingGrant bind the same Tenant, WorkOrder and InvocationAttempt, do not outlive the request or CommercialAuthorization, and every read, upload or commit requires a separately refreshed Artifact Gateway token"
   ]
 }

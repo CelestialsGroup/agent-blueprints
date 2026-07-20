@@ -1,0 +1,20 @@
+{
+  "jti": "egt_01J00000000000000000000000",
+  "iss": "agent-platform",
+  "aud": "agent-egress-gateway",
+  "iat": 1784192470,
+  "nbf": 1784192470,
+  "exp": 1784192770,
+  "tenant_id": "ten_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "runtime_run_id": "rtr_01J00000000000000000000000",
+  "invocation_id": "inv_egress_01J0000000000000000000",
+  "invocation_attempt_id": "iat_egress_01J000000000000000000",
+  "fencing_token": 1,
+  "destination_id": "public-docs-origin",
+  "gateway_binding_digest": "sha256:bc615a79dfe04287501e0127f2b48de9f22f1b6c8de879dfd93d9f83d4c82a5a",
+  "request_digest": "sha256:aaa7748900f9476326662032368876f15e625cceca95dfaaff450906e0b0241a",
+  "policy_decision_digest": "sha256:505956a09fc552627d9dfd96eb71a2c03365c7cb90868e451a8422ece887f5bb",
+  "execution_budget_digest": "sha256:4e8aac35b4943db25ecbb3ea6fa2259cdb2f3c144bb837f1cc6c97b0b6f94096",
+  "permissions_digest": "sha256:87356194834eefdb7c53e91088046524c32e8bfdd929a45a6163dbfc05b588fb"
+}

@@ -71,7 +71,9 @@ Plugin 只是 Tool、Skill、Template 等实现的一种打包方式，PluginMan
 
 权威传输契约是 `contracts/openapi/capability-provider-v1.yaml`，覆盖 Invoke、Status、Cancel 和 attempt-local Event。Model、Tool、MCP、Skill、Template、Renderer、Editor、Converter 与 Catalog-backed Provider 均实现或适配该 Port；`plugin-invocation-v1` 只保留为旧 Plugin 的兼容协议，不能作为新 Provider 的公共前提。
 
-CapabilityInvocationRequest 和独立 Token 必须绑定 Tenant、ClientApplication、PrincipalContextSnapshot Digest、WorkOrder、ProviderRevision、Capability Schema Digest、InvocationAttempt、Fencing、Request Digest、Policy、Budget、Permissions、ArtifactGrant 与 Staging Session。ArtifactGrant 使用通用 `execution_scope` 绑定同一 Tenant/WorkOrder/Capability InvocationAttempt，不要求伪造 RuntimeRun，其 `expires_at` 不得晚于请求 `deadline_at` 或独立 Token 的 `exp`。Provider 不得接受只有 `plugin_id`、宽泛权限或未绑定 Request Digest 的令牌。写请求具有明确 encoded-byte 上限，超限必须在 JSON 解析前返回 413。
+CapabilityInvocationRequest 必须携带完整 ExecutionBudget、PolicyDecision、EffectivePermissions 与 CommercialAuthorizationBinding，并绑定 Tenant、ClientApplication、PrincipalContextSnapshot Digest、WorkOrder、ProviderResolution、ProviderInstance、ProviderRevision、admitted audience、Capability Schema Digest、InvocationAttempt、Fencing、Request Digest、ArtifactGrant 与 ArtifactStagingGrant。Provider 不得依赖未定义的摘要反查接口获取真实执行值。
+
+Bearer Token 只授权一个 `invoke`、`status`、`cancel` 或 `read_events` 操作，同时绑定原始 Invocation Request Digest 和当前 Operation Request Digest。初始 Token 的 sequence 为 1；后续 Token 必须连续、引用紧邻前驱 `jti`，且不能越过原 request deadline 或 CommercialAuthorization。ArtifactGrant/ArtifactStagingGrant 是非 Bearer、可覆盖原长任务窗口的有界授权对象；每次读取、上传或 Commit 还必须使用最长 300 秒、绑定 Grant Digest 与操作摘要的 Artifact Gateway Token，因此 Capability Token 到期不要求扩大或重建 WorkOrder。Provider 不得接受只有 `plugin_id`、宽泛权限或未绑定摘要的令牌。写请求具有明确 encoded-byte 上限，超限必须在 JSON 解析前返回 413。
 
 Provider 输出只包含 Structured Result、StagedArtifact 和 UsageObservation。UsageObservation 没有 Platform `entry_id`、Tenant/WorkOrder 归属、Idempotency Key 或 `recorded_at`；Platform 校验 Meter/Evidence/Attempt 后才创建 TechnicalUsageEntry。Provider 只能读取已授权 ArtifactVersion 或写 Staging，不能 Finalize 正式 ArtifactVersion。
 
@@ -121,7 +123,7 @@ ProviderResolution 必须固化：
 
 - Resolver ID/Version/Digest；
 - 完整解析输入摘要，包括 Capability、Policy、Placement、Health 和 Capacity；
-- 每个候选的 Revision、结论、Reason Code 与 Evidence Digest；
+- 每个候选的 Revision、Bearer Audience、结论、Reason Code 与 Evidence Digest；
 - 不可变 Resolution Evidence Reference/Digest 和 Decision Digest；
 - CapabilityDefinition 摘要
 - ProviderRevision ID
@@ -148,4 +150,4 @@ Agent Runtime 使用同一 Revision/Admission/Conformance 治理，但不能按�
 
 冻结 AgentRuntimeProvider v1 前，至少两个 Adapter 必须通过 `runtime-core-v1`，承担通用 Agent 主链路的 Provider 还必须通过 `runtime-general-v1 + governed-v1`。这用于证明 CapabilityDefinition、ProviderResolution、RunManifest、Workbench Event 和 Artifact/Usage 契约没有按 DeerFlow 或其他单一框架定制。
 
-Profile 与 Test ID 以 `contracts/conformance/` 下的机器可读 Suite 为准。Suite 自带内容摘要；测试结果必须绑定 Suite ID/Version/Digest/Profile、ProviderRevision、环境和不可变 Evidence。Runtime、Sandbox、Runtime Gateway 和通用 Capability Provider 使用各自 Suite；README 中的测试名称或人工声明不能构成认证。
+Profile 与 Test ID 以 `contracts/conformance/` 下的机器可读 Suite 为准。Suite 自带内容摘要；测试结果必须绑定 Suite ID/Version/Digest/Profile、ProviderRevision、环境和不可变 Evidence。Runtime、Sandbox、Runtime Gateway、通用 Capability Provider 和 Artifact/Egress Execution Gateway 使用各自 Suite；README 中的测试名称或人工声明不能构成认证。

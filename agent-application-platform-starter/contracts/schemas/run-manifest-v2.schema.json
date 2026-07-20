@@ -5,7 +5,7 @@
   "type": "object",
   "required": [
     "agent_run_id", "workflow_run_id", "tenant_id", "work_order_id", "scenario", "workflow", "capability_resolutions",
-    "sandboxes", "location", "request_digest", "input", "context_package", "artifact_access_requirements",
+    "sandboxes", "location", "request_binding", "input", "context_package", "artifact_access_requirements",
     "execution_budget", "policy_decision", "effective_permissions", "gateway_bindings", "admission_limits",
     "authorization_renewal_policy",
     "event_registry", "agent_runtime",
@@ -99,7 +99,7 @@
       },
       "additionalProperties": false
     },
-    "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "request_binding": { "$ref": "urn:agent-platform:admitted-request-binding:v1" },
     "input": { "$ref": "urn:agent-platform:runtime-input-envelope:v1" },
     "context_package": { "$ref": "urn:agent-platform:context-package:v1" },
     "artifact_access_requirements": {
@@ -203,6 +203,7 @@
     "every Sandbox required_capabilities entry is covered by its Sandbox ProviderRevision conformance",
     "all selected ProviderRevisions have a latest certified admission decision at admission",
     "run_manifest_digest is RFC 8785 JCS SHA-256 over the manifest excluding run_manifest_digest",
+    "request_binding exactly matches the consumed ExecutionGrant request_contract_id, request_digest_profile and request_digest",
     "agent_runtime.resolution_id references exactly one capability_resolution whose admitted ProviderRevision kind is agent_runtime",
     "the AgentRun runtime_provider_resolution_id equals agent_runtime.resolution_id",
     "all selected Agent Runtime, Sandbox and Experience revisions remain immutable for the Run",

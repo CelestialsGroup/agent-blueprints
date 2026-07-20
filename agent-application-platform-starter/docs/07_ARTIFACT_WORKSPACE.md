@@ -108,4 +108,4 @@ WorkspaceRevision 的内容 Manifest Artifact 是平台版本事实；Workspace 
 
 Sandbox Provider 不直接创建 ArtifactVersion；平台验证 `/outputs` 或 Staging Manifest 后提交。
 
-该规则适用于所有 Agent Runtime、Capability、Plugin 和 Sandbox Provider。Provider ArtifactGrant/EffectivePermissions 只有 `read` 或 `stage_new_version`；Finalize 是 Platform 内部、幂等且可对账的 Ledger 事务。
+该规则适用于所有 Agent Runtime、Capability、Plugin 和 Sandbox Provider。读取使用带摘要的 ArtifactGrant；写入使用绑定 Tenant/WorkOrder/InvocationAttempt、Artifact Gateway Contract/Audience、媒体类型和字节/对象上限的 ArtifactStagingGrant，每次读写/Commit 还必须携带最长 300 秒的操作 Token。Provider 权限只有 `read` 或 `stage_new_version`；Staging Commit 仍处于 Quarantine，Finalize 是 Platform 内部、幂等且可对账的 Ledger 事务。

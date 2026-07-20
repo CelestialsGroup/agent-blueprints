@@ -1,7 +1,7 @@
 {
   "suite_id": "agent-runtime-provider",
   "suite_version": "1.0.0",
-  "suite_digest": "sha256:9523bc839ccb04e303e8879080835ee32d2128e262de7d6d09bedf2c32087ac8",
+  "suite_digest": "sha256:94f077f820aafce00d6c13bed73ae79d0de600870b537748d2128cfb3006654b",
   "target_kind": "agent_runtime",
   "profiles": [
     {
@@ -166,6 +166,12 @@
           "category": "security",
           "evidence_type": "trace",
           "description": "Tool and MCP traffic cannot bypass Invocation mediation."
+        },
+        {
+          "test_id": "artifact-gateway-enforced",
+          "category": "security",
+          "evidence_type": "trace",
+          "description": "Artifact reads and staging writes require admitted ArtifactGrant/StagingGrant and operation-scoped Artifact Gateway tokens."
         },
         {
           "test_id": "egress-gateway-enforced",

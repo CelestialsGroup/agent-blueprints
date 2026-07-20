@@ -1,0 +1,66 @@
+{
+  "suite_id": "execution-gateway",
+  "suite_version": "1.0.0",
+  "suite_digest": "sha256:2e58a4dd8efb8be1afa489f4a3a54724ec43d3223455bc93fcbfe73ae98c8b20",
+  "target_kind": "execution_gateway",
+  "profiles": [
+    {
+      "profile_id": "artifact-gateway-v1",
+      "tests": [
+        {
+          "test_id": "artifact-operation-token-binding",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "Read, stage-object and commit tokens cannot cross operation, audience, route, grant, Tenant, WorkOrder or InvocationAttempt boundaries."
+        },
+        {
+          "test_id": "artifact-staging-byte-digest",
+          "category": "contract",
+          "evidence_type": "artifact",
+          "description": "Decoded staging bytes match declared length and SHA-256 before quarantine acceptance."
+        },
+        {
+          "test_id": "artifact-staging-limits",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "Media type, object count, per-object bytes, total bytes and encoded-body limits are enforced before commit."
+        },
+        {
+          "test_id": "artifact-no-provider-finalize",
+          "category": "security",
+          "evidence_type": "trace",
+          "description": "Provider and Gateway operations can only create quarantined staging metadata; Platform alone finalizes ArtifactVersion."
+        }
+      ]
+    },
+    {
+      "profile_id": "egress-gateway-v1",
+      "tests": [
+        {
+          "test_id": "egress-operation-token-binding",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "Egress tokens bind the exact request, destination, Gateway route, execution context, Policy, Budget and Permissions."
+        },
+        {
+          "test_id": "egress-registered-destination-only",
+          "category": "security",
+          "evidence_type": "trace",
+          "description": "Runtime cannot provide a raw origin or override the registered destination authority."
+        },
+        {
+          "test_id": "egress-address-revalidation",
+          "category": "security",
+          "evidence_type": "trace",
+          "description": "DNS answers, connected IPs and every redirect are revalidated against private, loopback, link-local and metadata restrictions."
+        },
+        {
+          "test_id": "egress-header-and-body-limits",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "Hop-by-hop, Host and credential headers are filtered and encoded/decoded request and response limits are enforced."
+        }
+      ]
+    }
+  ]
+}

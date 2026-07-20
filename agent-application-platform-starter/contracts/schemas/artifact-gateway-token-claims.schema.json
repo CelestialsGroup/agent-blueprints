@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:artifact-gateway-token-claims:v1",
+  "title": "ArtifactGatewayTokenClaims",
+  "type": "object",
+  "required": [
+    "jti", "iss", "aud", "iat", "nbf", "exp", "operation", "tenant_id", "work_order_id",
+    "invocation_id", "invocation_attempt_id", "fencing_token", "gateway_binding_digest", "request_digest"
+  ],
+  "properties": {
+    "jti": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "iss": { "const": "agent-platform" },
+    "aud": { "type": "string", "minLength": 1, "maxLength": 300 },
+    "iat": { "type": "integer", "minimum": 0 },
+    "nbf": { "type": "integer", "minimum": 0 },
+    "exp": { "type": "integer", "minimum": 0 },
+    "operation": { "enum": ["read_content", "stage_object", "commit_staging"] },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "runtime_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "fencing_token": { "type": "integer", "minimum": 1 },
+    "gateway_binding_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "artifact_grant_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "staging_grant_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "operation": { "const": "read_content" } }, "required": ["operation"] },
+      "then": {
+        "required": ["artifact_grant_digest"],
+        "not": { "required": ["staging_grant_digest"] }
+      },
+      "else": {
+        "required": ["staging_grant_digest"],
+        "not": { "required": ["artifact_grant_digest"] }
+      }
+    }
+  ],
+  "x-semantic-constraints": [
+    "iat <= nbf < exp, exp - iat <= 300 and exp is no later than the bound ArtifactGrant or ArtifactStagingGrant",
+    "aud and gateway_binding_digest match the admitted artifact Gateway Port and request_digest binds the exact HTTP operation descriptor",
+    "read_content requires an ArtifactGrant with read permission while staging operations require an ArtifactStagingGrant and neither token can finalize an ArtifactVersion"
+  ]
+}

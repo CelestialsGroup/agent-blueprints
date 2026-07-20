@@ -1,0 +1,17 @@
+{
+  "invocation_id": "inv_egress_01J0000000000000000000",
+  "invocation_attempt_id": "iat_egress_01J000000000000000000",
+  "fencing_token": 1,
+  "request_digest": "sha256:aaa7748900f9476326662032368876f15e625cceca95dfaaff450906e0b0241a",
+  "status_code": 200,
+  "headers": [],
+  "body": {
+    "media_type": "application/json",
+    "encoding": "base64",
+    "data": "e30=",
+    "size_bytes": 2,
+    "digest": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "truncated": false
+  },
+  "observed_at": "2026-07-16T09:02:00Z"
+}

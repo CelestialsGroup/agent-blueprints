@@ -12,14 +12,14 @@
   "agent_run_id": "agr_01J00000000000000000000000",
   "workflow_run_id": "wfr_01J00000000000000000000000",
   "work_order_id": "wrk_01J00000000000000000000000",
-  "run_manifest_digest": "sha256:e0ebd4512d49a0d26250fbba7df88a7e67e734a1f2018b4de0c11464f2d5a744",
+  "run_manifest_digest": "sha256:edbc10e65f86214fc49128deab77ec134fbf1877a347c9e20a4cfe7f308626c3",
   "operation": "start",
-  "request_digest": "sha256:118142cea5741f5b6c491332689d18ec39e9dd278c9863dd0f5c7bf95be2bda1",
+  "request_digest": "sha256:83035cfa028a3faa1474eb08988b07f3b39fa303e905b7239a48b9571775a319",
   "invocation_id": "inv_runtime_01J000000000000000000",
   "invocation_attempt_id": "iat_runtime_01J0000000000000000",
   "fencing_token": 1,
-  "policy_decision_digest": "sha256:2040f3ac261711f1c60fe68af1d678fb0fd26c25b410f28d7d315a7bf42fe2e0",
+  "policy_decision_digest": "sha256:505956a09fc552627d9dfd96eb71a2c03365c7cb90868e451a8422ece887f5bb",
   "execution_budget_digest": "sha256:4e8aac35b4943db25ecbb3ea6fa2259cdb2f3c144bb837f1cc6c97b0b6f94096",
-  "effective_permissions_digest": "sha256:fe357a824dfa4d264229e0ad365e23a1305a6ee51480b14098994bc4d0ce9439",
-  "runtime_authorization_digest": "sha256:12607f1984f913a1a4a71e99cdbf53043367d5cb388ed9f74896df74bb981849"
+  "effective_permissions_digest": "sha256:87356194834eefdb7c53e91088046524c32e8bfdd929a45a6163dbfc05b588fb",
+  "runtime_authorization_digest": "sha256:a5b229321749e121db013975072d3026571e263f645860880cf75bffe5ddd66c"
 }

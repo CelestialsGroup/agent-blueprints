@@ -1,0 +1,96 @@
+openapi: 3.1.1
+
+info:
+  title: Egress Gateway Protocol
+  version: 1.0.0
+  description: |
+    Governed HTTP exchange against pre-registered destinations. Runtime requests never supply
+    a raw origin and every redirect, DNS answer and connected address remains policy checked.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+
+servers:
+  - url: https://egress-gateway.agent-platform.internal
+    description: Registered Egress Gateway endpoint
+
+security:
+  - EgressMutualTLS: []
+    EgressInvocationBearer: []
+
+paths:
+  /v1/http-exchanges:
+    post:
+      operationId: createGovernedHttpExchange
+      summary: Execute one policy-bound HTTP request against a registered destination
+      x-max-encoded-body-bytes: 2097152
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/egress-http-request.schema.json
+      responses:
+        '200':
+          description: Confirmed HTTP exchange response
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/egress-http-response.schema.json
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '500': { $ref: '#/components/responses/InternalError' }
+        '502': { $ref: '#/components/responses/BadGateway' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+
+components:
+  securitySchemes:
+    EgressMutualTLS:
+      type: mutualTLS
+      description: Registered Agent Platform or Runtime workload identity.
+    EgressInvocationBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Short-lived request-bound token validated against
+        urn:agent-platform:egress-invocation-token-claims:v1.
+
+  responses:
+    BadRequest:
+      description: Malformed governed HTTP request.
+      content: { application/json: { schema: { $ref: ../schemas/standard-error.schema.json } } }
+    Unauthorized:
+      description: Missing or invalid workload identity or Egress token.
+      content: { application/json: { schema: { $ref: ../schemas/standard-error.schema.json } } }
+    Forbidden:
+      description: Destination, policy, budget, permission, scope or request digest mismatch.
+      content: { application/json: { schema: { $ref: ../schemas/standard-error.schema.json } } }
+    Conflict:
+      description: Stale fencing token or request digest conflict.
+      content: { application/json: { schema: { $ref: ../schemas/standard-error.schema.json } } }
+    PayloadTooLarge:
+      description: Encoded request exceeds the declared limit and was rejected before parsing.
+      content: { application/json: { schema: { $ref: ../schemas/standard-error.schema.json } } }
+    Unprocessable:
+      description: Registered destination or HTTP operation violates policy.
+      content: { application/json: { schema: { $ref: ../schemas/standard-error.schema.json } } }
+    TooManyRequests:
+      description: Egress concurrency or rate limit exceeded.
+      headers:
+        Retry-After: { schema: { type: integer, minimum: 1 } }
+      content: { application/json: { schema: { $ref: ../schemas/standard-error.schema.json } } }
+    BadGateway:
+      description: Registered upstream returned an invalid or unavailable response.
+      content: { application/json: { schema: { $ref: ../schemas/standard-error.schema.json } } }
+    InternalError:
+      description: Internal Egress Gateway error.
+      content: { application/json: { schema: { $ref: ../schemas/standard-error.schema.json } } }
+    Unavailable:
+      description: Egress Gateway is temporarily unavailable.
+      content: { application/json: { schema: { $ref: ../schemas/standard-error.schema.json } } }

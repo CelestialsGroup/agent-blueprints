@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:artifact-staging-grant:v1",
+  "title": "ArtifactStagingGrant",
+  "description": "Short-lived, content-addressed authority to upload and commit quarantined staging objects without ArtifactVersion finalize authority.",
+  "type": "object",
+  "required": [
+    "staging_grant_id", "tenant_id", "work_order_id", "invocation_id", "invocation_attempt_id",
+    "staging_session_id", "gateway_binding", "allowed_media_types", "max_object_count",
+    "max_object_bytes", "max_total_bytes", "issued_at", "expires_at", "grant_digest"
+  ],
+  "properties": {
+    "staging_grant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "staging_session_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "gateway_binding": { "$ref": "urn:agent-platform:gateway-port-binding:v1" },
+    "allowed_media_types": {
+      "type": "array", "minItems": 1, "maxItems": 64, "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 200 }
+    },
+    "max_object_count": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+    "max_object_bytes": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "max_total_bytes": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "issued_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "grant_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "grant_digest is RFC 8785 JCS SHA-256 over the grant excluding grant_digest",
+    "the grant binds one Tenant, WorkOrder and Capability InvocationAttempt and its artifact Gateway binding matches the admitted RunManifest route",
+    "expires_at is later than issued_at and no later than the Capability request deadline or CommercialAuthorization expiration; each use also requires a shorter-lived Artifact Gateway operation token",
+    "the Provider may upload and commit quarantined staging objects within the declared media, count and byte limits but cannot finalize an ArtifactVersion"
+  ]
+}

@@ -5,7 +5,7 @@
   "type": "object",
   "required": [
     "resolution_id", "tenant_id", "client_app_id", "work_order_id", "execution_scope", "identity_dependency", "principal_context_digest",
-    "capability", "selected_provider_instance_id",
+    "capability", "selected_provider_instance_id", "selected_provider_audience",
     "routing_reason", "resolved_at", "selected_provider_revision",
     "capability_definition_digest", "resolver_revision", "resolution_input_digest",
     "candidate_evaluations", "resolution_evidence_reference",
@@ -41,6 +41,10 @@
       "additionalProperties": false
     },
     "selected_provider_instance_id": { "type": "string", "minLength": 1 },
+    "selected_provider_audience": {
+      "type": "string",
+      "pattern": "^urn:agent-platform:provider-instance:[A-Za-z0-9._:-]{1,200}$"
+    },
     "routing_reason": {
       "enum": ["tenant_binding", "client_binding", "scenario_requirement", "platform_default", "explicit_fallback"]
     },
@@ -61,10 +65,14 @@
       "maxItems": 256,
       "items": {
         "type": "object",
-        "required": ["provider_instance_id", "provider_revision_id", "outcome", "reason_codes", "evidence_digest"],
+        "required": ["provider_instance_id", "provider_revision_id", "provider_audience", "outcome", "reason_codes", "evidence_digest"],
         "properties": {
           "provider_instance_id": { "type": "string", "minLength": 1 },
           "provider_revision_id": { "type": "string", "minLength": 1 },
+          "provider_audience": {
+            "type": "string",
+            "pattern": "^urn:agent-platform:provider-instance:[A-Za-z0-9._:-]{1,200}$"
+          },
           "outcome": { "enum": ["selected", "rejected"] },
           "reason_codes": {
             "type": "array",
@@ -112,7 +120,7 @@
     "resolution_input_digest binds the complete requirements, policy, placement, health and capacity inputs evaluated by resolver_revision",
     "tenant_id, client_app_id and work_order_id define the ownership and execution scope of the decision",
     "identity_dependency explicitly declares whether principal attributes affect selection and principal_context_digest is non-null exactly for principal_context mode",
-    "candidate_evaluations contains exactly one selected candidate matching selected_provider_instance_id and selected_provider_revision",
+    "candidate_evaluations contains exactly one selected candidate matching selected_provider_instance_id, selected_provider_audience and selected_provider_revision",
     "resolution_evidence_reference resolves to immutable evidence whose digest equals resolution_evidence_digest"
   ]
 }

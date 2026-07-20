@@ -1,0 +1,17 @@
+{
+  "jti": "agt_01J00000000000000000000001",
+  "iss": "agent-platform",
+  "aud": "agent-artifact-gateway",
+  "iat": 1784192470,
+  "nbf": 1784192470,
+  "exp": 1784192770,
+  "operation": "commit_staging",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "invocation_id": "inv_cap_01J000000000000000000000",
+  "invocation_attempt_id": "iat_cap_01J00000000000000000000",
+  "fencing_token": 1,
+  "gateway_binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
+  "request_digest": "sha256:fb08c486941869da85df925508b7f62b89469579e6b7295ef5c0ac0730d1e96b",
+  "staging_grant_digest": "sha256:9c63071f90f3b696780635191a6c755c49799434aa0eb90119e5a6fa075eac80"
+}

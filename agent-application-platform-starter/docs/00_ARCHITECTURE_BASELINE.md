@@ -52,7 +52,7 @@ AgentRun 1 -> 1 RunManifest + 1 AgentRuntimeRun
 AgentRuntimeRun mutation -> Invocation 1 -> N Attempt
 ```
 
-每个 AgentRun 由 Tenant/Conversation/Branch WorkspaceRevision、实际有界输入、ContextPackage、ArtifactAccessRequirement、初始预算/策略/权限上限、商业授权 ID/Digest/到期上限、授权续期规则、四类 Gateway Binding、ProviderResolution、AdmissionDecision、Event Registry、Experience Revision、按需 Sandbox Slot 和 RunManifest 固化。短期 RuntimeAuthorization/ArtifactGrant 属于 InvocationAttempt，只能在同一 Manifest 与商业有效期内等价或缩权续期；其 Budget/Policy/Permissions 必须绑定同一 Tenant/WorkOrder/CommercialAuthorization，ArtifactGrant 不得早于 Authorization 签发或晚于其到期。Runtime 与 Sandbox Slot 只引用 ProviderResolution，避免重复快照产生冲突。没有 Sandbox Capability 的 Run 可以使用空 `sandboxes[]`；运行中的 Run 不得静默切换 Provider。
+每个 AgentRun 由 Tenant/Conversation/Branch WorkspaceRevision、已消费 ExecutionGrant 的请求 Contract/Profile/Digest、实际有界输入、ContextPackage、ArtifactAccessRequirement、初始预算/策略/权限上限、商业授权 ID/Digest/到期上限、授权续期规则、四类 Gateway Binding、ProviderResolution、AdmissionDecision、Event Registry、Experience Revision、按需 Sandbox Slot 和 RunManifest 固化。短期 RuntimeAuthorization/ArtifactGrant 属于 InvocationAttempt，只能在同一 Manifest 与商业有效期内等价或缩权续期；其 Budget/Policy/Permissions 必须绑定同一 Tenant/WorkOrder/CommercialAuthorization，ArtifactGrant 不得早于 Authorization 签发或晚于其到期。Runtime 与 Sandbox Slot 只引用 ProviderResolution，避免重复快照产生冲突。没有 Sandbox Capability 的 Run 可以使用空 `sandboxes[]`；运行中的 Run 不得静默切换 Provider。
 
 ## 可靠性边界
 
@@ -63,7 +63,7 @@ AgentRuntimeRun mutation -> Invocation 1 -> N Attempt
 - Artifact 和 Recording 大块字节只进入对象存储，数据库和 Event 只保存引用与摘要。
 - 核心 Runtime Event、PolicyDecision、TechnicalUsage 和 Runtime Gateway Frame 使用闭合 Schema；RunManifest 绑定 Event Registry ID/Version/Digest，未知 Provider Payload 不能驱动核心 Projection。
 - Runtime/Sandbox/Capability 认证绑定不可变 Conformance Suite/Profile/Digest；Runtime 调用令牌绑定 Tenant、Run、Attempt、Fencing、Policy、Budget 和请求摘要。
-- Capability Provider 是独立通用 Port，调用 Token 绑定 Tenant、ClientApplication、Principal Context、WorkOrder、ProviderRevision、Attempt、Fencing、请求、策略、预算、权限和暂存授权；Plugin 只是可选实现方式。
+- Capability Provider 是独立通用 Port，请求携带完整执行授权并绑定 ProviderResolution/Instance/Audience；Invoke、Status、Cancel、Event 使用不可跨操作重放且按前驱续期的 Token。Model/Tool 复用该 Port，Artifact/Egress 使用各自 OpenAPI 与短期操作 Token；Plugin 只是可选实现方式。
 - BusinessSettlementEnvelope 嵌入完整不可变 UsageReport，但不包含价格、货币、余额或商业结论。
 - 系统不承诺全局 Exactly-once。
 

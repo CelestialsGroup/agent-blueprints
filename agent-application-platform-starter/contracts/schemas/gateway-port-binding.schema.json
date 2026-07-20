@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:gateway-port-binding:v1",
+  "title": "GatewayPortBinding",
+  "description": "Immutable executable Port and audience selected for one governed Gateway route.",
+  "type": "object",
+  "required": [
+    "gateway_kind", "gateway_id", "route_id", "protocol_version", "contract_id",
+    "contract_digest", "binding_digest", "audience"
+  ],
+  "properties": {
+    "gateway_kind": { "enum": ["model", "tool", "artifact", "egress"] },
+    "gateway_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "route_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "protocol_version": { "const": "v1" },
+    "contract_id": {
+      "enum": [
+        "urn:agent-platform:openapi:capability-provider:v1",
+        "urn:agent-platform:openapi:artifact-gateway:v1",
+        "urn:agent-platform:openapi:egress-gateway:v1"
+      ]
+    },
+    "contract_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "binding_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "audience": { "type": "string", "minLength": 1, "maxLength": 300 }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "model and tool routes use capability-provider-v1, artifact routes use artifact-gateway-v1 and egress routes use egress-gateway-v1",
+    "contract_digest equals the admitted immutable OpenAPI artifact and audience is the only accepted bearer-token audience for this route"
+  ]
+}

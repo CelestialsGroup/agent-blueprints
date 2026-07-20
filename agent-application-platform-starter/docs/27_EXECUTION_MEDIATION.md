@@ -35,7 +35,9 @@ PolicyDecision 固化全部匹配规则摘要和 Effective Permissions Digest。
 
 AgentRuntimeProvider 的每次调用还必须使用短期 RuntimeInvocation Token。Token 将 Tenant、ProviderRevision、WorkflowRun/AgentRun/RuntimeRun、RunManifest、RuntimeAuthorization、InvocationAttempt、Fencing、PolicyDecision、ExecutionBudget、Effective Permissions 和请求摘要绑定为一个不可混用的授权上下文；mTLS 只证明工作负载身份，不能替代对象级绑定。
 
-RunManifest 固化初始 Budget/Policy/Permissions 上限、ArtifactAccessRequirement、CommercialAuthorizationBinding（ID/Digest/`expires_at`）和授权续期规则。Runtime Start 携带本 Attempt 的完整 RuntimeAuthorization 与类型化 Model/Tool/Artifact/Egress Gateway Binding；Authorization 内部作用域与摘要必须闭合，不能越过商业授权期限，ArtifactGrant 必须落在 Authorization 时间窗内。Token 过期、Adapter 重启或 Resume 通过前驱摘要链刷新 Authorization/ArtifactGrant，只能等价或缩权。通用 Capability Provider 使用独立 Token，并额外绑定 ClientApplication、Principal Context、WorkOrder、Capability Schema、ArtifactGrant 和 Staging Session；Capability ArtifactGrant 不能越过请求 deadline 或 Token `exp`，`plugin_id` 不属于稳定授权边界。
+RunManifest 固化初始 Budget/Policy/Permissions 上限、ArtifactAccessRequirement、CommercialAuthorizationBinding（ID/Digest/`expires_at`）和授权续期规则。Runtime Start 携带本 Attempt 的完整 RuntimeAuthorization 与类型化 Model/Tool/Artifact/Egress Gateway Binding；每个 Binding 固化可执行 Contract ID/Digest、Route、Audience 和 Binding Digest。Authorization 内部作用域与摘要必须闭合，不能越过商业授权期限，ArtifactGrant 必须落在 Authorization 时间窗内。Token 过期、Adapter 重启或 Resume 通过前驱摘要链刷新 Authorization/ArtifactGrant，只能等价或缩权。
+
+通用 Capability Provider 请求携带完整执行授权值并绑定 ProviderResolution/Instance/Audience。Invoke、Status、Cancel、Event Token 不可跨操作复用，续期使用连续 sequence 和前驱 `jti`，且不越过原 deadline/CommercialAuthorization。Model/Tool Gateway 复用该 Port；Artifact/Egress 使用独立 OpenAPI 和最长 300 秒的操作 Token。ArtifactStagingGrant 只允许受限 Quarantine 上传/Commit，不能 Finalize；`plugin_id` 不属于稳定授权边界。
 
 ## 模型 Gateway
 
@@ -76,6 +78,8 @@ HTTP/DNS 出站通过受控 Egress Proxy：
 - 请求大小和响应大小限制
 - 审计
 - 数据分类策略
+
+稳定请求只携带预注册 `destination_id + relative path`，禁止由 Runtime 提供原始 Origin。权威传输契约为 `egress-gateway-v1`；Token 绑定 RuntimeRun、InvocationAttempt、Fencing、Destination、Gateway Binding、Request Digest、Policy、Budget 和 Permissions。
 
 Kubernetes NetworkPolicy 不提供通用 FQDN 策略，因此不能单独承担域名 Allowlist。
 

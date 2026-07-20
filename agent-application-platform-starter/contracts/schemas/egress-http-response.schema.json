@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:egress-http-response:v1",
+  "title": "EgressHttpResponse",
+  "type": "object",
+  "required": [
+    "invocation_id", "invocation_attempt_id", "fencing_token", "request_digest",
+    "status_code", "headers", "body", "observed_at"
+  ],
+  "properties": {
+    "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "fencing_token": { "type": "integer", "minimum": 1 },
+    "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "status_code": { "type": "integer", "minimum": 100, "maximum": 599 },
+    "headers": {
+      "type": "array", "maxItems": 128,
+      "items": {
+        "type": "object", "required": ["name", "value"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "value": { "type": "string", "maxLength": 8192 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "body": {
+      "type": "object",
+      "required": ["media_type", "encoding", "data", "size_bytes", "digest", "truncated"],
+      "properties": {
+        "media_type": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "encoding": { "const": "base64" },
+        "data": { "type": "string", "maxLength": 5592408 },
+        "size_bytes": { "type": "integer", "minimum": 0, "maximum": 4194304 },
+        "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "truncated": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "observed_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

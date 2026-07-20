@@ -2,7 +2,7 @@
   "invocation_id": "inv_cap_01J000000000000000000000",
   "invocation_attempt_id": "iat_cap_01J00000000000000000000",
   "fencing_token": 1,
-  "request_digest": "sha256:39a377b5ed1faf5b11f38cc08a8cc0c4c1201504af22a7dfe410be1414422f66",
+  "request_digest": "sha256:473479826a73fdf169fbe7edaedb95595ef07d5876aded6c9b80930c84cf009b",
   "reason": "The WorkOrder was cancelled.",
   "requested_at": "2026-07-16T09:01:40Z"
 }

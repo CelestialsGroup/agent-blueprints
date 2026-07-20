@@ -8,7 +8,7 @@
   "invocation_attempt_id": "iat_cap_01J00000000000000000000",
   "fencing_token": 1,
   "idempotency_key": "capability-invocation-key-0001",
-  "request_digest": "sha256:39a377b5ed1faf5b11f38cc08a8cc0c4c1201504af22a7dfe410be1414422f66",
+  "request_digest": "sha256:cb2db69bda6053cafb3313efcce2a07f3ae14ed2a1a1bf7f656ffc74f07ca4f9",
   "provider_revision_id": "hpr_01J00000000000000000000000",
   "capability": {
     "id": "html.generate",
@@ -17,7 +17,7 @@
     "input_schema_digest": "sha256:3434343434343434343434343434343434343434343434343434343434343434",
     "output_schema_digest": "sha256:3535353535353535353535353535353535353535353535353535353535353535"
   },
-  "deadline_at": "2026-07-16T09:10:00Z",
+  "deadline_at": "2026-07-16T09:20:00Z",
   "input": {
     "prompt": "Generate the admitted HTML artifact."
   },
@@ -32,21 +32,162 @@
       "permissions": [
         "read"
       ],
-      "gateway_route_id": "artifact-route-workspace-manifest",
       "issued_at": "2026-07-16T09:01:00Z",
-      "expires_at": "2026-07-16T09:06:10Z",
+      "expires_at": "2026-07-16T09:20:00Z",
       "execution_scope": {
         "kind": "capability_invocation",
         "invocation_id": "inv_cap_01J000000000000000000000",
         "invocation_attempt_id": "iat_cap_01J00000000000000000000"
-      }
+      },
+      "gateway_binding": {
+        "gateway_kind": "artifact",
+        "gateway_id": "artifact-gateway",
+        "route_id": "artifact-route-work-order",
+        "protocol_version": "v1",
+        "contract_id": "urn:agent-platform:openapi:artifact-gateway:v1",
+        "contract_digest": "sha256:1f47bc91e199533c45f3a0c3b82cf3f3d2c27aedf52196ce9805e792e5a9b0c1",
+        "binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
+        "audience": "agent-artifact-gateway"
+      },
+      "grant_digest": "sha256:d6177d2b303bb9d2fcb14226e1273b9cae363b8924f953d6eb9389793d107aff"
     }
   ],
-  "output_staging_session_id": "stg_01J00000000000000000000000",
-  "policy_decision_digest": "sha256:2040f3ac261711f1c60fe68af1d678fb0fd26c25b410f28d7d315a7bf42fe2e0",
-  "execution_budget_digest": "sha256:4e8aac35b4943db25ecbb3ea6fa2259cdb2f3c144bb837f1cc6c97b0b6f94096",
   "trace_context": {
     "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
   },
-  "permissions_digest": "sha256:fe357a824dfa4d264229e0ad365e23a1305a6ee51480b14098994bc4d0ce9439"
+  "provider_resolution_id": "res_html_generate_01J0000000000000",
+  "provider_instance_id": "hpi_html_anything",
+  "commercial_authorization": {
+    "commercial_authorization_id": "cauth_01J00000000000000000000000",
+    "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7",
+    "expires_at": "2026-07-16T09:30:00Z"
+  },
+  "execution_budget": {
+    "budget_id": "bud_01J00000000000000000000000",
+    "budget_digest": "sha256:4e8aac35b4943db25ecbb3ea6fa2259cdb2f3c144bb837f1cc6c97b0b6f94096",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "work_order_id": "wrk_01J00000000000000000000000",
+    "limits": {
+      "max_input_tokens": 100000,
+      "max_output_tokens": 20000,
+      "max_model_requests": 200,
+      "max_sandbox_seconds": 1800,
+      "max_network_bytes": 104857600,
+      "max_storage_bytes": 104857600,
+      "max_artifact_count": 20,
+      "max_conversion_count": 3
+    },
+    "policies": {
+      "model_gateway_required": true,
+      "tool_gateway_required": true,
+      "egress_gateway_required": true,
+      "external_communication": false,
+      "require_approval_for": [
+        "external_communication"
+      ],
+      "data_classification": "confidential"
+    },
+    "created_at": "2026-07-16T09:00:30Z",
+    "expires_at": "2026-07-16T09:30:00Z"
+  },
+  "policy_decision": {
+    "decision_id": "pol_cap_01J000000000000000000000",
+    "decision_digest": "sha256:107d8f6e3b3e491c0f65d81d13d4107ae72e2f4e02291fdb386c64d062e45380",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "work_order_id": "wrk_01J00000000000000000000000",
+    "policy_bundle_digest": "sha256:6161616161616161616161616161616161616161616161616161616161616161",
+    "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7",
+    "execution_budget_digest": "sha256:4e8aac35b4943db25ecbb3ea6fa2259cdb2f3c144bb837f1cc6c97b0b6f94096",
+    "evaluations": [
+      {
+        "subject_kind": "runtime",
+        "subject_id": "agent.general",
+        "action": "allow",
+        "source": "commercial",
+        "rule_digest": "sha256:6262626262626262626262626262626262626262626262626262626262626262"
+      },
+      {
+        "subject_kind": "egress",
+        "subject_id": "default-deny",
+        "action": "allow",
+        "source": "runtime_profile",
+        "rule_digest": "sha256:6363636363636363636363636363636363636363636363636363636363636363"
+      }
+    ],
+    "outcome": "allow",
+    "effective_permissions_digest": "sha256:87356194834eefdb7c53e91088046524c32e8bfdd929a45a6163dbfc05b588fb",
+    "decided_at": "2026-07-16T09:00:59Z",
+    "expires_at": "2026-07-16T09:30:00Z",
+    "decision_point": "invocation",
+    "commercial_authorization_id": "cauth_01J00000000000000000000000",
+    "execution_budget_id": "bud_01J00000000000000000000000"
+  },
+  "effective_permissions": {
+    "permissions_id": "perm_01J00000000000000000000000",
+    "permissions_digest": "sha256:87356194834eefdb7c53e91088046524c32e8bfdd929a45a6163dbfc05b588fb",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "work_order_id": "wrk_01J00000000000000000000000",
+    "model": {
+      "allowed_model_profiles": [
+        "general-balanced"
+      ]
+    },
+    "tool": {
+      "allowed_capabilities": [
+        "html.generate",
+        "artifact.preview.html"
+      ]
+    },
+    "artifact": {
+      "read": true,
+      "stage_new_version": true
+    },
+    "egress": {
+      "mode": "restricted",
+      "allowed_destination_classes": [
+        "model_gateway",
+        "artifact_gateway",
+        "public-docs-origin"
+      ]
+    },
+    "sandbox_slots": [
+      {
+        "sandbox_slot_key": "primary-code",
+        "allowed_operations": [
+          "exec",
+          "files_read",
+          "files_write",
+          "terminal",
+          "snapshot"
+        ]
+      }
+    ]
+  },
+  "output_staging_grant": {
+    "staging_grant_id": "stgg_01J0000000000000000000000",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "work_order_id": "wrk_01J00000000000000000000000",
+    "invocation_id": "inv_cap_01J000000000000000000000",
+    "invocation_attempt_id": "iat_cap_01J00000000000000000000",
+    "staging_session_id": "stg_01J00000000000000000000000",
+    "gateway_binding": {
+      "gateway_kind": "artifact",
+      "gateway_id": "artifact-gateway",
+      "route_id": "artifact-route-work-order",
+      "protocol_version": "v1",
+      "contract_id": "urn:agent-platform:openapi:artifact-gateway:v1",
+      "contract_digest": "sha256:1f47bc91e199533c45f3a0c3b82cf3f3d2c27aedf52196ce9805e792e5a9b0c1",
+      "binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
+      "audience": "agent-artifact-gateway"
+    },
+    "allowed_media_types": [
+      "text/html"
+    ],
+    "max_object_count": 20,
+    "max_object_bytes": 4194304,
+    "max_total_bytes": 8388608,
+    "issued_at": "2026-07-16T09:01:00Z",
+    "expires_at": "2026-07-16T09:20:00Z",
+    "grant_digest": "sha256:9c63071f90f3b696780635191a6c755c49799434aa0eb90119e5a6fa075eac80"
+  }
 }

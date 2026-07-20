@@ -13,11 +13,11 @@
 - `workspace_revisions(workspace_revision_id)` 主键、`revision_digest` 唯一；`(workspace_id, branch_id, revision_number)` 唯一且从 1 连续；后续 Revision 引用同 Branch 紧邻前驱，Fork Revision 记录来源 Branch Revision，内容 Manifest ArtifactVersion 不可变并在准入时验证独立 WorkspaceContentManifest Schema。
 - `parent_message_id` 只能引用同一 Conversation 中 Sequence 更小的 Message；每个 Branch 默认最多一个活动 WorkOrder，不能用 Conversation 顶层单值表达并行分支。
 - Conversation Turn 事务原子完成 Message Sequence、WorkOrder、GrantConsumption、Workflow Start Outbox 和 CanonicalEvent。WorkOrderControl 事务验证客户端 `client_control_input_id` 后分配内部 `input_id/input_message_id`，只追加 ControlInput/GrantConsumption/Control Outbox，不创建新 Turn；Append/Interrupt 才比较 Message Head CAS，所有 Control 比较 Active Work CAS；`interrupt_and_enqueue` 通过取消意图与后继 WorkOrder 的明确关联闭合。
-- WorkOrder、ExecutionGrant、RunManifest 和 CanonicalEvent 的 Conversation/Turn/Branch/Input Message 绑定必须一致。
+- WorkOrder、ExecutionGrant、RunManifest 和 CanonicalEvent 的 Conversation/Turn/Branch/Input Message 绑定必须一致；RunManifest `request_binding` 必须逐字段等于已消费 ExecutionGrant 的 Request Contract ID、Digest Profile 和 Digest。
 - `workflow_runs(workflow_run_id)` 与 `work_orders(work_order_id)` 一对一；显式 `tenant_id` 必须一致，`root_agent_run_id` 唯一引用同一 WorkflowRun 的 Root；Temporal Continue-as-New 或未来编排器分段不能创建第二个平台 WorkflowRun。
 - `agent_runs(agent_run_id)` 显式绑定 Tenant、WorkflowRun、RunManifest 和 `runtime_run_id`；每个 WorkOrder 恰好一个 Root AgentRun，Sub-agent 的 Parent/Root 必须属于同一 Tenant/WorkOrder/WorkflowRun。
 - RunManifest 的 `agent_runtime.resolution_id` 必须引用恰好一个 Agent Runtime ProviderResolution，并与 AgentRun 的 `runtime_provider_resolution_id` 相同；每个 Sandbox Slot 同样只引用一个 Sandbox ProviderResolution；禁止复制第二份 Revision/Conformance 快照。
-- RunManifest 固化 Input、ContextPackage、ArtifactAccessRequirement、初始 ExecutionBudget/PolicyDecision/EffectivePermissions 上限、CommercialAuthorizationBinding（ID/Digest/到期上限）、AuthorizationRenewalPolicy、Gateway Binding 和 Admission Limits。Runtime Start 的 Input/Context/Gateway 必须逐值相同；RuntimeAuthorization 按 `(runtime_run_id, authorization_sequence)` 连续仅追加并绑定前驱摘要、当前 Attempt 和 Manifest，只能等价/缩权。其 Budget/Policy/Permissions 必须绑定同一 Tenant/WorkOrder/CommercialAuthorization，Authorization 不得越过商业期限，fresh ArtifactGrant 必须恰好覆盖 Requirement 且 `authorization.issued_at <= grant.issued_at < grant.expires_at <= authorization.expires_at`。
+- RunManifest 固化 Input、ContextPackage、ArtifactAccessRequirement、初始 ExecutionBudget/PolicyDecision/EffectivePermissions 上限、CommercialAuthorizationBinding（ID/Digest/到期上限）、AuthorizationRenewalPolicy、带 Contract ID/Digest/Audience 的 Gateway Binding 和 Admission Limits。Runtime Start 的 Input/Context/Gateway 必须逐值相同；RuntimeAuthorization 按 `(runtime_run_id, authorization_sequence)` 连续仅追加并绑定前驱摘要、当前 Attempt 和 Manifest，只能等价/缩权。其 Budget/Policy/Permissions 必须绑定同一 Tenant/WorkOrder/CommercialAuthorization，Authorization 不得越过商业期限，fresh ArtifactGrant 必须恰好覆盖 Requirement 且 `authorization.issued_at <= grant.issued_at < grant.expires_at <= authorization.expires_at`。
 - Conversation 生命周期必须遵循 `conversation-v1`；`archived`/`deleted` 写入相应审计时间，`deleted` 不可恢复。
 - CommercialAuthorizationSnapshot ID/摘要/到期上限、显式 Entitlement/Capability/Limit 和 Quota Reservation 引用随 WorkOrder 固化；Limit 摘要必须闭合，Platform 无权更新 Business Entitlement/Balance。
 
@@ -52,14 +52,16 @@
 - 每个 ProviderRevision（包括 Model/Tool/Skill/Renderer）都必须有 `conformance_set_digest`；每项结果绑定 Suite ID/Version/Digest/Profile 和 Evidence。CapabilityResolution 的 Definition 摘要、允许的 Provider Kind 和 Conformance 覆盖必须在准入时校验。
 - ProviderRevision 的 Implementation、BuildProvenance、Port Binding、配置、权限和凭据均按摘要不可变；`agent_runtime`/`sandbox`/`capability` kind 只能绑定对应稳定 Port。
 - BuildProvenance 的 Build Artifact Digest 必须等于 Implementation Distribution Digest；OCI 分发必须绑定 Image Digest。
-- ProviderResolution 的 Decision Digest 必须绑定 Resolver Revision、Resolution Input Digest、逐候选结论及 Evidence；恰好一个 Candidate 为 Selected，并与 Snapshot 的 Instance/Revision 相同。
+- ProviderResolution 的 Decision Digest 必须绑定 Resolver Revision、Resolution Input Digest、逐候选 Audience/结论及 Evidence；恰好一个 Candidate 为 Selected，并与 Snapshot 的 Instance/Revision 及 selected audience 相同。
 - ProviderResolution 行必须显式绑定 Tenant、ClientApplication 和 WorkOrder；`identity_dependency` 决定 PrincipalContextSnapshot Digest 是否必填，RLS 不得只依赖经 WorkOrder 间接推导的 Tenant。
 - `provider_admission_decisions(decision_id)` 主键；`(provider_revision_id, decision_sequence)` 唯一且仅允许追加。
 - Sequence 必须从 1 连续递增；`sequence=1` 不得有 Supersedes，`sequence>1` 必须引用同一 Revision 紧邻的上一 Decision；`revoked` 必须有 Reason。
 - 新 Run 只能选择最新决策为 `certified` 的 Revision；RunManifest 保留 Revision/Decision 摘要，后续撤销不改写历史 Run。
 - Agent Runtime Command `(runtime_run_id, command_sequence)`、`command_id` 唯一；Command 仅允许追加且 Fencing Token 严格递增。
 - Agent Runtime Command 的 `command_digest` 必须与短期 RuntimeInvocation Token 的 `request_digest` 相等；Token 还必须匹配 Tenant、ProviderRevision、WorkflowRun/AgentRun/RuntimeRun、RunManifest、RuntimeAuthorization、Attempt、Policy、Budget 和 Permissions。
-- Capability Invocation Token 必须逐字段匹配 Tenant、ClientApplication、Principal Context、WorkOrder、ProviderRevision、Capability、Attempt、Fencing、Request Digest、Policy、Budget、Permissions 和 Staging Session；公共表和 Port 不要求 `plugin_id`。
+- CapabilityInvocationRequest 必须携带完整 ExecutionBudget/PolicyDecision/EffectivePermissions/CommercialAuthorizationBinding，并逐字段匹配 admitted ProviderResolution/Instance/Revision/Audience。Capability Token 按 `(invocation_attempt_id, authorization_sequence)` 连续，引用前驱 `jti`，分别绑定 Invoke/Status/Cancel/Event 操作摘要且不越过原 deadline/CommercialAuthorization；公共表和 Port 不要求 `plugin_id`。
+- ArtifactGrant、ArtifactStagingGrant 分别具有内容摘要；Grant 与每个最长 300 秒的 Artifact Gateway Token 必须匹配 Tenant/WorkOrder/InvocationAttempt、Gateway Binding/Audience 和操作摘要。Staging Commit 不能写 ArtifactVersion Finalize 账本。
+- Egress Token 必须匹配 RuntimeRun/InvocationAttempt/Fencing、registered destination、Gateway Binding、Request Digest、Policy/Budget/Permissions；请求不得携带原始 Origin，DNS/Redirect/IP 再验证属于 Execution Gateway Conformance 责任。
 - AgentRuntimeRun 生命周期必须遵循 `agent-runtime-run-v1`；`cancel_requested` 不是取消证明，`outcome_unknown` 必须经 Invocation Ledger 对账，终态必须有 `completed_at`。
 - TemplateRevision ID/摘要唯一且不可变；SelectedExperience 必须引用已准入 Catalog Revision 和已认证 Template ProviderRevision，并满足 Scenario `required_tags` 与 CommercialAuthorizationSnapshot Entitlement。
 - UiExtensionManifest Bundle/摘要/ProviderRevision 不可变；只允许受支持 Slot、不透明 Origin iframe 和已批准权限。

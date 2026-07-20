@@ -1,6 +1,6 @@
 {
   "permissions_id": "perm_01J00000000000000000000000",
-  "permissions_digest": "sha256:fe357a824dfa4d264229e0ad365e23a1305a6ee51480b14098994bc4d0ce9439",
+  "permissions_digest": "sha256:87356194834eefdb7c53e91088046524c32e8bfdd929a45a6163dbfc05b588fb",
   "tenant_id": "ten_01J00000000000000000000000",
   "work_order_id": "wrk_01J00000000000000000000000",
   "model": {
@@ -22,7 +22,8 @@
     "mode": "restricted",
     "allowed_destination_classes": [
       "model_gateway",
-      "artifact_gateway"
+      "artifact_gateway",
+      "public-docs-origin"
     ]
   },
   "sandbox_slots": [

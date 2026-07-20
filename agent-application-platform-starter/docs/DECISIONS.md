@@ -13,7 +13,10 @@
 | Message、Workspace、Active Work 分离 CAS | 单一 Branch Version 会让 Steering 与文件提交互相制造无关冲突 | 三个所有权域分别使用 `message_head_version`、`workspace_head_version`、`active_work_version`；`branch_version` 只作查询 ETag |
 | 平台拥有 AgentRuntimeProvider，不依赖单一 Agent 框架 | DeerFlow 或其他框架的内部 Agent/Thread/Run/Checkpoint、持久化和升级节奏都不稳定 | DeerFlow 只是首个参考 Adapter；LangGraph/Deep Agents、OpenAI Agents SDK、Microsoft Agent Framework、Google ADK、Mastra 或 Native Runtime 均可实现同一 Port |
 | Capability、一致性验证和不可变 Resolution | 同名字符串不能证明 Provider 可替换，也不能解释动态路由 | Scenario 解析到精确 Capability/Profile；Resolution 固化 Resolver/Input/Candidate/Evidence/Decision，RunManifest 只引用统一解析事实 |
-| 通用 Capability Provider Port | Plugin ID 不能成为 Model、Tool、MCP、Skill、Renderer 或远程服务的稳定前提 | `capability-provider-v1` 提供 Invoke/Status/Cancel/Event；独立 Token 绑定租户、客户端、主体、WorkOrder、Attempt、Fencing、请求、策略、预算、权限和 Staging |
+| 通用 Capability Provider Port | Plugin ID 不能成为 Model、Tool、MCP、Skill、Renderer 或远程服务的稳定前提 | `capability-provider-v1` 提供 Invoke/Status/Cancel/Event；请求携带完整执行授权值并绑定 Resolution/Instance/Audience，操作级 Token 通过前驱链在原授权窗口内续期 |
+| 可执行 Gateway Port 与短期操作授权 | 只有 Route ID 或 Staging Session ID 会迫使实现自行发明凭据、上传和网络协议 | Model/Tool 复用 Capability Port；Artifact/Egress 使用独立 OpenAPI、Contract Digest、Audience 和操作 Token；ArtifactStagingGrant 只允许 Quarantine/Commit，不允许 Finalize |
+| RunManifest 精确绑定来源请求 | 无 Profile 的裸 `request_digest` 无法证明 Manifest 来自哪一种已授权请求 | Manifest 保存已消费 ExecutionGrant 的 Request Contract ID、Digest Profile 和 Digest；变更请求必须产生新的授权与 Manifest |
+| 活动 WorkOrder 失败不伪造运行态 | Queued 启动失败、等待拒绝或暂停期间 Provider 失败不应先制造虚假 running | `queued`、`waiting`、`paused` 可依据结构化失败证据直接进入 `failed`，状态更新仍需 Expected-state/Fencing |
 | Provider Envelope 与 Build Provenance | Plugin 打包方式不能污染 Runtime、Sandbox 或远程服务 | ProviderRevision 统一绑定 Implementation、稳定 Port、配置和 Conformance；Source Revision、Build、SBOM 与 Provenance 摘要不可变 |
 | 明确执行拓扑 | WorkOrder、Workflow 和框架 Run 混用会破坏重试与恢复 | 一个 WorkOrder 对应一个 Platform WorkflowRun；每个 AgentRun 对应一个 RunManifest 和 AgentRuntimeRun，Sub-agent 使用显式父子关系 |
 | Tenant-qualified 执行与统一 Resolution 引用 | 只靠间接 WorkOrder 关联或复制 Revision 会产生越权和漂移 | WorkflowRun/AgentRun/RunManifest/Runtime Start 显式绑定 Tenant；Runtime 与每个 Sandbox Slot 只引用一个 ProviderResolution |

@@ -1,11 +1,11 @@
 {
   "decision_id": "pad_html_skill_01J000000000000000",
   "provider_revision_id": "hpr_01J00000000000000000000000",
-  "provider_revision_digest": "sha256:461bd865248862fe13ef3f831295ebbfb6e6b830e83e2fa75cea45211f2f76c8",
+  "provider_revision_digest": "sha256:2c7840c85efb444003ce8f84798012ebe78a55a00c8acb576586a73cf28c3c68",
   "decision_sequence": 1,
   "decision": "certified",
   "evidence_digest": "sha256:4848484848484848484848484848484848484848484848484848484848484848",
   "decided_by": "principal:platform-provider-certifier",
   "decided_at": "2026-07-16T09:00:51Z",
-  "decision_digest": "sha256:bd27f283d71da4ee4af8a58c5fb83a96910c79fd4ba22e0e376ccb1b5a4dc65d"
+  "decision_digest": "sha256:8d7dcd5a2911a8cc05abe574138e68b895c01338ade1dc17a30b5d51332169d4"
 }

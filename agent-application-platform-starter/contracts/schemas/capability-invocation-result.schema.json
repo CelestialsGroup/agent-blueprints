@@ -4,13 +4,14 @@
   "title": "CapabilityInvocationResult",
   "type": "object",
   "required": [
-    "invocation_id", "invocation_attempt_id", "fencing_token", "provider_operation_id",
+    "invocation_id", "invocation_attempt_id", "fencing_token", "invocation_request_digest", "provider_operation_id",
     "output", "output_schema_digest", "staged_artifacts", "usage", "completed_at"
   ],
   "properties": {
     "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "fencing_token": { "type": "integer", "minimum": 1 },
+    "invocation_request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "provider_operation_id": { "type": "string", "minLength": 1, "maxLength": 500 },
     "output": { "type": "object", "maxProperties": 256 },
     "output_schema_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },

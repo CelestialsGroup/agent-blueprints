@@ -31,8 +31,9 @@ Schema、OpenAPI、状态机、数据库不变量和验证 Gate 高于叙述性�
 - Agent Runtime 和 Sandbox 只能通过带解析证据的 Provider Port/Resolution 接入，框架或基础设施私有模型不得进入稳定内核。
 - ExecutionGrant 精确绑定请求 Contract/Digest Profile；Conversation Branch 精确绑定 WorkspaceRevision Head。
 - 新 Turn 与现有 WorkOrder 控制使用不同请求；Message、Workspace 和 Active Work 使用独立 CAS 版本。
-- RunManifest 固化实际有界输入、ContextPackage、ArtifactAccessRequirement、初始预算/策略/权限上限、商业授权 ID/Digest/到期上限和四类 Gateway Binding；Runtime Start 携带本 Attempt 可等价/缩权续期的短期 RuntimeAuthorization/ArtifactGrant，任何跨 Tenant/WorkOrder、越过商业期限、Grant 早发/晚到期、缺失或扩权都 fail-closed。
-- 通用 Capability Provider 拥有独立 Port/Token，不以 Plugin 或 `plugin_id` 作为公共前提。
+- RunManifest 精确绑定已消费 ExecutionGrant 的请求 Contract/Profile/Digest，并固化实际有界输入、ContextPackage、ArtifactAccessRequirement、初始预算/策略/权限上限、商业授权 ID/Digest/到期上限和四类 Gateway Binding；Runtime Start 携带本 Attempt 可等价/缩权续期的短期 RuntimeAuthorization/ArtifactGrant，任何跨 Tenant/WorkOrder、越过商业期限、Grant 早发/晚到期、缺失或扩权都 fail-closed。
+- 通用 Capability Provider 拥有独立 Port/Token，不以 Plugin 或 `plugin_id` 作为公共前提；请求携带完整执行授权值并绑定 ProviderResolution/Instance/Audience，Invoke/Status/Cancel/Event 使用不可跨操作重放且可在原授权窗口内续期的短期 Token。
+- Model/Tool 复用 Capability Port；Artifact/Egress 使用独立可执行 Gateway Port。Artifact 写入由 ArtifactStagingGrant 与更短期 Gateway Token 共同授权，Provider 永远不能 Finalize ArtifactVersion。
 - CanonicalEvent 使用闭合 Metadata 和来源身份 Inbox 去重；Workspace 内容必须验证独立 Manifest Schema。
 - Sandbox 由 Capability 按需创建；轻量 Run 可以没有 Sandbox，非空 Slot 只引用统一 ProviderResolution。
 - RuntimeRecording 原始证据只读；调试和重跑必须创建新的授权与执行链路。

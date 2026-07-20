@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:artifact-staging-object-request:v1",
+  "title": "ArtifactStagingObjectRequest",
+  "type": "object",
+  "required": [
+    "staging_session_id", "invocation_id", "invocation_attempt_id", "fencing_token",
+    "object_key", "media_type", "content_encoding", "content_base64", "size_bytes", "digest", "request_digest"
+  ],
+  "properties": {
+    "staging_session_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "fencing_token": { "type": "integer", "minimum": 1 },
+    "object_key": {
+      "type": "string", "minLength": 1, "maxLength": 1024,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+    },
+    "media_type": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "content_encoding": { "const": "base64" },
+    "content_base64": { "type": "string", "maxLength": 5592408 },
+    "size_bytes": { "type": "integer", "minimum": 0, "maximum": 4194304 },
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "request_digest is RFC 8785 JCS SHA-256 over the request excluding request_digest and content_base64 and equals the Artifact Gateway token request_digest",
+    "the decoded content_base64 length and SHA-256 digest exactly match size_bytes and digest before the object is accepted into quarantine"
+  ]
+}

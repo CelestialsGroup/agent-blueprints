@@ -5,7 +5,7 @@
   "type": "object",
   "required": [
     "grant_id", "tenant_id", "work_order_id", "execution_scope", "artifact_id", "version_id",
-    "artifact_digest", "permissions", "gateway_route_id", "issued_at", "expires_at"
+    "artifact_digest", "permissions", "gateway_binding", "issued_at", "expires_at", "grant_digest"
   ],
   "properties": {
     "grant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
@@ -46,13 +46,15 @@
       "uniqueItems": true,
       "items": { "enum": ["read", "stage_new_version"] }
     },
-    "gateway_route_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "gateway_binding": { "$ref": "urn:agent-platform:gateway-port-binding:v1" },
     "issued_at": { "type": "string", "format": "date-time" },
-    "expires_at": { "type": "string", "format": "date-time" }
+    "expires_at": { "type": "string", "format": "date-time" },
+    "grant_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
   },
   "additionalProperties": false,
   "x-semantic-constraints": [
-    "expires_at is later than issued_at; a Runtime grant is issued no earlier than and expires no later than its RuntimeAuthorization, while a Capability grant expires no later than its request deadline and bearer-token expiration",
+    "grant_digest is RFC 8785 JCS SHA-256 over the grant excluding grant_digest",
+    "expires_at is later than issued_at; a Runtime grant remains inside RuntimeAuthorization while a Capability grant is a non-bearer requirement bounded by its request deadline and CommercialAuthorization and every use requires a shorter Artifact Gateway operation token",
     "the grant is Tenant, WorkOrder, InvocationAttempt, immutable ArtifactVersion and Artifact Gateway route bound",
     "Providers may read admitted versions or write staging content but never finalize an ArtifactVersion"
   ]

@@ -1,7 +1,7 @@
 {
   "suite_id": "capability-provider",
   "suite_version": "1.0.0",
-  "suite_digest": "sha256:f5906e48557a9cbe53c8424b570269a19339db7524b79f2d1fc11a814bfdb037",
+  "suite_digest": "sha256:7819b9e4bee0d08a15a1fdc54862ba61a6ae705a6e9923d2d902355e47a06807",
   "target_kind": "capability_provider",
   "profiles": [
     {
@@ -29,7 +29,7 @@
           "test_id": "token-binding",
           "category": "security",
           "evidence_type": "test_log",
-          "description": "The Provider rejects any mismatch in Tenant, ClientApplication, Principal context, WorkOrder, ProviderRevision, Attempt, fencing token, request digest, policy, budget, permissions or staging claims."
+          "description": "The Provider rejects any mismatch in Tenant, ClientApplication, Principal context, WorkOrder, ProviderResolution/Instance/Revision/Audience, Attempt, fencing, request, executable policy/budget/permissions or StagingGrant claims."
         },
         {
           "test_id": "fencing-and-source-ordering",
@@ -53,13 +53,13 @@
           "test_id": "timeout-cancel-status",
           "category": "lifecycle",
           "evidence_type": "trace",
-          "description": "Timeout, cancellation and status-query behavior exactly follows the CapabilityDefinition declarations."
+          "description": "Invoke, Status, Cancel and Event tokens are operation-bound; renewal sequence/predecessor lineage remains inside the original deadline and CommercialAuthorization."
         },
         {
           "test_id": "artifact-contract",
           "category": "contract",
           "evidence_type": "artifact",
-          "description": "Input ArtifactGrants bind the Capability Tenant, WorkOrder and InvocationAttempt and cannot outlive the request deadline or bearer token; output bytes remain in Staging, and the Provider cannot finalize ArtifactVersions."
+          "description": "Input ArtifactGrants bind the Capability Tenant, WorkOrder and InvocationAttempt; output uses an ArtifactStagingGrant plus shorter Artifact Gateway operation tokens, and the Provider cannot finalize ArtifactVersions."
         },
         {
           "test_id": "usage-observation-boundary",

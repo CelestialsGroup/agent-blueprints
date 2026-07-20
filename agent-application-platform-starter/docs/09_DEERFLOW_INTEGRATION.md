@@ -31,7 +31,7 @@ SaaS Runtime 必须通过受治理 Profile，支持预算注入、Model Gateway�
 
 每次调用使用短期 RuntimeInvocation Token，并绑定 Tenant、ProviderRevision、WorkflowRun/AgentRun/RuntimeRun、RunManifest、RuntimeAuthorization、InvocationAttempt、幂等请求摘要、Fencing、Policy、Budget 和 Permissions。取消意图不等于取消证明；`outcome_unknown` 必须通过 Invocation Ledger 查询或对账后才能进入终态。
 
-Start 请求不是只有 Message ID 的通知。Adapter 必须收到实际有界输入或不可变输入引用、ContextPackage、四类 Gateway Binding、请求体 Admission Limits，以及本 Attempt 的完整 RuntimeAuthorization/ArtifactGrant。Input/Context/Gateway 必须与 RunManifest 相等；Authorization 必须覆盖 Manifest 的 ArtifactAccessRequirement，闭合同一 Tenant/WorkOrder/CommercialAuthorization 的 Budget/Policy/Permissions 绑定，不超过初始上限或商业授权 `expires_at`，并拒绝早于 Authorization 签发或晚于其到期的 ArtifactGrant。任何缺失、过期、扩权或摘要不匹配都拒绝执行。
+Start 请求不是只有 Message ID 的通知。Adapter 必须收到实际有界输入或不可变输入引用、ContextPackage、四类带 Contract ID/Digest/Audience 的 Gateway Binding、请求体 Admission Limits，以及本 Attempt 的完整 RuntimeAuthorization/ArtifactGrant。Input/Context/Gateway 必须与 RunManifest 相等；Authorization 必须覆盖 Manifest 的 ArtifactAccessRequirement，闭合同一 Tenant/WorkOrder/CommercialAuthorization 的 Budget/Policy/Permissions 绑定，不超过初始上限或商业授权 `expires_at`，并拒绝早于 Authorization 签发或晚于其到期的 ArtifactGrant。Model/Tool 调用复用 Capability Port，Artifact/Egress 调用使用各自操作 Token；任何缺失、过期、扩权或摘要不匹配都拒绝执行。
 
 ## 与 Temporal 的职责分离
 

@@ -1,12 +1,12 @@
 {
   "authorization_id": "rauth_01J000000000000000000001",
   "authorization_sequence": 2,
-  "predecessor_authorization_digest": "sha256:12607f1984f913a1a4a71e99cdbf53043367d5cb388ed9f74896df74bb981849",
+  "predecessor_authorization_digest": "sha256:a5b229321749e121db013975072d3026571e263f645860880cf75bffe5ddd66c",
   "renewal_reason": "adapter_restart",
   "tenant_id": "ten_01J00000000000000000000000",
   "work_order_id": "wrk_01J00000000000000000000000",
   "runtime_run_id": "rtr_01J00000000000000000000000",
-  "run_manifest_digest": "sha256:e0ebd4512d49a0d26250fbba7df88a7e67e734a1f2018b4de0c11464f2d5a744",
+  "run_manifest_digest": "sha256:edbc10e65f86214fc49128deab77ec134fbf1877a347c9e20a4cfe7f308626c3",
   "commercial_authorization": {
     "commercial_authorization_id": "cauth_01J00000000000000000000000",
     "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7",
@@ -42,7 +42,7 @@
   },
   "policy_decision": {
     "decision_id": "pol_01J00000000000000000000000",
-    "decision_digest": "sha256:2040f3ac261711f1c60fe68af1d678fb0fd26c25b410f28d7d315a7bf42fe2e0",
+    "decision_digest": "sha256:505956a09fc552627d9dfd96eb71a2c03365c7cb90868e451a8422ece887f5bb",
     "tenant_id": "ten_01J00000000000000000000000",
     "work_order_id": "wrk_01J00000000000000000000000",
     "policy_bundle_digest": "sha256:6161616161616161616161616161616161616161616161616161616161616161",
@@ -65,7 +65,7 @@
       }
     ],
     "outcome": "allow",
-    "effective_permissions_digest": "sha256:fe357a824dfa4d264229e0ad365e23a1305a6ee51480b14098994bc4d0ce9439",
+    "effective_permissions_digest": "sha256:87356194834eefdb7c53e91088046524c32e8bfdd929a45a6163dbfc05b588fb",
     "decided_at": "2026-07-16T09:00:59Z",
     "expires_at": "2026-07-16T09:30:00Z",
     "decision_point": "run_admission",
@@ -74,7 +74,7 @@
   },
   "effective_permissions": {
     "permissions_id": "perm_01J00000000000000000000000",
-    "permissions_digest": "sha256:fe357a824dfa4d264229e0ad365e23a1305a6ee51480b14098994bc4d0ce9439",
+    "permissions_digest": "sha256:87356194834eefdb7c53e91088046524c32e8bfdd929a45a6163dbfc05b588fb",
     "tenant_id": "ten_01J00000000000000000000000",
     "work_order_id": "wrk_01J00000000000000000000000",
     "model": {
@@ -96,7 +96,8 @@
       "mode": "restricted",
       "allowed_destination_classes": [
         "model_gateway",
-        "artifact_gateway"
+        "artifact_gateway",
+        "public-docs-origin"
       ]
     },
     "sandbox_slots": [
@@ -123,7 +124,6 @@
       "permissions": [
         "read"
       ],
-      "gateway_route_id": "artifact-route-workspace-manifest",
       "issued_at": "2026-07-16T09:05:00Z",
       "expires_at": "2026-07-16T09:15:00Z",
       "execution_scope": {
@@ -131,10 +131,21 @@
         "runtime_run_id": "rtr_01J00000000000000000000000",
         "invocation_id": "inv_runtime_01J000000000000000000",
         "invocation_attempt_id": "iat_runtime_01J0000000000000001"
-      }
+      },
+      "gateway_binding": {
+        "gateway_kind": "artifact",
+        "gateway_id": "artifact-gateway",
+        "route_id": "artifact-route-work-order",
+        "protocol_version": "v1",
+        "contract_id": "urn:agent-platform:openapi:artifact-gateway:v1",
+        "contract_digest": "sha256:1f47bc91e199533c45f3a0c3b82cf3f3d2c27aedf52196ce9805e792e5a9b0c1",
+        "binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
+        "audience": "agent-artifact-gateway"
+      },
+      "grant_digest": "sha256:40340598e21db0278b60548eb92d7bb39d31cab361021595427682bd28028604"
     }
   ],
   "issued_at": "2026-07-16T09:05:00Z",
   "expires_at": "2026-07-16T09:15:00Z",
-  "authorization_digest": "sha256:bd978a5c14737e1a7d8ae132e2d7707ae0bedcd06f3dd12fea8c0c99647de019"
+  "authorization_digest": "sha256:d497dfaf0bd18ffe3d4323f907500ae178670b386d38e0ad99a31f615cd93b95"
 }

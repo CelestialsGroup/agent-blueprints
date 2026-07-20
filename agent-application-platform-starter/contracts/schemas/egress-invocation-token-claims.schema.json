@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:egress-invocation-token-claims:v1",
+  "title": "EgressInvocationTokenClaims",
+  "type": "object",
+  "required": [
+    "jti", "iss", "aud", "iat", "nbf", "exp", "tenant_id", "work_order_id", "runtime_run_id",
+    "invocation_id", "invocation_attempt_id", "fencing_token", "destination_id", "gateway_binding_digest",
+    "request_digest", "policy_decision_digest", "execution_budget_digest", "permissions_digest"
+  ],
+  "properties": {
+    "jti": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "iss": { "const": "agent-platform" },
+    "aud": { "type": "string", "minLength": 1, "maxLength": 300 },
+    "iat": { "type": "integer", "minimum": 0 },
+    "nbf": { "type": "integer", "minimum": 0 },
+    "exp": { "type": "integer", "minimum": 0 },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "runtime_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "fencing_token": { "type": "integer", "minimum": 1 },
+    "destination_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "gateway_binding_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "policy_decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "execution_budget_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "permissions_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "iat <= nbf < exp and exp - iat <= 300",
+    "aud and gateway_binding_digest match the admitted Egress Gateway Port while every execution and request claim matches the exact EgressHttpRequest",
+    "destination_id is present in EffectivePermissions and the request cannot supply or override a raw origin"
+  ]
+}

@@ -21,5 +21,6 @@
       "occurred_at": "2026-07-16T09:02:00Z"
     }
   ],
-  "completed_at": "2026-07-16T09:02:00Z"
+  "completed_at": "2026-07-16T09:02:00Z",
+  "invocation_request_digest": "sha256:cb2db69bda6053cafb3313efcce2a07f3ae14ed2a1a1bf7f656ffc74f07ca4f9"
 }

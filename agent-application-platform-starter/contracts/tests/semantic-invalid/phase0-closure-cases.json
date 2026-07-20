@@ -24,6 +24,16 @@
     { "id": "runtime-artifact-grant-predates-authorization", "mutation": "runtime_artifact_grant_predates_authorization" },
     { "id": "capability-artifact-grant-outlives-request-deadline", "mutation": "capability_artifact_grant_outlives_deadline" },
     { "id": "required-gateway-is-disabled", "mutation": "required_gateway_disabled" },
-    { "id": "provider-usage-contains-platform-entry", "mutation": "provider_usage_contains_platform_entry" }
+    { "id": "provider-usage-contains-platform-entry", "mutation": "provider_usage_contains_platform_entry" },
+    { "id": "capability-request-resolution-mismatch", "mutation": "capability_request_resolution_mismatch" },
+    { "id": "capability-token-audience-mismatch", "mutation": "capability_token_audience_mismatch" },
+    { "id": "capability-token-replays-wrong-operation", "mutation": "capability_token_operation_replay" },
+    { "id": "capability-token-lineage-gap", "mutation": "capability_token_lineage_gap" },
+    { "id": "run-manifest-request-binding-mismatch", "mutation": "run_manifest_request_binding_mismatch" },
+    { "id": "staging-grant-uses-unadmitted-gateway", "mutation": "staging_grant_gateway_mismatch" },
+    { "id": "gateway-contract-digest-mismatch", "mutation": "gateway_contract_digest_mismatch" },
+    { "id": "artifact-gateway-token-request-mismatch", "mutation": "artifact_gateway_request_digest_mismatch" },
+    { "id": "artifact-gateway-read-token-stale-fencing", "mutation": "artifact_gateway_read_fencing_mismatch" },
+    { "id": "egress-token-destination-mismatch", "mutation": "egress_token_destination_mismatch" }
   ]
 }

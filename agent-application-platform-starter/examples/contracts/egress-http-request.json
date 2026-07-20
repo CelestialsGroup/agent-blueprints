@@ -1,0 +1,13 @@
+{
+  "tenant_id": "ten_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "runtime_run_id": "rtr_01J00000000000000000000000",
+  "invocation_id": "inv_egress_01J0000000000000000000",
+  "invocation_attempt_id": "iat_egress_01J000000000000000000",
+  "fencing_token": 1,
+  "destination_id": "public-docs-origin",
+  "method": "GET",
+  "path": "/reference/index.json",
+  "headers": [],
+  "request_digest": "sha256:aaa7748900f9476326662032368876f15e625cceca95dfaaff450906e0b0241a"
+}

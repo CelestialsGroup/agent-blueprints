@@ -3,12 +3,14 @@
   "version": 1,
   "generated_at": "2026-07-20T00:00:00Z",
   "critical_schema_ids": [
+    "urn:agent-platform:run-manifest:v2",
     "urn:agent-platform:agent-runtime-start-request:v1",
     "urn:agent-platform:work-order-control-request:v1",
     "urn:agent-platform:conversation-branch:v1",
     "urn:agent-platform:provider-resolution:v1",
     "urn:agent-platform:capability-invocation-request:v1",
     "urn:agent-platform:capability-invocation-token-claims:v1",
+    "urn:agent-platform:capability-cancellation-request:v1",
     "urn:agent-platform:workspace-content-manifest:v1",
     "urn:agent-platform:runtime-session-request:v1",
     "urn:agent-platform:canonical-event:v2",
@@ -16,12 +18,341 @@
     "urn:agent-platform:execution-grant-claims:v1",
     "urn:agent-platform:runtime-authorization:v1",
     "urn:agent-platform:artifact-grant:v1",
+    "urn:agent-platform:artifact-staging-grant:v1",
+    "urn:agent-platform:artifact-gateway-token-claims:v1",
+    "urn:agent-platform:artifact-staging-object-request:v1",
+    "urn:agent-platform:artifact-staging-commit-request:v1",
     "urn:agent-platform:principal-context-snapshot:v1",
     "urn:agent-platform:runtime-gateway-bindings:v1",
+    "urn:agent-platform:gateway-port-binding:v1",
+    "urn:agent-platform:egress-http-request:v1",
+    "urn:agent-platform:egress-invocation-token-claims:v1",
     "urn:agent-platform:capability-invocation-result:v1",
     "urn:agent-platform:usage-observation:v1"
   ],
   "constraints": [
+    {
+      "constraint_id": "sem-5eb0e2c34027ee3b",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 0,
+      "statement": "every Scenario required capability has exactly one compatible capability_resolution",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "run_manifest.admission",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-05fa3a4bf3b5bfd1",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 1,
+      "statement": "every capability_definition_digest binds the admitted CapabilityDefinition",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "run_manifest.admission",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-c2568b83e691672c",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 2,
+      "statement": "selected Provider kind is allowed and its conformance covers the resolved capability",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "run_manifest.admission",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-e69f3cd4ae25c3f1",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 3,
+      "statement": "every Sandbox required_capabilities entry is covered by its Sandbox ProviderRevision conformance",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "run_manifest.sandbox_resolution",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-7f223e9635752e93",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 4,
+      "statement": "all selected ProviderRevisions have a latest certified admission decision at admission",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "run_manifest.admission",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-38ccc625adf786f9",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 5,
+      "statement": "run_manifest_digest is RFC 8785 JCS SHA-256 over the manifest excluding run_manifest_digest",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "run_manifest.digest",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-502437c78db314ea",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 6,
+      "statement": "request_binding exactly matches the consumed ExecutionGrant request_contract_id, request_digest_profile and request_digest",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "run_manifest.request_binding",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-74d3e6f1ac434ba8",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 7,
+      "statement": "agent_runtime.resolution_id references exactly one capability_resolution whose admitted ProviderRevision kind is agent_runtime",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "run_manifest.runtime_resolution",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-bcb52adb8354fe9d",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 8,
+      "statement": "the AgentRun runtime_provider_resolution_id equals agent_runtime.resolution_id",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "run_manifest.runtime_resolution",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-eb644e6104b8dac9",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 9,
+      "statement": "all selected Agent Runtime, Sandbox and Experience revisions remain immutable for the Run",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "run_manifest.admission",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-7ee08c4bf5ce69d6",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 10,
+      "statement": "each Sandbox resolution_id references exactly one capability_resolution whose selected ProviderRevision kind is sandbox",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "run_manifest.sandbox_resolution",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-4a3f10ed13f14afb",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 11,
+      "statement": "sandbox_slot_key is unique within the sandboxes array",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "run_manifest.sandbox_resolution",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-f67ca8291946e14d",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 12,
+      "statement": "primary_sandbox_slot_key is absent when sandboxes is empty and otherwise references exactly one sandboxes item",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "run_manifest.sandbox_resolution",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-e1f1a667f6e686a0",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 13,
+      "statement": "selected_experiences exactly match the admitted WorkOrder selections and immutable Catalog revisions",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "run_manifest.experience_binding",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-0a82d8617a717e75",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 14,
+      "statement": "every selected experience ProviderRevision is certified and conformant for its capability",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "run_manifest.experience_binding",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-ffdc5aa39e7e65cf",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 15,
+      "statement": "tenant_id and conversation binding match the WorkOrder, input message and ExecutionGrant",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "run_manifest.conversation_binding",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-f71008e18533cffd",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 16,
+      "statement": "conversation WorkspaceRevision matches the admitted branch head captured for this Run",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "run_manifest.conversation_binding",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-8b7fd20affa0d5c7",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 17,
+      "statement": "agent_run_id and workflow_run_id match the immutable AgentRun and WorkflowRun records",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "runtime_start.execution_topology",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-33cb834b744766f6",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 18,
+      "statement": "input, context_package and artifact_access_requirements are the complete bounded execution inputs admitted for this Run",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "run_manifest.execution_inputs",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-8e6af45fa9d7517b",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 19,
+      "statement": "execution_budget, policy_decision and effective_permissions are immutable initial ceilings; short-lived RuntimeAuthorization revisions may remain equal or narrow them without changing the RunManifest",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "run_manifest.authorization_ceiling",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-32dd0fc0a1abb63b",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 20,
+      "statement": "gateway_bindings and authorization_renewal_policy are complete, typed and immutable for this Run",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "run_manifest.gateway_binding",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-eee2dac87b064bbc",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 21,
+      "statement": "commercial_authorization binds the exact immutable ID, digest and expiration ceiling while event_registry binds its exact immutable ID, version and digest",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "run_manifest.commercial_event_binding",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-18ac0fc42c37dfed",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 22,
+      "statement": "orchestration_binding equals the WorkflowRun binding and contains no engine-native endpoint or mutable infrastructure identity",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "run_manifest.orchestration_binding",
+          "status": "contract_gate"
+        }
+      ]
+    },
     {
       "constraint_id": "sem-7c98a5ada228bf40",
       "schema_id": "urn:agent-platform:agent-runtime-start-request:v1",
@@ -361,10 +692,10 @@
       ]
     },
     {
-      "constraint_id": "sem-6c2aad8f09457a4f",
+      "constraint_id": "sem-dc5b8e56148fb165",
       "schema_id": "urn:agent-platform:provider-resolution:v1",
       "constraint_index": 4,
-      "statement": "candidate_evaluations contains exactly one selected candidate matching selected_provider_instance_id and selected_provider_revision",
+      "statement": "candidate_evaluations contains exactly one selected candidate matching selected_provider_instance_id, selected_provider_audience and selected_provider_revision",
       "enforcements": [
         {
           "kind": "semantic_validator",
@@ -417,10 +748,50 @@
       ]
     },
     {
-      "constraint_id": "sem-02cc31b8a5bfdbcb",
+      "constraint_id": "sem-19f389c56f363583",
       "schema_id": "urn:agent-platform:capability-invocation-request:v1",
       "constraint_index": 2,
-      "statement": "the Capability Invocation Token matches Tenant, ClientApplication, Principal context, WorkOrder, ProviderRevision, InvocationAttempt, Fencing, request digest, policy, budget and staging bindings",
+      "statement": "the request ProviderResolution, ProviderInstance, ProviderRevision and bearer audience exactly match the admitted immutable resolution before execution",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "capability_invocation.resolution_binding",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "conformance_test",
+          "artifact": "contracts/conformance/capability/v1/suite.json",
+          "check_id": "token-binding",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-e1172e190480529e",
+      "schema_id": "urn:agent-platform:capability-invocation-request:v1",
+      "constraint_index": 3,
+      "statement": "execution_budget, policy_decision and effective_permissions carry complete executable values, close over the same Tenant, WorkOrder and CommercialAuthorization, and their self-digests match the operation token",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "capability_invocation.execution_context",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "conformance_test",
+          "artifact": "contracts/conformance/capability/v1/suite.json",
+          "check_id": "budget-policy-enforced",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-20fc510dcf1756d1",
+      "schema_id": "urn:agent-platform:capability-invocation-request:v1",
+      "constraint_index": 4,
+      "statement": "the operation-scoped Capability token matches Tenant, ClientApplication, Principal context, WorkOrder, ProviderResolution, ProviderRevision, InvocationAttempt, Fencing, request digest, policy, budget, permissions and StagingGrant",
       "enforcements": [
         {
           "kind": "semantic_validator",
@@ -437,15 +808,21 @@
       ]
     },
     {
-      "constraint_id": "sem-de5bc747e1f15a84",
+      "constraint_id": "sem-864fd9f4e0891d64",
       "schema_id": "urn:agent-platform:capability-invocation-request:v1",
-      "constraint_index": 3,
-      "statement": "every input ArtifactGrant binds the same Tenant, WorkOrder and InvocationAttempt and expires no later than the request deadline or bearer-token expiration",
+      "constraint_index": 5,
+      "statement": "every input ArtifactGrant and the output ArtifactStagingGrant bind the same Tenant, WorkOrder and InvocationAttempt, do not outlive the request or CommercialAuthorization, and every read, upload or commit requires a separately refreshed Artifact Gateway token",
       "enforcements": [
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
           "check_id": "capability_invocation.artifact_grant_expiry",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "capability_invocation.staging_grant",
           "status": "contract_gate"
         },
         {
@@ -457,10 +834,10 @@
       ]
     },
     {
-      "constraint_id": "sem-e949b5f514657143",
+      "constraint_id": "sem-6496c1e1d82f30a1",
       "schema_id": "urn:agent-platform:capability-invocation-token-claims:v1",
       "constraint_index": 0,
-      "statement": "iat <= nbf < exp and exp - iat <= 900",
+      "statement": "iat <= nbf < exp, exp - iat <= 900 and exp is no later than the Capability request deadline or CommercialAuthorization expiration",
       "enforcements": [
         {
           "kind": "semantic_validator",
@@ -471,16 +848,86 @@
       ]
     },
     {
-      "constraint_id": "sem-fae1d5bb7cf82af5",
+      "constraint_id": "sem-82b9b7453025427e",
       "schema_id": "urn:agent-platform:capability-invocation-token-claims:v1",
       "constraint_index": 1,
-      "statement": "every claim matches the exact CapabilityInvocationRequest and admitted ProviderResolution before execution",
+      "statement": "authorization_sequence starts at one and renewed operation tokens name the immediate predecessor jti without widening the original Invocation scope",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "capability_invocation.token_lineage",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-ecf7997948f3a997",
+      "schema_id": "urn:agent-platform:capability-invocation-token-claims:v1",
+      "constraint_index": 2,
+      "statement": "operation and operation_request_digest bind the exact Invoke body, Status target, Cancel body or Event cursor descriptor and cannot authorize another operation",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "capability_invocation.operation_binding",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-c6b1495d4dfb92e8",
+      "schema_id": "urn:agent-platform:capability-invocation-token-claims:v1",
+      "constraint_index": 3,
+      "statement": "every claim, audience and executable context digest matches the exact CapabilityInvocationRequest, ArtifactStagingGrant and admitted ProviderResolution before execution",
       "enforcements": [
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
           "check_id": "capability_invocation.token_binding",
           "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-6144680b8a4f0f71",
+      "schema_id": "urn:agent-platform:capability-cancellation-request:v1",
+      "constraint_index": 0,
+      "statement": "request_digest is RFC 8785 JCS SHA-256 over the cancellation request excluding request_digest",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "capability_invocation.operation_binding",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-35e1a51ccfb1fa20",
+      "schema_id": "urn:agent-platform:capability-cancellation-request:v1",
+      "constraint_index": 1,
+      "statement": "an operation-scoped cancel token binds this request digest and the original Capability Invocation request digest",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "capability_invocation.operation_binding",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-2376b60a83bd7c13",
+      "schema_id": "urn:agent-platform:capability-cancellation-request:v1",
+      "constraint_index": 2,
+      "statement": "cancellation intent is idempotent and does not prove cancellation; the platform reconciles outcome_unknown",
+      "enforcements": [
+        {
+          "kind": "conformance_test",
+          "artifact": "contracts/conformance/capability/v1/suite.json",
+          "check_id": "timeout-cancel-status",
+          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -965,10 +1412,24 @@
       ]
     },
     {
-      "constraint_id": "sem-6cf640544c5415f1",
+      "constraint_id": "sem-d66999ca49250734",
       "schema_id": "urn:agent-platform:artifact-grant:v1",
       "constraint_index": 0,
-      "statement": "expires_at is later than issued_at; a Runtime grant is issued no earlier than and expires no later than its RuntimeAuthorization, while a Capability grant expires no later than its request deadline and bearer-token expiration",
+      "statement": "grant_digest is RFC 8785 JCS SHA-256 over the grant excluding grant_digest",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "artifact_grant.digest",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-718bf2ba959237f8",
+      "schema_id": "urn:agent-platform:artifact-grant:v1",
+      "constraint_index": 1,
+      "statement": "expires_at is later than issued_at; a Runtime grant remains inside RuntimeAuthorization while a Capability grant is a non-bearer requirement bounded by its request deadline and CommercialAuthorization and every use requires a shorter Artifact Gateway operation token",
       "enforcements": [
         {
           "kind": "semantic_validator",
@@ -979,9 +1440,9 @@
       ]
     },
     {
-      "constraint_id": "sem-08d2db657e43a024",
+      "constraint_id": "sem-c3f0d4cfd3f80880",
       "schema_id": "urn:agent-platform:artifact-grant:v1",
-      "constraint_index": 1,
+      "constraint_index": 2,
       "statement": "the grant is Tenant, WorkOrder, InvocationAttempt, immutable ArtifactVersion and Artifact Gateway route bound",
       "enforcements": [
         {
@@ -993,9 +1454,9 @@
       ]
     },
     {
-      "constraint_id": "sem-2c209f4f96a21b57",
+      "constraint_id": "sem-81bfe8cdea63d777",
       "schema_id": "urn:agent-platform:artifact-grant:v1",
-      "constraint_index": 2,
+      "constraint_index": 3,
       "statement": "Providers may read admitted versions or write staging content but never finalize an ArtifactVersion",
       "enforcements": [
         {
@@ -1003,6 +1464,204 @@
           "artifact": "scripts/validate_semantics.py",
           "check_id": "artifact_grant.provider_permissions",
           "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-329f76f5c2694371",
+      "schema_id": "urn:agent-platform:artifact-staging-grant:v1",
+      "constraint_index": 0,
+      "statement": "grant_digest is RFC 8785 JCS SHA-256 over the grant excluding grant_digest",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "artifact_staging_grant.digest",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-d7f2517caa8094f2",
+      "schema_id": "urn:agent-platform:artifact-staging-grant:v1",
+      "constraint_index": 1,
+      "statement": "the grant binds one Tenant, WorkOrder and Capability InvocationAttempt and its artifact Gateway binding matches the admitted RunManifest route",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "artifact_staging_grant.scope",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-816103f41cb985d6",
+      "schema_id": "urn:agent-platform:artifact-staging-grant:v1",
+      "constraint_index": 2,
+      "statement": "expires_at is later than issued_at and no later than the Capability request deadline or CommercialAuthorization expiration; each use also requires a shorter-lived Artifact Gateway operation token",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "artifact_staging_grant.expiry",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-04b32d4f422f9faf",
+      "schema_id": "urn:agent-platform:artifact-staging-grant:v1",
+      "constraint_index": 3,
+      "statement": "the Provider may upload and commit quarantined staging objects within the declared media, count and byte limits but cannot finalize an ArtifactVersion",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "artifact_staging_grant.permissions",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "conformance_test",
+          "artifact": "contracts/conformance/execution-gateway/v1/suite.json",
+          "check_id": "artifact-no-provider-finalize",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-b26f62da690a0cbd",
+      "schema_id": "urn:agent-platform:artifact-gateway-token-claims:v1",
+      "constraint_index": 0,
+      "statement": "iat <= nbf < exp, exp - iat <= 300 and exp is no later than the bound ArtifactGrant or ArtifactStagingGrant",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "artifact_gateway.token_binding",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-91c3df9158fa76fa",
+      "schema_id": "urn:agent-platform:artifact-gateway-token-claims:v1",
+      "constraint_index": 1,
+      "statement": "aud and gateway_binding_digest match the admitted artifact Gateway Port and request_digest binds the exact HTTP operation descriptor",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "artifact_gateway.operation_binding",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-2bc414e4d40e246a",
+      "schema_id": "urn:agent-platform:artifact-gateway-token-claims:v1",
+      "constraint_index": 2,
+      "statement": "read_content requires an ArtifactGrant with read permission while staging operations require an ArtifactStagingGrant and neither token can finalize an ArtifactVersion",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "artifact_gateway.token_binding",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "conformance_test",
+          "artifact": "contracts/conformance/execution-gateway/v1/suite.json",
+          "check_id": "artifact-operation-token-binding",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-ac321e6b118f067e",
+      "schema_id": "urn:agent-platform:artifact-staging-object-request:v1",
+      "constraint_index": 0,
+      "statement": "request_digest is RFC 8785 JCS SHA-256 over the request excluding request_digest and content_base64 and equals the Artifact Gateway token request_digest",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "artifact_gateway.operation_binding",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-c105e9e3da0b6e28",
+      "schema_id": "urn:agent-platform:artifact-staging-object-request:v1",
+      "constraint_index": 1,
+      "statement": "the decoded content_base64 length and SHA-256 digest exactly match size_bytes and digest before the object is accepted into quarantine",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "artifact_gateway.operation_binding",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "conformance_test",
+          "artifact": "contracts/conformance/execution-gateway/v1/suite.json",
+          "check_id": "artifact-staging-byte-digest",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-c46bd4ea7a0f5b45",
+      "schema_id": "urn:agent-platform:artifact-staging-commit-request:v1",
+      "constraint_index": 0,
+      "statement": "request_digest is RFC 8785 JCS SHA-256 over the request excluding request_digest and equals the operation-scoped Artifact Gateway token request_digest",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "artifact_gateway.operation_binding",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-d59d603433cec88d",
+      "schema_id": "urn:agent-platform:artifact-staging-commit-request:v1",
+      "constraint_index": 1,
+      "statement": "every object was uploaded under the same unexpired StagingGrant and the object count, media types and cumulative bytes remain within the grant",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "artifact_gateway.operation_binding",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "conformance_test",
+          "artifact": "contracts/conformance/execution-gateway/v1/suite.json",
+          "check_id": "artifact-staging-limits",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-83a2a00537efbc9c",
+      "schema_id": "urn:agent-platform:artifact-staging-commit-request:v1",
+      "constraint_index": 2,
+      "statement": "commit makes immutable quarantined StagedArtifact metadata visible but never finalizes an ArtifactVersion",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "artifact_staging_grant.permissions",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "conformance_test",
+          "artifact": "contracts/conformance/execution-gateway/v1/suite.json",
+          "check_id": "artifact-no-provider-finalize",
+          "status": "phase0_implementation_required"
         }
       ]
     },
@@ -1049,10 +1708,10 @@
       ]
     },
     {
-      "constraint_id": "sem-48f0d817b31f8781",
+      "constraint_id": "sem-4ebad55c81f138a2",
       "schema_id": "urn:agent-platform:runtime-gateway-bindings:v1",
       "constraint_index": 0,
-      "statement": "an enabled binding carries a typed route and audience while a disabled binding carries no routable identity",
+      "statement": "an enabled binding carries one typed executable Port whose gateway_kind equals the outer kind while a disabled binding carries no routable identity",
       "enforcements": [
         {
           "kind": "semantic_validator",
@@ -1063,9 +1722,23 @@
       ]
     },
     {
-      "constraint_id": "sem-379a3e2acc6f5203",
+      "constraint_id": "sem-9bedfce863140d5c",
       "schema_id": "urn:agent-platform:runtime-gateway-bindings:v1",
       "constraint_index": 1,
+      "statement": "model and tool Ports use capability-provider-v1, Artifact uses artifact-gateway-v1 and Egress uses egress-gateway-v1",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "gateway_binding.port_contract",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-fe925394eb298a42",
+      "schema_id": "urn:agent-platform:runtime-gateway-bindings:v1",
+      "constraint_index": 2,
       "statement": "a gateway required by ExecutionBudget or EffectivePermissions is enabled; disabled bindings are fail-closed and cannot be bypassed by a Provider",
       "enforcements": [
         {
@@ -1073,6 +1746,130 @@
           "artifact": "scripts/validate_semantics.py",
           "check_id": "gateway_binding.policy_alignment",
           "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-dc95541b4144728f",
+      "schema_id": "urn:agent-platform:gateway-port-binding:v1",
+      "constraint_index": 0,
+      "statement": "model and tool routes use capability-provider-v1, artifact routes use artifact-gateway-v1 and egress routes use egress-gateway-v1",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "gateway_port.contract_mapping",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-8b2f72913efac19b",
+      "schema_id": "urn:agent-platform:gateway-port-binding:v1",
+      "constraint_index": 1,
+      "statement": "contract_digest equals the admitted immutable OpenAPI artifact and audience is the only accepted bearer-token audience for this route",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "gateway_port.audience_binding",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-da2ab314889270b5",
+      "schema_id": "urn:agent-platform:egress-http-request:v1",
+      "constraint_index": 0,
+      "statement": "request_digest is RFC 8785 JCS SHA-256 over the request excluding request_digest and equals the operation-scoped Egress token request_digest",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "egress_gateway.request_binding",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-d5d3f9b0d826ec17",
+      "schema_id": "urn:agent-platform:egress-http-request:v1",
+      "constraint_index": 1,
+      "statement": "destination_id resolves to one immutable pre-registered origin and redirects, DNS answers and every connected IP remain within policy",
+      "enforcements": [
+        {
+          "kind": "conformance_test",
+          "artifact": "contracts/conformance/execution-gateway/v1/suite.json",
+          "check_id": "egress-address-revalidation",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-cd0d34960f897dd0",
+      "schema_id": "urn:agent-platform:egress-http-request:v1",
+      "constraint_index": 2,
+      "statement": "forbidden hop-by-hop, credential and host headers are rejected and the body digest and decoded size are verified before dispatch",
+      "enforcements": [
+        {
+          "kind": "conformance_test",
+          "artifact": "contracts/conformance/execution-gateway/v1/suite.json",
+          "check_id": "egress-header-and-body-limits",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-0b03857ffed85dcb",
+      "schema_id": "urn:agent-platform:egress-invocation-token-claims:v1",
+      "constraint_index": 0,
+      "statement": "iat <= nbf < exp and exp - iat <= 300",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "egress_gateway.token_binding",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-50d681f25154abf9",
+      "schema_id": "urn:agent-platform:egress-invocation-token-claims:v1",
+      "constraint_index": 1,
+      "statement": "aud and gateway_binding_digest match the admitted Egress Gateway Port while every execution and request claim matches the exact EgressHttpRequest",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "egress_gateway.token_binding",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "conformance_test",
+          "artifact": "contracts/conformance/execution-gateway/v1/suite.json",
+          "check_id": "egress-operation-token-binding",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-071a8aba30a4c711",
+      "schema_id": "urn:agent-platform:egress-invocation-token-claims:v1",
+      "constraint_index": 2,
+      "statement": "destination_id is present in EffectivePermissions and the request cannot supply or override a raw origin",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "egress_gateway.request_binding",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "conformance_test",
+          "artifact": "contracts/conformance/execution-gateway/v1/suite.json",
+          "check_id": "egress-registered-destination-only",
+          "status": "phase0_implementation_required"
         }
       ]
     },

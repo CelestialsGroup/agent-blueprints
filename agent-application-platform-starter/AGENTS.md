@@ -56,10 +56,11 @@ Scenario
 - `ConversationTurnRequest` 只创建新 Turn/WorkOrder；`WorkOrderControlRequest` 只控制现有 WorkOrder。`interrupt_and_enqueue` 先记录当前 WorkOrder 取消意图，再创建独立后继 WorkOrder；不得把 Append/Interrupt 偷换成新 Turn。
 - ExecutionGrant 必须声明 `request_contract_id` 与固定 Digest Profile，并绑定该精确请求去除 `execution_grant` 后的 JCS 摘要；Turn Grant 绑定 Turn/Message/Scenario，Control Grant 只绑定现有 WorkOrder/ControlRequest，不得携带陈旧 Turn 字段。Grant 内嵌有界 PrincipalContextSnapshot 并校验其摘要。
 - Runtime Command 与核心 Runtime Event Payload 必须使用类型化 Schema；Provider 私有 Event 不能直接驱动 Chat、Plan、Task、Usage 或终态 Projection。
-- RunManifest 固化实际有界输入或不可变引用、ContextPackage、ArtifactAccessRequirement、初始 Budget/Policy/Permissions 上限、授权续期规则和类型化 Model/Tool/Artifact/Egress Gateway Binding；不保存会过期的 bearer Grant。
+- RunManifest 通过 `request_contract_id + request_digest_profile + request_digest` 精确绑定已消费 ExecutionGrant 的原始请求，并固化实际有界输入或不可变引用、ContextPackage、ArtifactAccessRequirement、初始 Budget/Policy/Permissions 上限、授权续期规则和类型化 Model/Tool/Artifact/Egress Gateway Binding；不保存会过期的 bearer Grant。
 - Runtime Start 携带与 Manifest 一致的 Input/Context/Gateway，以及本 Attempt 的短期 RuntimeAuthorization。Authorization 以摘要和前驱链仅追加，内部 Budget/Policy/Permissions 必须绑定同一 Tenant/WorkOrder/CommercialAuthorization，且不能越过 RunManifest 固化的商业授权到期上限；Token 过期、Adapter 重启或 Resume 时只能等价/缩权续期并刷新同一授权时间窗内的 ArtifactGrant，扩权必须新建 WorkOrder、ExecutionGrant、ProviderResolution 和 RunManifest。
 - Runtime 调用使用短期 AgentRuntimeInvocation Token，绑定 Tenant、ProviderRevision、WorkflowRun/AgentRun/RuntimeRun、RunManifest、RuntimeAuthorization、InvocationAttempt、Fencing、Policy、Budget、Permissions 和请求摘要。
-- 通用 Capability 调用只使用 `capability-provider-v1`，独立 Token 绑定 Tenant、ClientApplication、Principal Context、WorkOrder、ProviderRevision、InvocationAttempt、Fencing、Request Digest、Policy、Budget、Permissions 和 Staging；不得要求 `plugin_id`。Plugin Invocation 只保留为实现适配层。
+- 通用 Capability 调用只使用 `capability-provider-v1`。请求携带完整 ExecutionBudget/PolicyDecision/EffectivePermissions 与 CommercialAuthorizationBinding，并显式绑定 ProviderResolution、ProviderInstance、ProviderRevision 和 admitted audience。独立 Token 只授权一个 Invoke/Status/Cancel/Event 操作，绑定原始请求与操作请求摘要，并以连续前驱 `jti` 在原 deadline/CommercialAuthorization 内等价续期；不得要求 `plugin_id`。Plugin Invocation 只保留为实现适配层。
+- Model/Tool Gateway 复用 `capability-provider-v1`；Artifact 与 Egress 分别使用 `artifact-gateway-v1`、`egress-gateway-v1`。每个 Gateway Binding 必须携带 Contract ID/Digest、Route、Audience 与 Binding Digest。Provider 写入只使用 ArtifactStagingGrant 加更短期 Artifact Gateway 操作 Token，Staging Commit 不等于 ArtifactVersion Finalize。
 - RunManifest 绑定 EventTypeRegistry 的 ID/Version/Digest；只有该 Registry 准入的 Payload 可以进入核心 Projection。
 - Platform Core Registry 必须覆盖 Conversation、Message、WorkOrder/Control、WorkflowRun、AgentRun、GrantConsumption、Approval、Invocation、Artifact、Usage、Workspace、RuntimeSession/Recording 和 Delivery；Runtime Registry 只承载 Adapter 标准事件。
 
@@ -105,7 +106,7 @@ Runtime Gateway 使用 `runtime-gateway/v1` 类型化帧、Connection Generation
 - Provider 只返回 UsageObservation；`entry_id`、Platform Idempotency Key、归属和 `recorded_at` 由 Platform 校验后创建 TechnicalUsageEntry。
 - Provider 只允许读取已准入 ArtifactVersion 或写 Artifact Staging；正式 ArtifactVersion Finalize 是 Platform 内部事务，不能出现在 Provider Grant 或 EffectivePermissions 中。
 - UsageReport 与 BusinessSettlementEnvelope 按 Reservation 连续编号并只追加；Settlement Envelope 嵌入完整 Final/Correction UsageReport，Business 才能依据自己的价格事实结算。价格、余额、Settlement 决策和商业 Reconciliation 仍由 Business 拥有。
-- 冻结 AgentRuntimeProvider 前，两个 Adapter 必须执行机器可读 `runtime-core-v1`；主 Runtime 还必须通过 `runtime-general-v1 + governed-v1`。Sandbox 与 Runtime Gateway 使用各自 Suite Manifest 和不可变证据。
+- 冻结 AgentRuntimeProvider 前，两个 Adapter 必须执行机器可读 `runtime-core-v1`；主 Runtime 还必须通过 `runtime-general-v1 + governed-v1`。Sandbox、Runtime Gateway、Capability Provider 与 Artifact/Egress Execution Gateway 使用各自 Suite Manifest 和不可变证据。
 
 ## 契约规则
 

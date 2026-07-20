@@ -46,6 +46,8 @@
 - Artifact Gateway
 - Capability Provider 服务 / Job / Sandbox CLI / MCP / 远程服务；Plugin 仅作兼容打包
 
+Model/Tool Gateway 对 Runtime 暴露 `capability-provider-v1`；Artifact 与 Egress 分别暴露 `artifact-gateway-v1`、`egress-gateway-v1`。所有 Gateway Route 均绑定不可变 Contract Digest 与 audience，不允许实现期再以私有未版本化协议替代。
+
 ## Kubernetes 工作负载
 
 ```text
@@ -112,6 +114,7 @@ audit
 - Browser -> Workbench：WorkSession Cookie + HTTP/SSE/WebSocket
 - Agent -> Business：签名 Webhook + Outbox
 - Agent -> Capability Provider：mTLS + Capability Invocation Token
+- Runtime/Provider -> Artifact/Egress Gateway：mTLS + operation-scoped Artifact/Egress Token
 - Worker -> 兼容 Plugin/Job：Capability Adapter + Kubernetes/Manifest 私有协议
 - Agent Runtime -> Model/Tool/Egress：强制 Gateway
 - Workflow：Temporal
