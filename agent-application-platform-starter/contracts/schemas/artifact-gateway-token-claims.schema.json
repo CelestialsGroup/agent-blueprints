@@ -4,7 +4,7 @@
   "title": "ArtifactGatewayTokenClaims",
   "type": "object",
   "required": [
-    "jti", "iss", "sub", "aud", "iat", "nbf", "exp", "operation", "tenant_id", "work_order_id",
+    "jti", "iss", "sub", "aud", "iat", "nbf", "exp", "operation", "tenant_id", "execution_scope",
     "invocation_id", "invocation_attempt_id", "fencing_token", "gateway_binding_digest",
     "operation_contract_id", "operation_digest_profile", "request_digest"
   ],
@@ -18,7 +18,10 @@
     "exp": { "type": "integer", "minimum": 0 },
     "operation": { "enum": ["read_content", "stage_object", "commit_staging"] },
     "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
-    "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "execution_scope": { "allOf": [
+      { "$ref": "urn:agent-platform:execution-scope:v1" },
+      { "not": { "properties": { "kind": { "const": "artifact_ingest" } }, "required": ["kind"] } }
+    ] },
     "runtime_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
@@ -81,6 +84,13 @@
           "operation_digest_profile": { "const": "rfc8785-request-excluding-request-digest-v1" }
         }
       }
+    },
+    {
+      "if": {
+        "properties": { "execution_scope": { "properties": { "kind": { "const": "artifact_operation" } } } },
+        "required": ["execution_scope"]
+      },
+      "then": { "not": { "required": ["runtime_run_id"] } }
     }
   ],
   "x-semantic-constraints": [

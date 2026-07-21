@@ -35,7 +35,7 @@ Attempt 属性：
 
 同一个逻辑操作的重试复用 Invocation ID，但创建新的 Attempt。
 
-Capability Provider 的长任务控制不创建新的逻辑 Invocation。Invoke、Status、Cancel 和 Event 各使用操作级短期 Token；Token 同时绑定调用方 `sub`、原始 Invocation Request Digest 与当前操作 Contract/Profile/Digest，续期 sequence 连续并引用紧邻前驱 `jti`。Invoke 的 `execution` 权限不能越过原 deadline/CommercialAuthorization；后续 `safety_control` 可以在执行窗口结束后继续 Status/Cancel/Event 对账，但不能改变 ProviderResolution、Tenant、WorkOrder、Policy、Budget、Permissions，不能访问过期 Artifact Grant 或创建新副作用。这属于治理授权续期，不是传输重试。
+Capability Provider 的长任务控制不创建新的逻辑 Invocation。Invoke、Status、Cancel 和 Event 各使用操作级短期 Token；Token 同时绑定调用方 `sub`、原始 Invocation Request Digest 与当前操作 Contract/Profile/Digest，续期 sequence 连续并引用紧邻前驱 `jti`。Invoke 的 `execution` 权限不能越过原 deadline/CommercialAuthorization；后续 `safety_control` 可以在执行窗口结束后继续 Status/Cancel/Event 对账，但不能改变 ProviderResolution、Tenant、ExecutionScope、Policy、Budget、Permissions，不能访问过期 Artifact Grant 或创建新副作用。这属于治理授权续期，不是传输重试。
 
 Agent Runtime 的 Start/Command/Status/Event 以及兼容 Plugin Bridge 的 Invoke/Status/Cancel/Event 采用同一项安全规则：Body、HTTP Path 与按 OpenAPI 默认值规范化的 Query 共同形成正式操作文档；操作 Token 绑定其 Contract/Profile/Digest。兼容 Bridge 的 Invoke `execution` 受原 Deadline/Artifact 窗口限制，后续 `safety_control` 只能 Status/Cancel/Event。逻辑 `invocation_id` 必须同时存在于 Runtime Command 与 Token，不能只靠 Attempt ID 推断。
 
@@ -65,7 +65,7 @@ Runtime Token 额外区分 `execution` 与 `safety_control`。前者受 RuntimeA
 - deadline
 - cancellation context
 - Artifact grants
-- Tenant、ClientApplication、Principal Context 和 WorkOrder
+- Tenant、ClientApplication、Principal Context 和 WorkOrder/ArtifactOperation ExecutionScope
 - ProviderResolution/Instance/Revision/Audience、完整 PolicyDecision/ExecutionBudget/Permissions、原始与操作 Request Digest、ArtifactGrant 和 ArtifactStagingGrant
 
 通用 Model/Tool/MCP/Skill/Renderer/Converter 调用使用 `capability-provider-v1` 和独立 Capability Invocation Token；`plugin_id` 只允许出现在兼容 Adapter 私有映射中。幂等唯一范围是 `(tenant_id, client_app_id, operation_id, idempotency_key_digest)`，同范围不同 Request Digest 必须返回 409。

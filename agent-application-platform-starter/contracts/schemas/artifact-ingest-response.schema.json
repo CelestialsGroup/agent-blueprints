@@ -3,29 +3,18 @@
   "$id": "urn:agent-platform:artifact-ingest-response:v1",
   "title": "ArtifactIngestResponse",
   "type": "object",
-  "required": [
-    "ingest_reference_id",
-    "upload_url",
-    "expires_at"
-  ],
+  "required": ["session", "upload_url", "required_headers"],
   "properties": {
-    "ingest_reference_id": {
-      "type": "string"
-    },
-    "upload_url": {
-      "type": "string",
-      "format": "uri"
-    },
+    "session": { "$ref": "urn:agent-platform:artifact-ingest-session:v1" },
+    "upload_url": { "type": "string", "format": "uri" },
     "required_headers": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "string"
-      }
-    },
-    "expires_at": {
-      "type": "string",
-      "format": "date-time"
+      "type": "object", "maxProperties": 16,
+      "additionalProperties": { "type": "string", "maxLength": 2000 }
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "upload URL is short-lived, single-session, tenant-scoped and accepts only the declared byte count, media type and digest",
+    "upload success alone cannot create ArtifactVersion or advance beyond uploaded"
+  ]
 }

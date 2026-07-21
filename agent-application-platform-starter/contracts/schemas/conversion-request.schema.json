@@ -3,23 +3,18 @@
   "$id": "urn:agent-platform:conversion-request:v1",
   "title": "CreateConversionRequest",
   "type": "object",
-  "required": [
-    "source_version_id",
-    "target_media_type"
-  ],
+  "required": ["operation_context", "target_media_type"],
   "properties": {
-    "source_version_id": {
-      "type": "string"
-    },
-    "target_media_type": {
-      "type": "string"
-    },
-    "profile": {
-      "type": "string"
-    },
+    "operation_context": { "$ref": "urn:agent-platform:artifact-operation-context:v1" },
+    "target_media_type": { "type": "string", "minLength": 1, "maxLength": 200 },
     "options": {
-      "type": "object"
+      "type": "object", "maxProperties": 32,
+      "additionalProperties": { "type": ["string", "number", "integer", "boolean", "null"] }
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "operation_context.operation_kind equals conversion and its source ArtifactVersion matches the path and immutable source digest",
+    "the selected converter capability is authorized by CommercialAuthorization, PolicyDecision and ExecutionBudget"
+  ]
 }

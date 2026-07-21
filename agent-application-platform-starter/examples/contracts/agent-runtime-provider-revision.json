@@ -1,6 +1,6 @@
 {
   "provider_revision_id": "apr_01J00000000000000000000000",
-  "provider_revision_digest": "sha256:2052a6b7f9fb2ddf13eddf3fcdbfde056187e9cce1ed1f724141c4e0d452ed93",
+  "provider_revision_digest": "sha256:3a68cf38e4d0b5b66bf7078c6e248049e51d96444dc3cb8d5606e6b7a7b7a4cd",
   "provider_instance_id": "api_native_runtime",
   "configuration_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   "approved_permissions_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
@@ -15,7 +15,7 @@
       "status": "passed",
       "report_digest": "sha256:1212121212121212121212121212121212121212121212121212121212121212",
       "suite_id": "agent-runtime-provider",
-      "suite_digest": "sha256:6bd5bee33974860ca312f94a2eb43cd634ccb9e200b4419d439277546875aa68",
+      "suite_digest": "sha256:9ef6d50df9f1032476ea2ada2c16d70c15d88368acf59794062df7dfce0bb356",
       "suite_profile_id": "governed-v1"
     },
     {
@@ -26,11 +26,11 @@
       "status": "passed",
       "report_digest": "sha256:1313131313131313131313131313131313131313131313131313131313131313",
       "suite_id": "agent-runtime-provider",
-      "suite_digest": "sha256:6bd5bee33974860ca312f94a2eb43cd634ccb9e200b4419d439277546875aa68",
+      "suite_digest": "sha256:9ef6d50df9f1032476ea2ada2c16d70c15d88368acf59794062df7dfce0bb356",
       "suite_profile_id": "runtime-general-v1"
     }
   ],
-  "conformance_set_digest": "sha256:1ace3ac48a5191e17ef65dc13748aa98f6a2da5caf5d57550698fc2e9668fdb9",
+  "conformance_set_digest": "sha256:6e5018b525469320d876710e602528108afc0962b78f7dbfe980e9457926fc95",
   "created_at": "2026-07-16T09:00:10Z",
   "implementation": {
     "implementation_id": "agent-runtime.native",

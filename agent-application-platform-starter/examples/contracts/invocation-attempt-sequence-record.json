@@ -18,5 +18,9 @@
   "reconciliation_case_id": "irc_sequence_01",
   "reconciliation_deadline_at": "2026-07-16T12:10:00Z",
   "created_at": "2026-07-16T12:00:00Z",
-  "updated_at": "2026-07-16T12:03:00Z"
+  "updated_at": "2026-07-16T12:03:00Z",
+  "execution_scope": {
+    "kind": "work_order",
+    "work_order_id": "wo_sequence_01"
+  }
 }

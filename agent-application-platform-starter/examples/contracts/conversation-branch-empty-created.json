@@ -1,0 +1,40 @@
+{
+  "branch_request_id": "breq_empty_01J0000000000000000000",
+  "request_digest": "sha256:7e1fd978fdff32d9ef71b7820eaf80ee2662af733d2d680650f7a4a608e09596",
+  "branch": {
+    "conversation_id": "conv_01J00000000000000000000000",
+    "branch_id": "parallel-empty-01",
+    "head_message_id": null,
+    "head_message_sequence": 0,
+    "active_work_order_id": null,
+    "workspace_head_revision_id": "wsr_empty_01J00000000000000000000",
+    "workspace_head_revision_digest": "sha256:32c17d1a238bee861de08f67741669e4bc110f490e3b982a156cb9aec84daed2",
+    "message_head_version": 1,
+    "workspace_head_version": 1,
+    "active_work_version": 1,
+    "branch_version": 1,
+    "created_at": "2026-07-16T09:07:30Z",
+    "updated_at": "2026-07-16T09:07:30Z"
+  },
+  "workspace_revision": {
+    "workspace_revision_id": "wsr_empty_01J00000000000000000000",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "workspace_id": "wsp_01J00000000000000000000000",
+    "branch_id": "parallel-empty-01",
+    "revision_number": 1,
+    "parent_revision_id": null,
+    "content_manifest_artifact": {
+      "artifact_id": "art_workspace_manifest_01J000000000000000",
+      "version_id": "ver_workspace_manifest_01J00000000000000",
+      "name": "workspace-manifest.json",
+      "media_type": "application/vnd.agent.workspace-manifest+json",
+      "role": "source",
+      "digest": "sha256:ef0e25f8c192d97c4c99db13fba26569c7f78ca505e6b0db999c86398e4d86f5",
+      "size_bytes": 641
+    },
+    "content_manifest_schema_id": "urn:agent-platform:workspace-content-manifest:v1",
+    "revision_digest": "sha256:32c17d1a238bee861de08f67741669e4bc110f490e3b982a156cb9aec84daed2",
+    "created_at": "2026-07-16T09:07:30Z",
+    "forked_from_revision_id": "wsr_01J00000000000000000000000"
+  }
+}

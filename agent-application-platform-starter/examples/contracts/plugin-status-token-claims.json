@@ -16,7 +16,7 @@
   "capability_id": "converter.html-to-pptx",
   "capability_version": "1.0.0",
   "staging_session_id": "stg_01J00000000000000000000000",
-  "permissions_digest": "sha256:258682bb254cc4fafff41ccea043261e9c9381ca9a42e0efef0e3f20e9c1b70c",
+  "permissions_digest": "sha256:d8bd8d96a7a79a2d7d8a49f56930fadc940d74c253004550ba27e461eda32e42",
   "invocation_request_digest": "sha256:a510df21d9b1140f44ebdca77a73b3b29df405850cd15dededb002d096c94894",
   "deadline_at": "2026-07-16T09:20:00Z",
   "jti": "pit_02_01J00000000000000000000000",

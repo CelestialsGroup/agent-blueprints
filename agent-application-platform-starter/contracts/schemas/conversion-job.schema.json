@@ -3,50 +3,17 @@
   "$id": "urn:agent-platform:conversion-job:v1",
   "title": "ConversionJob",
   "type": "object",
-  "required": [
-    "conversion_job_id",
-    "source_artifact_id",
-    "source_version_id",
-    "target_media_type",
-    "status",
-    "created_at"
-  ],
+  "required": ["conversion_job_id", "artifact_operation", "target_media_type"],
   "properties": {
-    "conversion_job_id": {
-      "type": "string"
-    },
-    "source_artifact_id": {
-      "type": "string"
-    },
-    "source_version_id": {
-      "type": "string"
-    },
-    "target_media_type": {
-      "type": "string"
-    },
-    "profile": {
-      "type": "string"
-    },
-    "status": {
-      "enum": [
-        "queued",
-        "running",
-        "completed",
-        "failed",
-        "cancelled"
-      ]
-    },
-    "result_artifact_id": {
-      "type": "string"
-    },
-    "created_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "completed_at": {
-      "type": "string",
-      "format": "date-time"
-    }
+    "conversion_job_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "artifact_operation": { "$ref": "urn:agent-platform:artifact-operation:v1" },
+    "target_media_type": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "result_artifact_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "result_version_id": { "type": "string", "minLength": 1, "maxLength": 200 }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "conversion_job_id is a projection identity for artifact_operation_id and never owns Provider execution, retry or terminal truth",
+    "result ArtifactVersion exists only when the bound ArtifactOperation and Invocation succeeded and Platform finalization committed"
+  ]
 }

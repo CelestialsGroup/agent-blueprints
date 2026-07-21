@@ -4,38 +4,19 @@
   "title": "ArtifactGrant",
   "type": "object",
   "required": [
-    "grant_id", "tenant_id", "work_order_id", "execution_scope", "artifact_id", "version_id",
+    "grant_id", "tenant_id", "execution_scope", "invocation_id", "invocation_attempt_id", "artifact_id", "version_id",
     "artifact_digest", "permissions", "gateway_binding", "issued_at", "expires_at", "grant_digest"
   ],
   "properties": {
     "grant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
-    "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
-    "execution_scope": {
-      "oneOf": [
-        {
-          "type": "object",
-          "required": ["kind", "runtime_run_id", "invocation_id", "invocation_attempt_id"],
-          "properties": {
-            "kind": { "const": "runtime_invocation" },
-            "runtime_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
-            "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
-            "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": ["kind", "invocation_id", "invocation_attempt_id"],
-          "properties": {
-            "kind": { "const": "capability_invocation" },
-            "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
-            "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 }
-          },
-          "additionalProperties": false
-        }
-      ]
-    },
+    "execution_scope": { "allOf": [
+      { "$ref": "urn:agent-platform:execution-scope:v1" },
+      { "not": { "properties": { "kind": { "const": "artifact_ingest" } }, "required": ["kind"] } }
+    ] },
+    "runtime_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "artifact_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "version_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "artifact_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
@@ -52,10 +33,25 @@
     "grant_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
   },
   "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": { "execution_scope": { "properties": { "kind": { "const": "artifact_operation" } } } },
+        "required": ["execution_scope"]
+      },
+      "then": { "not": { "required": ["runtime_run_id"] } }
+    },
+    {
+      "if": { "required": ["runtime_run_id"] },
+      "then": {
+        "properties": { "execution_scope": { "properties": { "kind": { "const": "work_order" } } } }
+      }
+    }
+  ],
   "x-semantic-constraints": [
     "grant_digest is RFC 8785 JCS SHA-256 over the grant excluding grant_digest",
     "expires_at is later than issued_at; a Runtime grant remains inside RuntimeAuthorization while a Capability grant is a non-bearer requirement bounded by its request deadline and CommercialAuthorization and every use requires a shorter Artifact Gateway operation token",
-    "the grant is Tenant, WorkOrder, InvocationAttempt, immutable ArtifactVersion and Artifact Gateway route bound",
+    "the grant is Tenant, Platform execution scope, InvocationAttempt, immutable ArtifactVersion and Artifact Gateway route bound; runtime_run_id is present only for a WorkOrder Runtime Invocation",
     "Providers may read admitted versions or write staging content but never finalize an ArtifactVersion"
   ]
 }

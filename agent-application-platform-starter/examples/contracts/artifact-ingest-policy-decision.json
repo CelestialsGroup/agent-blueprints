@@ -1,0 +1,28 @@
+{
+  "decision_id": "pol_ingest_01J0000000000000000000",
+  "decision_digest": "sha256:f04650ba71f37898c1f1e77f9aa0ac5db5ff035bdf24024e67cfdf10543eca70",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "policy_bundle_digest": "sha256:6161616161616161616161616161616161616161616161616161616161616161",
+  "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
+  "execution_budget_digest": "sha256:915216b1c8f1e7a0cc18d99ae2ce603fc5fa671f7eff05418adc99170493a3d7",
+  "evaluations": [
+    {
+      "subject_kind": "artifact",
+      "subject_id": "art_ingest_01J0000000000000000000",
+      "action": "allow",
+      "source": "commercial",
+      "rule_digest": "sha256:d5dbf8958ae0b621c121bd5e1d0bf31b87abe3a96c0f8c57d3814031dd7dcaf3"
+    }
+  ],
+  "outcome": "allow",
+  "effective_permissions_digest": "sha256:2166c778c95f205cbfe5fc68c863f7d32fd9d3b063a25570cf94b74f47034ac9",
+  "decided_at": "2026-07-16T09:10:01Z",
+  "expires_at": "2026-07-16T09:30:00Z",
+  "decision_point": "artifact",
+  "commercial_authorization_id": "cauth_01J00000000000000000000000",
+  "execution_budget_id": "bud_ingest_01J0000000000000000000",
+  "execution_scope": {
+    "kind": "artifact_ingest",
+    "artifact_ingest_session_id": "ing_01J00000000000000000000000"
+  }
+}

@@ -38,6 +38,7 @@
     "effective_at is not later than issued_at, and issued_at is not later than Platform receipt time plus bounded clock skew",
     "external_tenant_id and authenticated client_id resolve server-side to the same Tenant and ClientApplication that admitted the CommercialAuthorization",
     "commercial_authorization_id and commercial_authorization_digest match one immutable stored Business snapshot; the Platform cannot synthesize or widen this Business fact",
-    "revocation receipt is append-only and idempotent, immediately denies matching WorkSessions and new execution or Gateway authorization, and durably fans out WorkSession revocation plus fenced SystemSafetyControl cancellation and Outbox for each affected active WorkOrder without requiring a new Business Grant"
+    "revocation receipt is append-only and idempotent, immediately denies matching WorkSessions and new execution or Gateway authorization, and durably fans out WorkSession revocation plus scope-appropriate cancellation and Outbox for each affected active WorkOrder, ArtifactOperation and ArtifactIngestSession without requiring a new Business Grant",
+    "commercial_authorization_id exactly equals the authenticated Agent Access path parameter before the revocation is accepted"
   ]
 }

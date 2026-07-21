@@ -24,8 +24,10 @@
       "resolution_id": "res_agent_general_01J00000000000000",
       "tenant_id": "ten_01J00000000000000000000000",
       "client_app_id": "html-product",
-      "work_order_id": "wrk_01J00000000000000000000000",
-      "execution_scope": "work_order",
+      "execution_scope": {
+        "kind": "work_order",
+        "work_order_id": "wrk_01J00000000000000000000000"
+      },
       "principal_context_digest": "sha256:bfb1d517260890b1df9744f3b1420dda3865f1a382e9735ecbeb895bbc8e5862",
       "identity_dependency": {
         "mode": "principal_context",
@@ -44,7 +46,7 @@
         "version": "1.0.0",
         "digest": "sha256:ef30b70a32f4eb10c1ff2f9b68b5adaaeabe078ee9901362ff227bca163492d0"
       },
-      "resolution_input_digest": "sha256:cefdb8157637c682e1e826c56255fc37ec7d4b2229481345291733156bc87df1",
+      "resolution_input_digest": "sha256:e86648ce33681b3eef832cbbdb81e64bd786d1b1996d4f53606b28fdde27a5ff",
       "candidate_evaluations": [
         {
           "provider_instance_id": "api_native_runtime",
@@ -58,12 +60,12 @@
         }
       ],
       "resolution_evidence_reference": "resolution-evidence/res_agent_general_01J00000000000000",
-      "resolution_evidence_digest": "sha256:4c71901ef73de6d6497d61b8bb37bcd5320d76778c605a064a83d118b5487bf9",
+      "resolution_evidence_digest": "sha256:251f2a9f73f4b3f57f7e6d882527f6568694a1124807b1ac902f226aef6f98ff",
       "resolved_at": "2026-07-16T09:01:00Z",
       "capability_definition_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
       "selected_provider_revision": {
         "provider_revision_id": "apr_01J00000000000000000000000",
-        "provider_revision_digest": "sha256:2052a6b7f9fb2ddf13eddf3fcdbfde056187e9cce1ed1f724141c4e0d452ed93",
+        "provider_revision_digest": "sha256:3a68cf38e4d0b5b66bf7078c6e248049e51d96444dc3cb8d5606e6b7a7b7a4cd",
         "provider_kind": "agent_runtime",
         "implementation": {
           "implementation_id": "agent-runtime.native",
@@ -90,19 +92,21 @@
         "configuration_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
         "approved_permissions_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
         "credential_binding_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-        "conformance_set_digest": "sha256:1ace3ac48a5191e17ef65dc13748aa98f6a2da5caf5d57550698fc2e9668fdb9",
+        "conformance_set_digest": "sha256:6e5018b525469320d876710e602528108afc0962b78f7dbfe980e9457926fc95",
         "admission_decision_id": "pad_runtime_01J00000000000000000",
-        "admission_decision_digest": "sha256:c90d8c792004b5a8ade261b0404d803439f600d46c3f147083a3003628da1d10",
+        "admission_decision_digest": "sha256:29b5fe381ac4f2a63f1ef18e7020366956b3e9555f42a0186a5a7e072f2178a6",
         "admission_status": "certified"
       },
-      "decision_digest": "sha256:ed912a4e51bd06bf9ff5aacdbae0b8bd3560301bbf83d9aebfb39ec7d8e0892c"
+      "decision_digest": "sha256:6652ddcef8f8de6204f4a771dfeb0e4ea263de1d71676953e59bae2fab4f75b6"
     },
     {
       "resolution_id": "res_html_generate_01J0000000000000",
       "tenant_id": "ten_01J00000000000000000000000",
       "client_app_id": "html-product",
-      "work_order_id": "wrk_01J00000000000000000000000",
-      "execution_scope": "work_order",
+      "execution_scope": {
+        "kind": "work_order",
+        "work_order_id": "wrk_01J00000000000000000000000"
+      },
       "principal_context_digest": "sha256:bfb1d517260890b1df9744f3b1420dda3865f1a382e9735ecbeb895bbc8e5862",
       "identity_dependency": {
         "mode": "principal_context",
@@ -121,7 +125,7 @@
         "version": "1.0.0",
         "digest": "sha256:ef30b70a32f4eb10c1ff2f9b68b5adaaeabe078ee9901362ff227bca163492d0"
       },
-      "resolution_input_digest": "sha256:c08faa1ea0ebc7b9d996cdfbb80dd43403348bc597f85651ddac9fe2473bd8fe",
+      "resolution_input_digest": "sha256:103dfa4d0aa75c4e1b77b08454b2da986daf55387c5853de0bd600abdde78141",
       "candidate_evaluations": [
         {
           "provider_instance_id": "hpi_html_anything",
@@ -135,7 +139,7 @@
         }
       ],
       "resolution_evidence_reference": "resolution-evidence/res_html_generate_01J0000000000000",
-      "resolution_evidence_digest": "sha256:579eb4da8094ba7d62ca264429e0d3429c244eb63d568d9193d65a0679bb59ae",
+      "resolution_evidence_digest": "sha256:bd1bfff3ff8df3553e13348e9abe24f70e7277b90e19ba2be1875515e7b5c58c",
       "resolved_at": "2026-07-16T09:01:01Z",
       "capability_definition_digest": "sha256:3434343434343434343434343434343434343434343434343434343434343434",
       "selected_provider_revision": {
@@ -171,14 +175,16 @@
         "admission_decision_digest": "sha256:97fc473a0392207141d8cb8b957431a5027cab27f88efffc03493035fbc2a26b",
         "admission_status": "certified"
       },
-      "decision_digest": "sha256:9f01c0e7050db96fcb02e7ffec2bcb5251d7274528ddcd3f90569187848074eb"
+      "decision_digest": "sha256:022516cb7a457d271a50926285eabd24c930edb053ba930eeff24e400885d772"
     },
     {
       "resolution_id": "res_html_preview_01J00000000000000",
       "tenant_id": "ten_01J00000000000000000000000",
       "client_app_id": "html-product",
-      "work_order_id": "wrk_01J00000000000000000000000",
-      "execution_scope": "work_order",
+      "execution_scope": {
+        "kind": "work_order",
+        "work_order_id": "wrk_01J00000000000000000000000"
+      },
       "principal_context_digest": "sha256:bfb1d517260890b1df9744f3b1420dda3865f1a382e9735ecbeb895bbc8e5862",
       "identity_dependency": {
         "mode": "principal_context",
@@ -197,7 +203,7 @@
         "version": "1.0.0",
         "digest": "sha256:ef30b70a32f4eb10c1ff2f9b68b5adaaeabe078ee9901362ff227bca163492d0"
       },
-      "resolution_input_digest": "sha256:c7621de8f868e037efc5235b5b0b6fbd6c88244d8f15740aab1fd0aa04f1f417",
+      "resolution_input_digest": "sha256:22d8b664a0fa6bfc12b32f9f4124d6f6e40d9166c7250013b88490f70148a849",
       "candidate_evaluations": [
         {
           "provider_instance_id": "rpi_html_preview",
@@ -211,7 +217,7 @@
         }
       ],
       "resolution_evidence_reference": "resolution-evidence/res_html_preview_01J00000000000000",
-      "resolution_evidence_digest": "sha256:8f746dc60106bff69998e19d2639dc3fa43eab07431ae9c1c74ed6893d42018f",
+      "resolution_evidence_digest": "sha256:a0d2d4b48cf5bc6bb79c4351b960d163eb0f76e017fd47bf18e5d7a8058f9369",
       "resolved_at": "2026-07-16T09:01:02Z",
       "capability_definition_digest": "sha256:3535353535353535353535353535353535353535353535353535353535353535",
       "selected_provider_revision": {
@@ -247,7 +253,7 @@
         "admission_decision_digest": "sha256:894ef82e7650c43d5b7452b3ab8083f288f1836e27da5fb77e10fef00a1fb945",
         "admission_status": "certified"
       },
-      "decision_digest": "sha256:dcd60bb6a04e08645ba8d4d2ed5f31a5b08ef5f4ff0c5c84570ff99e205155d1"
+      "decision_digest": "sha256:8f22f4aabd211fe80047d7349de31887c005c5f530c5a007ba1d51833acee556"
     }
   ],
   "agent_runtime": {
@@ -308,7 +314,7 @@
     "placement_decision_digest": "sha256:b92cfbeac119fd895f6765f5ac7fb846c8982768acf00b588f48976ed4402922"
   },
   "sandboxes": [],
-  "run_manifest_digest": "sha256:b42f8b703e81b72d5879cd9e66fb62348ad289970ca66880a7f7078e809c9d62",
+  "run_manifest_digest": "sha256:f06d9364265f1f89246ac466368d51be880816e8d8a02f48305f2ce507b39867",
   "agent_run_id": "agr_01J00000000000000000000000",
   "workflow_run_id": "wfr_01J00000000000000000000000",
   "orchestration_binding": {
@@ -329,9 +335,8 @@
   },
   "execution_budget": {
     "budget_id": "bud_01J00000000000000000000000",
-    "budget_digest": "sha256:af98dd43e2a018f9df3a6bc97b17f4cea7ec2dae69d62f24e2cd367eefc3fba4",
+    "budget_digest": "sha256:a9965ff61c94ed866a5ddcc58156ec2c159cdb74c7dd445c338b7456ccf85598",
     "tenant_id": "ten_01J00000000000000000000000",
-    "work_order_id": "wrk_01J00000000000000000000000",
     "limits": {
       "max_input_tokens": 100000,
       "max_output_tokens": 20000,
@@ -356,16 +361,19 @@
       "data_classification": "confidential"
     },
     "created_at": "2026-07-16T09:00:30Z",
-    "expires_at": "2026-07-16T09:30:00Z"
+    "expires_at": "2026-07-16T09:30:00Z",
+    "execution_scope": {
+      "kind": "work_order",
+      "work_order_id": "wrk_01J00000000000000000000000"
+    }
   },
   "policy_decision": {
     "decision_id": "pol_01J00000000000000000000000",
-    "decision_digest": "sha256:49955634a2eadd54fd72cfc0d95f8b1720cc4c0c555206c8b5b649281484c11b",
+    "decision_digest": "sha256:e08b5bf2897d8393690f28137069ecb2de0c1269a4d8181e8062ef66831f3362",
     "tenant_id": "ten_01J00000000000000000000000",
-    "work_order_id": "wrk_01J00000000000000000000000",
     "policy_bundle_digest": "sha256:6161616161616161616161616161616161616161616161616161616161616161",
     "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
-    "execution_budget_digest": "sha256:af98dd43e2a018f9df3a6bc97b17f4cea7ec2dae69d62f24e2cd367eefc3fba4",
+    "execution_budget_digest": "sha256:a9965ff61c94ed866a5ddcc58156ec2c159cdb74c7dd445c338b7456ccf85598",
     "evaluations": [
       {
         "subject_kind": "runtime",
@@ -383,12 +391,16 @@
       }
     ],
     "outcome": "allow",
-    "effective_permissions_digest": "sha256:6eaf56c5e16acbcdad6c024efea4282211f5a4f5c0540332410e53c6536b5876",
+    "effective_permissions_digest": "sha256:c7d58f07389b50a621f4083f2b8ecf45e40aa27ee64c437abe887a24ebc2f424",
     "decided_at": "2026-07-16T09:00:59Z",
     "expires_at": "2026-07-16T09:30:00Z",
     "decision_point": "run_admission",
     "commercial_authorization_id": "cauth_01J00000000000000000000000",
-    "execution_budget_id": "bud_01J00000000000000000000000"
+    "execution_budget_id": "bud_01J00000000000000000000000",
+    "execution_scope": {
+      "kind": "work_order",
+      "work_order_id": "wrk_01J00000000000000000000000"
+    }
   },
   "event_registry": {
     "registry_id": "agent-runtime-core",
@@ -422,9 +434,8 @@
   },
   "effective_permissions": {
     "permissions_id": "perm_01J00000000000000000000000",
-    "permissions_digest": "sha256:6eaf56c5e16acbcdad6c024efea4282211f5a4f5c0540332410e53c6536b5876",
+    "permissions_digest": "sha256:c7d58f07389b50a621f4083f2b8ecf45e40aa27ee64c437abe887a24ebc2f424",
     "tenant_id": "ten_01J00000000000000000000000",
-    "work_order_id": "wrk_01J00000000000000000000000",
     "model": {
       "allowed_model_profiles": [
         "general-balanced"
@@ -448,7 +459,11 @@
         "public_documentation"
       ]
     },
-    "sandbox_slots": []
+    "sandbox_slots": [],
+    "execution_scope": {
+      "kind": "work_order",
+      "work_order_id": "wrk_01J00000000000000000000000"
+    }
   },
   "gateway_bindings": {
     "model": {
@@ -552,12 +567,12 @@
   },
   "agent_run_budget_allocation": {
     "allocation_id": "abal_root_01J000000000000000000000",
-    "allocation_digest": "sha256:465ec922331064033923a0ca34742d7837e52cb399e264a2aecf2b39d1808f75",
+    "allocation_digest": "sha256:e4e56166aad1bc6b0cf21fa6b93ab8a206a2d97baad8e5c299f04b1a7475da5e",
     "tenant_id": "ten_01J00000000000000000000000",
     "work_order_id": "wrk_01J00000000000000000000000",
     "agent_run_id": "agr_01J00000000000000000000000",
     "work_order_budget_id": "bud_01J00000000000000000000000",
-    "work_order_budget_digest": "sha256:af98dd43e2a018f9df3a6bc97b17f4cea7ec2dae69d62f24e2cd367eefc3fba4",
+    "work_order_budget_digest": "sha256:a9965ff61c94ed866a5ddcc58156ec2c159cdb74c7dd445c338b7456ccf85598",
     "limits": {
       "max_input_tokens": 100000,
       "max_output_tokens": 20000,

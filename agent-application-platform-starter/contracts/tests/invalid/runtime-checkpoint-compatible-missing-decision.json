@@ -1,0 +1,13 @@
+{
+  "checkpoint_id": "ckp_01J00000000000000000000000",
+  "runtime_run_id": "rtr_01J00000000000000000000000",
+  "provider_revision_id": "apr_01J00000000000000000000000",
+  "event_sequence": 42,
+  "content_reference": "artifact://art_runtime_checkpoint/ver_01",
+  "digest": "sha256:b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1",
+  "size_bytes": 8192,
+  "portability": "compatible_revision",
+  "compatibility_profile": "runtime-checkpoint-compatibility-v1",
+  "created_at": "2026-07-15T10:10:00Z",
+  "source_runtime_revision": "native-runtime-2026.07"
+}

@@ -67,15 +67,16 @@ network.mode = restricted
 
 Sandbox 不获得平台长期密钥。
 
-Secret Grant 必须：
+SecretGrant 与 Credential Gateway 必须：
 
-- 绑定 sandbox/work/invocation
+- 绑定 Tenant、PrincipalContext Digest、WorkOrder 或 ArtifactOperation ExecutionScope、ProviderRevision 与当前 Workload Identity
+- 绑定用途、目标、Secret Reference 集合和 pre-grant Operation Intent Digest
 - 最小 scope
-- 短期
-- 可撤销
-- 不以明文出现在 Spec、日志、Event、环境变量快照
+- Token 短 TTL、sender-constrained、只授权一次 Credential Access，Grant 消费与审计先于材料释放
+- 撤销、过期、已消费和请求摘要不匹配均同步 fail-closed
+- 明文、Delivery Handle 和可重放 Token 不进入 PostgreSQL、Redis、Temporal、Queue、Artifact、日志、Event、Trace、Recording 或环境变量快照
 
-优先通过内存文件、代理或 Workload Identity 提供。
+Phase 0 不声明账号交互登录、浏览器 Cookie 接管或私有 Git Credential Flow；这些能力在完成专用交互授权与撤销设计前保持 deferred。
 
 ## Workspace
 

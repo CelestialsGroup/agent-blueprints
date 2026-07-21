@@ -1,0 +1,54 @@
+{
+  "event_id": "evt_artifact-operation-cancel-requested_01J00000000000000000",
+  "schema_version": 2,
+  "tenant_id": "ten_01J00000000000000000000000",
+  "producer_id": "platform-core-ledger",
+  "provider_revision_id": null,
+  "source_stream_id": "artifact_operation/aop_preview_01J000000000000000000",
+  "source_event_id": "artifact.operation.state.changed/5",
+  "source_cursor": "5",
+  "dedupe_key": "sha256:00b11067662319ed23e6e58bde72eaa470c10f5201f4f4826d89bd73eea0b740",
+  "aggregate": {
+    "type": "artifact_operation",
+    "id": "aop_preview_01J000000000000000000",
+    "sequence": 5
+  },
+  "type": "artifact.operation.state.changed",
+  "occurred_at": "2026-07-16T09:10:02Z",
+  "actor": {
+    "type": "system",
+    "id": "artifact-service"
+  },
+  "data": {
+    "artifact_operation_id": "aop_preview_01J000000000000000000",
+    "operation_kind": "preview",
+    "state": "cancel_requested",
+    "state_version": 5,
+    "provider_resolution_id": "res_preview_01J000000000000000000",
+    "invocation_id": "inv_preview_01J000000000000000000",
+    "request_digest": "sha256:a4ef0fb82260822297ca0095e25cb26d732e5a8494c680a8f0761f5e8cc87c4a",
+    "invocation_request_digest": "sha256:8c0e799920cf80586dfe76073788705cd45948946af4a768ad69f85af1e1fd02",
+    "cancellation_intent_id": "cani_aop_01J0000000000000000000",
+    "cancellation_source_kind": "commercial_authorization_revocation_receipt",
+    "cancellation_source_id": "carcp_01J0000000000000000000000",
+    "cancellation_source_digest": "sha256:3d18dac5266a9226ce6710ea639dac806a36b38e17c8c3c7cfda9142d1bb26d1",
+    "cancellation_outbox_message_id": "out_cani_aop_01J000000000000000",
+    "cancellation_requested_at": "2026-07-16T09:10:02Z"
+  },
+  "metadata": {
+    "trace_id": "trace-artifact-operation-cancel-requested",
+    "correlation_id": "aop_preview_01J000000000000000000"
+  },
+  "data_version": 1,
+  "recorded_at": "2026-07-16T09:10:02.100Z",
+  "event_registry": {
+    "registry_id": "platform-core",
+    "registry_version": 1,
+    "registry_digest": "sha256:a9e717df6ee3d524e9805b1d1d78b39957618985d7d3ff9ad0e984362d1ddde6"
+  },
+  "producer_kind": "platform",
+  "execution_scope": {
+    "kind": "artifact_operation",
+    "artifact_operation_id": "aop_preview_01J000000000000000000"
+  }
+}

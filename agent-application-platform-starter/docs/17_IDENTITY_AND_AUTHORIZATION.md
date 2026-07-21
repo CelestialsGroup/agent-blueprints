@@ -65,7 +65,9 @@ Service 权限：
 - conversation:read
 - catalog:read
 
-`commercial_authorization_revocation_ingest`：`authorization:revoke` 只授予预注册且 sender-constrained 的 Business workload。Agent Access 从认证上下文派生 ClientApplication，以请求中的 `external_tenant_id` 解析 Platform Tenant，并要求 Path ID、已存 CommercialAuthorization ID/Digest 和 Revocation Notice 完全一致；`revocation_id + revocation_digest` 重放幂等，摘要冲突、跨 Client/Tenant、未来生效时间或超过允许 Clock Skew 的未来签发时间均拒绝。收据是 WorkSession 鉴权的同步 deny 索引，并以可恢复 intent 驱动 Session Version 撤销/断连和活动 WorkOrder SystemSafetyControl；浏览器 WorkSession 永远不能获得该 Scope。
+`commercial_authorization_revocation_ingest`：`authorization:revoke` 只授予预注册且 sender-constrained 的 Business workload。Agent Access 从认证上下文派生 ClientApplication，以请求中的 `external_tenant_id` 解析 Platform Tenant，并要求 Path ID、已存 CommercialAuthorization ID/Digest 和 Revocation Notice 完全一致；`revocation_id + revocation_digest` 重放幂等，摘要冲突、跨 Client/Tenant、未来生效时间或超过允许 Clock Skew 的未来签发时间均拒绝。带摘要收据是 WorkSession/执行/Gateway 鉴权的同步 deny 索引，并持久枚举 WorkSession、活动 WorkOrder、ArtifactOperation、ArtifactIngest 的 CAS/Outbox intents；WorkOrder 使用 fenced SystemSafetyControl，其余 Scope 按自身状态机 Cancel。浏览器 WorkSession 永远不能获得该 Scope。
+
+Agent Access 中同时携带资源 Path ID 与正文 ID 的操作使用 `x-path-body-bindings` 声明精确 JSON Pointer。实现必须在消费 Grant、解析对象或执行任何写入前比较二者，错绑统一拒绝且不得借错误差异泄漏另一资源是否存在；该行为由 `agent-access-core-v1/resource-path-request-binding` 提供运行证据。
 
 WorkSession 权限：
 

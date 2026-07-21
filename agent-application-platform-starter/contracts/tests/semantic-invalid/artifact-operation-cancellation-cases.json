@@ -1,0 +1,240 @@
+{
+  "cancel_requested_operation": {
+    "artifact_operation_id": "aop_preview_01J000000000000000000",
+    "operation_kind": "preview",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "client_app_id": "html-product",
+    "principal_context_digest": "sha256:bfb1d517260890b1df9744f3b1420dda3865f1a382e9735ecbeb895bbc8e5862",
+    "artifact_id": "art_01J00000000000000000000000",
+    "source_version_id": "ver_01J00000000000000000000000",
+    "source_version_digest": "sha256:8f849c3f87818d7b11c3de39155576cb941f7157d73daf22162fa996b58ee919",
+    "request_digest": "sha256:a4ef0fb82260822297ca0095e25cb26d732e5a8494c680a8f0761f5e8cc87c4a",
+    "invocation_request_digest": "sha256:8c0e799920cf80586dfe76073788705cd45948946af4a768ad69f85af1e1fd02",
+    "commercial_authorization_id": "cauth_01J00000000000000000000000",
+    "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
+    "quota_reservation_id": "qres_01J00000000000000000000000",
+    "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
+    "policy_decision_id": "pol_preview_01J000000000000000000",
+    "policy_decision_digest": "sha256:650e381596cb9ecd0d3b239b7514c8b55ff2034922bf8a522b23c2365841df8f",
+    "execution_budget_id": "bud_preview_01J000000000000000000",
+    "execution_budget_digest": "sha256:058abfaeca0cf57ba346cef5a301bd0512b525f5131d8ee432776be58f7be491",
+    "effective_permissions_id": "perm_preview_01J00000000000000000",
+    "effective_permissions_digest": "sha256:4b628137b325089843ba19eb9ccbb7d6d1b23ac5a119abeaf4e2fe15315af3eb",
+    "artifact_gateway_binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
+    "provider_resolution_id": "res_preview_01J000000000000000000",
+    "provider_revision_id": "rpr_01J00000000000000000000000",
+    "invocation_id": "inv_preview_01J000000000000000000",
+    "status": "cancel_requested",
+    "state_version": 5,
+    "created_at": "2026-07-16T09:06:00Z",
+    "updated_at": "2026-07-16T09:10:02Z",
+    "cancellation_intent_id": "cani_aop_01J0000000000000000000",
+    "cancellation_source_kind": "commercial_authorization_revocation_receipt",
+    "cancellation_source_id": "carcp_01J0000000000000000000000",
+    "cancellation_source_digest": "sha256:3d18dac5266a9226ce6710ea639dac806a36b38e17c8c3c7cfda9142d1bb26d1",
+    "cancellation_outbox_message_id": "out_cani_aop_01J000000000000000",
+    "cancellation_requested_at": "2026-07-16T09:10:02Z"
+  },
+  "cancel_requested_invocation": {
+    "invocation_id": "inv_preview_01J000000000000000000",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "execution_scope": {
+      "kind": "artifact_operation",
+      "artifact_operation_id": "aop_preview_01J000000000000000000"
+    },
+    "artifact_operation_id": "aop_preview_01J000000000000000000",
+    "capability_id": "artifact.preview.html",
+    "capability_version": "1.0",
+    "provider_instance_id": "rpi_html_preview",
+    "provider_resolution_id": "res_preview_01J000000000000000000",
+    "provider_revision_id": "rpr_01J00000000000000000000000",
+    "idempotency_key": "invocation-preview-idempotency-0001",
+    "request_digest": "sha256:8c0e799920cf80586dfe76073788705cd45948946af4a768ad69f85af1e1fd02",
+    "side_effect": "idempotent",
+    "status": "executing",
+    "current_attempt_id": "iat_preview_01J00000000000000000",
+    "created_at": "2026-07-16T09:06:02Z",
+    "updated_at": "2026-07-16T09:10:02Z",
+    "attempt_count": 1,
+    "max_attempts": 3
+  },
+  "cancellation_reconciling_operation": {
+    "artifact_operation_id": "aop_preview_01J000000000000000000",
+    "operation_kind": "preview",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "client_app_id": "html-product",
+    "principal_context_digest": "sha256:bfb1d517260890b1df9744f3b1420dda3865f1a382e9735ecbeb895bbc8e5862",
+    "artifact_id": "art_01J00000000000000000000000",
+    "source_version_id": "ver_01J00000000000000000000000",
+    "source_version_digest": "sha256:8f849c3f87818d7b11c3de39155576cb941f7157d73daf22162fa996b58ee919",
+    "request_digest": "sha256:a4ef0fb82260822297ca0095e25cb26d732e5a8494c680a8f0761f5e8cc87c4a",
+    "invocation_request_digest": "sha256:8c0e799920cf80586dfe76073788705cd45948946af4a768ad69f85af1e1fd02",
+    "commercial_authorization_id": "cauth_01J00000000000000000000000",
+    "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
+    "quota_reservation_id": "qres_01J00000000000000000000000",
+    "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
+    "policy_decision_id": "pol_preview_01J000000000000000000",
+    "policy_decision_digest": "sha256:650e381596cb9ecd0d3b239b7514c8b55ff2034922bf8a522b23c2365841df8f",
+    "execution_budget_id": "bud_preview_01J000000000000000000",
+    "execution_budget_digest": "sha256:058abfaeca0cf57ba346cef5a301bd0512b525f5131d8ee432776be58f7be491",
+    "effective_permissions_id": "perm_preview_01J00000000000000000",
+    "effective_permissions_digest": "sha256:4b628137b325089843ba19eb9ccbb7d6d1b23ac5a119abeaf4e2fe15315af3eb",
+    "artifact_gateway_binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
+    "provider_resolution_id": "res_preview_01J000000000000000000",
+    "provider_revision_id": "rpr_01J00000000000000000000000",
+    "invocation_id": "inv_preview_01J000000000000000000",
+    "status": "cancellation_reconciling",
+    "state_version": 7,
+    "created_at": "2026-07-16T09:06:00Z",
+    "updated_at": "2026-07-16T09:10:04Z",
+    "cancellation_intent_id": "cani_aop_01J0000000000000000000",
+    "cancellation_source_kind": "commercial_authorization_revocation_receipt",
+    "cancellation_source_id": "carcp_01J0000000000000000000000",
+    "cancellation_source_digest": "sha256:3d18dac5266a9226ce6710ea639dac806a36b38e17c8c3c7cfda9142d1bb26d1",
+    "cancellation_outbox_message_id": "out_cani_aop_01J000000000000000",
+    "cancellation_requested_at": "2026-07-16T09:10:02Z",
+    "cancellation_reconciliation_case_id": "irc_aop_cancel_01J000000000000000000"
+  },
+  "cancellation_reconciling_invocation": {
+    "invocation_id": "inv_preview_01J000000000000000000",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "execution_scope": {
+      "kind": "artifact_operation",
+      "artifact_operation_id": "aop_preview_01J000000000000000000"
+    },
+    "artifact_operation_id": "aop_preview_01J000000000000000000",
+    "capability_id": "artifact.preview.html",
+    "capability_version": "1.0",
+    "provider_instance_id": "rpi_html_preview",
+    "provider_resolution_id": "res_preview_01J000000000000000000",
+    "provider_revision_id": "rpr_01J00000000000000000000000",
+    "idempotency_key": "invocation-preview-idempotency-0001",
+    "request_digest": "sha256:8c0e799920cf80586dfe76073788705cd45948946af4a768ad69f85af1e1fd02",
+    "side_effect": "idempotent",
+    "status": "reconciling",
+    "current_attempt_id": "iat_preview_01J00000000000000000",
+    "created_at": "2026-07-16T09:06:02Z",
+    "updated_at": "2026-07-16T09:10:04Z",
+    "attempt_count": 1,
+    "max_attempts": 3,
+    "reconciliation_case_id": "irc_aop_cancel_01J000000000000000000",
+    "reconciliation_deadline_at": "2026-07-16T10:10:04Z"
+  },
+  "receipt": {
+    "revocation_id": "carev_01J0000000000000000000000",
+    "revocation_receipt_id": "carcp_01J0000000000000000000000",
+    "revocation_receipt_digest": "sha256:3d18dac5266a9226ce6710ea639dac806a36b38e17c8c3c7cfda9142d1bb26d1",
+    "revocation_digest": "sha256:49b0681af82d29c56dc65d458969f738ef598e945f95738114d3f91c2f91fd06",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "client_app_id": "html-product",
+    "commercial_authorization_id": "cauth_01J00000000000000000000000",
+    "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
+    "status": "accepted",
+    "deny_effective_at": "2026-07-16T09:10:02Z",
+    "work_session_revocations": [
+      {
+        "work_session_id": "wsc_01J00000000000000000000000",
+        "expected_session_version": 1,
+        "revocation_intent_id": "wsri_01J0000000000000000000000",
+        "outbox_message_id": "out_wsri_01J0000000000000000000",
+        "status": "enqueued"
+      }
+    ],
+    "execution_cancellation_targets": [
+      {
+        "execution_scope": {
+          "kind": "work_order",
+          "work_order_id": "wrk_01J00000000000000000000000"
+        },
+        "expected_owner_state_version": 1,
+        "action": "cancel",
+        "cancellation_intent_id": "cani_work_01J000000000000000000",
+        "outbox_message_id": "out_cani_work_01J00000000000000",
+        "status": "enqueued"
+      },
+      {
+        "execution_scope": {
+          "kind": "artifact_operation",
+          "artifact_operation_id": "aop_preview_01J000000000000000000"
+        },
+        "expected_owner_state_version": 4,
+        "action": "cancel",
+        "cancellation_intent_id": "cani_aop_01J0000000000000000000",
+        "outbox_message_id": "out_cani_aop_01J000000000000000",
+        "status": "enqueued"
+      },
+      {
+        "execution_scope": {
+          "kind": "artifact_ingest",
+          "artifact_ingest_session_id": "ing_01J00000000000000000000000"
+        },
+        "expected_owner_state_version": 4,
+        "action": "cancel",
+        "cancellation_intent_id": "cani_ing_01J0000000000000000000",
+        "outbox_message_id": "out_cani_ing_01J000000000000000",
+        "status": "enqueued"
+      }
+    ],
+    "fanout_status": "in_progress",
+    "accepted_at": "2026-07-16T09:10:02Z"
+  },
+  "state_machine_cases": [
+    {
+      "id": "running-missing-cancel-intent-path",
+      "mutation": "remove_active_cancel_path",
+      "state": "running"
+    },
+    {
+      "id": "running-directly-cancelled",
+      "mutation": "direct_active_cancelled",
+      "state": "running"
+    },
+    {
+      "id": "cancellation-reconciliation-retry",
+      "mutation": "cancellation_retry"
+    },
+    {
+      "id": "cancellation-ambiguous-success",
+      "mutation": "ambiguous_cancellation_success"
+    },
+    {
+      "id": "cancel-unknown-without-reconciliation",
+      "mutation": "remove_unknown_reconciliation"
+    }
+  ],
+  "binding_cases": [
+    {
+      "id": "cancellation-source-receipt-digest-mismatch",
+      "mutation": "source_receipt_digest_mismatch"
+    },
+    {
+      "id": "cancellation-intent-id-mismatch",
+      "mutation": "intent_id_mismatch"
+    },
+    {
+      "id": "cancellation-outbox-mismatch",
+      "mutation": "outbox_message_mismatch"
+    },
+    {
+      "id": "cancellation-before-receipt",
+      "mutation": "requested_before_receipt"
+    },
+    {
+      "id": "cancellation-stale-owner-cas",
+      "mutation": "stale_owner_cas"
+    },
+    {
+      "id": "cancellation-invocation-already-terminal",
+      "mutation": "invocation_status_terminal"
+    },
+    {
+      "id": "cancellation-invocation-binding-mismatch",
+      "mutation": "invocation_binding_mismatch"
+    },
+    {
+      "id": "cancellation-reconciliation-case-mismatch",
+      "mutation": "reconciliation_case_mismatch",
+      "owner": "cancellation_reconciling"
+    }
+  ]
+}

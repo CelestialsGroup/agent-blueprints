@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:artifact-ingest-status-operation-descriptor:v1",
+  "title": "ArtifactIngestStatusOperationDescriptor",
+  "type": "object",
+  "required": ["operation", "ingest_session_id"],
+  "properties": {
+    "operation": { "const": "read_artifact_ingest_session" },
+    "ingest_session_id": { "type": "string", "minLength": 1, "maxLength": 200 }
+  },
+  "additionalProperties": false
+}

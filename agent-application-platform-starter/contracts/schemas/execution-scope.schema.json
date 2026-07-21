@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:execution-scope:v1",
+  "title": "ExecutionScope",
+  "description": "Closed Platform execution ownership scope shared by ProviderResolution, Invocation and authorization records.",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": ["kind", "work_order_id"],
+      "properties": {
+        "kind": { "const": "work_order" },
+        "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["kind", "artifact_operation_id"],
+      "properties": {
+        "kind": { "const": "artifact_operation" },
+        "artifact_operation_id": { "type": "string", "minLength": 1, "maxLength": 200 }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["kind", "artifact_ingest_session_id"],
+      "properties": {
+        "kind": { "const": "artifact_ingest" },
+        "artifact_ingest_session_id": { "type": "string", "minLength": 1, "maxLength": 200 }
+      },
+      "additionalProperties": false
+    }
+  ],
+  "x-semantic-constraints": [
+    "an execution scope identifies exactly one Platform-owned WorkOrder, ArtifactOperation or ArtifactIngest aggregate and cannot be widened or rebound"
+  ]
+}

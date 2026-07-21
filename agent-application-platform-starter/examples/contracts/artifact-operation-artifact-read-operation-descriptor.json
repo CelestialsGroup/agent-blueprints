@@ -1,0 +1,13 @@
+{
+  "operation": "read_content",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "execution_scope": {
+    "kind": "artifact_operation",
+    "artifact_operation_id": "aop_preview_01J000000000000000000"
+  },
+  "invocation_id": "inv_preview_01J000000000000000000",
+  "invocation_attempt_id": "iat_preview_01J00000000000000000",
+  "fencing_token": 1,
+  "artifact_id": "art_01J00000000000000000000000",
+  "version_id": "ver_01J00000000000000000000000"
+}

@@ -3,12 +3,90 @@
   "$id": "urn:agent-platform:commercial-authorization-revocation-accepted:v1",
   "title": "CommercialAuthorizationRevocationAccepted",
   "type": "object",
-  "required": ["revocation_id", "revocation_receipt_id", "status", "accepted_at"],
+  "required": [
+    "revocation_id",
+    "revocation_receipt_id",
+    "revocation_receipt_digest",
+    "revocation_digest",
+    "tenant_id",
+    "client_app_id",
+    "commercial_authorization_id",
+    "commercial_authorization_digest",
+    "status",
+    "deny_effective_at",
+    "work_session_revocations",
+    "execution_cancellation_targets",
+    "fanout_status",
+    "accepted_at"
+  ],
   "properties": {
     "revocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "revocation_receipt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "revocation_receipt_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "revocation_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "client_app_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "commercial_authorization_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "commercial_authorization_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "status": { "const": "accepted" },
+    "deny_effective_at": { "type": "string", "format": "date-time" },
+    "work_session_revocations": {
+      "type": "array",
+      "maxItems": 10000,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": [
+          "work_session_id",
+          "expected_session_version",
+          "revocation_intent_id",
+          "outbox_message_id",
+          "status"
+        ],
+        "properties": {
+          "work_session_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "expected_session_version": { "type": "integer", "minimum": 1 },
+          "revocation_intent_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "outbox_message_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "status": { "enum": ["pending", "enqueued", "completed", "already_inactive"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "execution_cancellation_targets": {
+      "type": "array",
+      "maxItems": 100000,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": [
+          "execution_scope",
+          "expected_owner_state_version",
+          "action",
+          "cancellation_intent_id",
+          "outbox_message_id",
+          "status"
+        ],
+        "properties": {
+          "execution_scope": { "$ref": "urn:agent-platform:execution-scope:v1" },
+          "expected_owner_state_version": { "type": "integer", "minimum": 1 },
+          "action": { "const": "cancel" },
+          "cancellation_intent_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "outbox_message_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "status": { "enum": ["pending", "enqueued", "completed", "already_terminal"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "fanout_status": { "enum": ["pending", "in_progress", "completed"] },
     "accepted_at": { "type": "string", "format": "date-time" }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "revocation_receipt_digest is RFC 8785 JCS SHA-256 over the receipt excluding revocation_receipt_digest",
+    "the receipt binds the exact revocation digest, authenticated Tenant and ClientApplication, and immutable CommercialAuthorization ID and digest",
+    "deny_effective_at is no later than accepted_at and authorization checks consult the durable deny record before issuing or honoring execution, Gateway or WorkSession authority",
+    "execution_cancellation_targets contain every active WorkOrder, ArtifactOperation and ArtifactIngest owner bound to the authorization exactly once; every target is reduction-only cancel with a CAS version, durable intent and Outbox message",
+    "fanout is replayable from the receipt until every WorkSession and execution target is completed or already inactive or terminal; pending work is never interpreted as successful revocation completion"
+  ]
 }

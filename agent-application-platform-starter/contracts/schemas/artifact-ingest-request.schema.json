@@ -4,26 +4,31 @@
   "title": "ArtifactIngestRequest",
   "type": "object",
   "required": [
-    "name",
-    "media_type",
-    "size_bytes",
-    "digest"
+    "ingest_request_id", "tenant_id", "client_app_id", "principal_context",
+    "artifact_id", "name", "media_type", "size_bytes", "content_digest",
+    "commercial_authorization",
+    "idempotency_key", "request_digest", "requested_at"
   ],
   "properties": {
-    "name": {
-      "type": "string"
-    },
-    "media_type": {
-      "type": "string"
-    },
-    "size_bytes": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "digest": {
-      "type": "string",
-      "pattern": "^sha256:[0-9a-f]{64}$"
-    }
+    "ingest_request_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "client_app_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "principal_context": { "$ref": "urn:agent-platform:principal-context-snapshot:v1" },
+    "artifact_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "name": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "media_type": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "size_bytes": { "type": "integer", "minimum": 0 },
+    "content_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "commercial_authorization": { "$ref": "urn:agent-platform:commercial-authorization-binding:v1" },
+    "idempotency_key": { "type": "string", "minLength": 16, "maxLength": 255 },
+    "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "requested_at": { "type": "string", "format": "date-time" }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "request_digest is RFC 8785 JCS SHA-256 over the request excluding request_digest",
+    "authenticated Tenant and ClientApplication match the request and PrincipalContext; the caller supplies only the immutable CommercialAuthorization and upload intent",
+    "PolicyDecision and ExecutionBudget are Platform-owned admission facts created only after ingest_session_id allocation, share that ArtifactIngestSession scope and allow the exact media type and byte ceiling",
+    "idempotency scope is Tenant plus ClientApplication plus artifact-ingest plus idempotency-key digest"
+  ]
 }

@@ -14,7 +14,7 @@
   "fencing_token": 6,
   "tenant_id": "ten_01J00000000000000000000000",
   "work_order_id": "wrk_01J00000000000000000000000",
-  "policy_digest": "sha256:7b2258697b2b7182feea3d697c689837e9993a5f396db53d3d9c255404ba1dad",
+  "policy_digest": "sha256:f137d365462bb7d45ce8fcf1e81a30afaaf7a014ed42739fb80a683e7391d168",
   "request_contract_id": "urn:agent-platform:sandbox-lease-request:v1",
   "request_digest_profile": "rfc8785-request-excluding-request-digest-v1",
   "request_digest": "sha256:a4e01f8e6bea25365c07e0dd94d9a100a48383532031717feafe8fb04e37c1dd",

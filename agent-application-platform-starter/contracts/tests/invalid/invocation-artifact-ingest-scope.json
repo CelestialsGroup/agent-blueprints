@@ -1,0 +1,25 @@
+{
+  "invocation_id": "inv_preview_01J000000000000000000",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "execution_scope": {
+    "kind": "artifact_ingest",
+    "artifact_ingest_session_id": "ing_01J00000000000000000000000"
+  },
+  "artifact_operation_id": "aop_preview_01J000000000000000000",
+  "capability_id": "artifact.preview.html",
+  "capability_version": "1.0",
+  "provider_instance_id": "rpi_html_preview",
+  "provider_resolution_id": "res_preview_01J000000000000000000",
+  "provider_revision_id": "rpr_01J00000000000000000000000",
+  "idempotency_key": "invocation-preview-idempotency-0001",
+  "request_digest": "sha256:a4ef0fb82260822297ca0095e25cb26d732e5a8494c680a8f0761f5e8cc87c4a",
+  "side_effect": "idempotent",
+  "status": "succeeded",
+  "current_attempt_id": "iat_preview_01J00000000000000000",
+  "result_reference": "artifact-operation-result://aop_preview_01J000000000000000000",
+  "created_at": "2026-07-16T09:06:02Z",
+  "updated_at": "2026-07-16T09:06:05Z",
+  "completed_at": "2026-07-16T09:06:05Z",
+  "attempt_count": 1,
+  "max_attempts": 3
+}

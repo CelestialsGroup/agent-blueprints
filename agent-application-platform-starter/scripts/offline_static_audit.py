@@ -158,6 +158,33 @@ operation_profiles = {
         "http_exchange", "urn:agent-platform:egress-http-request:v1",
         "rfc8785-request-excluding-request-digest-v1", None,
     ),
+    ("credential-gateway-v1.yaml", "accessCredentialForOperation"): (
+        "credential_access", "urn:agent-platform:credential-access-request:v1",
+        "rfc8785-request-excluding-request-digest-v1", None,
+    ),
+}
+path_body_binding_profiles = {
+    ("agent-access-v1.yaml", "revokeCommercialAuthorization"): [
+        {"path_parameter": "commercial_authorization_id", "body_json_pointer": "/commercial_authorization_id"},
+    ],
+    ("agent-access-v1.yaml", "confirmArtifactIngestUpload"): [
+        {"path_parameter": "ingest_session_id", "body_json_pointer": "/ingest_session_id"},
+    ],
+    ("agent-access-v1.yaml", "controlWorkOrder"): [
+        {"path_parameter": "work_order_id", "body_json_pointer": "/work_order_id"},
+    ],
+    ("agent-access-v1.yaml", "createArtifactPreviewSession"): [
+        {"path_parameter": "artifact_id", "body_json_pointer": "/operation_context/artifact_id"},
+    ],
+    ("agent-access-v1.yaml", "createArtifactEditSession"): [
+        {"path_parameter": "artifact_id", "body_json_pointer": "/operation_context/artifact_id"},
+    ],
+    ("agent-access-v1.yaml", "createArtifactConversion"): [
+        {"path_parameter": "artifact_id", "body_json_pointer": "/operation_context/artifact_id"},
+    ],
+    ("agent-access-v1.yaml", "createConversationBranch"): [
+        {"path_parameter": "conversation_id", "body_json_pointer": "/conversation_id"},
+    ],
 }
 token_extensions = {
     "capability-provider-v1.yaml": "x-required-capability-token-operation",
@@ -166,8 +193,10 @@ token_extensions = {
     "agent-runtime-provider-v1.yaml": "x-required-runtime-token-operation",
     "plugin-invocation-v1.yaml": "x-required-plugin-token-operation",
     "egress-gateway-v1.yaml": "x-required-egress-token-operation",
+    "credential-gateway-v1.yaml": "x-required-credential-token-operation",
 }
 seen_operation_profiles: set[tuple[str, str]] = set()
+seen_path_body_binding_profiles: set[tuple[str, str]] = set()
 for path in openapi_files:
     document = load_yaml(path)
     assert document["openapi"] == "3.1.1", path
@@ -179,6 +208,19 @@ for path in openapi_files:
                 continue
             assert operation.get("operationId"), f"{path}: {method} {route}"
             profile_key = (path.name, operation["operationId"])
+            if profile_key in path_body_binding_profiles:
+                bindings = operation.get("x-path-body-bindings")
+                assert bindings == path_body_binding_profiles[profile_key], profile_key
+                route_parameters = set(re.findall(r"\{([^{}]+)\}", route))
+                assert operation.get("requestBody"), profile_key
+                assert all(
+                    binding["path_parameter"] in route_parameters
+                    and binding["body_json_pointer"].startswith("/")
+                    for binding in bindings
+                ), profile_key
+                seen_path_body_binding_profiles.add(profile_key)
+            else:
+                assert "x-path-body-bindings" not in operation, profile_key
             if profile_key in operation_profiles:
                 token_operation, contract_id, digest_profile, descriptor_schema = operation_profiles[profile_key]
                 token_extension = token_extensions[path.name]
@@ -216,6 +258,12 @@ for path in openapi_files:
                 )
                 if requires_plugin_token:
                     assert profile_key in operation_profiles, f"Ungoverned Plugin token operation: {profile_key}"
+            if path.name == "credential-gateway-v1.yaml":
+                requires_credential_token = any(
+                    "CredentialOperationBearer" in requirement for requirement in security
+                )
+                if requires_credential_token:
+                    assert profile_key in operation_profiles, f"Ungoverned Credential token operation: {profile_key}"
             responses = set(operation.get("responses", {}))
             assert any(code.startswith("2") for code in responses), f"{path}: {method} {route}: missing success"
             assert "500" in responses, f"{path}: {method} {route}: missing 500"
@@ -234,6 +282,7 @@ for path in openapi_files:
             continue
         assert (path.parent / ref.split("#", 1)[0]).resolve().exists(), f"Missing ref: {path}: {ref}"
 assert seen_operation_profiles == set(operation_profiles), "Missing governed operation digest profile"
+assert seen_path_body_binding_profiles == set(path_body_binding_profiles), "Missing path/body binding profile"
 
 jws_header_profiles = {
     "service-access-token-jws-header.schema.json": "at+jwt",
@@ -245,6 +294,7 @@ jws_header_profiles = {
     "egress-invocation-jws-header.schema.json": "agent-egress-invocation+jwt",
     "agent-runtime-invocation-jws-header.schema.json": "agent-runtime-invocation+jwt",
     "sandbox-operation-jws-header.schema.json": "agent-sandbox-operation+jwt",
+    "credential-operation-jws-header.schema.json": "agent-credential-operation+jwt",
 }
 assert len(set(jws_header_profiles.values())) == len(jws_header_profiles)
 for schema_name, token_type in jws_header_profiles.items():
@@ -282,6 +332,9 @@ jwt_security_profiles = {
     ),
     ("sandbox-provider-v1.yaml", "SandboxInvocationBearer"): (
         "sandbox-operation-jws-header.schema.json", "sandbox-operation-token-claims.schema.json",
+    ),
+    ("credential-gateway-v1.yaml", "CredentialOperationBearer"): (
+        "credential-operation-jws-header.schema.json", "credential-operation-token-claims.schema.json",
     ),
 }
 for (openapi_name, scheme_name), (header_name, claims_name) in jwt_security_profiles.items():

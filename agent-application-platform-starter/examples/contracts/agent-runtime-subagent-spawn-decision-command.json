@@ -1,12 +1,12 @@
 {
   "command_id": "cmd_spawn_decision_01J00000000000000",
-  "command_digest": "sha256:eb77383c9219f3d154d90e0cf103c25c2881216ea81dbbcf6894c87080667f81",
+  "command_digest": "sha256:d5fae8eb22bf154401898f8234d6e389c1b5350b11675b1cd838ef57b24db724",
   "runtime_run_id": "rtr_01J00000000000000000000000",
   "command_sequence": 2,
   "type": "subagent_spawn_decision",
   "spawn_request_id": "spawn_01J0000000000000000000000",
   "child_agent_run_admission_decision_id": "cadm_01J0000000000000000000000",
-  "child_agent_run_admission_decision_digest": "sha256:c429c88b807ca571955d76e872c35d9df98524c6a1920a881f7567a5d89071a5",
+  "child_agent_run_admission_decision_digest": "sha256:ec9650efcc5b74f707dcd5c330e35a9241ac31ad4220a2a202ddf419656bb247",
   "spawn_outcome": "accepted",
   "spawn_reason_codes": [
     "admitted"

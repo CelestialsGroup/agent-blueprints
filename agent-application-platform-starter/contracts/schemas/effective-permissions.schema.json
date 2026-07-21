@@ -7,7 +7,7 @@
     "permissions_id",
     "permissions_digest",
     "tenant_id",
-    "work_order_id",
+    "execution_scope",
     "model",
     "tool",
     "artifact",
@@ -18,7 +18,7 @@
     "permissions_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "permissions_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
-    "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "execution_scope": { "$ref": "urn:agent-platform:execution-scope:v1" },
     "model": {
       "type": "object",
       "required": ["allowed_model_profiles"],
@@ -91,7 +91,7 @@
   "additionalProperties": false,
   "x-semantic-constraints": [
     "permissions_digest is RFC 8785 JCS SHA-256 over the permissions excluding permissions_digest",
-    "all permissions are the intersection of commercial authorization, policy, Scenario and Provider admission; absent permission is denied",
+    "all permissions are the intersection of commercial authorization, policy, execution-scope requirements and Provider admission; absent permission is denied",
     "ArtifactVersion finalization is a Platform-owned transaction and is never represented as a Provider permission"
   ]
 }

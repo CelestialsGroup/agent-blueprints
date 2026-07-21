@@ -1,0 +1,25 @@
+{
+  "attestation": {
+    "attestation_id": "nua_01J00000000000000000000000",
+    "attestation_digest": "sha256:123c6e56bf9517059cd7caaf20006817ad11ee9088796229dc83c80089e472eb",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "execution_scope": {
+      "kind": "work_order",
+      "work_order_id": "wrk_01J00000000000000000000000"
+    },
+    "commercial_authorization_id": "cauth_01J00000000000000000000000",
+    "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
+    "quota_reservation_id": "qres_01J00000000000000000000000",
+    "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
+    "reason": "failed_before_dispatch",
+    "evidence_reference": "ledger://work-orders/wrk_01/no-dispatch-proof",
+    "evidence_digest": "sha256:0b12ce6d41a44d689edc01ca901c22a2fee689f030e7df49ae19b806657d33c2",
+    "confirmed_at": "2026-07-16T09:07:30Z"
+  },
+  "cases": [
+    {
+      "id": "attempt-dispatched-before-zero-confirmation",
+      "mutation": "dispatched_attempt_exists"
+    }
+  ]
+}

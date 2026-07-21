@@ -8,19 +8,19 @@
 
 | 检查项 | 本地结果 |
 |---|---|
-| 纯源码静态审计 | 通过：550 个 JSON、26 个 YAML、8 个 OpenAPI、47 个 Markdown 文件 |
-| JSON Schema 与夹具 | 通过：223 个 Schema、211 个有效夹具、73 个 Schema 负例 |
-| 语义不变量 | 通过：6 个状态机、188 个语义负例 |
-| 语义追踪 | 通过：49 个关键 Schema、226 条约束、208 个 Contract Gate 映射、146 个本次执行 Check ID、74 个 Phase 0 DDL/Conformance 责任 |
-| Core Event Registry | 通过：Platform 22 类、Agent Runtime 17 类闭合 Event Type；CanonicalEvent 按 Producer 所有权绑定对应 Registry |
-| 契约清单 | 通过：248 项受治理资源；Python/Node 一致 |
-| OpenAPI | 通过：8 份文档，0 Error / 0 Warning |
-| Bundle | 通过：8 个 Bundle，连续两次逐字节一致 |
+| 纯源码静态审计 | 通过：671 个 JSON、27 个 YAML、9 个 OpenAPI、47 个 Markdown 文件 |
+| JSON Schema 与夹具 | 通过：242 个 Schema、293 个有效夹具、80 个 Schema 负例 |
+| 语义不变量 | 通过：8 个状态机、236 个语义负例 |
+| 语义追踪 | 通过：135 个关键 Schema、496 条约束、294 个 Contract Gate 映射、166 个本次执行 Check ID、286 个 Phase 0 DDL/Conformance 责任 |
+| Core Event Registry | 通过：Platform 30 类、Agent Runtime 17 类闭合 Event Type；CanonicalEvent 按 Producer 所有权绑定对应 Registry |
+| 契约清单 | 通过：271 项受治理资源；Python/Node 一致 |
+| OpenAPI | 通过：9 份文档，0 Error / 0 Warning |
+| Bundle | 通过：9 个 Bundle，连续两次逐字节一致 |
 | JCS / Strict I-JSON | Python：CPython 3.14.6；Node.js 24.18.0；Go/gofmt 均通过 |
 | 兼容性 | 比较器自测通过；尚无冻结基线，显式记为首次冻结前 N/A，不记为兼容性通过 |
 | 仓库/供应链/公共 CI | 本轮延后，不计入 Architecture Contract Gate 通过条件 |
 
-本次 Gate 已验证请求与授权绑定、Turn/Control 与 CAS 分离、sender-constrained Business 撤销、Platform-only fenced SafetyControl、用途隔离的闭合 JWS Header/Claims Profile、Runtime/Sandbox/Egress 时间窗、Runtime/Capability/Plugin/Sandbox/Artifact/Egress 单操作 Contract/Profile/Digest、读路径与 Cursor、不可变 EgressDestinationRevision、按 Destination Class 授权、不透明 RuntimeSessionRoute、逻辑 Placement、Workspace Manifest、按 Producer 所有权绑定的双 Event Registry、来源去重、有界 Metadata、全部 JSON 写接口解析前大小上限和可执行语义追踪。
+本次 Gate 的机器可读 `architecture_closure` 包含：request-bound ExecutionGrant and RunManifest；single public WorkOrder control authority through WorkOrderControlRequest plus ExecutionGrant；separate Turn and WorkOrder control with split CAS ownership；sender-constrained Business revocation and Platform-only fenced safety cancellation；ArtifactOperation execution scope with Platform-derived admission and one Invocation ledger；durable ArtifactOperation cancellation intent, dispatch and fail-closed reconciliation；ConversationBranch Create/Fork command with source cut, workspace head and CAS；explicit NoUsageAttestation terminal accounting without fabricated usage；complete stable semantic traceability with executed Gate checks or implementation-required evidence；Platform-owned CompatibilityDecision and evidence for Runtime checkpoints and Sandbox snapshots；SecretGrant and single-operation Credential Gateway mediation；RootBinding-derived primary AgentRun without duplicate WorkOrder authority；staged ArtifactIngest Create/Status/Confirm/Scan/Platform Finalize lifecycle；accepted WorkOrder RPO zero only under acknowledged synchronous PostgreSQL replication；caller input separated from Platform-derived ArtifactOperation and ArtifactIngest admission facts；declared Agent Access path and request identity binding with implementation conformance evidence；renewable RuntimeAuthorization and bounded Runtime/Sandbox/Egress tokens；closed purpose-specific JWS Header and Claims profiles；Runtime/Capability/Plugin/Sandbox/Artifact/Egress operation Contract/Profile/Digest binding；immutable owner-scoped EgressDestinationRevision with class authorization；opaque slot-scoped RuntimeSessionRoute and logical content-bound Placement；WorkspaceContentManifest and ownership-bound typed dual Event registries；source Inbox dedupe, bounded metadata and all JSON write encoded-body admission limits；ProviderRevision, BuildProvenance, admission and executable semantic traceability。
 
 该结论仅为“架构/契约验证通过”。仓库仍没有真实 Agent Platform 组件，因此不能声称组件实现完成；Business -> Conversation -> Temporal -> Runtime/Sandbox -> Event/Artifact/Usage/Recording 的纵向链尚未完成；多租户隔离、故障注入、容量、SLO、Temporal Replay、备份恢复和密钥轮换也尚未提供生产证据。
 

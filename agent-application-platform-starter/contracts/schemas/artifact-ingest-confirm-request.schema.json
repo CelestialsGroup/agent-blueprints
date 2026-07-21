@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:artifact-ingest-confirm-request:v1",
+  "title": "ArtifactIngestConfirmRequest",
+  "type": "object",
+  "required": ["ingest_session_id", "upload_object_id", "media_type", "size_bytes", "content_digest", "request_digest"],
+  "properties": {
+    "ingest_session_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "upload_object_id": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "media_type": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "size_bytes": { "type": "integer", "minimum": 0 },
+    "content_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "request_digest is RFC 8785 JCS SHA-256 over the request excluding request_digest",
+    "object ownership, media type, decoded size and digest match the authorized Ingest request before scan is enqueued",
+    "ingest_session_id exactly equals the authenticated Agent Access path parameter before the confirmation is consumed"
+  ]
+}

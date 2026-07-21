@@ -37,10 +37,17 @@
         },
         "secret_reference_ids": {
           "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
           "items": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
           }
         },
+        "secret_grant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "secret_grant_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
         "stdin_reference": {
           "type": "string"
         },
@@ -60,12 +67,19 @@
           },
           "additionalProperties": false
         }
+      },
+      "dependentRequired": {
+        "secret_reference_ids": ["secret_grant_id", "secret_grant_digest"],
+        "secret_grant_id": ["secret_reference_ids", "secret_grant_digest"],
+        "secret_grant_digest": ["secret_reference_ids", "secret_grant_id"]
       }
     }
   ],
   "unevaluatedProperties": false,
   "x-semantic-constraints": [
-    "plain-text secret values are forbidden",
+    "plain-text secret values are forbidden and every secret_reference_id is covered by the exact immutable SecretGrant",
+    "SecretGrant Tenant, Principal, execution_scope, ProviderRevision, workload identity, sandbox-exec target and pre-grant request-intent digest match this operation",
+    "Credential Gateway delivery is single-operation, short-lived, sender-constrained, audited and never cached or persisted by Sandbox or Runtime",
     "command executes inside the selected Sandbox generation"
   ]
 }

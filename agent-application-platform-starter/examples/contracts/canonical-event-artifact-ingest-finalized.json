@@ -1,0 +1,46 @@
+{
+  "event_id": "evt_artifact-ingest-finalized_01J00000000000000000",
+  "schema_version": 2,
+  "tenant_id": "ten_01J00000000000000000000000",
+  "producer_id": "platform-core-ledger",
+  "provider_revision_id": null,
+  "source_stream_id": "artifact_ingest/ing_01J00000000000000000000000",
+  "source_event_id": "artifact.ingest.state.changed/1",
+  "source_cursor": "1",
+  "dedupe_key": "sha256:a3792074848ec5b771dea0d10583fe8de46cebe1c50beb1d24c0b3a32b6c3b58",
+  "aggregate": {
+    "type": "artifact_ingest",
+    "id": "ing_01J00000000000000000000000",
+    "sequence": 1
+  },
+  "type": "artifact.ingest.state.changed",
+  "occurred_at": "2026-07-16T09:10:00Z",
+  "actor": {
+    "type": "system",
+    "id": "artifact-service"
+  },
+  "data": {
+    "ingest_session_id": "ing_01J00000000000000000000000",
+    "state": "finalized",
+    "state_version": 7,
+    "content_digest": "sha256:40d373b4910150e8845bba107f985bb8502deeefbfc22a549a7288fa5a8213b8",
+    "scan_result_digest": "sha256:ca29a06a0d55d4b89c8ba7f2b31a804c8b6d2330773f4528ef541e29f76aabd1",
+    "artifact_version_id": "ver_ingest_01J0000000000000000000"
+  },
+  "metadata": {
+    "trace_id": "trace-artifact-ingest-finalized",
+    "correlation_id": "ing_01J00000000000000000000000"
+  },
+  "data_version": 1,
+  "recorded_at": "2026-07-16T09:10:00.100Z",
+  "event_registry": {
+    "registry_id": "platform-core",
+    "registry_version": 1,
+    "registry_digest": "sha256:a9e717df6ee3d524e9805b1d1d78b39957618985d7d3ff9ad0e984362d1ddde6"
+  },
+  "producer_kind": "platform",
+  "execution_scope": {
+    "kind": "artifact_ingest",
+    "artifact_ingest_session_id": "ing_01J00000000000000000000000"
+  }
+}

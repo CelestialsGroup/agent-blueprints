@@ -1,8 +1,7 @@
 {
   "usage_report_id": "usr_invalid_first_correction",
-  "usage_report_digest": "sha256:928b99990bfebfeceea666f26e86c88990463d37c7379803c47ff2bdbd5f574f",
+  "usage_report_digest": "sha256:2169486fc30e3f97ed8c270842d82e5a9e73f2c8d01a2f693268bc5c15a8d596",
   "tenant_id": "ten_01J00000000000000000000000",
-  "work_order_id": "wrk_01J00000000000000000000000",
   "commercial_authorization_id": "cauth_01J00000000000000000000000",
   "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
   "quota_reservation_id": "qres_01J00000000000000000000000",
@@ -13,7 +12,6 @@
     {
       "entry_id": "use_01J00000000000000000000000",
       "tenant_id": "ten_01J00000000000000000000000",
-      "work_order_id": "wrk_01J00000000000000000000000",
       "agent_run_id": "agr_01J00000000000000000000000",
       "runtime_run_id": "rtr_01J00000000000000000000000",
       "invocation_id": "inv_runtime_01J000000000000000000",
@@ -26,7 +24,7 @@
         "type": "provider",
         "id": "api_native_runtime",
         "provider_revision_id": "apr_01J00000000000000000000000",
-        "provider_revision_digest": "sha256:2052a6b7f9fb2ddf13eddf3fcdbfde056187e9cce1ed1f724141c4e0d452ed93"
+        "provider_revision_digest": "sha256:3a68cf38e4d0b5b66bf7078c6e248049e51d96444dc3cb8d5606e6b7a7b7a4cd"
       },
       "provider_operation_id": "provider-op-model-001",
       "meter_source": "provider_reported",
@@ -37,10 +35,18 @@
       "recorded_at": "2026-07-16T09:05:01Z",
       "evidence_digest": "sha256:88c7ef6685a93713c9d1fa9a273d61a964eadc94b318115fc1a11c5e44e5e1c0",
       "source_observation_id": "uobs_01J000000000000000000000",
+      "execution_scope": {
+        "kind": "work_order",
+        "work_order_id": "wrk_01J00000000000000000000000"
+      },
       "correction_of_entry_id": "use_01J00000000000000000000000",
       "correction_reason": "Invalid first report cannot be a correction."
     }
   ],
   "created_at": "2026-07-16T09:20:00Z",
-  "report_sequence": 1
+  "report_sequence": 1,
+  "execution_scope": {
+    "kind": "work_order",
+    "work_order_id": "wrk_01J00000000000000000000000"
+  }
 }

@@ -1,0 +1,13 @@
+{
+  "staging_session_id": "stg_aop_01J00000000000000000000",
+  "invocation_id": "inv_preview_01J000000000000000000",
+  "invocation_attempt_id": "iat_preview_01J00000000000000000",
+  "fencing_token": 1,
+  "object_key": "outputs/index.html",
+  "media_type": "text/html",
+  "content_encoding": "base64",
+  "content_base64": "PGgxPkhlbGxvPC9oMT4=",
+  "size_bytes": 14,
+  "digest": "sha256:e2c6c0ea7c7900c31f953e48d30d5e839801ab90630d751e7c8426ed5859da47",
+  "request_digest": "sha256:573db96d832204a24a040a5b05b8510b93a3b156d6960ac1dfea87f1a1f74796"
+}

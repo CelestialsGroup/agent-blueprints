@@ -26,4 +26,4 @@ Phase 0 使用平台自己的 Native SandboxProvider 与隔离执行后端；后
 make validate-architecture
 ```
 
-当前是已完成本地 Architecture Contract Gate 的产品边界候选版本，覆盖精确 ExecutionGrant 请求绑定、Branch WorkspaceRevision、可失败的 WorkflowRun/RootBinding、多 Agent Admission 与共享预算、框架中立 Agent Runtime、按需 Sandbox、可审计 ProviderResolution、Runtime Gateway/Recording、Experience Catalog，以及 TechnicalUsage/Business Settlement 交接。最新计数和工具链证据见 `CONTRACT_VALIDATION_REPORT.md`；正式冻结前仍需独立 CI/兼容性准入，也不代表产品实现完成、集成链路完成或生产就绪。详情从 `START_HERE.md` 开始。
+当前是已完成本地 Architecture Contract Gate 的产品边界候选版本，覆盖精确 ExecutionGrant 请求绑定、Branch Create/Fork 与 WorkspaceRevision CAS、可失败的 WorkflowRun/RootBinding、多 Agent Admission 与共享预算、框架中立 Agent Runtime、按需 Sandbox、可审计 ProviderResolution、ArtifactOperation/分阶段 Ingest、NoUsage、兼容性判定、Secret/Credential mediation、Runtime Gateway/Recording、Experience Catalog，以及 TechnicalUsage/Business Settlement 交接。最新计数和工具链证据见 `CONTRACT_VALIDATION_REPORT.md`；正式冻结前仍需独立 CI/兼容性准入，也不代表产品实现完成、集成链路完成或生产就绪。详情从 `START_HERE.md` 开始。

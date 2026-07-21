@@ -1,22 +1,19 @@
 {
   "settlement_envelope_id": "set_01J00000000000000000000000",
-  "settlement_envelope_digest": "sha256:ead2ef972e770c96d1a9c01b63fff43e75ebabdefa314676ae1d74d72574de6c",
+  "settlement_envelope_digest": "sha256:97cc8e1f24aae83d954c2e94a437afa80eda0eea60b52c2bef67e9d59e6be7b3",
   "tenant_id": "ten_01J00000000000000000000000",
-  "work_order_id": "wrk_01J00000000000000000000000",
   "commercial_authorization_id": "cauth_01J00000000000000000000000",
   "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
   "quota_reservation_id": "qres_01J00000000000000000000000",
   "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
-  "work_order_terminal_status": "completed",
   "action": "settle",
   "settlement_target_id": "business-usage-settlement-v1",
   "idempotency_key": "settlement-work-order-0001",
   "created_at": "2026-07-16T09:21:00Z",
   "usage_report": {
     "usage_report_id": "usr_01J00000000000000000000000",
-    "usage_report_digest": "sha256:915807ec7d218010ba0ef3b9745efe72b9b66562b8ec6f7f83e8c857f6c0db6f",
+    "usage_report_digest": "sha256:a4f21521d08e90d5fccd985e56a4bb2576e5f024c428eecaba51d33d520a72af",
     "tenant_id": "ten_01J00000000000000000000000",
-    "work_order_id": "wrk_01J00000000000000000000000",
     "commercial_authorization_id": "cauth_01J00000000000000000000000",
     "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
     "quota_reservation_id": "qres_01J00000000000000000000000",
@@ -27,7 +24,6 @@
       {
         "entry_id": "use_01J00000000000000000000000",
         "tenant_id": "ten_01J00000000000000000000000",
-        "work_order_id": "wrk_01J00000000000000000000000",
         "agent_run_id": "agr_01J00000000000000000000000",
         "runtime_run_id": "rtr_01J00000000000000000000000",
         "invocation_id": "inv_runtime_01J000000000000000000",
@@ -40,7 +36,7 @@
           "type": "provider",
           "id": "api_native_runtime",
           "provider_revision_id": "apr_01J00000000000000000000000",
-          "provider_revision_digest": "sha256:2052a6b7f9fb2ddf13eddf3fcdbfde056187e9cce1ed1f724141c4e0d452ed93"
+          "provider_revision_digest": "sha256:3a68cf38e4d0b5b66bf7078c6e248049e51d96444dc3cb8d5606e6b7a7b7a4cd"
         },
         "provider_operation_id": "provider-op-model-001",
         "meter_source": "provider_reported",
@@ -50,11 +46,24 @@
         "occurred_at": "2026-07-16T09:02:00Z",
         "recorded_at": "2026-07-16T09:05:01Z",
         "evidence_digest": "sha256:88c7ef6685a93713c9d1fa9a273d61a964eadc94b318115fc1a11c5e44e5e1c0",
-        "source_observation_id": "uobs_01J000000000000000000000"
+        "source_observation_id": "uobs_01J000000000000000000000",
+        "execution_scope": {
+          "kind": "work_order",
+          "work_order_id": "wrk_01J00000000000000000000000"
+        }
       }
     ],
     "created_at": "2026-07-16T09:20:00Z",
-    "report_sequence": 1
+    "report_sequence": 1,
+    "execution_scope": {
+      "kind": "work_order",
+      "work_order_id": "wrk_01J00000000000000000000000"
+    }
   },
-  "envelope_sequence": 1
+  "envelope_sequence": 1,
+  "execution_scope": {
+    "kind": "work_order",
+    "work_order_id": "wrk_01J00000000000000000000000"
+  },
+  "terminal_status": "completed"
 }

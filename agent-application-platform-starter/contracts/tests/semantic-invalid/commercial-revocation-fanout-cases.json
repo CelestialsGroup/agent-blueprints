@@ -1,0 +1,106 @@
+{
+  "notice": {
+    "revocation_id": "carev_01J0000000000000000000000",
+    "external_tenant_id": "org-456",
+    "commercial_authorization_id": "cauth_01J00000000000000000000000",
+    "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
+    "reason": "entitlement_revoked",
+    "effective_at": "2026-07-16T09:10:00Z",
+    "issued_at": "2026-07-16T09:10:01Z",
+    "revocation_digest": "sha256:49b0681af82d29c56dc65d458969f738ef598e945f95738114d3f91c2f91fd06"
+  },
+  "receipt": {
+    "revocation_id": "carev_01J0000000000000000000000",
+    "revocation_receipt_id": "carcp_01J0000000000000000000000",
+    "revocation_receipt_digest": "sha256:3d18dac5266a9226ce6710ea639dac806a36b38e17c8c3c7cfda9142d1bb26d1",
+    "revocation_digest": "sha256:49b0681af82d29c56dc65d458969f738ef598e945f95738114d3f91c2f91fd06",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "client_app_id": "html-product",
+    "commercial_authorization_id": "cauth_01J00000000000000000000000",
+    "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
+    "status": "accepted",
+    "deny_effective_at": "2026-07-16T09:10:02Z",
+    "work_session_revocations": [
+      {
+        "work_session_id": "wsc_01J00000000000000000000000",
+        "expected_session_version": 1,
+        "revocation_intent_id": "wsri_01J0000000000000000000000",
+        "outbox_message_id": "out_wsri_01J0000000000000000000",
+        "status": "enqueued"
+      }
+    ],
+    "execution_cancellation_targets": [
+      {
+        "execution_scope": {
+          "kind": "work_order",
+          "work_order_id": "wrk_01J00000000000000000000000"
+        },
+        "expected_owner_state_version": 1,
+        "action": "cancel",
+        "cancellation_intent_id": "cani_work_01J000000000000000000",
+        "outbox_message_id": "out_cani_work_01J00000000000000",
+        "status": "enqueued"
+      },
+      {
+        "execution_scope": {
+          "kind": "artifact_operation",
+          "artifact_operation_id": "aop_preview_01J000000000000000000"
+        },
+        "expected_owner_state_version": 4,
+        "action": "cancel",
+        "cancellation_intent_id": "cani_aop_01J0000000000000000000",
+        "outbox_message_id": "out_cani_aop_01J000000000000000",
+        "status": "enqueued"
+      },
+      {
+        "execution_scope": {
+          "kind": "artifact_ingest",
+          "artifact_ingest_session_id": "ing_01J00000000000000000000000"
+        },
+        "expected_owner_state_version": 4,
+        "action": "cancel",
+        "cancellation_intent_id": "cani_ing_01J0000000000000000000",
+        "outbox_message_id": "out_cani_ing_01J000000000000000",
+        "status": "enqueued"
+      }
+    ],
+    "fanout_status": "in_progress",
+    "accepted_at": "2026-07-16T09:10:02Z"
+  },
+  "expected_execution_scopes": [
+    {
+      "kind": "work_order",
+      "work_order_id": "wrk_01J00000000000000000000000"
+    },
+    {
+      "kind": "artifact_operation",
+      "artifact_operation_id": "aop_preview_01J000000000000000000"
+    },
+    {
+      "kind": "artifact_ingest",
+      "artifact_ingest_session_id": "ing_01J00000000000000000000000"
+    }
+  ],
+  "cases": [
+    {
+      "id": "revocation-receipt-digest-mismatch",
+      "mutation": "digest_mismatch"
+    },
+    {
+      "id": "revocation-missing-active-target",
+      "mutation": "missing_target"
+    },
+    {
+      "id": "revocation-duplicate-outbox",
+      "mutation": "duplicate_outbox"
+    },
+    {
+      "id": "revocation-completed-with-pending-target",
+      "mutation": "premature_completed"
+    },
+    {
+      "id": "revocation-receipt-authorization-mismatch",
+      "mutation": "authorization_mismatch"
+    }
+  ]
+}

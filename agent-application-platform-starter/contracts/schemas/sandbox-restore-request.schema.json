@@ -6,12 +6,20 @@
     { "$ref": "urn:agent-platform:sandbox-mutation-envelope:v1" },
     {
       "type": "object",
-      "required": ["protocol_version", "spec", "snapshot"],
+      "required": ["protocol_version", "spec", "snapshot", "target_provider_revision_id", "target_runtime_revision", "compatibility_decision"],
       "properties": {
         "protocol_version": { "const": "v1" },
         "spec": { "$ref": "urn:agent-platform:sandbox-spec:v1" },
-        "snapshot": { "$ref": "urn:agent-platform:sandbox-snapshot-manifest:v1" }
+        "snapshot": { "$ref": "urn:agent-platform:sandbox-snapshot-manifest:v1" },
+        "target_provider_revision_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "target_runtime_revision": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "compatibility_decision": { "$ref": "urn:agent-platform:compatibility-decision:v1" }
       }
     }
+  ],
+  "unevaluatedProperties": false,
+  "x-semantic-constraints": [
+    "compatibility_decision subject and digest match the snapshot and its source revision, the requested target ProviderRevision/runtime revision and profile",
+    "restore dispatch is fail-closed unless compatibility_decision.result is compatible and all bound evidence passes"
   ]
 }

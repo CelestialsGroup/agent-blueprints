@@ -3,49 +3,21 @@
   "$id": "urn:agent-platform:preview-session:v1",
   "title": "PreviewSession",
   "type": "object",
-  "required": [
-    "preview_session_id",
-    "artifact_id",
-    "version_id",
-    "status",
-    "preview_url",
-    "expires_at"
-  ],
+  "required": ["preview_session_id", "artifact_operation", "status", "expires_at"],
   "properties": {
-    "preview_session_id": {
-      "type": "string"
-    },
-    "artifact_id": {
-      "type": "string"
-    },
-    "version_id": {
-      "type": "string"
-    },
-    "status": {
-      "enum": [
-        "preparing",
-        "ready",
-        "failed",
-        "expired"
-      ]
-    },
-    "preview_url": {
-      "type": "string",
-      "format": "uri"
-    },
-    "expires_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "capabilities": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "error": {
-      "type": "object"
-    }
+    "preview_session_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "artifact_operation": { "$ref": "urn:agent-platform:artifact-operation:v1" },
+    "status": { "enum": ["preparing", "ready", "failed", "expired"] },
+    "preview_url": { "type": "string", "format": "uri" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "error": { "$ref": "urn:agent-platform:standard-error:v1" }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    { "if": { "properties": { "status": { "const": "ready" } }, "required": ["status"] }, "then": { "required": ["preview_url"] } },
+    { "if": { "properties": { "status": { "const": "failed" } }, "required": ["status"] }, "then": { "required": ["error"] } }
+  ],
+  "x-semantic-constraints": [
+    "PreviewSession is an expiring access projection over one ArtifactOperation and cannot become an execution fact source"
+  ]
 }

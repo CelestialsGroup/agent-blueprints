@@ -8,7 +8,7 @@
     "decision_id",
     "decision_digest",
     "tenant_id",
-    "work_order_id",
+    "execution_scope",
     "decision_point",
     "policy_bundle_digest",
     "commercial_authorization_id",
@@ -25,8 +25,8 @@
     "decision_id": { "type": "string", "minLength": 1 },
     "decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "tenant_id": { "type": "string", "minLength": 1 },
-    "work_order_id": { "type": "string", "minLength": 1 },
-    "decision_point": { "enum": ["run_admission", "runtime_command", "invocation", "runtime_session", "artifact", "delivery"] },
+    "execution_scope": { "$ref": "urn:agent-platform:execution-scope:v1" },
+    "decision_point": { "enum": ["run_admission", "runtime_command", "invocation", "runtime_session", "artifact", "artifact_operation", "delivery", "credential_access"] },
     "policy_bundle_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "commercial_authorization_id": { "type": "string", "minLength": 1 },
     "commercial_authorization_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
@@ -85,7 +85,7 @@
     "decision_digest is RFC 8785 JCS SHA-256 over the decision excluding decision_digest",
     "matching rules resolve order-independently as deny greater than ask greater than allow",
     "approval_required is the normalized outcome of ask and cannot override any matching deny",
-    "all evaluations belong to the declared decision_point and the complete admitted requirement set",
+    "all evaluations belong to the declared decision_point, execution scope and complete admitted requirement set",
     "expires_at is later than decided_at",
     "OS Sandbox and Gateway enforcement remain independent security boundaries after policy allow"
   ]

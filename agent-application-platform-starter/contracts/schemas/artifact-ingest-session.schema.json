@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:artifact-ingest-session:v1",
+  "title": "ArtifactIngestSession",
+  "type": "object",
+  "required": [
+    "ingest_session_id", "tenant_id", "client_app_id", "principal_context_digest",
+    "artifact_id", "request_digest", "commercial_authorization_id", "commercial_authorization_digest",
+    "policy_decision_id", "policy_decision_digest", "execution_budget_id", "execution_budget_digest",
+    "effective_permissions_id", "effective_permissions_digest",
+    "status", "state_version", "created_at", "expires_at", "updated_at"
+  ],
+  "properties": {
+    "ingest_session_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "client_app_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "principal_context_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "artifact_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "commercial_authorization_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "commercial_authorization_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "policy_decision_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "policy_decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "execution_budget_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "execution_budget_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "effective_permissions_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "effective_permissions_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "status": { "enum": ["created", "uploading", "uploaded", "scan_pending", "scanning", "ready_to_finalize", "finalized", "rejected", "expired"] },
+    "state_version": { "type": "integer", "minimum": 1 },
+    "confirmed_upload_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "scan_result_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "scan_result_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "artifact_version_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "artifact_version_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "rejection_reason": { "type": "string", "minLength": 1, "maxLength": 1000 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "completed_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "enum": ["uploaded", "scan_pending", "scanning", "ready_to_finalize", "finalized"] } }, "required": ["status"] },
+      "then": { "required": ["confirmed_upload_digest"] }
+    },
+    {
+      "if": { "properties": { "status": { "enum": ["ready_to_finalize", "finalized"] } }, "required": ["status"] },
+      "then": { "required": ["scan_result_id", "scan_result_digest"] }
+    },
+    {
+      "if": { "properties": { "status": { "const": "finalized" } }, "required": ["status"] },
+      "then": { "required": ["artifact_version_id", "artifact_version_digest", "completed_at"] }
+    },
+    {
+      "if": { "properties": { "status": { "const": "rejected" } }, "required": ["status"] },
+      "then": { "required": ["rejection_reason", "completed_at"] }
+    },
+    {
+      "if": { "properties": { "status": { "const": "expired" } }, "required": ["status"] },
+      "then": { "required": ["completed_at"] }
+    }
+  ],
+  "x-semantic-constraints": [
+    "state_version is contiguous and all transitions follow artifact-ingest-v1",
+    "status polling is tenant and principal authorized and resumes from durable Platform state whose CommercialAuthorization, PolicyDecision, ExecutionBudget and EffectivePermissions bindings were derived after Session allocation",
+    "ready_to_finalize requires a confirmed upload and an immutable passing scan result for the exact byte digest",
+    "only the Platform Artifact Ledger transaction may create ArtifactVersion and move ready_to_finalize to finalized",
+    "retries with the same request or confirmation digest are idempotent and conflicting digests fail with 409"
+  ]
+}

@@ -31,7 +31,8 @@
         "sandbox",
         "runtime_gateway",
         "capability_provider",
-        "execution_gateway"
+        "execution_gateway",
+        "credential_gateway"
       ]
     },
     "profiles": {

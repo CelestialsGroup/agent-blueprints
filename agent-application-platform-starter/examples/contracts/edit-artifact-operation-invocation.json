@@ -1,0 +1,25 @@
+{
+  "invocation_id": "inv_edit_01J000000000000000000",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "execution_scope": {
+    "kind": "artifact_operation",
+    "artifact_operation_id": "aop_edit_01J000000000000000000"
+  },
+  "artifact_operation_id": "aop_edit_01J000000000000000000",
+  "capability_id": "artifact.edit.html",
+  "capability_version": "1.0",
+  "provider_instance_id": "epi_artifact_editor",
+  "provider_resolution_id": "res_edit_01J000000000000000000",
+  "provider_revision_id": "epr_01J00000000000000000000000",
+  "idempotency_key": "invocation-edit-idempotency-0001",
+  "request_digest": "sha256:0d00e3513c18c24dca3ac85c0c39d3d09142d224bdd3e9ce52d1bf815da87a04",
+  "side_effect": "idempotent",
+  "status": "succeeded",
+  "current_attempt_id": "iat_edit_01J00000000000000000",
+  "result_reference": "artifact-operation-result://aop_edit_01J000000000000000000",
+  "created_at": "2026-07-16T09:06:02Z",
+  "updated_at": "2026-07-16T09:06:05Z",
+  "completed_at": "2026-07-16T09:06:05Z",
+  "attempt_count": 1,
+  "max_attempts": 3
+}

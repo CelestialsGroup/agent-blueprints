@@ -49,7 +49,7 @@ RunManifest 固化初始 Budget/Policy/Permissions 上限、ArtifactAccessRequir
 - Token 预算
 - Request/Response Usage
 - Model Allowlist
-- Tenant/WorkOrder 归属
+- Tenant、ClientApplication、Principal 与 WorkOrder/ArtifactOperation ExecutionScope 归属
 - 超时和取消
 - 内容与数据分类策略
 - BYOK Secret 临时授权

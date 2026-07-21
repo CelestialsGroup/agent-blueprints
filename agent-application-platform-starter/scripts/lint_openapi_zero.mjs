@@ -16,6 +16,7 @@ const documents = [
   "delivery-webhook-v1.yaml",
   "sandbox-provider-v1.yaml",
   "agent-runtime-provider-v1.yaml",
+  "credential-gateway-v1.yaml",
 ];
 
 if (!fs.existsSync(redocly) || !fs.existsSync(openapiDir)) {

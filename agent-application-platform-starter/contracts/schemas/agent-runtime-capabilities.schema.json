@@ -46,6 +46,23 @@
         "additionalProperties": false
       }
     },
+    "checkpoint_profiles": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": ["profile_id", "suite_id", "suite_version", "suite_digest"],
+        "properties": {
+          "profile_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "suite_id": { "const": "agent-runtime-provider" },
+          "suite_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+          "suite_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+        },
+        "additionalProperties": false
+      }
+    },
     "limits": {
       "type": "object",
       "properties": {
@@ -56,5 +73,18 @@
       "additionalProperties": false
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": { "features": { "contains": { "enum": ["runtime.checkpoint.export", "runtime.checkpoint.restore"] } } },
+        "required": ["features"]
+      },
+      "then": { "required": ["checkpoint_profiles"] }
+    }
+  ],
+  "x-semantic-constraints": [
+    "checkpoint export or restore is advertised only with content-addressed checkpoint Conformance Suite profiles",
+    "capability advertisement does not authorize cross-revision restore without an exact CompatibilityDecision"
+  ]
 }

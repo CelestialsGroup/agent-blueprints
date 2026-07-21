@@ -14,7 +14,10 @@
   "tenant_id": "ten_01J00000000000000000000000",
   "client_app_id": "html-product",
   "principal_context_digest": "sha256:bfb1d517260890b1df9744f3b1420dda3865f1a382e9735ecbeb895bbc8e5862",
-  "work_order_id": "wrk_01J00000000000000000000000",
+  "execution_scope": {
+    "kind": "work_order",
+    "work_order_id": "wrk_01J00000000000000000000000"
+  },
   "provider_resolution_id": "res_html_generate_01J0000000000000",
   "provider_instance_id": "hpi_html_anything",
   "provider_revision_id": "hpr_01J00000000000000000000000",
@@ -25,9 +28,9 @@
   "fencing_token": 1,
   "operation_contract_id": "urn:agent-platform:capability-invocation-request:v1",
   "operation_digest_profile": "rfc8785-request-excluding-request-digest-v1",
-  "operation_request_digest": "sha256:b934f4b9addb10a06f3b4cf50a7ae10f0928d0c3273849032f57921ae40c96ec",
-  "policy_decision_digest": "sha256:dd05f6fe93df0c9791f571cfdd7186baf76e2a476a140f6bda3f2d36b0ea535a",
-  "execution_budget_digest": "sha256:af98dd43e2a018f9df3a6bc97b17f4cea7ec2dae69d62f24e2cd367eefc3fba4",
-  "permissions_digest": "sha256:258682bb254cc4fafff41ccea043261e9c9381ca9a42e0efef0e3f20e9c1b70c",
-  "staging_grant_digest": "sha256:7e086f12b648800ef195e7f104095e102320db132164ee33cb27f97e81e16d01"
+  "operation_request_digest": "sha256:c2c79f63badb8a9a1cf72a3b80edf9c0ee2c13327f2518e9a8acbc0474d3484a",
+  "policy_decision_digest": "sha256:3df3cbac68dbdf5962a8363168db53d580189242b6d08ecdde012899f05a240e",
+  "execution_budget_digest": "sha256:a9965ff61c94ed866a5ddcc58156ec2c159cdb74c7dd445c338b7456ccf85598",
+  "permissions_digest": "sha256:d8bd8d96a7a79a2d7d8a49f56930fadc940d74c253004550ba27e461eda32e42",
+  "staging_grant_digest": "sha256:ff086f67572bb2077cf9ac522aff6210d1be81dbfbb2473c538e6649e830d877"
 }

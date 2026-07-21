@@ -1,11 +1,11 @@
 {
   "command_id": "rtcmd_safety_01J000000000000000000",
-  "command_digest": "sha256:46a45a39cfed6e6e5e9b7794db51c2ef4dde5d78bc8b8f4e09d32d87c1955db0",
+  "command_digest": "sha256:d239c8f2a31673b00eac7e91b5d576ff1593ce2c2642c48509db5c8356a33b3d",
   "runtime_run_id": "rtr_01J00000000000000000000000",
   "command_sequence": 3,
   "type": "cancel",
   "system_safety_control_id": "ssc_01J00000000000000000000000",
-  "system_safety_control_digest": "sha256:026f0ee0af8342a43db2c7466f3f09d66f40133c7a1a3bf29c747bf9fb9941ab",
+  "system_safety_control_digest": "sha256:3a8b5550fb8068cbf794b3adbd8edb6c76b280bd5fc382c329ad924b72393c0e",
   "invocation_id": "inv_runtime_safety_01J00000000000",
   "invocation_attempt_id": "iat_runtime_safety_01J0000000001",
   "fencing_token": 3,

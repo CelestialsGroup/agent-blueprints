@@ -15,7 +15,6 @@
     "source_cursor",
     "dedupe_key",
     "event_registry",
-    "conversation_id",
     "aggregate",
     "type",
     "occurred_at",
@@ -85,6 +84,7 @@
       "minLength": 1,
       "maxLength": 200
     },
+    "execution_scope": { "$ref": "urn:agent-platform:execution-scope:v1" },
     "work_order_id": {
       "type": "string",
       "minLength": 1
@@ -138,6 +138,10 @@
             "sandbox_operation",
             "runtime_session",
             "runtime_recording"
+            ,"artifact_operation"
+            ,"artifact_ingest"
+            ,"compatibility_decision"
+            ,"secret_grant"
           ]
         },
         "id": {
@@ -179,6 +183,18 @@
           "type": "string"
         },
         "runtime_recording_id": {
+          "type": "string"
+        },
+        "artifact_operation_id": {
+          "type": "string"
+        },
+        "artifact_ingest_session_id": {
+          "type": "string"
+        },
+        "compatibility_decision_id": {
+          "type": "string"
+        },
+        "secret_grant_id": {
           "type": "string"
         }
       },
@@ -276,18 +292,63 @@
           "metadata": { "not": { "required": ["provider_instance_id"] } }
         }
       }
+    },
+    {
+      "if": {
+        "properties": { "aggregate": { "properties": { "type": { "enum": ["conversation", "conversation_branch", "conversation_message", "workspace_revision"] } } } },
+        "required": ["aggregate"]
+      },
+      "then": { "required": ["conversation_id"] }
+    },
+    {
+      "if": {
+        "properties": { "aggregate": { "properties": { "type": { "const": "artifact_operation" } } } },
+        "required": ["aggregate"]
+      },
+      "then": {
+        "required": ["execution_scope"],
+        "properties": { "execution_scope": { "properties": { "kind": { "const": "artifact_operation" } } } },
+        "not": { "anyOf": [
+          { "required": ["conversation_id"] }, { "required": ["work_order_id"] },
+          { "required": ["turn_id"] }, { "required": ["branch_id"] },
+          { "required": ["input_message_id"] }, { "required": ["work_sequence"] }
+        ] }
+      }
+    },
+    {
+      "if": {
+        "properties": { "aggregate": { "properties": { "type": { "const": "artifact_ingest" } } } },
+        "required": ["aggregate"]
+      },
+      "then": {
+        "required": ["execution_scope"],
+        "properties": { "execution_scope": { "properties": { "kind": { "const": "artifact_ingest" } } } },
+        "not": { "anyOf": [
+          { "required": ["conversation_id"] }, { "required": ["work_order_id"] },
+          { "required": ["turn_id"] }, { "required": ["branch_id"] },
+          { "required": ["input_message_id"] }, { "required": ["work_sequence"] }
+        ] }
+      }
+    },
+    {
+      "if": {
+        "properties": { "aggregate": { "properties": { "type": { "const": "secret_grant" } } } },
+        "required": ["aggregate"]
+      },
+      "then": { "required": ["execution_scope"] }
     }
   ],
   "dependentRequired": {
-    "work_order_id": ["turn_id", "branch_id", "input_message_id", "work_sequence"],
-    "turn_id": ["work_order_id", "branch_id", "input_message_id", "work_sequence"],
-    "branch_id": ["work_order_id", "turn_id", "input_message_id", "work_sequence"],
-    "input_message_id": ["work_order_id", "turn_id", "branch_id", "work_sequence"],
-    "work_sequence": ["work_order_id", "turn_id", "branch_id", "input_message_id"]
+    "work_order_id": ["conversation_id", "turn_id", "branch_id", "input_message_id", "work_sequence"],
+    "turn_id": ["conversation_id", "work_order_id", "branch_id", "input_message_id", "work_sequence"],
+    "branch_id": ["conversation_id", "work_order_id", "turn_id", "input_message_id", "work_sequence"],
+    "input_message_id": ["conversation_id", "work_order_id", "turn_id", "branch_id", "work_sequence"],
+    "work_sequence": ["conversation_id", "work_order_id", "turn_id", "branch_id", "input_message_id"]
   },
   "x-semantic-constraints": [
-    "Conversation lifecycle events omit the complete Work context group",
+    "Conversation lifecycle events require conversation_id and omit the complete Work context group",
     "events for an executable Turn carry work_order_id, turn_id, branch_id, input_message_id and work_sequence as an all-or-none binding",
+    "ArtifactOperation and ArtifactIngest events carry their exact execution_scope and omit Conversation and Work context; SecretGrant events carry the grant execution_scope",
     "aggregate sequence and WorkOrder work_sequence are independent monotonic ledgers",
     "dedupe_key is RFC 8785 JCS SHA-256 over tenant_id, producer_id, source_stream_id and source_event_id",
     "Inbox uniqueness on tenant_id plus producer_id plus source_stream_id plus source_event_id rejects source retries before Projection",

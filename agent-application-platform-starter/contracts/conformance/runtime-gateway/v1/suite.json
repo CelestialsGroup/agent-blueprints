@@ -1,7 +1,7 @@
 {
   "suite_id": "runtime-gateway",
   "suite_version": "1.0.0",
-  "suite_digest": "sha256:1bb9b2721be4d75a8d90103738ab5bbdfeeec30a5d8fb10cb09e92926537c326",
+  "suite_digest": "sha256:80d4fe8e4edbaf698aa962a5647e372ea3e6fa43772348124a723bd832c2ef1d",
   "target_kind": "runtime_gateway",
   "profiles": [
     {
@@ -60,6 +60,12 @@
           "category": "recording",
           "evidence_type": "artifact",
           "description": "Recording checkpoints bind channel sequence to WorkOrder work_sequence."
+        },
+        {
+          "test_id": "port-forward-live-only",
+          "category": "recording",
+          "evidence_type": "test_log",
+          "description": "Port-forward frames remain live-only and are rejected from RuntimeRecording channels and chunk finalization."
         },
         {
           "test_id": "secret-redaction",

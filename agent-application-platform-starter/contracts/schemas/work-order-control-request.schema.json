@@ -45,6 +45,8 @@
   "x-semantic-constraints": [
     "a fresh single-use ExecutionGrant binds the exact control request excluding execution_grant",
     "append_input and interrupt compare expected_message_head_version while every action compares expected_active_work_version; neither participates in WorkspaceRevision CAS",
-    "append_input and interrupt allocate platform input_id and input_message_id and persist an immutable authorized control input before an AgentRuntime command is emitted"
+    "append_input and interrupt allocate platform input_id and input_message_id and persist an immutable authorized control input before an AgentRuntime command is emitted",
+    "all user pause, resume, cancel and approval decisions use this request and Grant path; no reduction-only or legacy route can authorize a user-originated Runtime command",
+    "work_order_id exactly equals the authenticated Agent Access path parameter before the ExecutionGrant is consumed or control state is mutated"
   ]
 }

@@ -3,7 +3,7 @@
   "attempt_id": "sat_exec_01",
   "fencing_token": 7,
   "idempotency_key": "sop_exec_01-idempotency-0001",
-  "request_digest": "sha256:d3a98945c08c93484b89410bd5c50aa69709f92152cf17bfad9d7173bbdf8f7c",
+  "request_digest": "sha256:d7c0878261b3c9563e14fa4b4cca5b2f960c0397c291312a6acd74592563479b",
   "deadline_at": "2026-07-16T10:30:00Z",
   "expected_generation": 4,
   "command": [
@@ -13,10 +13,14 @@
     "printf hello"
   ],
   "working_directory": "/workspace",
-  "secret_reference_ids": [],
+  "secret_reference_ids": [
+    "secret-ref-api-token-01"
+  ],
   "capture": {
     "stdout": true,
     "stderr": true,
     "max_bytes": 1048576
-  }
+  },
+  "secret_grant_id": "secg_01J00000000000000000000000",
+  "secret_grant_digest": "sha256:a376866d4be26035eb75b9f018c9fb3b2a1b6732d700a4c7a4529b669d0e8919"
 }

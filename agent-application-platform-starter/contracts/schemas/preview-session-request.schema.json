@@ -3,22 +3,17 @@
   "$id": "urn:agent-platform:preview-session-request:v1",
   "title": "CreatePreviewSessionRequest",
   "type": "object",
-  "required": [
-    "version_id"
-  ],
+  "required": ["operation_context"],
   "properties": {
-    "version_id": {
-      "type": "string"
-    },
-    "renderer_capability": {
-      "type": "string"
-    },
-    "profile": {
-      "type": "string"
-    },
+    "operation_context": { "$ref": "urn:agent-platform:artifact-operation-context:v1" },
     "options": {
-      "type": "object"
+      "type": "object", "maxProperties": 32,
+      "additionalProperties": { "type": ["string", "number", "integer", "boolean", "null"] }
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "operation_context.operation_kind equals preview and its source ArtifactVersion matches the path",
+    "a preview URL is issued only after the ArtifactOperation succeeds and remains an isolated, expiring Platform projection"
+  ]
 }

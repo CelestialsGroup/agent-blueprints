@@ -1,0 +1,78 @@
+{
+  "resolution_id": "res_edit_01J000000000000000000",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "client_app_id": "html-product",
+  "execution_scope": {
+    "kind": "artifact_operation",
+    "artifact_operation_id": "aop_edit_01J000000000000000000"
+  },
+  "principal_context_digest": "sha256:bfb1d517260890b1df9744f3b1420dda3865f1a382e9735ecbeb895bbc8e5862",
+  "identity_dependency": {
+    "mode": "principal_context",
+    "declaration_digest": "sha256:405b028e4388eb8c9259ee7f44c25663203449030c7beebe0a1041b5f7df4c19"
+  },
+  "capability": {
+    "id": "artifact.edit.html",
+    "version": "1.0",
+    "profile": "default"
+  },
+  "selected_provider_instance_id": "epi_artifact_editor",
+  "selected_provider_audience": "urn:agent-platform:provider-instance:epi_artifact_editor",
+  "routing_reason": "scenario_requirement",
+  "resolver_revision": {
+    "id": "provider-resolver",
+    "version": "1.0.0",
+    "digest": "sha256:ef30b70a32f4eb10c1ff2f9b68b5adaaeabe078ee9901362ff227bca163492d0"
+  },
+  "resolution_input_digest": "sha256:87a1a32b4f5bc5ea6128d9f60d6064165fc6a96594a8411c9814b028c410eeb5",
+  "candidate_evaluations": [
+    {
+      "provider_instance_id": "epi_artifact_editor",
+      "provider_revision_id": "epr_01J00000000000000000000000",
+      "provider_audience": "urn:agent-platform:provider-instance:epi_artifact_editor",
+      "outcome": "selected",
+      "reason_codes": [
+        "scenario_match"
+      ],
+      "evidence_digest": "sha256:e332bac55cbeec80515fd96a4405be0e0e59b77404f4ad67d06ad09989c40cae"
+    }
+  ],
+  "resolution_evidence_reference": "resolution-evidence/res_edit_01J000000000000000000",
+  "resolution_evidence_digest": "sha256:db9c6143a77ac7bb991406dde319a3df28b659e76ec5f9c08b0caed864b5806a",
+  "resolved_at": "2026-07-16T09:06:01Z",
+  "capability_definition_digest": "sha256:3636363636363636363636363636363636363636363636363636363636363636",
+  "selected_provider_revision": {
+    "provider_revision_id": "epr_01J00000000000000000000000",
+    "provider_revision_digest": "sha256:eea1f1794f27aebca6031b33ada617ff8ccf9b214412f0bfffd0abace39cc151",
+    "provider_kind": "editor",
+    "implementation": {
+      "implementation_id": "editor-provider.fixture",
+      "implementation_version": "1.0.0",
+      "distribution_type": "package",
+      "distribution_digest": "sha256:3737373737373737373737373737373737373737373737373737373737373737",
+      "manifest_digest": "sha256:3636363636363636363636363636363636363636363636363636363636363636",
+      "provenance": {
+        "source_revision": "2251cca58dd51fcc8576ed01cde49988693c245328d08664970b53b202b7059b",
+        "source_tree_digest": "sha256:de324776ca2fc656a882554433228bf24a5261c8edad31faa0d2ce0d2b4d5198",
+        "build_artifact_digest": "sha256:3737373737373737373737373737373737373737373737373737373737373737",
+        "sbom_digest": "sha256:0e16c0107b1b6a20c3c89ee5280e028b8adc9ffbf914c3d28c60c636adc4032c",
+        "provenance_statement_digest": "sha256:fdb92839e992ae3a10e6ba23b139877f2ebed04cdfc65767b4ea92a7fdeabfe8",
+        "build_system": "contract-fixture-build-v1"
+      }
+    },
+    "port": {
+      "protocol": "capability-provider",
+      "protocol_version": "v1",
+      "contract_digest": "sha256:82ab68c671d838e1c3f0e3e31368c985c118120c8c474d21fc648e312ce7d500",
+      "binding_digest": "sha256:3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a"
+    },
+    "configuration_digest": "sha256:3838383838383838383838383838383838383838383838383838383838383838",
+    "approved_permissions_digest": "sha256:3939393939393939393939393939393939393939393939393939393939393939",
+    "credential_binding_digest": "sha256:3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b",
+    "conformance_set_digest": "sha256:e25f6a6c98e79e23ef4bad1ea2c2cdc56412df4744e457d26a87536a94d76926",
+    "admission_decision_id": "pad_editor_01J000000000000000000",
+    "admission_decision_digest": "sha256:c9457d8a722c45c5afa057cd03dd519727b74be02b7fa03fb7ff60e1a4de02a8",
+    "admission_status": "certified"
+  },
+  "decision_digest": "sha256:f3feab9342327c76120ac152817cd85001f9bc06a01f7c1de7b5d811eda9c52f"
+}

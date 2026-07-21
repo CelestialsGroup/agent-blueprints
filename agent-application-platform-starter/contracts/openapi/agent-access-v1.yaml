@@ -39,6 +39,9 @@ paths:
     post:
       tags: [BusinessControl]
       operationId: revokeCommercialAuthorization
+      x-path-body-bindings:
+        - path_parameter: commercial_authorization_id
+          body_json_pointer: /commercial_authorization_id
       summary: Record an immutable Business authorization revocation
       description: |
         Only a sender-constrained, allowlisted Business workload may submit this
@@ -95,6 +98,7 @@ paths:
       tags: [Artifacts]
       operationId: createArtifactIngestSession
       summary: Create a constrained input Artifact upload session
+      description: The caller supplies identity, commercial authorization and upload intent only. The Platform allocates the session and derives its PolicyDecision, ExecutionBudget and EffectivePermissions before returning upload capability; caller-supplied admission facts are rejected.
       x-max-encoded-body-bytes: 65536
       security:
         - ServiceOAuth:
@@ -134,6 +138,93 @@ paths:
           $ref: '#/components/responses/InternalError'
         '503':
           $ref: '#/components/responses/Unavailable'
+
+  /v1/artifact-ingest-sessions/{ingest_session_id}:
+    parameters:
+      - name: ingest_session_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/Traceparent'
+    get:
+      tags: [Artifacts]
+      operationId: getArtifactIngestSession
+      summary: Read durable upload, scan and Platform finalization status
+      description: Upload storage state is not authoritative; this response is the tenant and principal authorized Platform aggregate.
+      security:
+        - ServiceOAuth:
+            - artifact:read
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      responses:
+        '200':
+          description: Current Artifact ingest state
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/artifact-ingest-session.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /v1/artifact-ingest-sessions/{ingest_session_id}/confirm:
+    parameters:
+      - name: ingest_session_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/Traceparent'
+      - $ref: '#/components/parameters/IdempotencyKey'
+    post:
+      tags: [Artifacts]
+      operationId: confirmArtifactIngestUpload
+      x-path-body-bindings:
+        - path_parameter: ingest_session_id
+          body_json_pointer: /ingest_session_id
+      summary: Confirm uploaded bytes and enqueue governed scanning
+      description: Confirmation is idempotent and never finalizes ArtifactVersion. Scan and finalization remain durable Platform-owned transitions.
+      x-max-encoded-body-bytes: 65536
+      security:
+        - ServiceOAuth:
+            - artifact:write
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/artifact-ingest-confirm-request.schema.json
+      responses:
+        '202':
+          description: Upload confirmed and scan enqueued or previously accepted result replayed
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/artifact-ingest-session.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
   /v1/work-orders:
     post:
@@ -219,42 +310,6 @@ paths:
         '503':
           $ref: '#/components/responses/Unavailable'
 
-  /v1/work-orders/{work_order_id}/cancel:
-    parameters:
-      - $ref: '#/components/parameters/WorkOrderId'
-      - $ref: '#/components/parameters/Traceparent'
-      - $ref: '#/components/parameters/CsrfToken'
-    post:
-      tags: [WorkOrders]
-      operationId: cancelWorkOrder
-      summary: Request idempotent WorkOrder cancellation
-      x-required-work-session-scopes: [work:cancel]
-      x-cookie-csrf-required: true
-      security:
-        - ServiceOAuth:
-            - work:cancel
-        - WorkSessionCookie: []
-        - WorkSessionBearer: []
-      responses:
-        '202':
-          description: Cancellation accepted
-          content:
-            application/json:
-              schema:
-                $ref: ../schemas/cancellation-result.schema.json
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '500':
-          $ref: '#/components/responses/InternalError'
-        '503':
-          $ref: '#/components/responses/Unavailable'
-
   /v1/work-orders/{work_order_id}/control:
     parameters:
       - $ref: '#/components/parameters/WorkOrderId'
@@ -264,12 +319,16 @@ paths:
     post:
       tags: [WorkOrders]
       operationId: controlWorkOrder
-      summary: Append an authorized control input to an existing WorkOrder
+      x-path-body-bindings:
+        - path_parameter: work_order_id
+          body_json_pointer: /work_order_id
+      summary: Submit the only authorized user control command for an existing WorkOrder
       description: |
-        This endpoint never creates a Turn or successor WorkOrder. append_input and
-        interrupt first persist the immutable control input, then emit an Agent Runtime
-        command referencing control_request_id. A fresh single-use ExecutionGrant binds
-        the exact request. Message and active-work CAS are independent from Workspace CAS.
+        This is the only user authority path for append_input, interrupt, pause, resume,
+        cancel and approval_decision. It never creates a Turn or successor WorkOrder.
+        The Platform first persists the immutable WorkOrderControlRequest and consumes a
+        fresh single-use ExecutionGrant, then emits Runtime commands that must reference
+        control_request_id. Message and active-work CAS remain independent from Workspace CAS.
       x-required-work-session-scopes: [work:control]
       x-cookie-csrf-required: true
       x-max-encoded-body-bytes: 1048576
@@ -472,79 +531,6 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-
-  /v1/work-orders/{work_order_id}/pause:
-    parameters:
-      - $ref: '#/components/parameters/WorkOrderId'
-      - $ref: '#/components/parameters/Traceparent'
-      - $ref: '#/components/parameters/CsrfToken'
-    post:
-      tags: [WorkOrders]
-      operationId: pauseWorkOrder
-      summary: Request a pausable WorkOrder to pause
-      x-required-work-session-scopes: [work:control]
-      x-cookie-csrf-required: true
-      security:
-        - ServiceOAuth:
-            - work:control
-        - WorkSessionCookie: []
-        - WorkSessionBearer: []
-      responses:
-        '202':
-          description: Pause request accepted
-          content:
-            application/json:
-              schema:
-                $ref: ../schemas/work-order-state.schema.json
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '500':
-          $ref: '#/components/responses/InternalError'
-        '503':
-          $ref: '#/components/responses/Unavailable'
-
-  /v1/work-orders/{work_order_id}/resume:
-    parameters:
-      - $ref: '#/components/parameters/WorkOrderId'
-      - $ref: '#/components/parameters/Traceparent'
-      - $ref: '#/components/parameters/CsrfToken'
-    post:
-      tags: [WorkOrders]
-      operationId: resumeWorkOrder
-      summary: Resume a paused or waiting WorkOrder
-      x-required-work-session-scopes: [work:control]
-      x-cookie-csrf-required: true
-      security:
-        - ServiceOAuth:
-            - work:control
-        - WorkSessionCookie: []
-        - WorkSessionBearer: []
-      responses:
-        '202':
-          description: Resume request accepted
-          content:
-            application/json:
-              schema:
-                $ref: ../schemas/work-order-state.schema.json
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '500':
-          $ref: '#/components/responses/InternalError'
-        '503':
-          $ref: '#/components/responses/Unavailable'
-
   /v1/work-orders/{work_order_id}/approvals:
     parameters:
       - $ref: '#/components/parameters/WorkOrderId'
@@ -574,53 +560,6 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
-
-  /v1/approvals/{approval_id}/decision:
-    parameters:
-      - $ref: '#/components/parameters/ApprovalId'
-      - $ref: '#/components/parameters/Traceparent'
-      - $ref: '#/components/parameters/IdempotencyKey'
-      - $ref: '#/components/parameters/CsrfToken'
-    post:
-      tags: [WorkOrders]
-      operationId: decideApproval
-      summary: Approve or reject a pending action
-      x-max-encoded-body-bytes: 65536
-      x-required-work-session-scopes: [approval:decide]
-      x-cookie-csrf-required: true
-      security:
-        - ServiceOAuth:
-            - work:control
-        - WorkSessionCookie: []
-        - WorkSessionBearer: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: ../schemas/approval-decision.schema.json
-      responses:
-        '200':
-          description: Updated Approval
-          content:
-            application/json:
-              schema:
-                $ref: ../schemas/approval-request.schema.json
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '413':
-          $ref: '#/components/responses/PayloadTooLarge'
-        '500':
-          $ref: '#/components/responses/InternalError'
-
   /v1/work-orders/{work_order_id}/runtime-sessions:
     parameters:
       - $ref: '#/components/parameters/WorkOrderId'
@@ -789,7 +728,11 @@ paths:
     post:
       tags: [Artifacts]
       operationId: createArtifactPreviewSession
+      x-path-body-bindings:
+        - path_parameter: artifact_id
+          body_json_pointer: /operation_context/artifact_id
       summary: Create a short-lived isolated Artifact preview
+      description: The caller supplies the Artifact, requested Capability and commercial inputs. The Platform allocates ArtifactOperation and derives Policy, Budget, Permissions, Gateway, ProviderResolution and Invocation bindings.
       x-max-encoded-body-bytes: 262144
       x-required-work-session-scopes: [artifact:read]
       x-cookie-csrf-required: true
@@ -836,7 +779,11 @@ paths:
     post:
       tags: [Artifacts]
       operationId: createArtifactEditSession
+      x-path-body-bindings:
+        - path_parameter: artifact_id
+          body_json_pointer: /operation_context/artifact_id
       summary: Create an Artifact EditSession
+      description: The caller supplies the Artifact, requested Capability and commercial inputs. The Platform allocates ArtifactOperation and derives Policy, Budget, Permissions, Gateway, ProviderResolution and Invocation bindings.
       x-max-encoded-body-bytes: 262144
       x-required-work-session-scopes: [artifact:edit]
       x-cookie-csrf-required: true
@@ -1015,7 +962,11 @@ paths:
     post:
       tags: [Artifacts]
       operationId: createArtifactConversion
+      x-path-body-bindings:
+        - path_parameter: artifact_id
+          body_json_pointer: /operation_context/artifact_id
       summary: Create an asynchronous Artifact conversion
+      description: The caller supplies the Artifact, requested Capability and commercial inputs. The Platform allocates ArtifactOperation and derives Policy, Budget, Permissions, Gateway, ProviderResolution and Invocation bindings.
       x-max-encoded-body-bytes: 1048576
       x-required-work-session-scopes: [artifact:export]
       x-cookie-csrf-required: true
@@ -1082,6 +1033,40 @@ paths:
             application/json:
               schema:
                 $ref: ../schemas/conversion-job.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /v1/artifact-operations/{artifact_operation_id}:
+    parameters:
+      - name: artifact_operation_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/Traceparent'
+    get:
+      tags: [Artifacts]
+      operationId: getArtifactOperation
+      summary: Read the authoritative Preview, Edit or Conversion execution aggregate
+      x-required-work-session-scopes: [artifact:read]
+      security:
+        - ServiceOAuth:
+            - artifact:read
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      responses:
+        '200':
+          description: ArtifactOperation state and Provider/Invocation bindings
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/artifact-operation.schema.json
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1260,6 +1245,61 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags: [Conversations]
+      operationId: createConversationBranch
+      x-path-body-bindings:
+        - path_parameter: conversation_id
+          body_json_pointer: /conversation_id
+      summary: Idempotently create or fork a branch at exact Message and WorkspaceRevision heads
+      description: |
+        mode=create creates an empty branch from the Conversation initial WorkspaceRevision.
+        mode=fork binds an exact source Branch, Message cut, WorkspaceRevision and both
+        source CAS versions. Debug rerun and parallel work use this command before creating
+        a fresh Turn, ExecutionGrant, ProviderResolution and RunManifest.
+      x-required-work-session-scopes: [conversation:write]
+      x-cookie-csrf-required: true
+      x-max-encoded-body-bytes: 262144
+      security:
+        - ServiceOAuth:
+            - conversation:create
+        - WorkSessionCookie: []
+        - WorkSessionBearer: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CsrfToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/conversation-branch-create-request.schema.json
+      responses:
+        '201':
+          description: Branch created or the identical idempotent result replayed
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/conversation-branch-created.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -1601,13 +1641,6 @@ components:
       in: path
       required: true
       description: Platform WorkOrder identifier.
-      schema:
-        type: string
-    ApprovalId:
-      name: approval_id
-      in: path
-      required: true
-      description: Approval identifier.
       schema:
         type: string
     ArtifactId:

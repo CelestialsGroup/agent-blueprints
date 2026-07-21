@@ -7,7 +7,7 @@
   "required": [
     "entry_id",
     "tenant_id",
-    "work_order_id",
+    "execution_scope",
     "meter_id",
     "meter_version",
     "meter_definition_digest",
@@ -25,7 +25,7 @@
   "properties": {
     "entry_id": { "type": "string", "minLength": 1 },
     "tenant_id": { "type": "string", "minLength": 1 },
-    "work_order_id": { "type": "string", "minLength": 1 },
+    "execution_scope": { "$ref": "urn:agent-platform:execution-scope:v1" },
     "agent_run_id": { "type": "string", "minLength": 1 },
     "runtime_run_id": { "type": "string", "minLength": 1 },
     "invocation_id": { "type": "string", "minLength": 1 },
@@ -109,22 +109,57 @@
       "if": { "properties": { "meter_source": { "const": "provider_reported" } }, "required": ["meter_source"] },
       "then": {
         "properties": { "producer": { "properties": { "type": { "const": "provider" } } } },
-        "required": ["provider_operation_id", "source_observation_id", "agent_run_id", "runtime_run_id"]
+        "required": ["provider_operation_id", "source_observation_id", "invocation_id"]
       }
     },
     {
       "if": { "properties": { "meter_source": { "const": "platform_metered" } }, "required": ["meter_source"] },
       "then": { "properties": { "producer": { "properties": { "type": { "const": "platform" } } } } }
+    },
+    {
+      "if": {
+        "properties": { "execution_scope": { "properties": { "kind": { "const": "artifact_operation" } } } },
+        "required": ["execution_scope"]
+      },
+      "then": {
+        "required": ["invocation_id"],
+        "not": {
+          "anyOf": [
+            { "required": ["agent_run_id"] },
+            { "required": ["runtime_run_id"] },
+            { "required": ["sandbox_operation_id"] }
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "execution_scope": { "properties": { "kind": { "const": "artifact_ingest" } } } },
+        "required": ["execution_scope"]
+      },
+      "then": {
+        "properties": { "meter_source": { "const": "platform_metered" } },
+        "not": {
+          "anyOf": [
+            { "required": ["provider_operation_id"] },
+            { "required": ["source_observation_id"] },
+            { "required": ["agent_run_id"] },
+            { "required": ["runtime_run_id"] },
+            { "required": ["invocation_id"] },
+            { "required": ["sandbox_operation_id"] }
+          ]
+        }
+      }
     }
   ],
   "x-semantic-constraints": [
     "entry_id and idempotency_key are unique within tenant_id",
     "meter unit equals the immutable MeterDefinition base_unit",
-    "correction chains are acyclic, preserve tenant and attribution, and never rewrite the corrected entry",
+    "correction chains are acyclic, preserve tenant, execution_scope and attribution, and never rewrite the corrected entry",
     "partial or estimated Usage is never silently treated as confirmed or zero",
     "evidence_reference resolves to immutable Platform-controlled evidence matching evidence_digest",
     "recorded_at is not earlier than occurred_at",
     "entry_id, idempotency_key and recorded_at are assigned by Platform; provider-reported entries bind a validated source_observation_id"
-    ,"provider-reported Runtime usage is attributed to one AgentRun and RuntimeRun so WorkOrder totals can be reconciled across a multi-agent tree"
+    ,"provider-reported WorkOrder Runtime usage is attributed to one AgentRun and RuntimeRun; ArtifactOperation usage is attributed to its unique Invocation; ArtifactIngest permits only Platform-metered evidence"
   ]
 }

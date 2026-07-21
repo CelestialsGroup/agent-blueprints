@@ -10,6 +10,7 @@
 - `conversations(conversation_id)` 主键；`(tenant_id, client_app_id, client_conversation_key)` 唯一。
 - `conversation_messages(message_id)` 主键；`(conversation_id, message_sequence)` 与 `(conversation_id, client_message_id)` 唯一；Message 仅允许追加。
 - `conversation_branches(conversation_id, branch_id)` 主键；Head Message/Sequence 与 Fork Point 必须引用同一 Conversation 的先前 Message；Workspace Head 必须引用同 Branch 的不可变 WorkspaceRevision ID/Digest。Message、Workspace Head 和 Active Work 分别使用 `message_head_version`、`workspace_head_version`、`active_work_version` CAS；`branch_version` 只作投影 ETag。
+- ConversationBranch Create/Fork 以 Tenant-derived ClientApplication + Conversation + `branch-create` + Idempotency Key Digest 唯一；相同 Key 不同 Request Digest 返回冲突。Fork 必须同时验证来源 Branch 的 Message Cut、`source_message_head_version`、WorkspaceRevision ID/Digest 与 `source_workspace_head_version`，再原子插入新 Branch、初始 Heads 和 `conversation.branch.created|forked` Outbox Event。
 - `workspace_revisions(workspace_revision_id)` 主键、`revision_digest` 唯一；`(workspace_id, branch_id, revision_number)` 唯一且从 1 连续；后续 Revision 引用同 Branch 紧邻前驱，Fork Revision 记录来源 Branch Revision，内容 Manifest ArtifactVersion 不可变并在准入时验证独立 WorkspaceContentManifest Schema。
 - `parent_message_id` 只能引用同一 Conversation 中 Sequence 更小的 Message；每个 Branch 默认最多一个活动 WorkOrder，不能用 Conversation 顶层单值表达并行分支。
 - Conversation Turn 事务原子完成 Message Sequence、WorkOrder、GrantConsumption、Workflow Start Outbox 和 CanonicalEvent。WorkOrderControl 事务验证客户端 `client_control_input_id` 后分配内部 `input_id/input_message_id`，只追加 ControlInput/GrantConsumption/Control Outbox，不创建新 Turn；Append/Interrupt 才比较 Message Head CAS，所有 Control 比较 Active Work CAS；`interrupt_and_enqueue` 通过取消意图与后继 WorkOrder 的明确关联闭合。
@@ -58,7 +59,7 @@
 - ProviderRevision 的 Implementation、BuildProvenance、Port Binding、配置、权限和凭据均按摘要不可变；`agent_runtime`/`sandbox`/`capability` kind 只能绑定对应稳定 Port。
 - BuildProvenance 的 Build Artifact Digest 必须等于 Implementation Distribution Digest；OCI 分发必须绑定 Image Digest。
 - ProviderResolution 的 Decision Digest 必须绑定 Resolver Revision、Resolution Input Digest、逐候选 Audience/结论及 Evidence；恰好一个 Candidate 为 Selected，并与 Snapshot 的 Instance/Revision 及 selected audience 相同。
-- ProviderResolution 行必须显式绑定 Tenant、ClientApplication 和 WorkOrder；`identity_dependency` 决定 PrincipalContextSnapshot Digest 是否必填，RLS 不得只依赖经 WorkOrder 间接推导的 Tenant。
+- ProviderResolution 行必须显式绑定 Tenant、ClientApplication 和闭合 `execution_scope`；当前允许 WorkOrder 或 ArtifactOperation，且所有外键必须指向该 Scope 的同一所有者。`identity_dependency` 决定 PrincipalContextSnapshot Digest 是否必填，RLS 不得只依赖经上层聚合间接推导的 Tenant。
 - `provider_admission_decisions(decision_id)` 主键；`(provider_revision_id, decision_sequence)` 唯一且仅允许追加。
 - Sequence 必须从 1 连续递增；`sequence=1` 不得有 Supersedes，`sequence>1` 必须引用同一 Revision 紧邻的上一 Decision；`revoked` 必须有 Reason。
 - 新 Run 只能选择最新决策为 `certified` 的 Revision；RunManifest 保留 Revision/Decision 摘要，后续撤销不改写历史 Run。
@@ -67,7 +68,7 @@
 - `runtime_command_user_control_fk`：携带 `authorized_control_request_id` 的 Command 必须外键绑定同 WorkOrder 的已授权 ControlRequest，action 相同；Append/Interrupt 还必须绑定已原子持久化的 `input_id + content_digest`。
 - `system_safety_control_append_only_idempotency`：`system_safety_controls(safety_control_id)` 主键，`control_digest` 唯一且内容不可变；相同 ID + Digest 重放幂等，冲突拒绝。创建控制事实、`work_order.safety_control.issued` 与 Control Outbox 必须同事务。
 - `system_safety_control_trigger_evidence_fk`：每个 SystemSafetyControl 的 `(evidence_contract_id, evidence_id, evidence_digest)` 必须解析到已持久接纳且摘要匹配的不可变 Platform/Business 证据；`observed_at <= issued_at`。原因与证据类型必须匹配，任意字符串、日志文本或 Provider 自报不能成为停止权限。
-- `commercial_authorization_revocation_fanout`：`commercial_authorization_revocation_receipts(revocation_id)` 仅追加并保存 Revocation Digest、认证 ClientApplication、解析后的 Tenant、外部 Tenant、CommercialAuthorization ID/Digest、接收时间和 Inbox 键；相同 ID + Digest 重放幂等，冲突拒绝。收据一旦提交，鉴权查询立即拒绝匹配的 WorkSession、RuntimeAuthorization/执行 Token 和 Gateway Token 新签发，Platform-owned Gateway 对既有 Token 也查询该 deny 索引。每个 Session 以唯一 `(revocation_id, session_id)` intent 递增/撤销 Session Version 并通知断开；每个仍活动且绑定该精确 Authorization 的 WorkOrder 原子进入取消意图、禁止新 Child Admission，并以唯一 `(revocation_id, work_order_id)` 创建 AgentRunControlFanout。Fanout 对每个活动 RuntimeRun 分配新 Fencing 和独立 SystemSafetyControl/Outbox；部分失败均可从收据恢复，不能依赖一次内存遍历。
+- `commercial_authorization_revocation_fanout`：`commercial_authorization_revocation_receipts(revocation_id)` 仅追加并保存 Receipt/Revocation Digest、认证 ClientApplication、解析后的 Tenant、CommercialAuthorization ID/Digest、同步 deny 生效时间和 Inbox 键；相同 ID + Digest 重放幂等，冲突拒绝。收据在同一事务枚举唯一 WorkSession intents 与全部活动 WorkOrder、ArtifactOperation、ArtifactIngest `ExecutionScope` targets，每项保存 Owner State CAS、reduction-only Cancel intent 和 Outbox ID。WorkOrder target 禁止新 Child Admission并创建 AgentRunControlFanout，对每个活动 RuntimeRun 分配新 Fencing/SystemSafetyControl；ArtifactOperation/Ingest 按各自状态机进入可恢复取消/拒绝终态。部分失败从收据重放到 `completed/already_terminal`，不能依赖一次内存遍历或把 `in_progress` 当撤销完成。
 - `runtime_command_system_safety_fk`：Pause/Cancel Command 在用户 ControlRequest 与 `system_safety_control_id + system_safety_control_digest` 间恰好选择一个来源。系统来源外键绑定由唯一 Platform Safety Controller 签发、且同 Tenant/WorkOrder/RuntimeRun/action 的不可变记录；Resume、Append、Interrupt、Approval、Checkpoint 禁止引用该表。
 - Agent Runtime Command 必须显式携带逻辑 `invocation_id`；其 `command_digest` 必须与短期 RuntimeInvocation Token 的 `operation_request_digest` 相等。Token 还必须匹配当前 Operation Contract/Profile、Tenant、ProviderRevision、WorkflowRun/AgentRun/RuntimeRun、RunManifest、RuntimeAuthorization、Attempt、Policy、Budget 和 Permissions；Status/Event Path 与 Cursor 使用正式读描述符摘要。`safety_control` 可以越过执行授权期限，但只能读取或 Cancel/Pause，不能继续执行。系统安全 Command 的 Token 还必须绑定相同 SystemSafetyControl ID/Digest，且 `nbf >= issued_at`。
 - CapabilityInvocationRequest 必须携带完整 ExecutionBudget/PolicyDecision/EffectivePermissions/CommercialAuthorizationBinding，并逐字段匹配 admitted ProviderResolution/Instance/Revision/Audience。Capability Token 按 `(invocation_attempt_id, authorization_sequence)` 连续，引用前驱 `jti`，分别绑定 Invoke/Status/Cancel/Event 操作摘要；`execution` 不越过原 deadline/CommercialAuthorization，后续 `safety_control` 只允许 Status/Cancel/Event 且不能使用过期 Artifact Grant 或产生新副作用。公共表和 Port 不要求 `plugin_id`。
@@ -76,6 +77,8 @@
 - `work_session_revocation_version`：WorkSession 的 `(tenant_id, session_id, session_version)` 与 `revoked_at` 是 Platform 权威状态；Cookie/Bearer Claims 的版本必须等于当前版本，商业授权失效、权限变化或显式撤销后旧连接和请求均 fail-closed。
 - Egress Token 必须匹配 `http_exchange` Operation、Request Contract/Profile、Tenant/ClientApplication、RuntimeRun/InvocationAttempt/Fencing、registered DestinationRevision ID/Digest/Class、Gateway Binding、RuntimeAuthorization、Request Digest、Policy/Budget/Permissions；EffectivePermissions 比较 `destination_class`，请求不得携带原始 Origin，DNS/Redirect/IP 再验证属于 Execution Gateway Conformance 责任。
 - RuntimeSessionRoute 只持久化 `gateway_route_id + provider_route_reference + provider_route_digest`；原始 Endpoint、Pod/VM、Cluster、Region 或 Cell 只能存在于 Gateway/Provider 私有存储，不能进入稳定内核表或用户 API。
+- CompatibilityEvidence 和 CompatibilityDecision 只允许 Platform 插入且不可更新；Decision 的 Subject Digest、Source/Target ProviderRevision 与 Runtime Revision、Profile、Suite ID/Version/Digest 和全部 Evidence 必须闭合。Restore Dispatch 只能引用 `compatible` Decision；缺失、失败、过期或任何字段不匹配均在 Provider 调用前拒绝。
+- SecretGrant 与 SecretGrantRevocation 仅追加。Grant 的 Tenant、Principal、ExecutionScope、ProviderRevision、Workload Identity、用途、Target 和 pre-grant Operation Intent Digest 必须与目标执行一致；单次消费与 Audit Identity 在材料交付前原子提交。Revocation/Expiration/Consumed 状态由同步 deny 索引检查，明文或 Delivery Handle 不得写入 PostgreSQL、Redis、Temporal、Queue、Event、Trace、Recording 或 Artifact。
 - AgentRuntimeRun 生命周期必须遵循 `agent-runtime-run-v1`；`cancel_requested` 不是取消证明，`outcome_unknown` 必须经 Invocation Ledger 对账，终态必须有 `completed_at`。
 - AgentRun 状态投影由已准入 Runtime Event 或对账证据更新。Root `succeeded` 只表示 Root Runtime 结束，不自动完成 WorkOrder；`completed` 要求 Root succeeded、所有 `required_for_work_order_completion=true` 的 Child succeeded，且不存在任何活动 Child。Required Child 失败按 Scenario 规则进入 `failed` 或有可用结果时进入 `partial`；`cancelled` 要求每个活动 Run 都有取消/未启动证明；`paused` 要求全部活动 Run 已确认暂停。终态 WorkOrder 下发现非终态 Child 必须进入孤儿对账并提高 Fencing，不能静默遗留。
 - TemplateRevision ID/摘要唯一且不可变；SelectedExperience 必须引用已准入 Catalog Revision 和已认证 Template ProviderRevision，并满足 Scenario `required_tags` 与 CommercialAuthorizationSnapshot Entitlement。
@@ -101,18 +104,91 @@
 - Provider 只提交按 ProviderRevision + InvocationAttempt + observation_id 幂等的 UsageObservation；Platform 验证后分配 TechnicalUsage `entry_id`、归属、Idempotency Key 和 `recorded_at`，ProviderReported Entry 必须引用源 Observation。
 - Final UsageReport 只允许 Confirmed/Corrected Entry；Partial/Estimated 不得静默结算为 Confirmed 或零。
 - Correction Entry 仅追加，引用同 Tenant/WorkOrder 的先前 Entry，Correction 链无环且不修改历史数量。
-- UsageReport 与 BusinessSettlementEnvelope 在同一 Tenant/WorkOrder/Reservation 内连续编号并引用紧邻前驱。Settlement Envelope 嵌入完整 Final/Correction UsageReport，绑定同一 CommercialAuthorization 和 QuotaReservation；Platform Envelope 不含价格或余额变更。
+- UsageReport 与 BusinessSettlementEnvelope 在同一 Tenant/ExecutionScope/Reservation 内连续编号并引用紧邻前驱。WorkOrder 与 ArtifactOperation 用量都进入同一 TechnicalUsage/Report/Settlement 模型；Settlement Envelope 嵌入完整 Final/Correction UsageReport，绑定同一 CommercialAuthorization 和 QuotaReservation，且不含价格或余额变更。
 
 ## Artifact 与 Delivery
 
 - `(artifact_id, version_number)` 唯一；ArtifactVersion 不可变。
 - Staging/Finalization 使用预期摘要/大小；未 Finalize 不可交付。
 - Provider Grant/EffectivePermissions 只允许 `read` 或 `stage_new_version`；Finalize 是 Platform 内部事务，Provider 结果只能引用 StagedArtifact。
+- ArtifactOperation 以 `(tenant_id, client_app_id, operation_kind, idempotency_key_digest)` 唯一并保存 Request Digest。公开请求不得携带 Platform 分配的 Operation ID、Policy/Budget/Permissions/Gateway/Provider 事实；事务先认证调用方输入并分配 Operation，再生成并以外键/摘要绑定这些 admission facts。状态版本连续遵循 `artifact-operation-v1`。ProviderResolution 与唯一 Invocation 必须使用同一 `artifact_operation` ExecutionScope、ProviderRevision 和 Request Digest；Preview/Edit/Conversion Projection 不得拥有 Dispatch/Retry/Terminal Truth。每个活动态取消都以 Expected Owner State CAS 原子保存 `cancel_requested`、不可变来源 ID/Digest、`cancellation_intent_id`、Outbox ID 和核心事件；已派发取消绑定唯一 Invocation 及其取消状态，未知结果绑定同一 Invocation ReconciliationCase，且取消对账不得重新派发执行。Operation 的已派发 `cancelled` 只能投影已提交或已对账的 Invocation `cancelled` 事实。
+- ArtifactIngestSession 以 `(tenant_id, client_app_id, artifact-ingest, idempotency_key_digest)` 唯一并保存 Request Digest。Create 请求不得携带 Policy/Budget/Permissions；Session 分配后由 Platform 生成同 Scope 的 PolicyDecision、ExecutionBudget、EffectivePermissions 并保存 ID/Digest。确认上传以 Session + Confirmation Digest 幂等，状态版本连续遵循 `artifact-ingest-v1`。只有绑定精确字节摘要的通过态 ScanResult 才能进入 `ready_to_finalize`，且只有 Platform Artifact Ledger 事务可原子创建一个 ArtifactVersion、推进 `finalized` 并写 Outbox。
 - DeliveryAttempt `(delivery_id, attempt_number)` 唯一；回调只能引用预注册 Target，不接受任意 URL。
+- WorkOrder 终态不等于用量已确认。DeliveryPackage 与 Settlement 在非空 Final/Correction UsageReport 和 NoUsageAttestation 之间恰好选择一个；缺失用量、Partial/Estimated 或未知测量保持待对账，绝不能推导为零。NoUsageAttestation 仅允许在没有任何 Runtime/Capability/Sandbox/Gateway Attempt 且没有 TechnicalUsageEntry 的可证明启动前失败、取消或准入拒绝中创建，并仅追加保存证据摘要。
 - `runtime_recordings(recording_id)` 主键；`(recording_id, channel, chunk_sequence)` 与 chunk_id 唯一。
 - Recording Chunk 的不可变 ArtifactVersion 与摘要/大小一致；`chunk_count`、Channel Sequence、`work_sequence`/时间范围和 Manifest 摘要必须闭合。
 - Recording Chunk 必须绑定 Redaction Profile/Evidence Digest；未脱敏 Frame 不得创建 ArtifactVersion 或进入任何持久介质。
 - RuntimeRecording 生命周期必须遵循 `runtime-recording-v1`；`ready` 只能绑定完整 Manifest，`failed` 必须绑定结构化错误，`deleted` 保留不可逆 Tombstone。
+
+## Phase 0 DDL 责任索引
+
+以下 ID 是 `contracts/semantic-constraints-v1.json` 的机器引用目标。0B Migration、Constraint 与集成证据必须使用这些精确 ID；本文件存在该 ID 只表示责任已分配，不表示实现已完成或通过。
+
+| Check ID | 必须由实现证明的责任 |
+|---|---|
+| `workflow_run_optional_unique_binding` | WorkOrder 到可空 WorkflowRun 的唯一绑定 |
+| `workflow_root_binding_unique_fk` | WorkflowRun 只存在一个 RootBinding |
+| `workflow_root_binding_deferred_atomic_insert` | RootBinding 循环外键延迟到事务提交校验 |
+| `workflow_root_binding_authority` | Root Agent 身份只由 RootBinding 决定 |
+| `agent_run_parent_root_depth_fk` | Child Parent/Root/Depth 同一执行树 |
+| `agent_run_spawn_admission_unique_fk` | Child AgentRun 唯一引用 Accepted Admission |
+| `work_order_shared_budget_ledger` | 全部 AgentRun 共用一个 WorkOrder 预算账本 |
+| `child_admission_topology_limits` | 深度、数量和并发在准入事务内硬限制 |
+| `child_spawn_idempotency_unique` | Spawn ID/Digest 重放幂等且冲突拒绝 |
+| `child_admission_single_decision` | 每个 Spawn 只有一个不可变准入结论 |
+| `child_admission_atomic_insert` | Accepted 资源与 Outbox/Event 原子创建 |
+| `child_admission_active_authorization_guard` | 活动状态与授权在 Child 准入锁内复核 |
+| `agent_run_control_fanout_authority_fk` | Fanout 绑定唯一用户或系统控制事实 |
+| `agent_run_control_fanout_target_snapshot` | 活动子树目标和 Fencing 事务快照闭合 |
+| `idempotency_scope_unique_index` | Tenant/Client/Operation/Key Digest 唯一 |
+| `idempotency_digest_conflict` | 同 Key 不同 Request Digest 冲突 |
+| `work_order_control_input_allocation_and_outbox` | 用户 Control、Grant 消费、输入分配与 Outbox 原子 |
+| `message_workspace_active_work_split_cas` | Message、Workspace 与 Active Work 独立 CAS |
+| `branch_etag_not_write_cas` | Branch ETag 不可充当写入 CAS |
+| `branch_fork_prior_message_fk` | Fork Message Cut 只引用来源 Branch 已存在消息 |
+| `branch_workspace_revision_fk` | Fork Workspace Head 绑定精确不可变 Revision |
+| `branch_one_active_work_order` | 每个 Branch 默认最多一个活动 WorkOrder |
+| `conversation_branch_create_idempotency` | Branch Create/Fork ID 与摘要幂等 |
+| `conversation_branch_create_atomic_outbox` | Branch、Heads 与核心 Event Outbox 原子 |
+| `workspace_revision_contiguous` | Workspace Revision Number 从 1 连续 |
+| `workspace_revision_immediate_predecessor` | 后续 Revision 引用紧邻前驱 |
+| `workspace_revision_fork_origin` | Fork Revision 记录精确来源 Revision |
+| `provider_revision_immutable` | ProviderRevision 摘要唯一且禁止更新删除 |
+| `provider_resolution_complete_input_evidence` | Resolver Input/Candidate/Evidence 完整持久化 |
+| `provider_resolution_immutable_evidence_lookup` | Resolution Evidence 引用可解析且摘要匹配 |
+| `tenant_client_work_order_provider_resolution` | 历史稳定 ID；实际约束为 Tenant/Client/ExecutionScope 所有权闭合 |
+| `runtime_command_append_only_idempotency` | Runtime Command 序列仅追加且摘要重放幂等 |
+| `runtime_command_user_control_fk` | 用户 Command 只引用同 Scope 已授权 ControlRequest |
+| `runtime_command_system_safety_fk` | 安全 Command 只引用同 Scope Reduction-only 事实 |
+| `runtime_command_child_admission_fk` | Child 决策 Command 绑定同树 Admission |
+| `system_safety_control_append_only_idempotency` | SafetyControl 仅追加且 ID/Digest 幂等 |
+| `system_safety_control_trigger_evidence_fk` | SafetyControl 触发证据真实可解析 |
+| `commercial_authorization_revocation_fanout` | 商业撤销同步拒绝新授权并可恢复 Fanout |
+| `work_session_revocation_version` | Session Version 撤销后旧连接 fail-closed |
+| `secret_grant_revocation_synchronous_deny` | SecretGrant 撤销在材料释放前同步生效 |
+| `egress_destination_revision_immutable` | Egress DestinationRevision 仅追加不可变 |
+| `aggregate_and_work_sequence_ledgers` | Aggregate/Work 序列分别连续唯一 |
+| `canonical_event_inbox_source_uniqueness` | Provider Source Identity Inbox 唯一 |
+| `conversation_event_omits_work_scope` | Conversation-only Event 禁止伪造 Work Scope |
+| `work_order_sequence_and_outbox` | WorkOrder 状态、序列和 Event Outbox 原子 |
+| `technical_usage_identity_uniqueness` | Usage Entry 与 Tenant Idempotency 唯一 |
+| `technical_usage_correction_chain` | Correction 同 Scope、无环、仅追加 |
+| `technical_usage_multi_agent_attribution` | Usage 精确归属 AgentRun/Attempt/Provider |
+| `usage_report_sequence_and_predecessor` | UsageReport Reservation 内连续前驱链 |
+| `usage_report_append_only_correction` | Final/Correction Report 只追加 |
+| `settlement_envelope_sequence` | Settlement Envelope Reservation 内连续前驱链 |
+| `work_order_terminal_usage_accounting` | 终态 WorkOrder 必须进入明确用量对账状态 |
+| `no_usage_absence_proof` | NoUsage 前证明不存在任何 Dispatch 与 Usage |
+| `no_usage_attestation_append_only` | NoUsageAttestation 内容寻址且仅追加 |
+| `delivery_usage_accounting_required` | Delivery 必须绑定 Report 或 Attestation，不把缺失当零 |
+| `artifact_operation_idempotency_scope` | ArtifactOperation Tenant/Client/Kind/Key 唯一 |
+| `artifact_operation_state_and_terminal_evidence` | Operation 状态连续且终态证据不可变 |
+| `artifact_operation_cancellation_outbox` | 撤销收据/内部触发器先持久化唯一 Intent 与派发 Outbox；消费者以 Owner CAS 原子提交 `cancel_requested`、来源绑定、核心事件和状态 Outbox，重放只消费同一 Intent |
+| `artifact_ingest_idempotency_scope` | Ingest Tenant/Client/Operation/Key 唯一 |
+| `artifact_ingest_digest_idempotency` | 上传确认 ID/Digest 重放幂等 |
+| `artifact_ingest_state_version` | Ingest 状态版本连续并遵循状态机 |
+| `artifact_ingest_platform_finalize_transaction` | ArtifactVersion Finalize 只由 Platform 原子提交 |
+| `compatibility_decision_platform_ownership` | CompatibilityDecision 只由 Platform 仅追加拥有 |
 
 ## Redis 禁止事项
 

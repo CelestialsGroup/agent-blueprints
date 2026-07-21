@@ -153,6 +153,24 @@
       "allowed_provider_kinds": [
         "agent_runtime"
       ]
+    },
+    {
+      "id": "artifact.edit.html",
+      "version": "1.0",
+      "profile": "default",
+      "definition_digest": "sha256:3636363636363636363636363636363636363636363636363636363636363636",
+      "allowed_provider_kinds": [
+        "editor"
+      ]
+    },
+    {
+      "id": "artifact.convert.pptx",
+      "version": "1.0",
+      "profile": "default",
+      "definition_digest": "sha256:3737373737373737373737373737373737373737373737373737373737373737",
+      "allowed_provider_kinds": [
+        "converter"
+      ]
     }
   ],
   "agent_runtime_capability": {
@@ -167,7 +185,7 @@
   "provider_revisions": [
     {
       "provider_revision_id": "spr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:76c77ff375ea0363c130a9fea147d1de328b8ba0f2483bb5ee4ac715a6cde16d",
+      "provider_revision_digest": "sha256:0cf63bc10a3d6e979a6a729485f4bca99435868a40e9cedce335f8058ff8360f",
       "provider_instance_id": "spi_native_sandbox",
       "configuration_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
       "approved_permissions_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
@@ -182,11 +200,11 @@
           "status": "passed",
           "report_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
           "suite_id": "sandbox-provider",
-          "suite_digest": "sha256:fd85653947c27723f6d260087f7d3eff49a2cd31306c3f153675ec79284928a9",
+          "suite_digest": "sha256:bdebf6fba1cd41072a46b47de451bf039485047e9a9478fad2d6c69ee8ff38b7",
           "suite_profile_id": "sandbox-core-v1"
         }
       ],
-      "conformance_set_digest": "sha256:4d8889e6063f7704daeea3dc0f3c2663614def9aa05c622a0a6c0201a2773c89",
+      "conformance_set_digest": "sha256:07f488c6a212045ad548c2c040f67f25e04674774682890135e4aca3fd7ad17a",
       "created_at": "2026-07-16T09:00:00Z",
       "implementation": {
         "implementation_id": "sandbox-provider.native",
@@ -213,7 +231,7 @@
     },
     {
       "provider_revision_id": "apr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:2052a6b7f9fb2ddf13eddf3fcdbfde056187e9cce1ed1f724141c4e0d452ed93",
+      "provider_revision_digest": "sha256:3a68cf38e4d0b5b66bf7078c6e248049e51d96444dc3cb8d5606e6b7a7b7a4cd",
       "provider_instance_id": "api_native_runtime",
       "configuration_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
       "approved_permissions_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
@@ -228,7 +246,7 @@
           "status": "passed",
           "report_digest": "sha256:1212121212121212121212121212121212121212121212121212121212121212",
           "suite_id": "agent-runtime-provider",
-          "suite_digest": "sha256:6bd5bee33974860ca312f94a2eb43cd634ccb9e200b4419d439277546875aa68",
+          "suite_digest": "sha256:9ef6d50df9f1032476ea2ada2c16d70c15d88368acf59794062df7dfce0bb356",
           "suite_profile_id": "governed-v1"
         },
         {
@@ -239,11 +257,11 @@
           "status": "passed",
           "report_digest": "sha256:1313131313131313131313131313131313131313131313131313131313131313",
           "suite_id": "agent-runtime-provider",
-          "suite_digest": "sha256:6bd5bee33974860ca312f94a2eb43cd634ccb9e200b4419d439277546875aa68",
+          "suite_digest": "sha256:9ef6d50df9f1032476ea2ada2c16d70c15d88368acf59794062df7dfce0bb356",
           "suite_profile_id": "runtime-general-v1"
         }
       ],
-      "conformance_set_digest": "sha256:1ace3ac48a5191e17ef65dc13748aa98f6a2da5caf5d57550698fc2e9668fdb9",
+      "conformance_set_digest": "sha256:6e5018b525469320d876710e602528108afc0962b78f7dbfe980e9457926fc95",
       "created_at": "2026-07-16T09:00:10Z",
       "implementation": {
         "implementation_id": "agent-runtime.native",
@@ -447,30 +465,120 @@
         "contract_digest": "sha256:82ab68c671d838e1c3f0e3e31368c985c118120c8c474d21fc648e312ce7d500",
         "binding_digest": "sha256:8585858585858585858585858585858585858585858585858585858585858585"
       }
+    },
+    {
+      "provider_revision_id": "epr_01J00000000000000000000000",
+      "provider_revision_digest": "sha256:eea1f1794f27aebca6031b33ada617ff8ccf9b214412f0bfffd0abace39cc151",
+      "provider_instance_id": "epi_artifact_editor",
+      "configuration_digest": "sha256:3838383838383838383838383838383838383838383838383838383838383838",
+      "approved_permissions_digest": "sha256:3939393939393939393939393939393939393939393939393939393939393939",
+      "credential_binding_digest": "sha256:3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b",
+      "provider_kind": "editor",
+      "conformance": [
+        {
+          "capability": "artifact.edit.html",
+          "version": "1.0",
+          "profile": "default",
+          "suite_version": "1.0.0",
+          "status": "passed",
+          "report_digest": "sha256:3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c",
+          "suite_id": "capability-provider",
+          "suite_digest": "sha256:261f8021c3a29cc0d21c1464ca5fa41166174c841278b6c4882459b78a86a791",
+          "suite_profile_id": "capability-core-v1"
+        }
+      ],
+      "conformance_set_digest": "sha256:e25f6a6c98e79e23ef4bad1ea2c2cdc56412df4744e457d26a87536a94d76926",
+      "created_at": "2026-07-16T09:00:22Z",
+      "implementation": {
+        "implementation_id": "editor-provider.fixture",
+        "implementation_version": "1.0.0",
+        "distribution_type": "package",
+        "distribution_digest": "sha256:3737373737373737373737373737373737373737373737373737373737373737",
+        "manifest_digest": "sha256:3636363636363636363636363636363636363636363636363636363636363636",
+        "provenance": {
+          "source_revision": "2251cca58dd51fcc8576ed01cde49988693c245328d08664970b53b202b7059b",
+          "source_tree_digest": "sha256:de324776ca2fc656a882554433228bf24a5261c8edad31faa0d2ce0d2b4d5198",
+          "build_artifact_digest": "sha256:3737373737373737373737373737373737373737373737373737373737373737",
+          "sbom_digest": "sha256:0e16c0107b1b6a20c3c89ee5280e028b8adc9ffbf914c3d28c60c636adc4032c",
+          "provenance_statement_digest": "sha256:fdb92839e992ae3a10e6ba23b139877f2ebed04cdfc65767b4ea92a7fdeabfe8",
+          "build_system": "contract-fixture-build-v1"
+        }
+      },
+      "port": {
+        "protocol": "capability-provider",
+        "protocol_version": "v1",
+        "contract_digest": "sha256:82ab68c671d838e1c3f0e3e31368c985c118120c8c474d21fc648e312ce7d500",
+        "binding_digest": "sha256:3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a"
+      }
+    },
+    {
+      "provider_revision_id": "cpr_01J00000000000000000000000",
+      "provider_revision_digest": "sha256:c2dc0203d833905965a8c9bbf60565d80e0ea0e934fadcc31e8d9b867d22f460",
+      "provider_instance_id": "cpi_html_to_pptx",
+      "configuration_digest": "sha256:3838383838383838383838383838383838383838383838383838383838383838",
+      "approved_permissions_digest": "sha256:3939393939393939393939393939393939393939393939393939393939393939",
+      "credential_binding_digest": "sha256:3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b",
+      "provider_kind": "converter",
+      "conformance": [
+        {
+          "capability": "artifact.convert.pptx",
+          "version": "1.0",
+          "profile": "default",
+          "suite_version": "1.0.0",
+          "status": "passed",
+          "report_digest": "sha256:3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c",
+          "suite_id": "capability-provider",
+          "suite_digest": "sha256:261f8021c3a29cc0d21c1464ca5fa41166174c841278b6c4882459b78a86a791",
+          "suite_profile_id": "capability-core-v1"
+        }
+      ],
+      "conformance_set_digest": "sha256:5a3d4baf78a6f481b97425eb809fa5464bafbec93a4d0a17372b3cb90c64ac48",
+      "created_at": "2026-07-16T09:00:22Z",
+      "implementation": {
+        "implementation_id": "converter-provider.fixture",
+        "implementation_version": "1.0.0",
+        "distribution_type": "package",
+        "distribution_digest": "sha256:3737373737373737373737373737373737373737373737373737373737373737",
+        "manifest_digest": "sha256:3636363636363636363636363636363636363636363636363636363636363636",
+        "provenance": {
+          "source_revision": "2251cca58dd51fcc8576ed01cde49988693c245328d08664970b53b202b7059b",
+          "source_tree_digest": "sha256:de324776ca2fc656a882554433228bf24a5261c8edad31faa0d2ce0d2b4d5198",
+          "build_artifact_digest": "sha256:3737373737373737373737373737373737373737373737373737373737373737",
+          "sbom_digest": "sha256:0e16c0107b1b6a20c3c89ee5280e028b8adc9ffbf914c3d28c60c636adc4032c",
+          "provenance_statement_digest": "sha256:fdb92839e992ae3a10e6ba23b139877f2ebed04cdfc65767b4ea92a7fdeabfe8",
+          "build_system": "contract-fixture-build-v1"
+        }
+      },
+      "port": {
+        "protocol": "capability-provider",
+        "protocol_version": "v1",
+        "contract_digest": "sha256:82ab68c671d838e1c3f0e3e31368c985c118120c8c474d21fc648e312ce7d500",
+        "binding_digest": "sha256:3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a"
+      }
     }
   ],
   "admission_decisions": [
     {
       "decision_id": "pad_01J00000000000000000000000",
       "provider_revision_id": "spr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:76c77ff375ea0363c130a9fea147d1de328b8ba0f2483bb5ee4ac715a6cde16d",
+      "provider_revision_digest": "sha256:0cf63bc10a3d6e979a6a729485f4bca99435868a40e9cedce335f8058ff8360f",
       "decision_sequence": 1,
       "decision": "certified",
       "evidence_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
       "decided_by": "principal:platform-provider-certifier",
       "decided_at": "2026-07-16T09:00:30Z",
-      "decision_digest": "sha256:ef8102fddb956f1acd2de688adf99799317024e1db00d9a233cff36e7a711117"
+      "decision_digest": "sha256:613efbebbeaca51754c6f5cd0b9537bf5353b52f9b8f5aa3e22862ca613f7e50"
     },
     {
       "decision_id": "pad_runtime_01J00000000000000000",
       "provider_revision_id": "apr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:2052a6b7f9fb2ddf13eddf3fcdbfde056187e9cce1ed1f724141c4e0d452ed93",
+      "provider_revision_digest": "sha256:3a68cf38e4d0b5b66bf7078c6e248049e51d96444dc3cb8d5606e6b7a7b7a4cd",
       "decision_sequence": 1,
       "decision": "certified",
       "evidence_digest": "sha256:1414141414141414141414141414141414141414141414141414141414141414",
       "decided_by": "principal:platform-provider-certifier",
       "decided_at": "2026-07-16T09:00:40Z",
-      "decision_digest": "sha256:c90d8c792004b5a8ade261b0404d803439f600d46c3f147083a3003628da1d10"
+      "decision_digest": "sha256:29b5fe381ac4f2a63f1ef18e7020366956b3e9555f42a0186a5a7e072f2178a6"
     },
     {
       "decision_id": "pad_tool_01J000000000000000000",
@@ -515,6 +623,28 @@
       "decided_by": "principal:platform-provider-certifier",
       "decided_at": "2026-07-16T09:00:55Z",
       "decision_digest": "sha256:fc8c956761f4834cc371c9788cca254101c9166428ab129308c15cb2464e865e"
+    },
+    {
+      "decision_id": "pad_editor_01J000000000000000000",
+      "provider_revision_id": "epr_01J00000000000000000000000",
+      "provider_revision_digest": "sha256:eea1f1794f27aebca6031b33ada617ff8ccf9b214412f0bfffd0abace39cc151",
+      "decision_sequence": 1,
+      "decision": "certified",
+      "evidence_digest": "sha256:3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d",
+      "decided_by": "principal:platform-provider-certifier",
+      "decided_at": "2026-07-16T09:00:52Z",
+      "decision_digest": "sha256:c9457d8a722c45c5afa057cd03dd519727b74be02b7fa03fb7ff60e1a4de02a8"
+    },
+    {
+      "decision_id": "pad_converter_01J000000000000000000",
+      "provider_revision_id": "cpr_01J00000000000000000000000",
+      "provider_revision_digest": "sha256:c2dc0203d833905965a8c9bbf60565d80e0ea0e934fadcc31e8d9b867d22f460",
+      "decision_sequence": 1,
+      "decision": "certified",
+      "evidence_digest": "sha256:3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d",
+      "decided_by": "principal:platform-provider-certifier",
+      "decided_at": "2026-07-16T09:00:52Z",
+      "decision_digest": "sha256:fe7701a792c0bba405b69b4d7299d0c04b501148ccd23f3734c1335d036aece5"
     }
   ],
   "commercial_authorization": {

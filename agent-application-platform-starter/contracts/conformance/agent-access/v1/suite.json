@@ -1,7 +1,7 @@
 {
   "suite_id": "agent-access",
   "suite_version": "1.0.0",
-  "suite_digest": "sha256:bf1fa328984b835fd69a86db40bb4cab6a3738e49f71c6abddeb68a9a3d56425",
+  "suite_digest": "sha256:3ad4a9cd75833c4311fa47f01774f54a4afdf95a2cf2e73685a1570b9ab7c128",
   "target_kind": "agent_access",
   "profiles": [
     {
@@ -20,10 +20,16 @@
           "description": "ClientApplication and Platform Tenant are derived server-side from the authenticated workload plus external tenant mapping; body or path identifiers cannot override TenantContext."
         },
         {
+          "test_id": "resource-path-request-binding",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "Every declared x-path-body-bindings pair is compared before authorization consumption, object lookup or mutation; mismatched path and request identities are rejected without revealing cross-object existence."
+        },
+        {
           "test_id": "commercial-authorization-revocation-ingest",
           "category": "security",
           "evidence_type": "trace",
-          "description": "A sender-constrained Business revocation is accepted only when path, external tenant, client, bounded issue time and stored CommercialAuthorization ID/digest match. Receipt and fan-out intent are durable and idempotent; matching WorkSessions and new execution/Gateway authorization fail closed immediately, Platform Gateways deny new side effects from old authorization, and every affected active run receives a newly fenced SystemSafetyControl cancellation."
+          "description": "A sender-constrained Business revocation is accepted only when path, external tenant, client, bounded issue time and stored CommercialAuthorization ID/digest match. The digested receipt durably enumerates WorkSession revocation plus every active WorkOrder, ArtifactOperation and ArtifactIngest cancellation intent with CAS and Outbox identity. Authorization and Platform Gateways deny immediately, while replayable fan-out drives WorkOrder SystemSafetyControl and non-Work execution owners to cancelled or already-terminal closure."
         },
         {
           "test_id": "encoded-body-limits",

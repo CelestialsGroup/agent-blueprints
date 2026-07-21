@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:no-usage-attestation:v1",
+  "title": "NoUsageAttestation",
+  "description": "Platform confirmation that no metered effect occurred. Absence of a UsageReport is never equivalent to this record.",
+  "type": "object",
+  "required": [
+    "attestation_id", "attestation_digest", "tenant_id", "execution_scope",
+    "commercial_authorization_id", "commercial_authorization_digest",
+    "quota_reservation_id", "quota_reservation_digest", "reason",
+    "evidence_reference", "evidence_digest", "confirmed_at"
+  ],
+  "properties": {
+    "attestation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "attestation_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "execution_scope": { "$ref": "urn:agent-platform:execution-scope:v1" },
+    "commercial_authorization_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "commercial_authorization_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "quota_reservation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "quota_reservation_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "reason": { "enum": ["failed_before_dispatch", "cancelled_before_dispatch", "admission_rejected_before_dispatch"] },
+    "evidence_reference": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "evidence_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "confirmed_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "attestation_digest is RFC 8785 JCS SHA-256 over the attestation excluding attestation_digest",
+    "the execution scope has no dispatched Runtime, Capability, Sandbox or Gateway Attempt and no TechnicalUsageEntry before confirmation",
+    "an unknown, partial or estimated measurement cannot produce a NoUsageAttestation and remains unsettled until reconciled",
+    "the attestation is append-only and tenant, execution_scope, CommercialAuthorization and QuotaReservation bindings match the terminal owner"
+  ]
+}

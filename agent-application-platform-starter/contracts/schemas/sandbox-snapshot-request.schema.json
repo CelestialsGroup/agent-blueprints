@@ -31,6 +31,7 @@
             "application_quiesced"
           ]
         },
+        "compatibility_profile": { "type": "string", "minLength": 1, "maxLength": 200 },
         "include_paths": {
           "type": "array",
           "items": {
@@ -41,5 +42,9 @@
       }
     }
   ],
-  "unevaluatedProperties": false
+  "unevaluatedProperties": false,
+  "x-semantic-constraints": [
+    "compatibility_profile is required when the resulting snapshot is intended for any target other than the exact source ProviderRevision and runtime revision",
+    "a snapshot request cannot declare itself portable or compatible; only a later Platform CompatibilityDecision backed by Suite evidence can do so"
+  ]
 }

@@ -1,0 +1,8 @@
+{
+  "ingest_session_id": "ing_01J00000000000000000000000",
+  "upload_object_id": "quarantine/object/ing-01",
+  "media_type": "application/pdf",
+  "size_bytes": 4096,
+  "content_digest": "sha256:40d373b4910150e8845bba107f985bb8502deeefbfc22a549a7288fa5a8213b8",
+  "request_digest": "sha256:8c5e71ec64fd52de671910847c5cd59efe11038e67d1f2d08de999b6ff7af202"
+}

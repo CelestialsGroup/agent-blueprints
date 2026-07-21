@@ -7,7 +7,7 @@
   "required": [
     "jti", "iss", "sub", "aud", "iat", "nbf", "exp", "authority_mode", "operation", "authorization_sequence",
     "predecessor_jti", "renewal_reason", "tenant_id", "client_app_id", "principal_context_digest",
-    "work_order_id", "provider_resolution_id", "provider_instance_id", "provider_revision_id",
+    "execution_scope", "provider_resolution_id", "provider_instance_id", "provider_revision_id",
     "capability_id", "capability_version", "invocation_id", "invocation_attempt_id", "fencing_token",
     "invocation_request_digest", "operation_contract_id", "operation_digest_profile",
     "operation_request_digest", "policy_decision_digest",
@@ -31,7 +31,10 @@
     "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "client_app_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "principal_context_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
-    "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "execution_scope": { "allOf": [
+      { "$ref": "urn:agent-platform:execution-scope:v1" },
+      { "not": { "properties": { "kind": { "const": "artifact_ingest" } }, "required": ["kind"] } }
+    ] },
     "provider_resolution_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "provider_instance_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "provider_revision_id": { "type": "string", "minLength": 1, "maxLength": 200 },

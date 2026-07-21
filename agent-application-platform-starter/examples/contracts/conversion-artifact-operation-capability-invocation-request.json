@@ -1,0 +1,200 @@
+{
+  "protocol_version": "v1",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "client_app_id": "html-product",
+  "principal_context_digest": "sha256:bfb1d517260890b1df9744f3b1420dda3865f1a382e9735ecbeb895bbc8e5862",
+  "invocation_id": "inv_conversion_01J000000000000000000",
+  "invocation_attempt_id": "iat_conversion_01J00000000000000000",
+  "fencing_token": 1,
+  "idempotency_key": "artifact-conversion-provider-dispatch-0001",
+  "request_digest": "sha256:9ce6a5f0b89c0142ee8b626bc78868d725e28c58987944a6026e2e83b62ec676",
+  "provider_revision_id": "cpr_01J00000000000000000000000",
+  "capability": {
+    "id": "artifact.convert.pptx",
+    "version": "1.0",
+    "profile": "default",
+    "input_schema_digest": "sha256:3434343434343434343434343434343434343434343434343434343434343434",
+    "output_schema_digest": "sha256:3535353535353535353535353535353535353535353535353535353535353535"
+  },
+  "deadline_at": "2026-07-16T09:20:00Z",
+  "input": {
+    "artifact_id": "art_01J00000000000000000000000",
+    "source_version_id": "ver_01J00000000000000000000000",
+    "source_version_digest": "sha256:8f849c3f87818d7b11c3de39155576cb941f7157d73daf22162fa996b58ee919",
+    "operation_options": {
+      "target_media_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "options": {
+        "page_size": "wide"
+      }
+    }
+  },
+  "input_artifact_grants": [
+    {
+      "grant_id": "artg_conversion_01J00000000000000000",
+      "tenant_id": "ten_01J00000000000000000000000",
+      "artifact_id": "art_01J00000000000000000000000",
+      "version_id": "ver_01J00000000000000000000000",
+      "artifact_digest": "sha256:8f849c3f87818d7b11c3de39155576cb941f7157d73daf22162fa996b58ee919",
+      "permissions": [
+        "read"
+      ],
+      "issued_at": "2026-07-16T09:06:01Z",
+      "expires_at": "2026-07-16T09:20:00Z",
+      "execution_scope": {
+        "kind": "artifact_operation",
+        "artifact_operation_id": "aop_conversion_01J000000000000000000"
+      },
+      "gateway_binding": {
+        "gateway_kind": "artifact",
+        "gateway_id": "artifact-gateway",
+        "route_id": "artifact-route-work-order",
+        "protocol_version": "v1",
+        "contract_id": "urn:agent-platform:openapi:artifact-gateway:v1",
+        "contract_digest": "sha256:b3cc84d2a5e07df5e0773c15d9a8a0824f2da6087cbc8833193d5cff8bdf6097",
+        "binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
+        "audience": "agent-artifact-gateway"
+      },
+      "grant_digest": "sha256:e352f56c1bba055a6e7d06b7ad95dc6141c18b534449bff41ba38ffc0bcf2f3b",
+      "invocation_id": "inv_conversion_01J000000000000000000",
+      "invocation_attempt_id": "iat_conversion_01J00000000000000000"
+    }
+  ],
+  "trace_context": {
+    "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+  },
+  "provider_resolution_id": "res_conversion_01J000000000000000000",
+  "provider_instance_id": "cpi_html_to_pptx",
+  "commercial_authorization": {
+    "commercial_authorization_id": "cauth_01J00000000000000000000000",
+    "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
+    "expires_at": "2026-07-16T09:30:00Z"
+  },
+  "execution_budget": {
+    "budget_id": "bud_conversion_01J000000000000000000",
+    "budget_digest": "sha256:1844dbb71a449bde28ef8f6709fd0589cbf4faf751ab19bee44caab064b406f6",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "limits": {
+      "max_input_tokens": 100000,
+      "max_output_tokens": 20000,
+      "max_model_requests": 200,
+      "max_sandbox_seconds": 1800,
+      "max_network_bytes": 104857600,
+      "max_storage_bytes": 104857600,
+      "max_artifact_count": 20,
+      "max_conversion_count": 3,
+      "max_agent_runs": 1,
+      "max_agent_depth": 1,
+      "max_parallel_agent_runs": 1
+    },
+    "policies": {
+      "model_gateway_required": false,
+      "tool_gateway_required": false,
+      "egress_gateway_required": false,
+      "external_communication": false,
+      "require_approval_for": [
+        "external_communication"
+      ],
+      "data_classification": "confidential"
+    },
+    "created_at": "2026-07-16T09:06:01Z",
+    "expires_at": "2026-07-16T09:30:00Z",
+    "execution_scope": {
+      "kind": "artifact_operation",
+      "artifact_operation_id": "aop_conversion_01J000000000000000000"
+    }
+  },
+  "policy_decision": {
+    "decision_id": "pol_conversion_01J000000000000000000",
+    "decision_digest": "sha256:3aa7fbaa69d73f386f351b3ae76d808697ed5c07d8e49b3531d33513ca8efb3b",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "policy_bundle_digest": "sha256:6161616161616161616161616161616161616161616161616161616161616161",
+    "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
+    "execution_budget_digest": "sha256:1844dbb71a449bde28ef8f6709fd0589cbf4faf751ab19bee44caab064b406f6",
+    "evaluations": [
+      {
+        "subject_kind": "artifact",
+        "subject_id": "artifact.convert.pptx",
+        "action": "allow",
+        "source": "commercial",
+        "rule_digest": "sha256:cfae01934d6eb8d215bf1cba7a65c86274d856055e433b167343c775c89f35ed"
+      }
+    ],
+    "outcome": "allow",
+    "effective_permissions_digest": "sha256:4172549f41704cc093211ed06fc744a55e24d9bd74a2349522ef44e476880c73",
+    "decided_at": "2026-07-16T09:06:01Z",
+    "expires_at": "2026-07-16T09:30:00Z",
+    "decision_point": "artifact_operation",
+    "commercial_authorization_id": "cauth_01J00000000000000000000000",
+    "execution_budget_id": "bud_conversion_01J000000000000000000",
+    "execution_scope": {
+      "kind": "artifact_operation",
+      "artifact_operation_id": "aop_conversion_01J000000000000000000"
+    }
+  },
+  "effective_permissions": {
+    "permissions_id": "perm_conversion_01J00000000000000000",
+    "permissions_digest": "sha256:4172549f41704cc093211ed06fc744a55e24d9bd74a2349522ef44e476880c73",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "model": {
+      "allowed_model_profiles": []
+    },
+    "tool": {
+      "allowed_capabilities": [
+        "artifact.convert.pptx"
+      ]
+    },
+    "artifact": {
+      "read": true,
+      "stage_new_version": true
+    },
+    "egress": {
+      "mode": "none",
+      "allowed_destination_classes": []
+    },
+    "sandbox_slots": [],
+    "execution_scope": {
+      "kind": "artifact_operation",
+      "artifact_operation_id": "aop_conversion_01J000000000000000000"
+    }
+  },
+  "output_staging_grant": {
+    "staging_grant_id": "stgg_conversion_01J0000000000000000",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "execution_scope": {
+      "kind": "artifact_operation",
+      "artifact_operation_id": "aop_conversion_01J000000000000000000"
+    },
+    "invocation_id": "inv_conversion_01J000000000000000000",
+    "invocation_attempt_id": "iat_conversion_01J00000000000000000",
+    "staging_session_id": "stg_conversion_01J00000000000000000",
+    "gateway_binding": {
+      "gateway_kind": "artifact",
+      "gateway_id": "artifact-gateway",
+      "route_id": "artifact-route-work-order",
+      "protocol_version": "v1",
+      "contract_id": "urn:agent-platform:openapi:artifact-gateway:v1",
+      "contract_digest": "sha256:b3cc84d2a5e07df5e0773c15d9a8a0824f2da6087cbc8833193d5cff8bdf6097",
+      "binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
+      "audience": "agent-artifact-gateway"
+    },
+    "allowed_media_types": [
+      "text/html"
+    ],
+    "max_object_count": 20,
+    "max_object_bytes": 4194304,
+    "max_total_bytes": 8388608,
+    "issued_at": "2026-07-16T09:06:01Z",
+    "expires_at": "2026-07-16T09:20:00Z",
+    "grant_digest": "sha256:f77bc414c8553ad85b16e6b6ca7b7f6ce2ddede29a1de0841645a2bf2d764407"
+  },
+  "execution_scope": {
+    "kind": "artifact_operation",
+    "artifact_operation_id": "aop_conversion_01J000000000000000000"
+  },
+  "execution_owner_request_digest": "sha256:8b6d2ff7e6f713d3fcdced00e64999bcf170c2856fb8e415079e4259f0f4cfff",
+  "secret_reference_ids": [
+    "secret-ref-artifact-preview-api-01"
+  ],
+  "secret_grant_id": "secg_aop_01J000000000000000000000",
+  "secret_grant_digest": "sha256:34d953afb2adf58f983ead4833153150826b27a9f3da421ee1c9f7d47dd3cba5"
+}

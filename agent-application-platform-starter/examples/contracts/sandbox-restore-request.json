@@ -3,7 +3,7 @@
   "attempt_id": "sat_restore_01",
   "fencing_token": 12,
   "idempotency_key": "sop_restore_01-idempotency-0001",
-  "request_digest": "sha256:b8670e4b540eb1a7003c88b465b631bd77ee5f83016f53223de51fb7388f9607",
+  "request_digest": "sha256:87cd7f4c49f4d49ec84b8a4f10c77eec4322ad3daf2060ea1e4364c37fc3672e",
   "deadline_at": "2026-07-16T10:30:00Z",
   "protocol_version": "v1",
   "spec": {
@@ -95,18 +95,88 @@
   "snapshot": {
     "snapshot_id": "ssn_01J00000000000000000000000",
     "sandbox_id": "sbx_01J00000000000000000000000",
-    "provider_revision_id": "spr_01J00000000000000000000000",
     "level": "workspace",
-    "portable": true,
     "digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
     "size_bytes": 4096,
     "content_reference": "artifact://sandbox-snapshots/ssn_01",
     "created_at": "2026-07-16T10:00:00Z",
-    "compatibility": {
-      "architecture": "arm64",
-      "runtime_profile": "hardened",
-      "runtime_version": "1.0.0",
-      "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    "source_provider_revision_id": "spr_01J00000000000000000000000",
+    "source_runtime_revision": "sandbox-runtime-1.0.0",
+    "portability": "portable",
+    "compatibility_profile": "sandbox-snapshot-workspace-v1",
+    "compatibility_decision": {
+      "decision_id": "cmpd_sandbox_01J0000000000000000",
+      "decision_digest": "sha256:6b8afdb90addb489c85a4a61796a6ab7f4ef22bd7449f6e04fe3b313cb3707a2",
+      "subject_kind": "sandbox_snapshot",
+      "subject_id": "ssn_01J00000000000000000000000",
+      "subject_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+      "source_provider_revision_id": "spr_01J00000000000000000000000",
+      "source_runtime_revision": "sandbox-runtime-1.0.0",
+      "target_provider_revision_id": "spr_01J00000000000000000000000",
+      "target_runtime_revision": "sandbox-runtime-1.1.0",
+      "compatibility_profile": "sandbox-snapshot-workspace-v1",
+      "evidence": [
+        {
+          "evidence_id": "cevd_sandbox_01J00000000000000000",
+          "evidence_digest": "sha256:b4b185d31932e82af5f84ea47eefb492b7fc1adacf7d2c3506e3023f71e2e220",
+          "subject_kind": "sandbox_snapshot",
+          "source_provider_revision_id": "spr_01J00000000000000000000000",
+          "source_runtime_revision": "sandbox-runtime-1.0.0",
+          "target_provider_revision_id": "spr_01J00000000000000000000000",
+          "target_runtime_revision": "sandbox-runtime-1.1.0",
+          "suite_id": "sandbox-provider",
+          "suite_version": "1.0.0",
+          "suite_digest": "sha256:bdebf6fba1cd41072a46b47de451bf039485047e9a9478fad2d6c69ee8ff38b7",
+          "profile_id": "sandbox-snapshot-workspace-v1",
+          "test_run_reference": "conformance://sandbox/snapshot-workspace/run-01",
+          "test_run_digest": "sha256:6f99249ce5e02786e44c702052f969abcad1a069c5a111b74f7ef330c49f002c",
+          "result": "passed",
+          "completed_at": "2026-07-16T10:05:00Z"
+        }
+      ],
+      "result": "compatible",
+      "reason_codes": [
+        "suite_passed"
+      ],
+      "decided_at": "2026-07-16T10:06:00Z"
     }
+  },
+  "target_provider_revision_id": "spr_01J00000000000000000000000",
+  "target_runtime_revision": "sandbox-runtime-1.1.0",
+  "compatibility_decision": {
+    "decision_id": "cmpd_sandbox_01J0000000000000000",
+    "decision_digest": "sha256:6b8afdb90addb489c85a4a61796a6ab7f4ef22bd7449f6e04fe3b313cb3707a2",
+    "subject_kind": "sandbox_snapshot",
+    "subject_id": "ssn_01J00000000000000000000000",
+    "subject_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+    "source_provider_revision_id": "spr_01J00000000000000000000000",
+    "source_runtime_revision": "sandbox-runtime-1.0.0",
+    "target_provider_revision_id": "spr_01J00000000000000000000000",
+    "target_runtime_revision": "sandbox-runtime-1.1.0",
+    "compatibility_profile": "sandbox-snapshot-workspace-v1",
+    "evidence": [
+      {
+        "evidence_id": "cevd_sandbox_01J00000000000000000",
+        "evidence_digest": "sha256:b4b185d31932e82af5f84ea47eefb492b7fc1adacf7d2c3506e3023f71e2e220",
+        "subject_kind": "sandbox_snapshot",
+        "source_provider_revision_id": "spr_01J00000000000000000000000",
+        "source_runtime_revision": "sandbox-runtime-1.0.0",
+        "target_provider_revision_id": "spr_01J00000000000000000000000",
+        "target_runtime_revision": "sandbox-runtime-1.1.0",
+        "suite_id": "sandbox-provider",
+        "suite_version": "1.0.0",
+        "suite_digest": "sha256:bdebf6fba1cd41072a46b47de451bf039485047e9a9478fad2d6c69ee8ff38b7",
+        "profile_id": "sandbox-snapshot-workspace-v1",
+        "test_run_reference": "conformance://sandbox/snapshot-workspace/run-01",
+        "test_run_digest": "sha256:6f99249ce5e02786e44c702052f969abcad1a069c5a111b74f7ef330c49f002c",
+        "result": "passed",
+        "completed_at": "2026-07-16T10:05:00Z"
+      }
+    ],
+    "result": "compatible",
+    "reason_codes": [
+      "suite_passed"
+    ],
+    "decided_at": "2026-07-16T10:06:00Z"
   }
 }

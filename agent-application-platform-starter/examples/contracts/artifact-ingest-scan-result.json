@@ -1,0 +1,13 @@
+{
+  "scan_result_id": "iscan_01J0000000000000000000000",
+  "scan_result_digest": "sha256:ca29a06a0d55d4b89c8ba7f2b31a804c8b6d2330773f4528ef541e29f76aabd1",
+  "ingest_session_id": "ing_01J00000000000000000000000",
+  "content_digest": "sha256:40d373b4910150e8845bba107f985bb8502deeefbfc22a549a7288fa5a8213b8",
+  "scanner_provider_revision_id": "spr_scanner_01J0000000000000000000",
+  "scanner_profile": "artifact-malware-and-content-v1",
+  "scanner_suite_digest": "sha256:b913fb78bd24bba26d8ca14d53bb3cbafe32a95b46e0ad3814c7d46f93476aa0",
+  "result": "passed",
+  "evidence_reference": "scan-evidence://ing-01",
+  "evidence_digest": "sha256:f0f29b277e097955e6ee7c70d2c07d880982a3dcf04b9b500a71a13fdbd34cd2",
+  "completed_at": "2026-07-16T09:10:50Z"
+}

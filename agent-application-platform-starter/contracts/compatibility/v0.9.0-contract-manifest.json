@@ -2,20 +2,26 @@
   "baseline": "v0.9.0",
   "status": "candidate-not-frozen",
   "digest_profile": "RFC8785-JCS+SHA-256; Strict-I-JSON-v2.0",
-  "resource_count": 248,
-  "resources_digest": "sha256:b38dcf6a2f836156779a0dc49ccca52690f97dcfea1b55d3c245beb1dcfdb679",
+  "resource_count": 271,
+  "resources_digest": "sha256:7a5f2d42ae7c166580a4166972fe52f46f76ee75db46eb7f8456b4a7b7779a0f",
   "resources": [
     {
       "path": "contracts/conformance/agent-access/v1/suite.json",
       "kind": "governance",
       "id": "contracts/conformance/agent-access/v1/suite.json",
-      "digest": "sha256:ae3a4270c592305ad0b2cf19968ce6765442479f11284d8761c722e1901eab46"
+      "digest": "sha256:89d9e0fa220fc520b771aee782b75778fb7dbe562cc130a462de918fda31ff3a"
     },
     {
       "path": "contracts/conformance/capability/v1/suite.json",
       "kind": "governance",
       "id": "contracts/conformance/capability/v1/suite.json",
       "digest": "sha256:6ef778bbe349ec8f139b10b140dabd8b01d175a33489197b1216ef3aebdc3d48"
+    },
+    {
+      "path": "contracts/conformance/credential/v1/suite.json",
+      "kind": "governance",
+      "id": "contracts/conformance/credential/v1/suite.json",
+      "digest": "sha256:8636ae9ea25695ab72d69cc2684e7233975601a0501c115ad90bb723eb7330ec"
     },
     {
       "path": "contracts/conformance/execution-gateway/v1/suite.json",
@@ -27,19 +33,19 @@
       "path": "contracts/conformance/runtime-gateway/v1/suite.json",
       "kind": "governance",
       "id": "contracts/conformance/runtime-gateway/v1/suite.json",
-      "digest": "sha256:9e8cec651300a7330e166de02102340a786e2ca924ccc1e396dab55b2095c137"
+      "digest": "sha256:d110672fe3cbb86377252871888f234fc44afae946ff09324cc6345377c682bc"
     },
     {
       "path": "contracts/conformance/runtime/v1/suite.json",
       "kind": "governance",
       "id": "contracts/conformance/runtime/v1/suite.json",
-      "digest": "sha256:a6132e22a9fb5b78919c7b8602ee59e76b70fc27b3a91be600401762a6271e3f"
+      "digest": "sha256:268ff34c549e01f223201262f2dab96d2718146aea383a8180d8cbf26a52eb44"
     },
     {
       "path": "contracts/conformance/sandbox/v1/suite.json",
       "kind": "governance",
       "id": "contracts/conformance/sandbox/v1/suite.json",
-      "digest": "sha256:cf581aac9637dd9d239241a4373c92d4582a59e67e99b45401015c602e63690e"
+      "digest": "sha256:d8d7f42c51e2ea472853a2c44f7a28c571ad3bee75585548e916b4690d18e205"
     },
     {
       "path": "contracts/event-types/agent-runtime-core-v1.json",
@@ -51,13 +57,13 @@
       "path": "contracts/event-types/platform-core-v1.json",
       "kind": "governance",
       "id": "contracts/event-types/platform-core-v1.json",
-      "digest": "sha256:cf5f6949fcba179c383a9c8366a3f9db3542a55562c69d877a2496399618864f"
+      "digest": "sha256:d673a84511ef252c0b2c11c3caf8b0a858b9499cf5582394b4e803749df15dc4"
     },
     {
       "path": "contracts/openapi/agent-access-v1.yaml",
       "kind": "openapi",
       "id": "contracts/openapi/agent-access-v1.yaml",
-      "digest": "sha256:7a53970025d410ea4297c3cb7fabb5ef9bcbdc8a108cec6b4bc206524dec692e"
+      "digest": "sha256:63c9e468912ee9935d0036f3db4a272b9338cae2a9c3687f788cd6204c7c2950"
     },
     {
       "path": "contracts/openapi/agent-runtime-provider-v1.yaml",
@@ -76,6 +82,12 @@
       "kind": "openapi",
       "id": "contracts/openapi/capability-provider-v1.yaml",
       "digest": "sha256:82ab68c671d838e1c3f0e3e31368c985c118120c8c474d21fc648e312ce7d500"
+    },
+    {
+      "path": "contracts/openapi/credential-gateway-v1.yaml",
+      "kind": "openapi",
+      "id": "contracts/openapi/credential-gateway-v1.yaml",
+      "digest": "sha256:5520f833ab8d9cd02996d6bf661cc36abe7804ad7407c5ef5258ae01b9e4ea94"
     },
     {
       "path": "contracts/openapi/delivery-webhook-v1.yaml",
@@ -153,13 +165,13 @@
       "path": "contracts/schemas/agent-runtime-capabilities.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:agent-runtime-capabilities:v1",
-      "digest": "sha256:2388c3749f4041e126bb28ac2a5074a6666cf8ea7407510d0c6f48387456e463"
+      "digest": "sha256:af2e64722ae20dccca1b03043c40b88e8669d73edc6d8478be7a3f2ddcef3e7f"
     },
     {
       "path": "contracts/schemas/agent-runtime-checkpoint-manifest.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:agent-runtime-checkpoint-manifest:v1",
-      "digest": "sha256:ac9266131ee7d27a80645f37e8805115869a96046583bc3d1af81218f6c5386f"
+      "digest": "sha256:6d295d0f5a7985ad43f9fb367e3231b2850d6a9ddabac0a51a49f5f165ca8557"
     },
     {
       "path": "contracts/schemas/agent-runtime-command.schema.json",
@@ -267,25 +279,55 @@
       "path": "contracts/schemas/artifact-gateway-token-claims.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:artifact-gateway-token-claims:v1",
-      "digest": "sha256:e3244cca2d2e5dee8929139d7c1ed565e355c3780c6e5541c6a35d6f03b6b361"
+      "digest": "sha256:6c4d672a6644de5971cd9a6dcc0307ff8caf7e3874174e392ef5863227cb7f82"
     },
     {
       "path": "contracts/schemas/artifact-grant.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:artifact-grant:v1",
-      "digest": "sha256:0a184c333c8f2c871982e56ffbdf5ddb1dfa95692e1f229371cbc38efac978c5"
+      "digest": "sha256:5965aa1c9555e20ea0d958bbaba9ae0d4e8fc9c95a2e293e306d269c3d76f2fb"
+    },
+    {
+      "path": "contracts/schemas/artifact-ingest-confirm-request.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:artifact-ingest-confirm-request:v1",
+      "digest": "sha256:9e8a1ae57c2acf1d893d9bbe652948330f6ea4b26c61e783018294b653f00d19"
+    },
+    {
+      "path": "contracts/schemas/artifact-ingest-finalize-command.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:artifact-ingest-finalize-command:v1",
+      "digest": "sha256:5b5e23e54bd04d9c145c227eadabcbfc3d67ec5675c48898162cc61a530fdbab"
     },
     {
       "path": "contracts/schemas/artifact-ingest-request.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:artifact-ingest-request:v1",
-      "digest": "sha256:c2d8d7426ba4555b1dad017ce902c387879a3b16186ed4218a9bd077e07bdb23"
+      "digest": "sha256:4d644bf62b1726dc50f940f2ea70a45e4610789629f8db7c1a950e7ed47ee4f8"
     },
     {
       "path": "contracts/schemas/artifact-ingest-response.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:artifact-ingest-response:v1",
-      "digest": "sha256:497e6a2d01c88482fad988c152e931e6b317b6325fccfcb9b8a01e8be7bd518c"
+      "digest": "sha256:5888f118a7a2dd48fa1509a92de833470c9ba0154cba1ed011588f8dd1a01f60"
+    },
+    {
+      "path": "contracts/schemas/artifact-ingest-scan-result.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:artifact-ingest-scan-result:v1",
+      "digest": "sha256:cc1b87bf71ce5eef8188ac521c7a819afb114681dae2e0479d8bf1ed5c554960"
+    },
+    {
+      "path": "contracts/schemas/artifact-ingest-session.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:artifact-ingest-session:v1",
+      "digest": "sha256:c1e1f8dcef56f6be54a3c4b98e14a88c5dafe1070f1129a5b36786f5f45c2dfc"
+    },
+    {
+      "path": "contracts/schemas/artifact-ingest-status-operation-descriptor.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:artifact-ingest-status-operation-descriptor:v1",
+      "digest": "sha256:9b4a9061f6b5966bed4030c043ce01f513f09febd7211830055f331a41f96c84"
     },
     {
       "path": "contracts/schemas/artifact-metadata.schema.json",
@@ -294,10 +336,22 @@
       "digest": "sha256:7b98dde8ca0bbafdb87af6d7a1df0d5c726ba378b50de1f60c8afc9f08909912"
     },
     {
+      "path": "contracts/schemas/artifact-operation-context.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:artifact-operation-context:v1",
+      "digest": "sha256:a0fcc4c20b300becc5a32f78db9654ca001b280cd1ff8af9f545e0e09a172b81"
+    },
+    {
+      "path": "contracts/schemas/artifact-operation.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:artifact-operation:v1",
+      "digest": "sha256:bc14112b3594bc7c270e966a5bb34cf0c33b84b5122cc6e6307dad769d09ac4e"
+    },
+    {
       "path": "contracts/schemas/artifact-read-operation-descriptor.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:artifact-read-operation-descriptor:v1",
-      "digest": "sha256:2dd9b860adbf61e503a320ee61d6770408ebbd117ac7fc68659a7c071d637534"
+      "digest": "sha256:726c301b43e2918a5ea57e41e3283c990c1190d0673afd7031ae4c1f3654ac7c"
     },
     {
       "path": "contracts/schemas/artifact-reference.schema.json",
@@ -315,7 +369,7 @@
       "path": "contracts/schemas/artifact-staging-grant.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:artifact-staging-grant:v1",
-      "digest": "sha256:541e7abe36aad62d2d9b396c91874d9c275220598cec38195be0b24502639870"
+      "digest": "sha256:9473273acfaa4108aaf5d264e475f20585869171648215eb98148c8a05f52712"
     },
     {
       "path": "contracts/schemas/artifact-staging-object-request.schema.json",
@@ -363,7 +417,7 @@
       "path": "contracts/schemas/business-settlement-envelope.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:business-settlement-envelope:v1",
-      "digest": "sha256:b7d4fc7119c3211e226023c9ed85381db15c4ead3178860e777376b65175336c"
+      "digest": "sha256:04c4670b4c194c65140c27c236a74b0d8b5f4d45c53c6f1a68347a8401dc9033"
     },
     {
       "path": "contracts/schemas/callback-registration.schema.json",
@@ -387,7 +441,7 @@
       "path": "contracts/schemas/canonical-event-v2.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:canonical-event:v2",
-      "digest": "sha256:6ed5799ce54648ee139093dbbddaffb5d9e35b22596dd4df8e015513d28b6b4c"
+      "digest": "sha256:484a991c04da07961043ac97048f6789e6270c579baaf353907b85f4da481b5b"
     },
     {
       "path": "contracts/schemas/capability-cancellation-request.schema.json",
@@ -435,7 +489,7 @@
       "path": "contracts/schemas/capability-invocation-request.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:capability-invocation-request:v1",
-      "digest": "sha256:84bebfdd53c4ef0fd557b756605746720507127c00eee3198bcceba45c2efcbe"
+      "digest": "sha256:835431e4b5b30f8f579af54cdda507b19737d29ae4375f1c40a06ec8ca95c17f"
     },
     {
       "path": "contracts/schemas/capability-invocation-result.schema.json",
@@ -453,7 +507,7 @@
       "path": "contracts/schemas/capability-invocation-token-claims.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:capability-invocation-token-claims:v1",
-      "digest": "sha256:2b63b860de72980bd829756550d283ba6866819177bf5e18c0483a442a53d665"
+      "digest": "sha256:66e0b3735296a0ef5ffae6fb574b5aa5ddc4bd5ccd43bbd4d548a5e8524153dd"
     },
     {
       "path": "contracts/schemas/capability-status-operation-descriptor.schema.json",
@@ -489,13 +543,13 @@
       "path": "contracts/schemas/commercial-authorization-revocation-accepted.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:commercial-authorization-revocation-accepted:v1",
-      "digest": "sha256:2d06fb63bfe654908de74156b85f39a5f1c2650695e1cfe9c6a3363bb2f8e280"
+      "digest": "sha256:1ce412678972fd09f6fa0b3076b362c1246fabeefcc86f3a006c98a89e9a1ec7"
     },
     {
       "path": "contracts/schemas/commercial-authorization-revocation.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:commercial-authorization-revocation:v1",
-      "digest": "sha256:4abe5db9179e42cfe962d34cbc803f86ad3bc5012a59656055e1d87c20a3c69f"
+      "digest": "sha256:1501ddcd2221ba24142e0f2e5c03272820380b4a6a76735b8c7eccdb8143e2e1"
     },
     {
       "path": "contracts/schemas/commercial-authorization-snapshot.schema.json",
@@ -504,16 +558,40 @@
       "digest": "sha256:b86ec3df121768fccf26a065db56d13c008f50a758d5c1afb31cdafe43986d88"
     },
     {
+      "path": "contracts/schemas/compatibility-decision.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:compatibility-decision:v1",
+      "digest": "sha256:51fb0b14dead91531f3abb3ae8a7330a91f44ec0a4afedf7ed7ec329193b6f89"
+    },
+    {
+      "path": "contracts/schemas/compatibility-evidence.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:compatibility-evidence:v1",
+      "digest": "sha256:f0c59b0c5f026bc772885e6c88a499083de10934ef9023a092efabc01c8e106a"
+    },
+    {
       "path": "contracts/schemas/conformance-suite-manifest.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:conformance-suite-manifest:v1",
-      "digest": "sha256:fc51054c54f994bacd4dea6b747733a0e4de48c075c9ef8a400a21f90456f567"
+      "digest": "sha256:e443ada6f1ae0b983695472ccd9f28ba2cd7909687fd2038a381dbae3c8f439e"
     },
     {
       "path": "contracts/schemas/context-package.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:context-package:v1",
       "digest": "sha256:74d5a35556f8060f4239381136cb92c6d1a90241edc04b34c32371d541ef1faa"
+    },
+    {
+      "path": "contracts/schemas/conversation-branch-create-request.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:conversation-branch-create-request:v1",
+      "digest": "sha256:ae3887dd61f70dda0d0dcdee8642fd4c415aeb855858cc0f3fd5028125fa9eb9"
+    },
+    {
+      "path": "contracts/schemas/conversation-branch-created.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:conversation-branch-created:v1",
+      "digest": "sha256:5fedf1559ce99b3f56a1a5c5e71c160d3758c68c1983065c90249b7823dc8d84"
     },
     {
       "path": "contracts/schemas/conversation-branch-page.schema.json",
@@ -573,19 +651,43 @@
       "path": "contracts/schemas/conversion-job.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:conversion-job:v1",
-      "digest": "sha256:236e6cd14752848d0e0d36a044ab3403d9e1e41ae2bd5cd9d03809438a926529"
+      "digest": "sha256:ab5f94b1dd991367790d96b4d9c319b04e4a71da182677a715f907c19df645a2"
     },
     {
       "path": "contracts/schemas/conversion-request.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:conversion-request:v1",
-      "digest": "sha256:534e429c9a6de6baa2db16a8e8e080dd54283ed79a46be09328c57a2a654fb05"
+      "digest": "sha256:759248f0a469654beddae107ef1a8d390217177f6fbabbe5177c6cf0ee015f72"
+    },
+    {
+      "path": "contracts/schemas/credential-access-request.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:credential-access-request:v1",
+      "digest": "sha256:52bc7b03606f4356e24696e059096b8b477efe83027cf6c0f13f0d5750d0c547"
+    },
+    {
+      "path": "contracts/schemas/credential-delivery.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:credential-delivery:v1",
+      "digest": "sha256:35d029741a7037dc86e3b68b58b79147250a6373e87038b1d16b2c339e77a4b7"
+    },
+    {
+      "path": "contracts/schemas/credential-operation-jws-header.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:credential-operation-jws-header:v1",
+      "digest": "sha256:a7adb69c57d94bd9f0142223d52fc4e4462972cb61bb823b60c6fccdfa9f75f1"
+    },
+    {
+      "path": "contracts/schemas/credential-operation-token-claims.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:credential-operation-token-claims:v1",
+      "digest": "sha256:758a694305e9b699b7cde77deb0902942a70ec54c03e1bb710fdb288a4822ba6"
     },
     {
       "path": "contracts/schemas/delivery-package.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:delivery-package:v1",
-      "digest": "sha256:9a28330162de2a128d96120dce1476c37e60fb00596fb47cf40f0f2a72e7ff59"
+      "digest": "sha256:546cd93ab5e315e944ed1be9a947a603652207757b676877398f3fd87860cad7"
     },
     {
       "path": "contracts/schemas/delivery-target.schema.json",
@@ -597,7 +699,7 @@
       "path": "contracts/schemas/delivery-webhook-envelope.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:delivery-webhook-envelope:v1",
-      "digest": "sha256:9061d85d76d078fdaeee88498371eec50b31883e1c3da4a3a80d7ba23745feb8"
+      "digest": "sha256:1dc33833a123656aa320978edc148a7227053a5d0c213c1f8053294c5d71454b"
     },
     {
       "path": "contracts/schemas/edit-commit-request.schema.json",
@@ -614,14 +716,14 @@
     {
       "path": "contracts/schemas/edit-session-request.schema.json",
       "kind": "json-schema",
-      "id": "urn:agent-platform:create-edit-session:v1",
-      "digest": "sha256:83ca9291f27841e037a11a2e8c8514fa03392d1f24a39c0ac946a96d267109a5"
+      "id": "urn:agent-platform:edit-session-request:v1",
+      "digest": "sha256:41b38a69844cfd8127ba462f552e2035b7d0b93a8cd0974f2883a218c2bd938b"
     },
     {
       "path": "contracts/schemas/edit-session.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:edit-session:v1",
-      "digest": "sha256:2337fc23e7ac169147a703ea131418d447cf128c3c52c3b5d277e3044686354c"
+      "digest": "sha256:7ff21d184d9c2338a24338b0415a59f69e445a895a183f502c540db3afe6559d"
     },
     {
       "path": "contracts/schemas/effective-execution-limits.schema.json",
@@ -633,7 +735,7 @@
       "path": "contracts/schemas/effective-permissions.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:effective-permissions:v1",
-      "digest": "sha256:03b49ad8ac74a560eda620782c9d2c0944cdad92656d7c8c35fc2b293893cf2e"
+      "digest": "sha256:4a16931148d63c95de9ca37ad81b31d8174541a3b66491f2bc14c621d344d91b"
     },
     {
       "path": "contracts/schemas/egress-destination-revision.schema.json",
@@ -699,7 +801,7 @@
       "path": "contracts/schemas/execution-budget.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:execution-budget:v1",
-      "digest": "sha256:115d5fdd8218b6454507b8a9be482a2df047d7f0138cca4a41b04106ae8d5b7e"
+      "digest": "sha256:eded399c1a0491d59ea38ebdcc297a99e0a5283afa07a3adae37e90d39b75f58"
     },
     {
       "path": "contracts/schemas/execution-grant-claims.schema.json",
@@ -712,6 +814,12 @@
       "kind": "json-schema",
       "id": "urn:agent-platform:execution-grant-jws-header:v1",
       "digest": "sha256:2284fede8853585d692508da918b061e4b888db60cf4c0f9b8fcf72b956d4fc9"
+    },
+    {
+      "path": "contracts/schemas/execution-scope.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:execution-scope:v1",
+      "digest": "sha256:56599e99d5cf02cbeb82e5ad232614270bea40209e3d91e20284953ecdc88273"
     },
     {
       "path": "contracts/schemas/experience-catalog-entry.schema.json",
@@ -771,13 +879,19 @@
       "path": "contracts/schemas/invocation-record.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:invocation-record:v2",
-      "digest": "sha256:16b030c5bb26d9c51849eabf06ec1b3207c1ea2afbc77b2422a200c13745b41c"
+      "digest": "sha256:af74fd10c54d0dbd6773bee341908f4b749a585defccac09e4f0633ab14def3a"
     },
     {
       "path": "contracts/schemas/meter-definition.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:meter-definition:v1",
       "digest": "sha256:3e4e54a552557c26e2fd005dedde53e52e4527cc1d68ef3ce8e3509e061006d9"
+    },
+    {
+      "path": "contracts/schemas/no-usage-attestation.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:no-usage-attestation:v1",
+      "digest": "sha256:b96fd2875e7e91108ffaafd07f3c2cf6fb08dc2dd6966925f46e8146904d25c4"
     },
     {
       "path": "contracts/schemas/orchestration-binding.schema.json",
@@ -789,7 +903,7 @@
       "path": "contracts/schemas/platform-core-event-data.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:platform-core-event-data:v1",
-      "digest": "sha256:2cdd84520f544a6171703ace529334c73fd4a4356485145faecc9646040e1f14"
+      "digest": "sha256:8f3b82b34aa5e9e4eb65c003d95e7557cc9741aed54a84c4501f7014e966d9ce"
     },
     {
       "path": "contracts/schemas/plugin-cancellation-request.schema.json",
@@ -879,19 +993,19 @@
       "path": "contracts/schemas/policy-decision.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:policy-decision:v1",
-      "digest": "sha256:051b2fe101e6d2382894e4eb0f274de4ceacb1c59fb501c69121ec81d769f307"
+      "digest": "sha256:513d39d06c6a95a66169860a19ada3e58b90d51c27aef27d04779d4646a74d91"
     },
     {
       "path": "contracts/schemas/preview-session-request.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:preview-session-request:v1",
-      "digest": "sha256:1c4939fefffec4217d36ea1736c440aa0216b612a278d9adebf255cf6736fd98"
+      "digest": "sha256:8dddbb780a6b385c63e60adc78dfde7a32671d7e2c02c423d27b1125f09eb50f"
     },
     {
       "path": "contracts/schemas/preview-session.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:preview-session:v1",
-      "digest": "sha256:39c2a29273929e40a91baf88cc3ce45795ed072d6bebddb3ad41f5bf8f1e1cb1"
+      "digest": "sha256:548ed6677a7f02f9f2c1a7640243ca60cc2ddcb9e1ca0a833f0bdca5f7ed4178"
     },
     {
       "path": "contracts/schemas/principal-context-snapshot.schema.json",
@@ -933,7 +1047,7 @@
       "path": "contracts/schemas/provider-resolution.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:provider-resolution:v1",
-      "digest": "sha256:b285be060af2b1acc6f383bd5eb59df361d4d1a0b08ee7b66468884b98e4aab7"
+      "digest": "sha256:cd470da6e285cf95cba61d0e0104b0691ea238e6067e420298ea311e438fda6c"
     },
     {
       "path": "contracts/schemas/provider-revision-snapshot.schema.json",
@@ -1041,7 +1155,7 @@
       "path": "contracts/schemas/sandbox-capabilities.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:sandbox-capabilities:v1",
-      "digest": "sha256:c99b8bfbef566a0a20fb50031d33aadd74fe89ad2109bcdbc0d614995a221e2d"
+      "digest": "sha256:5efe103eecefb900958fe6a5e19bbed8d7fb0141c5b1e285229165b99a6c46fa"
     },
     {
       "path": "contracts/schemas/sandbox-conformance-report.schema.json",
@@ -1077,7 +1191,7 @@
       "path": "contracts/schemas/sandbox-exec-request.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:sandbox-exec-request:v1",
-      "digest": "sha256:8590b0a7c3e86a939c107e1383c24d1edfd454ae896180a37dc7493ff57a1a25"
+      "digest": "sha256:e5a1b0301b9f92b9b5685880ea159e689a06d403a9af8d4a8f287197969335ed"
     },
     {
       "path": "contracts/schemas/sandbox-exec-result-operation-descriptor.schema.json",
@@ -1161,7 +1275,7 @@
       "path": "contracts/schemas/sandbox-restore-request.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:sandbox-restore-request:v1",
-      "digest": "sha256:1664d9eb9503f712fb569f912b0dd7bb85432616d45f1e1a8ac7ced328168aa6"
+      "digest": "sha256:3f99d441b29d98697e865de2d64e5f5f3eb92ef78a13489f4980129831189684"
     },
     {
       "path": "contracts/schemas/sandbox-runtime-session-endpoint.schema.json",
@@ -1185,13 +1299,13 @@
       "path": "contracts/schemas/sandbox-snapshot-manifest.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:sandbox-snapshot-manifest:v1",
-      "digest": "sha256:591af6e33f522f01ca950804f664dce1f5f6647b156ea2632e2f56138af7a2c5"
+      "digest": "sha256:9a9f93be0fe8541e88636da25c1b89c4d0291f866404a20fe478415cae4e9322"
     },
     {
       "path": "contracts/schemas/sandbox-snapshot-request.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:sandbox-snapshot-request:v1",
-      "digest": "sha256:dd5faac550313c981a4a633adb940e1d515921d107653568de963df7ac847e78"
+      "digest": "sha256:916ee55ee89dff403f6a1ab2506aa62faf1026657ce939808bd7db2b2c8db4f8"
     },
     {
       "path": "contracts/schemas/sandbox-spec.schema.json",
@@ -1236,6 +1350,18 @@
       "digest": "sha256:cf59d3620b0d433e497dc9c2277cf79712555c61eeb5581ad8bb3b101e46244b"
     },
     {
+      "path": "contracts/schemas/secret-grant-revocation.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:secret-grant-revocation:v1",
+      "digest": "sha256:a010f697c7a637bd3ce7613f82c4b137a3acfc3785702ecdf73d9e6fd03554b0"
+    },
+    {
+      "path": "contracts/schemas/secret-grant.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:secret-grant:v1",
+      "digest": "sha256:93dddb40c7a8ca2fa44a6013e715114c4c985995e9f99dd97b31b64ad39e5f10"
+    },
+    {
       "path": "contracts/schemas/selected-experience.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:selected-experience:v1",
@@ -1275,7 +1401,7 @@
       "path": "contracts/schemas/technical-usage-entry.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:technical-usage-entry:v1",
-      "digest": "sha256:0ab2c4b4c3cf7b5b08a9922205909981c82de78dfe5611f944f2738192c36621"
+      "digest": "sha256:04d087bc261b3c586cc185afadefd79f03584b40268cd915854e9af7f341fd6d"
     },
     {
       "path": "contracts/schemas/template-revision.schema.json",
@@ -1299,7 +1425,7 @@
       "path": "contracts/schemas/usage-report.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:usage-report:v1",
-      "digest": "sha256:14a8f93fcb272cbec169f65f97bec373b6455392b1e4cf949ad010ee64480006"
+      "digest": "sha256:6fe514b8c224fb7ba48a1cff7c8c96265927a9fc88e992b6872f0903a0a2b925"
     },
     {
       "path": "contracts/schemas/work-order-accepted.schema.json",
@@ -1317,7 +1443,7 @@
       "path": "contracts/schemas/work-order-control-request.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:work-order-control-request:v1",
-      "digest": "sha256:da2f2162f21c7163432d58cdb5062f9ff9ddf1440e7a3fa281f15678135fd165"
+      "digest": "sha256:fb7a7a51f6d0bb6be34f0062eb293f47c28b1204d65507e5cc6f840d86543229"
     },
     {
       "path": "contracts/schemas/work-order-request.schema.json",
@@ -1329,7 +1455,7 @@
       "path": "contracts/schemas/work-order-state.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:work-order-state:v1",
-      "digest": "sha256:7adec4f5bcb0c929c7e8d20f6e62ed7e2f865baab713ca07b01ca6be0199489f"
+      "digest": "sha256:2429f4e1c51303fa47f7d88a0c034f55bda68c76da54249e5c544f939840fb33"
     },
     {
       "path": "contracts/schemas/work-session-claims.schema.json",
@@ -1398,6 +1524,18 @@
       "digest": "sha256:7ae966ad16147501f81f6b17c187dd837543d4474462004f7ef716d69f33c42f"
     },
     {
+      "path": "contracts/state-machines/artifact-ingest-v1.json",
+      "kind": "state-machine",
+      "id": "contracts/state-machines/artifact-ingest-v1.json",
+      "digest": "sha256:8404bb83e3088583b3f7bc202da7b16a969010d3275db244e1e57e541f6bf1d7"
+    },
+    {
+      "path": "contracts/state-machines/artifact-operation-v1.json",
+      "kind": "state-machine",
+      "id": "contracts/state-machines/artifact-operation-v1.json",
+      "digest": "sha256:5156dde4c3ebfab6c05b7b5bddf39576d1cff1728fdc922518e30268481c23ec"
+    },
+    {
       "path": "contracts/state-machines/conversation-v1.json",
       "kind": "state-machine",
       "id": "contracts/state-machines/conversation-v1.json",
@@ -1425,7 +1563,7 @@
       "path": "contracts/state-machines/work-order-v1.json",
       "kind": "state-machine",
       "id": "contracts/state-machines/work-order-v1.json",
-      "digest": "sha256:4fb7694e0c38f852b345320bb43bd2881320d298c8a50635a41e54c1ecb587e5"
+      "digest": "sha256:cec5e4865fa5549eb02e769f65902766ab2bb853fda6d884b5b8918c692c838e"
     },
     {
       "path": "contracts/testdata/jcs-v1/vectors.json",
@@ -1437,13 +1575,13 @@
       "path": "docs/23_STATE_MACHINE_SPEC.md",
       "kind": "governance",
       "id": "docs/23_STATE_MACHINE_SPEC.md",
-      "digest": "sha256:38338a45c82022c5b8db0f3d15b5eb7901d04de5e32ccf68acabc8ca7f7efc60"
+      "digest": "sha256:aedfa4bf37a846e494cf0918e0bbd03081f54c12a85163bbd348743af80a0d4d"
     },
     {
       "path": "docs/26_DATA_MODEL_INVARIANTS.md",
       "kind": "governance",
       "id": "docs/26_DATA_MODEL_INVARIANTS.md",
-      "digest": "sha256:30d5533897d53f72bcfcc21181e13fcf1b9050997d03be2616c98b36a0503138"
+      "digest": "sha256:a097d4ddc7b83e84c137eb59569287681e176220ff26d275672561376e215504"
     },
     {
       "path": "examples/schemas/html-anything-config.schema.json",
@@ -1494,5 +1632,5 @@
       "digest": "sha256:46d6fa17b4a8b06e6da4a016d776385952a12d2e59e51066fcd5173248258d8e"
     }
   ],
-  "manifest_digest": "sha256:42ba97b8765977c5a91fb83d68dd56ac3730ef117ce2364cb7ae45c520ba4df4"
+  "manifest_digest": "sha256:40757eed79558e10d4cf05ed303d3fcb3c88c33b4e9daa97a547a2b507e8924d"
 }

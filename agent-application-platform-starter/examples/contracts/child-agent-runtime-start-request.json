@@ -9,9 +9,9 @@
   "invocation_attempt_id": "iat_runtime_child_01J00000000000",
   "fencing_token": 1,
   "idempotency_key": "runtime-child-start-key-0001",
-  "request_digest": "sha256:6c6ccfe39798016e5bc013cd142f40635ee44265f9b256973f49a5cb368c6341",
+  "request_digest": "sha256:05eb92a6aec9fe1daaa1c365dd7b7b8df0422a6a411bb67ee322508b9d959d05",
   "deadline_at": "2026-07-16T09:15:00Z",
-  "run_manifest_digest": "sha256:86595c1d95b44c7e9956486efbacfe243bab118a7a43031c086bec0ea9bb5131",
+  "run_manifest_digest": "sha256:31b8a960a9f94a00abee1d4fb6cc8584133296f071d02eaa0da6e4a5ce87a05c",
   "sandbox_bindings": [
     {
       "sandbox_slot_key": "subagent/researcher",
@@ -119,7 +119,7 @@
     "tenant_id": "ten_01J00000000000000000000000",
     "work_order_id": "wrk_01J00000000000000000000000",
     "runtime_run_id": "rtr_child_01J0000000000000000000",
-    "run_manifest_digest": "sha256:86595c1d95b44c7e9956486efbacfe243bab118a7a43031c086bec0ea9bb5131",
+    "run_manifest_digest": "sha256:31b8a960a9f94a00abee1d4fb6cc8584133296f071d02eaa0da6e4a5ce87a05c",
     "commercial_authorization": {
       "commercial_authorization_id": "cauth_01J00000000000000000000000",
       "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
@@ -127,9 +127,8 @@
     },
     "execution_budget": {
       "budget_id": "bud_01J00000000000000000000000",
-      "budget_digest": "sha256:af98dd43e2a018f9df3a6bc97b17f4cea7ec2dae69d62f24e2cd367eefc3fba4",
+      "budget_digest": "sha256:a9965ff61c94ed866a5ddcc58156ec2c159cdb74c7dd445c338b7456ccf85598",
       "tenant_id": "ten_01J00000000000000000000000",
-      "work_order_id": "wrk_01J00000000000000000000000",
       "limits": {
         "max_input_tokens": 100000,
         "max_output_tokens": 20000,
@@ -154,16 +153,19 @@
         "data_classification": "confidential"
       },
       "created_at": "2026-07-16T09:00:30Z",
-      "expires_at": "2026-07-16T09:30:00Z"
+      "expires_at": "2026-07-16T09:30:00Z",
+      "execution_scope": {
+        "kind": "work_order",
+        "work_order_id": "wrk_01J00000000000000000000000"
+      }
     },
     "policy_decision": {
       "decision_id": "pol_child_01J00000000000000000000",
-      "decision_digest": "sha256:c018a1de1f806691d6fd1714f80fdd033788055e9a8973699fe4be1799202341",
+      "decision_digest": "sha256:7237df00f1815d7485d2bde0fb42b20cb6e2b234f553eb6b2b4d76551792966c",
       "tenant_id": "ten_01J00000000000000000000000",
-      "work_order_id": "wrk_01J00000000000000000000000",
       "policy_bundle_digest": "sha256:6161616161616161616161616161616161616161616161616161616161616161",
       "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
-      "execution_budget_digest": "sha256:af98dd43e2a018f9df3a6bc97b17f4cea7ec2dae69d62f24e2cd367eefc3fba4",
+      "execution_budget_digest": "sha256:a9965ff61c94ed866a5ddcc58156ec2c159cdb74c7dd445c338b7456ccf85598",
       "evaluations": [
         {
           "subject_kind": "runtime",
@@ -181,18 +183,21 @@
         }
       ],
       "outcome": "allow",
-      "effective_permissions_digest": "sha256:f6369afbf017c696ed689dd1d10b00b8578fbb36497fa0e76ea304cd907f551f",
+      "effective_permissions_digest": "sha256:4dcc922eab2cd4deca1d7c13b2dd316254613688c7eeee6b9fae3ad501b69b03",
       "decided_at": "2026-07-16T09:00:59Z",
       "expires_at": "2026-07-16T09:30:00Z",
       "decision_point": "run_admission",
       "commercial_authorization_id": "cauth_01J00000000000000000000000",
-      "execution_budget_id": "bud_01J00000000000000000000000"
+      "execution_budget_id": "bud_01J00000000000000000000000",
+      "execution_scope": {
+        "kind": "work_order",
+        "work_order_id": "wrk_01J00000000000000000000000"
+      }
     },
     "effective_permissions": {
       "permissions_id": "perm_child_01J0000000000000000000",
-      "permissions_digest": "sha256:f6369afbf017c696ed689dd1d10b00b8578fbb36497fa0e76ea304cd907f551f",
+      "permissions_digest": "sha256:4dcc922eab2cd4deca1d7c13b2dd316254613688c7eeee6b9fae3ad501b69b03",
       "tenant_id": "ten_01J00000000000000000000000",
-      "work_order_id": "wrk_01J00000000000000000000000",
       "model": {
         "allowed_model_profiles": [
           "general-balanced"
@@ -227,13 +232,16 @@
             "snapshot"
           ]
         }
-      ]
+      ],
+      "execution_scope": {
+        "kind": "work_order",
+        "work_order_id": "wrk_01J00000000000000000000000"
+      }
     },
     "artifact_grants": [
       {
         "grant_id": "artg_rauth_child_01J000000000000000000",
         "tenant_id": "ten_01J00000000000000000000000",
-        "work_order_id": "wrk_01J00000000000000000000000",
         "artifact_id": "art_workspace_manifest_01J000000000000000",
         "version_id": "ver_workspace_manifest_01J00000000000000",
         "artifact_digest": "sha256:ef0e25f8c192d97c4c99db13fba26569c7f78ca505e6b0db999c86398e4d86f5",
@@ -243,10 +251,8 @@
         "issued_at": "2026-07-16T09:01:00Z",
         "expires_at": "2026-07-16T09:15:00Z",
         "execution_scope": {
-          "kind": "runtime_invocation",
-          "runtime_run_id": "rtr_child_01J0000000000000000000",
-          "invocation_id": "inv_runtime_child_01J0000000000000",
-          "invocation_attempt_id": "iat_runtime_child_01J00000000000"
+          "kind": "work_order",
+          "work_order_id": "wrk_01J00000000000000000000000"
         },
         "gateway_binding": {
           "gateway_kind": "artifact",
@@ -258,22 +264,25 @@
           "binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
           "audience": "agent-artifact-gateway"
         },
-        "grant_digest": "sha256:6b8b2f43fa516dd8fa30976e4bdbd030157cfa69aec72bd11625bfb2cf5cd1bb"
+        "grant_digest": "sha256:ce59b5a7d8c513e64a129693540b1d1992b264a426e2e51516a14774edb58517",
+        "runtime_run_id": "rtr_child_01J0000000000000000000",
+        "invocation_id": "inv_runtime_child_01J0000000000000",
+        "invocation_attempt_id": "iat_runtime_child_01J00000000000"
       }
     ],
     "issued_at": "2026-07-16T09:01:00Z",
     "expires_at": "2026-07-16T09:15:00Z",
-    "authorization_digest": "sha256:68f9089999942842a1bd4160f2c01a365339bb68e62a9b8359d954eeadc13c15",
+    "authorization_digest": "sha256:af9cb63c5d0907301c3bf0400c51a3f2ff57ff39ef6a66a82151030aae2cea72",
     "agent_run_budget_allocation": {
       "allocation_id": "abal_child_01J00000000000000000000",
-      "allocation_digest": "sha256:ab93f925bded5a93b050db27f9518e494d8e45866e9348f1484059bddee8fc7b",
+      "allocation_digest": "sha256:b888e7b656b58932b1f1130c17308b89a33dec8e292006fab0193dee74c33a6b",
       "tenant_id": "ten_01J00000000000000000000000",
       "work_order_id": "wrk_01J00000000000000000000000",
       "agent_run_id": "agr_child_01J0000000000000000000",
       "parent_allocation_id": "abal_root_01J000000000000000000000",
-      "parent_allocation_digest": "sha256:465ec922331064033923a0ca34742d7837e52cb399e264a2aecf2b39d1808f75",
+      "parent_allocation_digest": "sha256:e4e56166aad1bc6b0cf21fa6b93ab8a206a2d97baad8e5c299f04b1a7475da5e",
       "work_order_budget_id": "bud_01J00000000000000000000000",
-      "work_order_budget_digest": "sha256:af98dd43e2a018f9df3a6bc97b17f4cea7ec2dae69d62f24e2cd367eefc3fba4",
+      "work_order_budget_digest": "sha256:a9965ff61c94ed866a5ddcc58156ec2c159cdb74c7dd445c338b7456ccf85598",
       "limits": {
         "max_input_tokens": 20000,
         "max_output_tokens": 5000,

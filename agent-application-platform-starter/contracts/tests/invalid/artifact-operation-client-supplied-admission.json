@@ -1,0 +1,66 @@
+{
+  "operation_context": {
+    "operation_kind": "preview",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "client_app_id": "html-product",
+    "principal_context": {
+      "snapshot_version": 1,
+      "client_app_id": "html-product",
+      "external_tenant_id": "org-456",
+      "external_principal_id": "user-123",
+      "principal_type": "user",
+      "roles": [
+        "member"
+      ],
+      "groups": [
+        "design-team"
+      ],
+      "attributes": {
+        "data_classification": "internal",
+        "region": "cn"
+      },
+      "issued_at": "2026-07-16T08:59:30Z",
+      "expires_at": "2026-07-16T09:30:00Z",
+      "digest_profile": "rfc8785-principal-context-excluding-digest-v1",
+      "principal_context_digest": "sha256:bfb1d517260890b1df9744f3b1420dda3865f1a382e9735ecbeb895bbc8e5862"
+    },
+    "artifact_id": "art_01J00000000000000000000000",
+    "source_version_id": "ver_01J00000000000000000000000",
+    "source_version_digest": "sha256:8f849c3f87818d7b11c3de39155576cb941f7157d73daf22162fa996b58ee919",
+    "capability": {
+      "id": "artifact.preview.html",
+      "version": "1.0",
+      "profile": "default"
+    },
+    "commercial_authorization": {
+      "commercial_authorization_id": "cauth_01J00000000000000000000000",
+      "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
+      "expires_at": "2026-07-16T09:30:00Z"
+    },
+    "quota_reservation_id": "qres_01J00000000000000000000000",
+    "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
+    "idempotency_key": "artifact-preview-idempotency-0001",
+    "request_digest": "sha256:a4ef0fb82260822297ca0095e25cb26d732e5a8494c680a8f0761f5e8cc87c4a",
+    "requested_at": "2026-07-16T09:06:00Z",
+    "artifact_operation_id": "aop_preview_01J000000000000000000",
+    "policy_decision_id": "pol_preview_01J000000000000000000",
+    "policy_decision_digest": "sha256:650e381596cb9ecd0d3b239b7514c8b55ff2034922bf8a522b23c2365841df8f",
+    "execution_budget_id": "bud_preview_01J000000000000000000",
+    "execution_budget_digest": "sha256:058abfaeca0cf57ba346cef5a301bd0512b525f5131d8ee432776be58f7be491",
+    "effective_permissions_id": "perm_preview_01J00000000000000000",
+    "effective_permissions_digest": "sha256:4b628137b325089843ba19eb9ccbb7d6d1b23ac5a119abeaf4e2fe15315af3eb",
+    "artifact_gateway_binding": {
+      "gateway_kind": "artifact",
+      "gateway_id": "artifact-gateway",
+      "route_id": "artifact-route-work-order",
+      "protocol_version": "v1",
+      "contract_id": "urn:agent-platform:openapi:artifact-gateway:v1",
+      "contract_digest": "sha256:b3cc84d2a5e07df5e0773c15d9a8a0824f2da6087cbc8833193d5cff8bdf6097",
+      "binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
+      "audience": "agent-artifact-gateway"
+    }
+  },
+  "options": {
+    "theme": "system"
+  }
+}

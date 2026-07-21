@@ -12,6 +12,6 @@
   "required_for_work_order_completion": true,
   "agent_role": "researcher",
   "runtime_provider_resolution_id": "res_agent_general_01J00000000000000",
-  "run_manifest_digest": "sha256:86595c1d95b44c7e9956486efbacfe243bab118a7a43031c086bec0ea9bb5131",
+  "run_manifest_digest": "sha256:31b8a960a9f94a00abee1d4fb6cc8584133296f071d02eaa0da6e4a5ce87a05c",
   "created_at": "2026-07-16T09:02:01Z"
 }

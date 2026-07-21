@@ -31,7 +31,7 @@
 - **RuntimeAuthorization**：绑定一个 Runtime InvocationAttempt 的短期仅追加授权 Revision；可在同一 RunManifest 下等价或缩权续期，并携带 fresh ArtifactGrant。
 - **AgentRuntimeInvocation Token**：绑定 Tenant、ProviderRevision、RunManifest、RuntimeAuthorization、Attempt、Fencing、Policy、Budget、Permissions 和请求摘要的短期调用授权；`execution` 受执行期限限制，`safety_control` 只允许到期后读取或 Cancel/Pause。
 - **SystemSafetyControl**：Platform-owned、不可变且仅用于减权的控制事实；在新的 Business Grant 不可用或不应成为前提时，以 Tenant/WorkOrder/RuntimeRun、Pause/Cancel action、触发证据和摘要授权停止动作，不能恢复执行或产生新副作用。
-- **CommercialAuthorizationRevocation**：Business-owned 的不可变撤销通知；由 sender-constrained Business workload 提交，Platform 只保存幂等收据并为匹配的活动执行派生 SystemSafetyControl，不回写商业授权事实。
+- **CommercialAuthorizationRevocation**：Business-owned 的不可变撤销通知；由 sender-constrained Business workload 提交，Platform 保存带摘要的幂等 deny 收据与 WorkSession/WorkOrder/ArtifactOperation/ArtifactIngest CAS/Outbox intents。WorkOrder 派生 fenced SystemSafetyControl，其他 Scope 按自身状态机减权；Platform 不回写商业授权事实。
 - **RunManifest**：固化 Tenant、Scenario、ProviderResolution/Admission、Event Registry、Experience、Sandbox、Runtime、ArtifactAccessRequirement 和初始授权上限的执行快照；不保存短期 bearer Grant。
 
 ## 可靠性

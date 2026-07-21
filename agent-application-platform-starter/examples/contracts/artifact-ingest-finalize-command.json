@@ -1,0 +1,12 @@
+{
+  "finalize_command_id": "ifin_01J00000000000000000000000",
+  "command_digest": "sha256:58de3ad6cf4fe2384be3e4013c45a3a8c016c9dead631f0c57e9da1ea96811f7",
+  "authority": "platform_artifact_ledger",
+  "ingest_session_id": "ing_01J00000000000000000000000",
+  "expected_state_version": 6,
+  "confirmed_upload_digest": "sha256:40d373b4910150e8845bba107f985bb8502deeefbfc22a549a7288fa5a8213b8",
+  "scan_result_id": "iscan_01J0000000000000000000000",
+  "scan_result_digest": "sha256:ca29a06a0d55d4b89c8ba7f2b31a804c8b6d2330773f4528ef541e29f76aabd1",
+  "idempotency_key": "artifact-ingest-finalize-idempotency-0001",
+  "issued_at": "2026-07-16T09:10:55Z"
+}

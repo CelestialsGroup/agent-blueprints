@@ -1,8 +1,7 @@
 {
   "permissions_id": "perm_01J00000000000000000000000",
-  "permissions_digest": "sha256:258682bb254cc4fafff41ccea043261e9c9381ca9a42e0efef0e3f20e9c1b70c",
+  "permissions_digest": "sha256:d8bd8d96a7a79a2d7d8a49f56930fadc940d74c253004550ba27e461eda32e42",
   "tenant_id": "ten_01J00000000000000000000000",
-  "work_order_id": "wrk_01J00000000000000000000000",
   "model": {
     "allowed_model_profiles": [
       "general-balanced"
@@ -37,5 +36,9 @@
         "snapshot"
       ]
     }
-  ]
+  ],
+  "execution_scope": {
+    "kind": "work_order",
+    "work_order_id": "wrk_01J00000000000000000000000"
+  }
 }

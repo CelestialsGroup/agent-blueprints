@@ -113,12 +113,12 @@ Python 只负责确实依赖 Python Agent/ML 生态的 Runtime/Capability Adapte
 | Runtime Start 只有摘要 | RunManifest/Start 固化输入、Context、Grant、预算/策略/权限与 Gateway Binding | Go Admission Builder 原子创建 Manifest；Adapter fail-closed |
 | Turn 与 Append/Interrupt 冲突、Branch 假 CAS | TurnRequest 与 ControlRequest 分离；Message/Workspace/Active Work 三个 CAS | PostgreSQL 独立版本列、条件 UPDATE 与 Outbox |
 | Capability Port/Token 不完整 | `capability-provider-v1`、操作描述符、Contract/Profile/Digest 和前驱 Token | Go Gateway +各语言薄 Adapter SDK；重放防护由 Conformance 证明 |
-| Tenant/Principal/Idempotency/Resolution 所有权 | Tenant+ClientApplication+WorkOrder、Principal Snapshot 与 Idempotency scope | RLS、Unique Index、事务 TenantContext；不靠框架默认中间件 |
+| Tenant/Principal/Idempotency/Resolution 所有权 | Tenant + ClientApplication + WorkOrder/ArtifactOperation ExecutionScope、Principal Snapshot 与 Idempotency scope | RLS、Unique Index、事务 TenantContext；不靠框架默认中间件 |
 | accepted 不能取消 | WorkOrder 状态机已有直接取消意图迁移 | Repository compare-and-set +结构化 Event |
 | Workspace Manifest/多 Sandbox Slot | 独立 Content Manifest、`sandboxes[]`、`sandbox_slot_key`、不透明 Runtime Route | Artifact 校验、Slot-scoped Session、Controller 私有 Endpoint |
 | Event Registry/来源去重/Metadata/大小上限 | 双 Registry、Source identity/Dedupe、闭合 Metadata、encoded-body limit | Inbox Unique、413 pre-parse middleware、Projection allowlist |
 
-补充安全闭合：Egress 使用不可变、owner-scoped `EgressDestinationRevision`，权限比较 `destination_class`；Runtime、Capability、兼容 Plugin、Sandbox、Artifact 与 Egress 的执行 Token 必须完整落在实际授权时间窗内。Runtime/Capability/Plugin `safety_control` 只保留到期后的读取、取消和对账能力，不能恢复执行、访问过期 Artifact Grant 或产生新副作用。Runtime 自动止损不能依赖新的 Business Grant：Agent Access 接受 sender-constrained、幂等的 Business Revocation Notice；Go Safety Controller Domain Activity 仅追加 `SystemSafetyControl + Platform Event + Outbox`，并由 Runtime Command/Token 绑定同一 Tenant/WorkOrder/RuntimeRun/action/digest。Safety Controller 可先作为 Worker 内模块，只有它拥有签发权限；该技术落点不改变 Business/Platform 事实源边界。以上问题由契约和实施责任共同关闭，任何框架选型都不能替代数据库与运行证据。
+补充安全闭合：Egress 使用不可变、owner-scoped `EgressDestinationRevision`，权限比较 `destination_class`；Runtime、Capability、兼容 Plugin、Sandbox、Artifact 与 Egress 的执行 Token 必须完整落在实际授权时间窗内。Runtime/Capability/Plugin `safety_control` 只保留到期后的读取、取消和对账能力，不能恢复执行、访问过期 Artifact Grant 或产生新副作用。平台自动止损不能依赖新的 Business Grant：Agent Access 接受 sender-constrained、幂等的 Business Revocation Notice；收据同步拒绝新授权并为 WorkSession、WorkOrder、ArtifactOperation 和 ArtifactIngest 持久化可恢复 CAS/Outbox intents。WorkOrder 由 Go Safety Controller Domain Activity 仅追加 `SystemSafetyControl + Platform Event + Outbox`，并由 Runtime Command/Token 绑定同一 Tenant/WorkOrder/RuntimeRun/action/digest；ArtifactOperation/Ingest 按自身状态机 reduction-only Cancel。Safety Controller 可先作为 Worker 内模块，只有它拥有 Runtime 安全控制签发权限；该技术落点不改变 Business/Platform 事实源边界。以上问题由契约和实施责任共同关闭，任何框架选型都不能替代数据库与运行证据。
 
 ## 0A.1 到 0B
 

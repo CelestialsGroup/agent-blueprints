@@ -115,8 +115,8 @@ Platform 默认值改为新 Sandbox ProviderRevision。
 
 - 新 WorkOrder Binding 回滚到旧 Native Provider。
 - 已创建的新后端 Sandbox 按其 Revision 完成或取消。
-- 禁止运行中直接把 Process Snapshot 恢复到不兼容 Provider。
-- Workspace Snapshot 可在兼容声明通过后恢复到旧 Provider。
+- 禁止运行中直接把 Snapshot 恢复到未被 Platform CompatibilityDecision 判为兼容的目标 Revision。
+- Workspace/Filesystem/Process Snapshot 只有精确 Source/Target Runtime Revision、ProviderRevision、Suite/Profile/Digest 与不可变 Evidence 全部匹配时才可恢复到旧 Provider；Provider 声明本身不构成证据。
 
 ## 禁止耦合
 

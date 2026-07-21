@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:artifact-ingest-finalize-command:v1",
+  "title": "ArtifactIngestFinalizeCommand",
+  "description": "Platform-internal command consumed only by the Artifact Ledger transaction; it is never a Provider or public API capability.",
+  "type": "object",
+  "required": [
+    "finalize_command_id", "command_digest", "authority", "ingest_session_id", "expected_state_version",
+    "confirmed_upload_digest", "scan_result_id", "scan_result_digest", "idempotency_key", "issued_at"
+  ],
+  "properties": {
+    "finalize_command_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "command_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "authority": { "const": "platform_artifact_ledger" },
+    "ingest_session_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "expected_state_version": { "type": "integer", "minimum": 1 },
+    "confirmed_upload_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "scan_result_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "scan_result_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "idempotency_key": { "type": "string", "minLength": 16, "maxLength": 255 },
+    "issued_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "command_digest is RFC 8785 JCS SHA-256 over the command excluding command_digest",
+    "the Platform transaction locks ready_to_finalize, verifies upload and scan digests, creates one immutable ArtifactVersion, advances state and appends Outbox events atomically",
+    "Provider, scanner, client and Credential Gateway identities cannot invoke or mint this command"
+  ]
+}

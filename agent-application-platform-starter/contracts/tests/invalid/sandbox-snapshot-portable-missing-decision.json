@@ -1,0 +1,13 @@
+{
+  "snapshot_id": "ssn_01J00000000000000000000000",
+  "sandbox_id": "sbx_01J00000000000000000000000",
+  "level": "workspace",
+  "digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+  "size_bytes": 4096,
+  "content_reference": "artifact://sandbox-snapshots/ssn_01",
+  "created_at": "2026-07-16T10:00:00Z",
+  "source_provider_revision_id": "spr_01J00000000000000000000000",
+  "source_runtime_revision": "sandbox-runtime-1.0.0",
+  "portability": "portable",
+  "compatibility_profile": "sandbox-snapshot-workspace-v1"
+}

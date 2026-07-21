@@ -29,5 +29,13 @@
       "registry_version": 1,
       "registry_digest": "sha256:eaae5ff3a467b85bbb5bb1cdbba4dd4b5546d7f5fb1cb1c17e37565bec55ae8c"
     }
+  ],
+  "checkpoint_profiles": [
+    {
+      "profile_id": "runtime-checkpoint-compatibility-v1",
+      "suite_id": "agent-runtime-provider",
+      "suite_version": "1.0.0",
+      "suite_digest": "sha256:9ef6d50df9f1032476ea2ada2c16d70c15d88368acf59794062df7dfce0bb356"
+    }
   ]
 }

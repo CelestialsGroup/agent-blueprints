@@ -1,0 +1,46 @@
+{
+  "event_id": "evt_conversation-branch-forked_01J00000000000000000",
+  "schema_version": 2,
+  "tenant_id": "ten_01J00000000000000000000000",
+  "producer_id": "platform-core-ledger",
+  "provider_revision_id": null,
+  "source_stream_id": "conversation_branch/debug-rerun-01",
+  "source_event_id": "conversation.branch.forked/1",
+  "source_cursor": "1",
+  "dedupe_key": "sha256:57ffb3c8aa008375faa69c26c8493f6338d8309cb4476add574aec274b3a2494",
+  "aggregate": {
+    "type": "conversation_branch",
+    "id": "debug-rerun-01",
+    "sequence": 1
+  },
+  "type": "conversation.branch.forked",
+  "occurred_at": "2026-07-16T09:10:00Z",
+  "actor": {
+    "type": "system",
+    "id": "artifact-service"
+  },
+  "data": {
+    "branch_request_id": "breq_01J00000000000000000000000",
+    "branch_id": "debug-rerun-01",
+    "mode": "fork",
+    "source_branch_id": "main",
+    "source_message_id": "msg_01J00000000000000000000000",
+    "source_message_sequence": 1,
+    "workspace_revision_id": "wsr_fork_01J000000000000000000000",
+    "workspace_revision_digest": "sha256:02f4a5ba74ee297dcd079277ca4f810a1a7e9379f6599c2d967037a25b8367f5",
+    "request_digest": "sha256:2da69c65a861fb3599b122e4a164a7a30bbeb899175fd7e81e5c829daf455e83"
+  },
+  "metadata": {
+    "trace_id": "trace-conversation-branch-forked",
+    "correlation_id": "debug-rerun-01"
+  },
+  "data_version": 1,
+  "recorded_at": "2026-07-16T09:10:00.100Z",
+  "event_registry": {
+    "registry_id": "platform-core",
+    "registry_version": 1,
+    "registry_digest": "sha256:a9e717df6ee3d524e9805b1d1d78b39957618985d7d3ff9ad0e984362d1ddde6"
+  },
+  "producer_kind": "platform",
+  "conversation_id": "conv_01J00000000000000000000000"
+}

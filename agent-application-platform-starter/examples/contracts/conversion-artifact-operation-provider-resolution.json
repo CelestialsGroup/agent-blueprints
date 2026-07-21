@@ -1,0 +1,78 @@
+{
+  "resolution_id": "res_conversion_01J000000000000000000",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "client_app_id": "html-product",
+  "execution_scope": {
+    "kind": "artifact_operation",
+    "artifact_operation_id": "aop_conversion_01J000000000000000000"
+  },
+  "principal_context_digest": "sha256:bfb1d517260890b1df9744f3b1420dda3865f1a382e9735ecbeb895bbc8e5862",
+  "identity_dependency": {
+    "mode": "principal_context",
+    "declaration_digest": "sha256:405b028e4388eb8c9259ee7f44c25663203449030c7beebe0a1041b5f7df4c19"
+  },
+  "capability": {
+    "id": "artifact.convert.pptx",
+    "version": "1.0",
+    "profile": "default"
+  },
+  "selected_provider_instance_id": "cpi_html_to_pptx",
+  "selected_provider_audience": "urn:agent-platform:provider-instance:cpi_html_to_pptx",
+  "routing_reason": "scenario_requirement",
+  "resolver_revision": {
+    "id": "provider-resolver",
+    "version": "1.0.0",
+    "digest": "sha256:ef30b70a32f4eb10c1ff2f9b68b5adaaeabe078ee9901362ff227bca163492d0"
+  },
+  "resolution_input_digest": "sha256:a7c321eab36e1278e55d0e50e152830fedcf314b551f2fb7f31a02018b290403",
+  "candidate_evaluations": [
+    {
+      "provider_instance_id": "cpi_html_to_pptx",
+      "provider_revision_id": "cpr_01J00000000000000000000000",
+      "provider_audience": "urn:agent-platform:provider-instance:cpi_html_to_pptx",
+      "outcome": "selected",
+      "reason_codes": [
+        "scenario_match"
+      ],
+      "evidence_digest": "sha256:934b173aa41b7236f067b9480e8938914c3db1d10aa4245ce8103319f8972612"
+    }
+  ],
+  "resolution_evidence_reference": "resolution-evidence/res_conversion_01J000000000000000000",
+  "resolution_evidence_digest": "sha256:e34dc0a7b0abeca5f4916fdaedd3179f84081c1e2a197a0bfa7cde50910fb7fb",
+  "resolved_at": "2026-07-16T09:06:01Z",
+  "capability_definition_digest": "sha256:3737373737373737373737373737373737373737373737373737373737373737",
+  "selected_provider_revision": {
+    "provider_revision_id": "cpr_01J00000000000000000000000",
+    "provider_revision_digest": "sha256:c2dc0203d833905965a8c9bbf60565d80e0ea0e934fadcc31e8d9b867d22f460",
+    "provider_kind": "converter",
+    "implementation": {
+      "implementation_id": "converter-provider.fixture",
+      "implementation_version": "1.0.0",
+      "distribution_type": "package",
+      "distribution_digest": "sha256:3737373737373737373737373737373737373737373737373737373737373737",
+      "manifest_digest": "sha256:3636363636363636363636363636363636363636363636363636363636363636",
+      "provenance": {
+        "source_revision": "2251cca58dd51fcc8576ed01cde49988693c245328d08664970b53b202b7059b",
+        "source_tree_digest": "sha256:de324776ca2fc656a882554433228bf24a5261c8edad31faa0d2ce0d2b4d5198",
+        "build_artifact_digest": "sha256:3737373737373737373737373737373737373737373737373737373737373737",
+        "sbom_digest": "sha256:0e16c0107b1b6a20c3c89ee5280e028b8adc9ffbf914c3d28c60c636adc4032c",
+        "provenance_statement_digest": "sha256:fdb92839e992ae3a10e6ba23b139877f2ebed04cdfc65767b4ea92a7fdeabfe8",
+        "build_system": "contract-fixture-build-v1"
+      }
+    },
+    "port": {
+      "protocol": "capability-provider",
+      "protocol_version": "v1",
+      "contract_digest": "sha256:82ab68c671d838e1c3f0e3e31368c985c118120c8c474d21fc648e312ce7d500",
+      "binding_digest": "sha256:3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a"
+    },
+    "configuration_digest": "sha256:3838383838383838383838383838383838383838383838383838383838383838",
+    "approved_permissions_digest": "sha256:3939393939393939393939393939393939393939393939393939393939393939",
+    "credential_binding_digest": "sha256:3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b",
+    "conformance_set_digest": "sha256:5a3d4baf78a6f481b97425eb809fa5464bafbec93a4d0a17372b3cb90c64ac48",
+    "admission_decision_id": "pad_converter_01J000000000000000000",
+    "admission_decision_digest": "sha256:fe7701a792c0bba405b69b4d7299d0c04b501148ccd23f3734c1335d036aece5",
+    "admission_status": "certified"
+  },
+  "decision_digest": "sha256:dc7280966dd4456d31e3c1a95bc4d84e1e098cdf07ba565494b4998408a713f2"
+}

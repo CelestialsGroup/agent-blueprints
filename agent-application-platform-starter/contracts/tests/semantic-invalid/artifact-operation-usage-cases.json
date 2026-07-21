@@ -1,0 +1,311 @@
+{
+  "meter": {
+    "meter_id": "model.input_tokens",
+    "meter_version": 1,
+    "definition_digest": "sha256:5fb9469a79d57e8867f640bd6d1e30fa3d74dfc56b630897fd3599b677dac841",
+    "base_unit": "token",
+    "aggregation": "sum",
+    "measurement_authority": "platform_or_provider",
+    "corrections_allowed": true,
+    "status": "active"
+  },
+  "entry": {
+    "entry_id": "use_aop_01J000000000000000000000",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "invocation_id": "inv_preview_01J000000000000000000",
+    "meter_id": "model.input_tokens",
+    "meter_version": 1,
+    "meter_definition_digest": "sha256:5fb9469a79d57e8867f640bd6d1e30fa3d74dfc56b630897fd3599b677dac841",
+    "quantity": 1200,
+    "unit": "token",
+    "producer": {
+      "type": "provider",
+      "id": "rpi_html_preview",
+      "provider_revision_id": "rpr_01J00000000000000000000000",
+      "provider_revision_digest": "sha256:f2730e7377bc8918460730328465d72a0da531e73350bdb1fbd76a7eabb6b5c3"
+    },
+    "provider_operation_id": "provider-op-artifact-preview-001",
+    "meter_source": "provider_reported",
+    "measurement_status": "confirmed",
+    "idempotency_key": "usage-artifact-preview-0001",
+    "evidence_reference": "https://evidence.agent.internal/provider-usage/uobs_aop_01",
+    "occurred_at": "2026-07-16T09:06:03Z",
+    "recorded_at": "2026-07-16T09:06:06Z",
+    "evidence_digest": "sha256:2e81c9923af4f94c013060c17573469b38876b557f3fa939458aa2e5557e62bd",
+    "source_observation_id": "uobs_aop_01J0000000000000000000",
+    "execution_scope": {
+      "kind": "artifact_operation",
+      "artifact_operation_id": "aop_preview_01J000000000000000000"
+    }
+  },
+  "report": {
+    "usage_report_id": "usr_aop_01J000000000000000000000",
+    "usage_report_digest": "sha256:73140038d36d36a184d55aed608ffc55895685f688a6714b70c00586477127ba",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "commercial_authorization_id": "cauth_01J00000000000000000000000",
+    "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
+    "quota_reservation_id": "qres_01J00000000000000000000000",
+    "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
+    "report_status": "final",
+    "idempotency_key": "usage-report-artifact-preview-final-0001",
+    "entries": [
+      {
+        "entry_id": "use_aop_01J000000000000000000000",
+        "tenant_id": "ten_01J00000000000000000000000",
+        "invocation_id": "inv_preview_01J000000000000000000",
+        "meter_id": "model.input_tokens",
+        "meter_version": 1,
+        "meter_definition_digest": "sha256:5fb9469a79d57e8867f640bd6d1e30fa3d74dfc56b630897fd3599b677dac841",
+        "quantity": 1200,
+        "unit": "token",
+        "producer": {
+          "type": "provider",
+          "id": "rpi_html_preview",
+          "provider_revision_id": "rpr_01J00000000000000000000000",
+          "provider_revision_digest": "sha256:f2730e7377bc8918460730328465d72a0da531e73350bdb1fbd76a7eabb6b5c3"
+        },
+        "provider_operation_id": "provider-op-artifact-preview-001",
+        "meter_source": "provider_reported",
+        "measurement_status": "confirmed",
+        "idempotency_key": "usage-artifact-preview-0001",
+        "evidence_reference": "https://evidence.agent.internal/provider-usage/uobs_aop_01",
+        "occurred_at": "2026-07-16T09:06:03Z",
+        "recorded_at": "2026-07-16T09:06:06Z",
+        "evidence_digest": "sha256:2e81c9923af4f94c013060c17573469b38876b557f3fa939458aa2e5557e62bd",
+        "source_observation_id": "uobs_aop_01J0000000000000000000",
+        "execution_scope": {
+          "kind": "artifact_operation",
+          "artifact_operation_id": "aop_preview_01J000000000000000000"
+        }
+      }
+    ],
+    "created_at": "2026-07-16T09:06:07Z",
+    "report_sequence": 1,
+    "execution_scope": {
+      "kind": "artifact_operation",
+      "artifact_operation_id": "aop_preview_01J000000000000000000"
+    }
+  },
+  "settlement": {
+    "settlement_envelope_id": "set_aop_01J000000000000000000000",
+    "settlement_envelope_digest": "sha256:d4c9f20f26ec5d9d08d2d131d73f63c46aeb58cd8920769b27c806cc9bc0694a",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "commercial_authorization_id": "cauth_01J00000000000000000000000",
+    "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
+    "quota_reservation_id": "qres_01J00000000000000000000000",
+    "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
+    "action": "settle",
+    "settlement_target_id": "business-usage-settlement-v1",
+    "idempotency_key": "settlement-artifact-preview-0001",
+    "created_at": "2026-07-16T09:06:08Z",
+    "usage_report": {
+      "usage_report_id": "usr_aop_01J000000000000000000000",
+      "usage_report_digest": "sha256:73140038d36d36a184d55aed608ffc55895685f688a6714b70c00586477127ba",
+      "tenant_id": "ten_01J00000000000000000000000",
+      "commercial_authorization_id": "cauth_01J00000000000000000000000",
+      "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
+      "quota_reservation_id": "qres_01J00000000000000000000000",
+      "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
+      "report_status": "final",
+      "idempotency_key": "usage-report-artifact-preview-final-0001",
+      "entries": [
+        {
+          "entry_id": "use_aop_01J000000000000000000000",
+          "tenant_id": "ten_01J00000000000000000000000",
+          "invocation_id": "inv_preview_01J000000000000000000",
+          "meter_id": "model.input_tokens",
+          "meter_version": 1,
+          "meter_definition_digest": "sha256:5fb9469a79d57e8867f640bd6d1e30fa3d74dfc56b630897fd3599b677dac841",
+          "quantity": 1200,
+          "unit": "token",
+          "producer": {
+            "type": "provider",
+            "id": "rpi_html_preview",
+            "provider_revision_id": "rpr_01J00000000000000000000000",
+            "provider_revision_digest": "sha256:f2730e7377bc8918460730328465d72a0da531e73350bdb1fbd76a7eabb6b5c3"
+          },
+          "provider_operation_id": "provider-op-artifact-preview-001",
+          "meter_source": "provider_reported",
+          "measurement_status": "confirmed",
+          "idempotency_key": "usage-artifact-preview-0001",
+          "evidence_reference": "https://evidence.agent.internal/provider-usage/uobs_aop_01",
+          "occurred_at": "2026-07-16T09:06:03Z",
+          "recorded_at": "2026-07-16T09:06:06Z",
+          "evidence_digest": "sha256:2e81c9923af4f94c013060c17573469b38876b557f3fa939458aa2e5557e62bd",
+          "source_observation_id": "uobs_aop_01J0000000000000000000",
+          "execution_scope": {
+            "kind": "artifact_operation",
+            "artifact_operation_id": "aop_preview_01J000000000000000000"
+          }
+        }
+      ],
+      "created_at": "2026-07-16T09:06:07Z",
+      "report_sequence": 1,
+      "execution_scope": {
+        "kind": "artifact_operation",
+        "artifact_operation_id": "aop_preview_01J000000000000000000"
+      }
+    },
+    "envelope_sequence": 1,
+    "execution_scope": {
+      "kind": "artifact_operation",
+      "artifact_operation_id": "aop_preview_01J000000000000000000"
+    },
+    "terminal_status": "succeeded"
+  },
+  "operation": {
+    "artifact_operation_id": "aop_preview_01J000000000000000000",
+    "operation_kind": "preview",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "client_app_id": "html-product",
+    "principal_context_digest": "sha256:bfb1d517260890b1df9744f3b1420dda3865f1a382e9735ecbeb895bbc8e5862",
+    "artifact_id": "art_01J00000000000000000000000",
+    "source_version_id": "ver_01J00000000000000000000000",
+    "source_version_digest": "sha256:8f849c3f87818d7b11c3de39155576cb941f7157d73daf22162fa996b58ee919",
+    "request_digest": "sha256:a4ef0fb82260822297ca0095e25cb26d732e5a8494c680a8f0761f5e8cc87c4a",
+    "invocation_request_digest": "sha256:8c0e799920cf80586dfe76073788705cd45948946af4a768ad69f85af1e1fd02",
+    "commercial_authorization_id": "cauth_01J00000000000000000000000",
+    "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
+    "quota_reservation_id": "qres_01J00000000000000000000000",
+    "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
+    "policy_decision_id": "pol_preview_01J000000000000000000",
+    "policy_decision_digest": "sha256:650e381596cb9ecd0d3b239b7514c8b55ff2034922bf8a522b23c2365841df8f",
+    "execution_budget_id": "bud_preview_01J000000000000000000",
+    "execution_budget_digest": "sha256:058abfaeca0cf57ba346cef5a301bd0512b525f5131d8ee432776be58f7be491",
+    "effective_permissions_id": "perm_preview_01J00000000000000000",
+    "effective_permissions_digest": "sha256:4b628137b325089843ba19eb9ccbb7d6d1b23ac5a119abeaf4e2fe15315af3eb",
+    "artifact_gateway_binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
+    "provider_resolution_id": "res_preview_01J000000000000000000",
+    "provider_revision_id": "rpr_01J00000000000000000000000",
+    "invocation_id": "inv_preview_01J000000000000000000",
+    "status": "succeeded",
+    "state_version": 5,
+    "terminal_stage": "finalization",
+    "result_reference": "artifact-operation-result://aop_preview_01J000000000000000000",
+    "terminal_evidence_digest": "sha256:2328ea766e6d2ada3a4c84ff8d0a70e1099a48bc6af581bfb5f8dd6779c345cb",
+    "created_at": "2026-07-16T09:06:00Z",
+    "updated_at": "2026-07-16T09:06:05Z",
+    "completed_at": "2026-07-16T09:06:05Z"
+  },
+  "invocation": {
+    "invocation_id": "inv_preview_01J000000000000000000",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "execution_scope": {
+      "kind": "artifact_operation",
+      "artifact_operation_id": "aop_preview_01J000000000000000000"
+    },
+    "artifact_operation_id": "aop_preview_01J000000000000000000",
+    "capability_id": "artifact.preview.html",
+    "capability_version": "1.0",
+    "provider_instance_id": "rpi_html_preview",
+    "provider_resolution_id": "res_preview_01J000000000000000000",
+    "provider_revision_id": "rpr_01J00000000000000000000000",
+    "idempotency_key": "invocation-preview-idempotency-0001",
+    "request_digest": "sha256:8c0e799920cf80586dfe76073788705cd45948946af4a768ad69f85af1e1fd02",
+    "side_effect": "idempotent",
+    "status": "succeeded",
+    "current_attempt_id": "iat_preview_01J00000000000000000",
+    "result_reference": "artifact-operation-result://aop_preview_01J000000000000000000",
+    "created_at": "2026-07-16T09:06:02Z",
+    "updated_at": "2026-07-16T09:06:05Z",
+    "completed_at": "2026-07-16T09:06:05Z",
+    "attempt_count": 1,
+    "max_attempts": 3
+  },
+  "resolution": {
+    "resolution_id": "res_preview_01J000000000000000000",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "client_app_id": "html-product",
+    "execution_scope": {
+      "kind": "artifact_operation",
+      "artifact_operation_id": "aop_preview_01J000000000000000000"
+    },
+    "principal_context_digest": "sha256:bfb1d517260890b1df9744f3b1420dda3865f1a382e9735ecbeb895bbc8e5862",
+    "identity_dependency": {
+      "mode": "principal_context",
+      "declaration_digest": "sha256:405b028e4388eb8c9259ee7f44c25663203449030c7beebe0a1041b5f7df4c19"
+    },
+    "capability": {
+      "id": "artifact.preview.html",
+      "version": "1.0",
+      "profile": "default"
+    },
+    "selected_provider_instance_id": "rpi_html_preview",
+    "selected_provider_audience": "urn:agent-platform:provider-instance:rpi_html_preview",
+    "routing_reason": "scenario_requirement",
+    "resolver_revision": {
+      "id": "provider-resolver",
+      "version": "1.0.0",
+      "digest": "sha256:ef30b70a32f4eb10c1ff2f9b68b5adaaeabe078ee9901362ff227bca163492d0"
+    },
+    "resolution_input_digest": "sha256:9900ac83069426b80609b2d01de60b97f0cf5e0f013d3e0505c6738917dbcb2e",
+    "candidate_evaluations": [
+      {
+        "provider_instance_id": "rpi_html_preview",
+        "provider_revision_id": "rpr_01J00000000000000000000000",
+        "provider_audience": "urn:agent-platform:provider-instance:rpi_html_preview",
+        "outcome": "selected",
+        "reason_codes": [
+          "scenario_match"
+        ],
+        "evidence_digest": "sha256:3b81a6b5750686daade1ba1b0d67030e2eda86b1a71f145f5b4b8c5fa0d36038"
+      }
+    ],
+    "resolution_evidence_reference": "resolution-evidence/res_preview_01J000000000000000000",
+    "resolution_evidence_digest": "sha256:bf1bef6e4f4f77a968e542e545262309cc82294840eb7ac44ae250431c829d64",
+    "resolved_at": "2026-07-16T09:06:01Z",
+    "capability_definition_digest": "sha256:3535353535353535353535353535353535353535353535353535353535353535",
+    "selected_provider_revision": {
+      "provider_revision_id": "rpr_01J00000000000000000000000",
+      "provider_revision_digest": "sha256:f2730e7377bc8918460730328465d72a0da531e73350bdb1fbd76a7eabb6b5c3",
+      "provider_kind": "renderer",
+      "implementation": {
+        "implementation_id": "renderer-provider.html-preview",
+        "implementation_version": "1.0.0",
+        "distribution_type": "package",
+        "distribution_digest": "sha256:3737373737373737373737373737373737373737373737373737373737373737",
+        "manifest_digest": "sha256:3636363636363636363636363636363636363636363636363636363636363636",
+        "provenance": {
+          "source_revision": "2251cca58dd51fcc8576ed01cde49988693c245328d08664970b53b202b7059b",
+          "source_tree_digest": "sha256:de324776ca2fc656a882554433228bf24a5261c8edad31faa0d2ce0d2b4d5198",
+          "build_artifact_digest": "sha256:3737373737373737373737373737373737373737373737373737373737373737",
+          "sbom_digest": "sha256:0e16c0107b1b6a20c3c89ee5280e028b8adc9ffbf914c3d28c60c636adc4032c",
+          "provenance_statement_digest": "sha256:fdb92839e992ae3a10e6ba23b139877f2ebed04cdfc65767b4ea92a7fdeabfe8",
+          "build_system": "contract-fixture-build-v1"
+        }
+      },
+      "port": {
+        "protocol": "capability-provider",
+        "protocol_version": "v1",
+        "contract_digest": "sha256:82ab68c671d838e1c3f0e3e31368c985c118120c8c474d21fc648e312ce7d500",
+        "binding_digest": "sha256:3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a"
+      },
+      "configuration_digest": "sha256:3838383838383838383838383838383838383838383838383838383838383838",
+      "approved_permissions_digest": "sha256:3939393939393939393939393939393939393939393939393939393939393939",
+      "credential_binding_digest": "sha256:3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b",
+      "conformance_set_digest": "sha256:21148b468e66ceded199c25abfd1cf5065c2570a2a1e81931b9c9a604172a6f9",
+      "admission_decision_id": "pad_renderer_01J0000000000000000",
+      "admission_decision_digest": "sha256:894ef82e7650c43d5b7452b3ab8083f288f1836e27da5fb77e10fef00a1fb945",
+      "admission_status": "certified"
+    },
+    "decision_digest": "sha256:7b398f722e22121933fe7300d7d2dccde094a8041e16d3afb865842f0fc417f9"
+  },
+  "cases": [
+    {
+      "id": "artifact-usage-wrong-invocation",
+      "mutation": "wrong_invocation"
+    },
+    {
+      "id": "artifact-usage-wrong-provider-revision",
+      "mutation": "wrong_provider_revision"
+    },
+    {
+      "id": "artifact-report-cross-scope-entry",
+      "mutation": "cross_scope_entry"
+    },
+    {
+      "id": "artifact-settlement-cross-scope",
+      "mutation": "settlement_cross_scope"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "evidence_id": "cevd_runtime_01J00000000000000000",
+  "evidence_digest": "sha256:a1212ac5325930706282d328f9b54045c8078fe1c0916cc6a1186a984740cd54",
+  "subject_kind": "runtime_checkpoint",
+  "source_provider_revision_id": "apr_01J00000000000000000000000",
+  "source_runtime_revision": "native-runtime-2026.07",
+  "target_provider_revision_id": "apr_01J00000000000000000000001",
+  "target_runtime_revision": "native-runtime-2026.08",
+  "suite_id": "agent-runtime-provider",
+  "suite_version": "1.0.0",
+  "suite_digest": "sha256:9ef6d50df9f1032476ea2ada2c16d70c15d88368acf59794062df7dfce0bb356",
+  "profile_id": "runtime-checkpoint-compatibility-v1",
+  "test_run_reference": "conformance://runtime/checkpoint/run-01",
+  "test_run_digest": "sha256:d678a5c6c8a7408ba91e116eec841c21068be208f350530f776c4fdadd838d1f",
+  "result": "passed",
+  "completed_at": "2026-07-16T10:11:00Z"
+}

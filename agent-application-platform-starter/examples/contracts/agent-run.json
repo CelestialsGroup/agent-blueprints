@@ -10,6 +10,6 @@
   "required_for_work_order_completion": true,
   "agent_role": "general",
   "runtime_provider_resolution_id": "res_agent_general_01J00000000000000",
-  "run_manifest_digest": "sha256:9ccb574beef4e1bc9b63e6b07f763ed9d1391a8cf730b17c003ab4b5fc5b727d",
+  "run_manifest_digest": "sha256:98023eeeba92e5ca04b9bd3b6727be89dcad3e0fc233c822b2dc279a148f080a",
   "created_at": "2026-07-16T09:01:00Z"
 }

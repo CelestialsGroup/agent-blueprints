@@ -285,7 +285,7 @@ Provider 单次传输 Attempt 返回 `SandboxOperationStatus`：`accepted`/`runn
 
 SandboxRegistry 保存期望状态、租约、Slot 与代数；Provider Adapter 保存实际 Pod/VM/Container/Endpoint。Lease 过期由 Temporal 定时器驱动终止/对账，不能依赖 Redis TTL 作为事实。
 
-SnapshotManifest 固化 `provider_revision_id`、Level、摘要、Size、`content_reference` 和兼容性。Workspace 级 Snapshot 可跨符合契约的 Provider 迁移；Filesystem/Process 级默认只在声明兼容时恢复。Restore 使用标准变更 Envelope，并为恢复后的 Sandbox 分配新的 `sandbox_id` 和显式 Slot；Snapshot 本身不可变。
+SnapshotManifest 固化 Source ProviderRevision、Source Runtime Revision、Level、摘要、Size、`content_reference` 和必需 Compatibility Profile。Provider 只能报告来源事实，不能自行授权 portable/compatible。任何跨 Source Revision 的 Workspace/Filesystem/Process Restore 都必须在 Dispatch 前绑定 Platform-owned CompatibilityDecision；Decision 的 Subject Digest、Source/Target ProviderRevision、Runtime Revision、Suite ID/Version/Digest、Profile 与 Evidence 必须完全匹配且结果为 `compatible`。缺失、失败或不匹配一律 fail-closed。Restore 为新 Sandbox 分配新的 `sandbox_id` 和显式 Slot；Snapshot 本身不可变。
 
 ## 对账与取消
 

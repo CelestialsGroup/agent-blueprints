@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:compatibility-evidence:v1",
+  "title": "CompatibilityEvidence",
+  "type": "object",
+  "required": [
+    "evidence_id", "evidence_digest", "subject_kind", "source_provider_revision_id",
+    "source_runtime_revision", "target_provider_revision_id", "target_runtime_revision",
+    "suite_id", "suite_version", "suite_digest", "profile_id", "test_run_reference",
+    "test_run_digest", "result", "completed_at"
+  ],
+  "properties": {
+    "evidence_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "evidence_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "subject_kind": { "enum": ["runtime_checkpoint", "sandbox_snapshot"] },
+    "source_provider_revision_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "source_runtime_revision": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "target_provider_revision_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "target_runtime_revision": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "suite_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "suite_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "suite_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "profile_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "test_run_reference": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "test_run_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "result": { "enum": ["passed", "failed"] },
+    "completed_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "evidence_digest is RFC 8785 JCS SHA-256 over the evidence excluding evidence_digest",
+    "suite_id, version, digest and profile resolve to an immutable admitted Conformance Suite and test execution",
+    "source and target revisions are exact immutable revisions; wildcard or Provider-family compatibility evidence is forbidden"
+  ]
+}

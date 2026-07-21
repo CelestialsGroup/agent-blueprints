@@ -1,0 +1,26 @@
+{
+  "machine_id": "artifact-ingest",
+  "version": 1,
+  "initial_state": "created",
+  "terminal_states": ["finalized", "rejected", "expired"],
+  "transitions": [
+    { "from": "created", "event": "upload_started", "to": "uploading" },
+    { "from": "created", "event": "lease_expired", "to": "expired" },
+    { "from": "created", "event": "authorization_revoked", "to": "rejected" },
+    { "from": "uploading", "event": "upload_confirmed", "to": "uploaded" },
+    { "from": "uploading", "event": "lease_expired", "to": "expired" },
+    { "from": "uploading", "event": "authorization_revoked", "to": "rejected" },
+    { "from": "uploaded", "event": "scan_enqueued", "to": "scan_pending" },
+    { "from": "uploaded", "event": "authorization_revoked", "to": "rejected" },
+    { "from": "scan_pending", "event": "scan_started", "to": "scanning" },
+    { "from": "scan_pending", "event": "lease_expired", "to": "expired" },
+    { "from": "scan_pending", "event": "authorization_revoked", "to": "rejected" },
+    { "from": "scanning", "event": "scan_passed", "to": "ready_to_finalize" },
+    { "from": "scanning", "event": "scan_rejected", "to": "rejected" },
+    { "from": "scanning", "event": "scan_error_closed", "to": "rejected" },
+    { "from": "scanning", "event": "authorization_revoked_and_scan_closed", "to": "rejected" },
+    { "from": "ready_to_finalize", "event": "platform_finalize_committed", "to": "finalized" },
+    { "from": "ready_to_finalize", "event": "lease_expired", "to": "expired" }
+    ,{ "from": "ready_to_finalize", "event": "authorization_revoked", "to": "rejected" }
+  ]
+}

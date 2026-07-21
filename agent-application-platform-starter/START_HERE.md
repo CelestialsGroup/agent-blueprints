@@ -29,12 +29,14 @@ Schema、OpenAPI、状态机、数据库不变量和验证 Gate 高于叙述性�
 - Business Application 拥有 User、Organization、Membership、Product、Order、Payment、Entitlement 和商业额度。
 - Agent Platform 拥有 Conversation、WorkOrder、Workflow、Event、Artifact、Technical Usage、Provider、Sandbox、RuntimeRecording 和 Experience Catalog。
 - Agent Runtime 和 Sandbox 只能通过带解析证据的 Provider Port/Resolution 接入，框架或基础设施私有模型不得进入稳定内核。
-- ExecutionGrant 精确绑定请求 Contract/Digest Profile；Conversation Branch 精确绑定 WorkspaceRevision Head。
+- ExecutionGrant 精确绑定请求 Contract/Digest Profile；Conversation Branch Create/Fork 命令精确绑定来源 Message Cut、WorkspaceRevision Head 与 CAS。
 - 新 Turn 与现有 WorkOrder 控制使用不同请求；Message、Workspace 和 Active Work 使用独立 CAS 版本。
 - 用户控制仍需要新的 Business ExecutionGrant；Business 授权撤销通过 sender-constrained 的不可变 Revocation Notice 进入 Platform。授权到期、撤销、Deadline/预算触发或紧急停机时，唯一 Platform Safety Controller 以不可变 `SystemSafetyControl` 仅执行 Pause/Cancel。该路径不能恢复执行、追加输入、批准、Checkpoint 或产生新副作用。
 - RunManifest 精确绑定已消费 ExecutionGrant 的请求 Contract/Profile/Digest，并固化实际有界输入、ContextPackage、ArtifactAccessRequirement、初始预算/策略/权限上限、商业授权 ID/Digest/到期上限和四类 Gateway Binding；Runtime Start 携带本 Attempt 可等价/缩权续期的短期 RuntimeAuthorization/ArtifactGrant，任何跨 Tenant/WorkOrder、越过商业期限、Grant 早发/晚到期、缺失或扩权都 fail-closed。
 - 通用 Capability Provider 拥有独立 Port/Token，不以 Plugin 或 `plugin_id` 作为公共前提；请求携带完整执行授权值并绑定 ProviderResolution/Instance/Audience，Invoke/Status/Cancel/Event 使用正式 Contract/Profile/Digest、不可跨操作重放且可在原授权窗口内续期的短期 Token。
 - Model/Tool 复用 Capability Port；Artifact/Egress 使用独立可执行 Gateway Port。Artifact 写入由 ArtifactStagingGrant 与更短期 Gateway Token 共同授权，Provider 永远不能 Finalize ArtifactVersion。
+- Preview/Edit/Conversion 使用统一 ArtifactOperation ExecutionScope。客户端只提交业务授权与 Artifact/Capability 意图；Platform 分配 Operation 后派生 Policy/Budget/Permissions/Gateway/ProviderResolution，并复用 Capability Invocation/Attempt、TechnicalUsage 与 Settlement。ArtifactIngest 也在 Session 分配后派生 Policy/Budget/Permissions，使用 Create/Status/Confirm/Scan/Platform Finalize 状态机且不调度 Provider。
+- 终态用量在非空 UsageReport 与肯定的 NoUsageAttestation 间显式选择；Checkpoint/Snapshot 跨 Revision 恢复依赖 Platform CompatibilityDecision/Evidence；Secret 只经绑定目标 Intent 的 SecretGrant 和单操作 Credential Gateway 交付，均 fail-closed。
 - Egress 绑定不可变 Owner-scoped DestinationRevision 并按 destination_class 授权；RuntimeSessionRoute 只携带不透明 Gateway/Provider Route Reference，不保存原始基础设施地址。
 - CanonicalEvent 使用闭合 Metadata 和来源身份 Inbox 去重；Workspace 内容必须验证独立 Manifest Schema。
 - Sandbox 由 Capability 按需创建；轻量 Run 可以没有 Sandbox，非空 Slot 只引用统一 ProviderResolution。

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:compatibility-decision:v1",
+  "title": "CompatibilityDecision",
+  "description": "Immutable Platform decision authorizing or denying one exact checkpoint/snapshot source-to-target restoration pair.",
+  "type": "object",
+  "required": [
+    "decision_id", "decision_digest", "subject_kind", "subject_id", "subject_digest",
+    "source_provider_revision_id", "source_runtime_revision", "target_provider_revision_id",
+    "target_runtime_revision", "compatibility_profile", "evidence", "result", "reason_codes", "decided_at"
+  ],
+  "properties": {
+    "decision_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "subject_kind": { "enum": ["runtime_checkpoint", "sandbox_snapshot"] },
+    "subject_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "subject_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "source_provider_revision_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "source_runtime_revision": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "target_provider_revision_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "target_runtime_revision": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "compatibility_profile": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": { "$ref": "urn:agent-platform:compatibility-evidence:v1" }
+    },
+    "result": { "enum": ["compatible", "incompatible"] },
+    "reason_codes": {
+      "type": "array", "minItems": 1, "maxItems": 16, "uniqueItems": true,
+      "items": { "enum": ["suite_passed", "suite_failed", "profile_mismatch", "source_mismatch", "target_mismatch", "evidence_missing", "evidence_expired", "policy_denied"] }
+    },
+    "decided_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "decision_digest is RFC 8785 JCS SHA-256 over the decision excluding decision_digest",
+    "compatible requires only passed evidence matching subject, source, target and compatibility profile; any failed or missing required evidence closes as incompatible",
+    "restore and migration fail closed unless an exact immutable compatible decision is bound before dispatch",
+    "Provider self-declaration cannot create, replace or mutate this Platform-owned decision"
+  ]
+}

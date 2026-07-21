@@ -2,13 +2,13 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:agent-platform:usage-report:v1",
   "title": "UsageReport",
-  "description": "Immutable collection of TechnicalUsage entries for one WorkOrder and one Business reservation.",
+  "description": "Immutable collection of TechnicalUsage entries for one closed execution scope and one Business reservation.",
   "type": "object",
   "required": [
     "usage_report_id",
     "usage_report_digest",
     "tenant_id",
-    "work_order_id",
+    "execution_scope",
     "commercial_authorization_id",
     "commercial_authorization_digest",
     "quota_reservation_id",
@@ -23,7 +23,7 @@
     "usage_report_id": { "type": "string", "minLength": 1 },
     "usage_report_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "tenant_id": { "type": "string", "minLength": 1 },
-    "work_order_id": { "type": "string", "minLength": 1 },
+    "execution_scope": { "$ref": "urn:agent-platform:execution-scope:v1" },
     "commercial_authorization_id": { "type": "string", "minLength": 1 },
     "commercial_authorization_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "quota_reservation_id": { "type": "string", "minLength": 1 },
@@ -84,9 +84,9 @@
   ],
   "x-semantic-constraints": [
     "usage_report_digest is RFC 8785 JCS SHA-256 over the report excluding usage_report_digest",
-    "all entries match tenant_id and work_order_id and have unique entry_id",
+    "all entries match tenant_id and execution_scope and have unique entry_id",
     "a final report contains only confirmed or corrected entries; partial and estimated measurements remain visible in partial reports",
-    "report_sequence is contiguous per tenant, WorkOrder and QuotaReservation; every later report supersedes the immediate predecessor",
+    "report_sequence is contiguous per tenant, execution_scope and QuotaReservation; every later report supersedes the immediate predecessor",
     "a correction report contains only corrected entries and never replaces an earlier report"
   ]
 }

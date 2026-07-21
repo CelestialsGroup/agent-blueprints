@@ -75,12 +75,6 @@
         "null"
       ]
     },
-    "primary_agent_run_id": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
     "last_work_sequence": {
       "type": "integer",
       "minimum": 0
@@ -101,5 +95,11 @@
       "format": "date-time"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "status transitions follow contracts/state-machines/work-order-v1.json and terminal states have no outgoing transitions",
+    "last_work_sequence is contiguous per WorkOrder and every externally visible state change is committed with its Outbox event",
+    "workflow_run_id, when present, resolves through exactly one immutable WorkflowRunRootBinding; RootBinding rather than a denormalized primary AgentRun field is authoritative",
+    "terminal_at is present only for terminal status and the terminal WorkOrder remains pending for delivery until usage is represented by a final non-empty UsageReport or NoUsageAttestation"
+  ]
 }

@@ -34,7 +34,9 @@ Scenario
 
 - ProviderRevision 创建后按摘要不可变。
 - ProviderResolution 必须绑定 Resolver Revision、完整输入摘要、逐候选结论、不可变证据和 Decision Digest；只保存“选了谁”不构成可审计解析。
-- ProviderResolution 必须显式绑定 `tenant_id + client_app_id + work_order_id`，通过 `identity_dependency` 声明解析是否依赖身份；依赖身份时必须绑定 PrincipalContextSnapshot Digest。幂等记录唯一范围固定为 Tenant + ClientApplication + Operation + Key Digest。
+- ProviderResolution 必须显式绑定 `tenant_id + client_app_id + execution_scope`；当前 Scope 只允许 WorkOrder 或 ArtifactOperation，ArtifactIngest 不调度 Provider。`identity_dependency` 声明解析是否依赖身份；依赖身份时必须绑定 PrincipalContextSnapshot Digest。幂等记录唯一范围固定为 Tenant + ClientApplication + Operation + Key Digest。
+- Preview/Edit/Conversion 公共请求只接受调用方拥有的 Tenant、ClientApplication、PrincipalContext、ArtifactVersion、Capability、CommercialAuthorization、QuotaReservation、幂等键和请求摘要。Platform 认证请求并分配 `artifact_operation_id` 后，才生成同 Scope 的 PolicyDecision、ExecutionBudget、EffectivePermissions、Artifact Gateway Binding、ProviderResolution 与 Invocation；公开请求提交这些 Platform 事实必须拒绝。
+- ArtifactIngest Create 同样不接受调用方提交 PolicyDecision、ExecutionBudget 或 EffectivePermissions。Platform 分配 `ingest_session_id` 后生成并持久绑定这些事实；它们不得反向成为创建 Session 的前置输入。
 - ProviderRevision 的公共 Envelope 只包含 Provider kind、Implementation、Port、配置、权限、凭据和 Conformance；Runtime、Sandbox 和 Capability Provider 不得被强制包装成 Plugin。
 - Implementation 必须绑定不可变 BuildProvenance，包括 Source Revision、Source Tree、Build Artifact、SBOM 和 Provenance Statement 摘要。
 - 认证/撤销使用仅追加的 ProviderAdmissionDecision，不得回写 Revision。
@@ -57,7 +59,7 @@ Scenario
 - 每个 Run 在准入时锁定 Agent Runtime ProviderRevision；运行中不得自动切换框架。Provider 原生 Checkpoint 只能在明确声明并通过测试的兼容范围内恢复。
 - 每个可执行后续输入都需要新的 Business ExecutionGrant；WorkSession 不能扩大商业授权。
 - `ConversationTurnRequest` 只创建新 Turn/WorkOrder；`WorkOrderControlRequest` 只控制现有 WorkOrder。`interrupt_and_enqueue` 先记录当前 WorkOrder 取消意图，再创建独立后继 WorkOrder；不得把 Append/Interrupt 偷换成新 Turn。
-- Business 授权到期、撤销、Deadline/预算触发或紧急停机不能阻止平台减权。Business 撤销使用 sender-constrained、幂等的不可变 `CommercialAuthorizationRevocation`，Platform 只保存收据和派生控制，不改写商业事实。唯一 Platform Safety Controller 可创建不可变 `SystemSafetyControl`，但只能绑定一个 Tenant/WorkOrder/RuntimeRun 的 Pause/Cancel 与内容寻址触发证据；它不能 Resume、Append、Interrupt、Approval、Checkpoint 或创建任何新副作用，也不能与用户 `WorkOrderControlRequest` 混用。
+- Business 授权到期、撤销、Deadline/预算触发或紧急停机不能阻止平台减权。Business 撤销使用 sender-constrained、幂等的不可变 `CommercialAuthorizationRevocation`；Platform 原子保存带摘要的 deny 收据，以及 WorkSession、WorkOrder、ArtifactOperation、ArtifactIngest 的 CAS/Outbox intents，不改写商业事实。WorkOrder 仍由唯一 Safety Controller 对每个 RuntimeRun 创建不可变 SystemSafetyControl；非 WorkOrder Scope 由各自状态机执行 reduction-only Cancel。任何路径都不能 Resume、追加输入、批准、Checkpoint 或创建新副作用。
 - ExecutionGrant 必须声明 `request_contract_id` 与固定 Digest Profile，并绑定该精确请求去除 `execution_grant` 后的 JCS 摘要；Turn Grant 绑定 Turn/Message/Scenario，Control Grant 只绑定现有 WorkOrder/ControlRequest，不得携带陈旧 Turn 字段。Grant 内嵌有界 PrincipalContextSnapshot 并校验其摘要。
 - Runtime Command 与核心 Runtime Event Payload 必须使用类型化 Schema；Provider 私有 Event 不能直接驱动 Chat、Plan、Task、Usage 或终态 Projection。
 - RunManifest 通过 `request_contract_id + request_digest_profile + request_digest` 精确绑定已消费 ExecutionGrant 的原始请求，并固化实际有界输入或不可变引用、ContextPackage、ArtifactAccessRequirement、初始 Budget/Policy/Permissions 上限、授权续期规则和类型化 Model/Tool/Artifact/Egress Gateway Binding；不保存会过期的 bearer Grant。
@@ -71,7 +73,7 @@ Scenario
 - Model/Tool Gateway 复用 `capability-provider-v1`；Artifact 与 Egress 分别使用 `artifact-gateway-v1`、`egress-gateway-v1`。每个 Gateway Binding 必须携带 Contract ID/Digest、Route、Audience 与 Binding Digest。Provider 写入只使用 ArtifactStagingGrant 加更短期 Artifact Gateway 操作 Token，Staging Commit 不等于 ArtifactVersion Finalize。
 - Egress 只解析不可变、Owner-scoped DestinationRevision；Request/Token 绑定 Revision ID/Digest/Class，EffectivePermissions 只按 Class 授权。RuntimeSessionRoute 只保存 Gateway Route 与带摘要的不透明 Provider Route Reference，不得泄漏 Endpoint/Cluster/Region/Cell。
 - RunManifest 绑定 Agent Runtime EventTypeRegistry 的 ID/Version/Digest；Platform 领域 Event 绑定 Platform Core Registry。CanonicalEvent 只能绑定二者中与 Producer 所有权匹配的精确 Revision，且 Payload 必须通过对应 Schema；Provider 私有 Registry 不能进入核心 Projection。
-- Platform Core Registry 必须覆盖 Conversation、Message、WorkOrder/Control/SystemSafetyControl、WorkflowRun、AgentRun、GrantConsumption、Approval、Invocation、Artifact、Usage、Workspace、RuntimeSession/Recording 和 Delivery；Runtime Registry 只承载 Adapter 标准事件。
+- Platform Core Registry 必须覆盖 Conversation/Branch Create-Fork、Message、WorkOrder/Control/SystemSafetyControl、WorkflowRun、AgentRun、GrantConsumption、Approval、Invocation、Artifact/ArtifactOperation/ArtifactIngest、Usage/NoUsage、CompatibilityDecision、SecretGrant/Credential Audit、Workspace、RuntimeSession/Recording 和 Delivery；Runtime Registry 只承载 Adapter 标准事件。
 
 ## 可靠性
 

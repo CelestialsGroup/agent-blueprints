@@ -1,6 +1,6 @@
 {
   "provider_revision_id": "spr_01J00000000000000000000000",
-  "provider_revision_digest": "sha256:76c77ff375ea0363c130a9fea147d1de328b8ba0f2483bb5ee4ac715a6cde16d",
+  "provider_revision_digest": "sha256:0cf63bc10a3d6e979a6a729485f4bca99435868a40e9cedce335f8058ff8360f",
   "provider_instance_id": "spi_native_sandbox",
   "configuration_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
   "approved_permissions_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
@@ -15,11 +15,11 @@
       "status": "passed",
       "report_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
       "suite_id": "sandbox-provider",
-      "suite_digest": "sha256:fd85653947c27723f6d260087f7d3eff49a2cd31306c3f153675ec79284928a9",
+      "suite_digest": "sha256:bdebf6fba1cd41072a46b47de451bf039485047e9a9478fad2d6c69ee8ff38b7",
       "suite_profile_id": "sandbox-core-v1"
     }
   ],
-  "conformance_set_digest": "sha256:4d8889e6063f7704daeea3dc0f3c2663614def9aa05c622a0a6c0201a2773c89",
+  "conformance_set_digest": "sha256:07f488c6a212045ad548c2c040f67f25e04674774682890135e4aca3fd7ad17a",
   "created_at": "2026-07-16T09:00:00Z",
   "implementation": {
     "implementation_id": "sandbox-provider.native",

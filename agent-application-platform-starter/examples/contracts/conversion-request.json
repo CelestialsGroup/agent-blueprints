@@ -1,0 +1,50 @@
+{
+  "operation_context": {
+    "operation_kind": "conversion",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "client_app_id": "html-product",
+    "principal_context": {
+      "snapshot_version": 1,
+      "client_app_id": "html-product",
+      "external_tenant_id": "org-456",
+      "external_principal_id": "user-123",
+      "principal_type": "user",
+      "roles": [
+        "member"
+      ],
+      "groups": [
+        "design-team"
+      ],
+      "attributes": {
+        "data_classification": "internal",
+        "region": "cn"
+      },
+      "issued_at": "2026-07-16T08:59:30Z",
+      "expires_at": "2026-07-16T09:30:00Z",
+      "digest_profile": "rfc8785-principal-context-excluding-digest-v1",
+      "principal_context_digest": "sha256:bfb1d517260890b1df9744f3b1420dda3865f1a382e9735ecbeb895bbc8e5862"
+    },
+    "artifact_id": "art_01J00000000000000000000000",
+    "source_version_id": "ver_01J00000000000000000000000",
+    "source_version_digest": "sha256:8f849c3f87818d7b11c3de39155576cb941f7157d73daf22162fa996b58ee919",
+    "capability": {
+      "id": "artifact.convert.pptx",
+      "version": "1.0",
+      "profile": "default"
+    },
+    "commercial_authorization": {
+      "commercial_authorization_id": "cauth_01J00000000000000000000000",
+      "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
+      "expires_at": "2026-07-16T09:30:00Z"
+    },
+    "quota_reservation_id": "qres_01J00000000000000000000000",
+    "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
+    "idempotency_key": "artifact-conversion-idempotency-0001",
+    "request_digest": "sha256:8b6d2ff7e6f713d3fcdced00e64999bcf170c2856fb8e415079e4259f0f4cfff",
+    "requested_at": "2026-07-16T09:06:00Z"
+  },
+  "target_media_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "options": {
+    "page_size": "wide"
+  }
+}

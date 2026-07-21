@@ -1,7 +1,7 @@
 {
   "suite_id": "sandbox-provider",
   "suite_version": "1.0.0",
-  "suite_digest": "sha256:fd85653947c27723f6d260087f7d3eff49a2cd31306c3f153675ec79284928a9",
+  "suite_digest": "sha256:bdebf6fba1cd41072a46b47de451bf039485047e9a9478fad2d6c69ee8ff38b7",
   "target_kind": "sandbox",
   "profiles": [
     {
@@ -110,6 +110,12 @@
           "description": "Sandbox can write only admitted staging locations."
         },
         {
+          "test_id": "secret-grant-and-credential-gateway",
+          "category": "security",
+          "evidence_type": "trace",
+          "description": "Exec rejects uncovered Secret references and only consumes a sender-constrained single-use Credential delivery for the exact request; material is absent from cache, disk, logs, events, traces, snapshots and recordings."
+        },
+        {
           "test_id": "provider-failover",
           "category": "multi_node",
           "evidence_type": "trace",
@@ -126,6 +132,60 @@
           "category": "usage",
           "evidence_type": "report",
           "description": "Sandbox usage entries bind MeterDefinition, WorkOrder and immutable evidence."
+        }
+      ]
+    },
+    {
+      "profile_id": "sandbox-snapshot-workspace-v1",
+      "depends_on": [
+        "sandbox-core-v1"
+      ],
+      "tests": [
+        {
+          "test_id": "workspace-snapshot-roundtrip",
+          "category": "recovery",
+          "evidence_type": "test_log",
+          "description": "Workspace snapshot bytes, manifest digest and restored WorkspaceRevision content match exactly."
+        },
+        {
+          "test_id": "workspace-cross-revision-evidence",
+          "category": "contract",
+          "evidence_type": "artifact",
+          "description": "Cross-revision workspace restore emits immutable evidence for the exact source and target revisions and profile."
+        },
+        {
+          "test_id": "workspace-restore-fail-closed",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "Missing, failed or mismatched CompatibilityDecision blocks restore before dispatch."
+        }
+      ]
+    },
+    {
+      "profile_id": "sandbox-snapshot-filesystem-v1",
+      "depends_on": [
+        "sandbox-snapshot-workspace-v1"
+      ],
+      "tests": [
+        {
+          "test_id": "filesystem-source-target-matrix",
+          "category": "recovery",
+          "evidence_type": "artifact",
+          "description": "Each admitted filesystem source-to-target Provider/runtime pair passes the declared compatibility matrix."
+        }
+      ]
+    },
+    {
+      "profile_id": "sandbox-snapshot-process-v1",
+      "depends_on": [
+        "sandbox-snapshot-filesystem-v1"
+      ],
+      "tests": [
+        {
+          "test_id": "process-source-target-matrix",
+          "category": "recovery",
+          "evidence_type": "artifact",
+          "description": "Each admitted process snapshot pair verifies architecture, runtime, image and kernel-sensitive restore evidence without wildcard compatibility."
         }
       ]
     }

@@ -1,14 +1,14 @@
 {
   "registry_id": "platform-core",
   "registry_version": 1,
-  "registry_digest": "sha256:9e668598dafb8bd7f7c1cca1f4f3675553b14fc5e42948de99433ec282a23f62",
+  "registry_digest": "sha256:a9e717df6ee3d524e9805b1d1d78b39957618985d7d3ff9ad0e984362d1ddde6",
   "definitions": [
     {
       "type": "conversation.created",
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/conversationCreated",
-        "digest": "sha256:1da9f6f76bb3baee672ffc410ce78fbe3b2306abd45aceb707a39cbab8529d08",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -25,7 +25,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/messageAppended",
-        "digest": "sha256:1da9f6f76bb3baee672ffc410ce78fbe3b2306abd45aceb707a39cbab8529d08",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -42,7 +42,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/workOrderAccepted",
-        "digest": "sha256:1da9f6f76bb3baee672ffc410ce78fbe3b2306abd45aceb707a39cbab8529d08",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -59,7 +59,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/workOrderControlAccepted",
-        "digest": "sha256:1da9f6f76bb3baee672ffc410ce78fbe3b2306abd45aceb707a39cbab8529d08",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -76,7 +76,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/systemSafetyControlIssued",
-        "digest": "sha256:1da9f6f76bb3baee672ffc410ce78fbe3b2306abd45aceb707a39cbab8529d08",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -95,7 +95,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/workOrderStateChanged",
-        "digest": "sha256:1da9f6f76bb3baee672ffc410ce78fbe3b2306abd45aceb707a39cbab8529d08",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -112,7 +112,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/workflowRunStarted",
-        "digest": "sha256:1da9f6f76bb3baee672ffc410ce78fbe3b2306abd45aceb707a39cbab8529d08",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -129,7 +129,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/agentRunStarted",
-        "digest": "sha256:1da9f6f76bb3baee672ffc410ce78fbe3b2306abd45aceb707a39cbab8529d08",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -146,7 +146,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/workflowRunRootBound",
-        "digest": "sha256:1da9f6f76bb3baee672ffc410ce78fbe3b2306abd45aceb707a39cbab8529d08",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -164,7 +164,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/childAgentRunAdmissionDecided",
-        "digest": "sha256:1da9f6f76bb3baee672ffc410ce78fbe3b2306abd45aceb707a39cbab8529d08",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -182,7 +182,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/agentRunStateChanged",
-        "digest": "sha256:1da9f6f76bb3baee672ffc410ce78fbe3b2306abd45aceb707a39cbab8529d08",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -200,7 +200,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/agentRunControlFanoutCreated",
-        "digest": "sha256:1da9f6f76bb3baee672ffc410ce78fbe3b2306abd45aceb707a39cbab8529d08",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -219,7 +219,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/grantConsumed",
-        "digest": "sha256:1da9f6f76bb3baee672ffc410ce78fbe3b2306abd45aceb707a39cbab8529d08",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -236,7 +236,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/approvalRequested",
-        "digest": "sha256:1da9f6f76bb3baee672ffc410ce78fbe3b2306abd45aceb707a39cbab8529d08",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -253,7 +253,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/approvalResolved",
-        "digest": "sha256:1da9f6f76bb3baee672ffc410ce78fbe3b2306abd45aceb707a39cbab8529d08",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -270,7 +270,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/invocationStateChanged",
-        "digest": "sha256:1da9f6f76bb3baee672ffc410ce78fbe3b2306abd45aceb707a39cbab8529d08",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -287,7 +287,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/artifactVersionCreated",
-        "digest": "sha256:1da9f6f76bb3baee672ffc410ce78fbe3b2306abd45aceb707a39cbab8529d08",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -304,7 +304,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/usageRecorded",
-        "digest": "sha256:1da9f6f76bb3baee672ffc410ce78fbe3b2306abd45aceb707a39cbab8529d08",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -321,7 +321,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/workspaceRevisionCommitted",
-        "digest": "sha256:1da9f6f76bb3baee672ffc410ce78fbe3b2306abd45aceb707a39cbab8529d08",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -338,7 +338,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/runtimeSessionOpened",
-        "digest": "sha256:1da9f6f76bb3baee672ffc410ce78fbe3b2306abd45aceb707a39cbab8529d08",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -355,7 +355,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/runtimeRecordingReady",
-        "digest": "sha256:1da9f6f76bb3baee672ffc410ce78fbe3b2306abd45aceb707a39cbab8529d08",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -372,7 +372,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/deliveryStateChanged",
-        "digest": "sha256:1da9f6f76bb3baee672ffc410ce78fbe3b2306abd45aceb707a39cbab8529d08",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -382,6 +382,148 @@
       "projection_consumers": [
         "delivery-projection",
         "timeline-projection"
+      ]
+    },
+    {
+      "type": "conversation.branch.created",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/conversationBranchChanged",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "internal",
+      "retention_class": "audit",
+      "contains_user_content": false,
+      "projection_consumers": [
+        "conversation-projection",
+        "workspace-projection",
+        "timeline-projection"
+      ]
+    },
+    {
+      "type": "conversation.branch.forked",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/conversationBranchChanged",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "internal",
+      "retention_class": "audit",
+      "contains_user_content": false,
+      "projection_consumers": [
+        "conversation-projection",
+        "workspace-projection",
+        "timeline-projection"
+      ]
+    },
+    {
+      "type": "artifact.operation.state.changed",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/artifactOperationStateChanged",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "internal",
+      "retention_class": "audit",
+      "contains_user_content": false,
+      "projection_consumers": [
+        "artifact-projection",
+        "invocation-projection",
+        "timeline-projection"
+      ]
+    },
+    {
+      "type": "usage.no_usage.confirmed",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/noUsageConfirmed",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "internal",
+      "retention_class": "audit",
+      "contains_user_content": false,
+      "projection_consumers": [
+        "usage-projection",
+        "delivery-projection",
+        "audit-projection"
+      ]
+    },
+    {
+      "type": "artifact.ingest.state.changed",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/artifactIngestStateChanged",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "internal",
+      "retention_class": "audit",
+      "contains_user_content": false,
+      "projection_consumers": [
+        "artifact-projection",
+        "timeline-projection",
+        "audit-projection"
+      ]
+    },
+    {
+      "type": "compatibility.decided",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/compatibilityDecided",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "internal",
+      "retention_class": "audit",
+      "contains_user_content": false,
+      "projection_consumers": [
+        "provider-projection",
+        "runtime-projection",
+        "audit-projection"
+      ]
+    },
+    {
+      "type": "secret.grant.state.changed",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/secretGrantChanged",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "restricted",
+      "retention_class": "audit",
+      "contains_user_content": false,
+      "projection_consumers": [
+        "credential-audit-projection",
+        "audit-projection"
+      ]
+    },
+    {
+      "type": "credential.accessed",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/credentialAccessed",
+        "digest": "sha256:f299ab06170d756ea41f4ccc4e5cfe8b01d6ee648d4ddb7dab5bca2cbd9f6bc0",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "restricted",
+      "retention_class": "audit",
+      "contains_user_content": false,
+      "projection_consumers": [
+        "credential-audit-projection",
+        "audit-projection"
       ]
     }
   ]

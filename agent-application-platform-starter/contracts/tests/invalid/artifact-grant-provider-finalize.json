@@ -1,7 +1,6 @@
 {
   "grant_id": "artg_01J0000000000000000000000",
   "tenant_id": "ten_01J00000000000000000000000",
-  "work_order_id": "wrk_01J00000000000000000000000",
   "artifact_id": "art_workspace_manifest_01J000000000000000",
   "version_id": "ver_workspace_manifest_01J00000000000000",
   "artifact_digest": "sha256:ef0e25f8c192d97c4c99db13fba26569c7f78ca505e6b0db999c86398e4d86f5",
@@ -12,10 +11,8 @@
   "issued_at": "2026-07-16T09:01:00Z",
   "expires_at": "2026-07-16T09:15:00Z",
   "execution_scope": {
-    "kind": "runtime_invocation",
-    "runtime_run_id": "rtr_01J00000000000000000000000",
-    "invocation_id": "inv_runtime_01J000000000000000000",
-    "invocation_attempt_id": "iat_runtime_01J0000000000000000"
+    "kind": "work_order",
+    "work_order_id": "wrk_01J00000000000000000000000"
   },
   "gateway_binding": {
     "gateway_kind": "artifact",
@@ -27,5 +24,8 @@
     "binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
     "audience": "agent-artifact-gateway"
   },
-  "grant_digest": "sha256:3705c3655495f76438427c10a63c0b820df854a09fcf0bd657dab6c3b21a9cad"
+  "grant_digest": "sha256:f48aa7724926b2b90cc7d5682f64ff33f7431636878c8ceb4851db8db87df580",
+  "runtime_run_id": "rtr_01J00000000000000000000000",
+  "invocation_id": "inv_runtime_start_01J000000000000",
+  "invocation_attempt_id": "iat_runtime_start_01J00000000000"
 }

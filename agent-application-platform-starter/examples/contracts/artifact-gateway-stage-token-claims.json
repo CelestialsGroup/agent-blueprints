@@ -8,7 +8,10 @@
   "exp": 1784192770,
   "operation": "stage_object",
   "tenant_id": "ten_01J00000000000000000000000",
-  "work_order_id": "wrk_01J00000000000000000000000",
+  "execution_scope": {
+    "kind": "work_order",
+    "work_order_id": "wrk_01J00000000000000000000000"
+  },
   "invocation_id": "inv_cap_01J000000000000000000000",
   "invocation_attempt_id": "iat_cap_01J00000000000000000000",
   "fencing_token": 1,
@@ -16,5 +19,5 @@
   "operation_contract_id": "urn:agent-platform:artifact-staging-object-request:v1",
   "operation_digest_profile": "rfc8785-artifact-stage-metadata-excluding-content-and-request-digest-v1",
   "request_digest": "sha256:687577dd7304f41ea1cc6d1a2e294474142e4b862547966ef1aab414d73c3635",
-  "staging_grant_digest": "sha256:7e086f12b648800ef195e7f104095e102320db132164ee33cb27f97e81e16d01"
+  "staging_grant_digest": "sha256:ff086f67572bb2077cf9ac522aff6210d1be81dbfbb2473c538e6649e830d877"
 }

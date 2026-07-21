@@ -1,0 +1,23 @@
+{
+  "jti": "agt_aop_stage_01J000000000000000",
+  "iss": "agent-platform",
+  "sub": "urn:agent-platform:provider-instance:rpi_html_preview",
+  "aud": "agent-artifact-gateway",
+  "iat": 1784192762,
+  "nbf": 1784192762,
+  "exp": 1784193062,
+  "operation": "stage_object",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "execution_scope": {
+    "kind": "artifact_operation",
+    "artifact_operation_id": "aop_preview_01J000000000000000000"
+  },
+  "invocation_id": "inv_preview_01J000000000000000000",
+  "invocation_attempt_id": "iat_preview_01J00000000000000000",
+  "fencing_token": 1,
+  "gateway_binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
+  "operation_contract_id": "urn:agent-platform:artifact-staging-object-request:v1",
+  "operation_digest_profile": "rfc8785-artifact-stage-metadata-excluding-content-and-request-digest-v1",
+  "request_digest": "sha256:573db96d832204a24a040a5b05b8510b93a3b156d6960ac1dfea87f1a1f74796",
+  "staging_grant_digest": "sha256:bf4cbe47b4696ee516fab5e645abe5a588e8acd483341208793ff3184d6e2a54"
+}

@@ -4,76 +4,34 @@
   "title": "SandboxSnapshotManifest",
   "type": "object",
   "required": [
-    "snapshot_id",
-    "sandbox_id",
-    "provider_revision_id",
-    "level",
-    "portable",
-    "digest",
-    "size_bytes",
-    "created_at",
-    "content_reference"
+    "snapshot_id", "sandbox_id", "source_provider_revision_id", "source_runtime_revision",
+    "level", "portability", "compatibility_profile", "digest", "size_bytes", "created_at", "content_reference"
   ],
   "properties": {
-    "snapshot_id": {
-      "type": "string"
-    },
-    "sandbox_id": {
-      "type": "string"
-    },
-    "provider_revision_id": {
-      "type": "string"
-    },
-    "level": {
-      "enum": [
-        "workspace",
-        "filesystem",
-        "process"
-      ]
-    },
-    "portable": {
-      "type": "boolean"
-    },
-    "digest": {
-      "type": "string",
-      "pattern": "^sha256:[0-9a-f]{64}$"
-    },
-    "size_bytes": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "content_reference": {
-      "type": "string"
-    },
-    "created_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "compatibility": {
-      "type": "object",
-      "properties": {
-        "architecture": {
-          "enum": [
-            "amd64",
-            "arm64"
-          ]
-        },
-        "runtime_profile": {
-          "type": "string"
-        },
-        "runtime_version": {
-          "type": "string"
-        },
-        "kernel_version_range": {
-          "type": "string"
-        },
-        "image_digest": {
-          "type": "string",
-          "pattern": "^sha256:[0-9a-f]{64}$"
-        }
-      },
-      "additionalProperties": false
-    }
+    "snapshot_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "sandbox_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "source_provider_revision_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "source_runtime_revision": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "level": { "enum": ["workspace", "filesystem", "process"] },
+    "portability": { "enum": ["same_revision", "compatible_revision", "portable"] },
+    "compatibility_profile": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "compatibility_decision": { "$ref": "urn:agent-platform:compatibility-decision:v1" },
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "size_bytes": { "type": "integer", "minimum": 0 },
+    "content_reference": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "created_at": { "type": "string", "format": "date-time" }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "portability": { "enum": ["compatible_revision", "portable"] } }, "required": ["portability"] },
+      "then": { "required": ["compatibility_decision"] },
+      "else": { "not": { "required": ["compatibility_decision"] } }
+    }
+  ],
+  "x-semantic-constraints": [
+    "compatible_revision and portable require an immutable Platform CompatibilityDecision for the exact snapshot digest, source revision, target revision and profile",
+    "same_revision restore requires exact ProviderRevision and runtime revision equality; any mismatch fails closed",
+    "workspace, filesystem and process portability use distinct admitted Sandbox Suite profiles and Provider self-report is never sufficient"
+  ]
 }

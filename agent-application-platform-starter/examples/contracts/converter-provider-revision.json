@@ -1,0 +1,45 @@
+{
+  "provider_revision_id": "cpr_01J00000000000000000000000",
+  "provider_revision_digest": "sha256:c2dc0203d833905965a8c9bbf60565d80e0ea0e934fadcc31e8d9b867d22f460",
+  "provider_instance_id": "cpi_html_to_pptx",
+  "configuration_digest": "sha256:3838383838383838383838383838383838383838383838383838383838383838",
+  "approved_permissions_digest": "sha256:3939393939393939393939393939393939393939393939393939393939393939",
+  "credential_binding_digest": "sha256:3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b",
+  "provider_kind": "converter",
+  "conformance": [
+    {
+      "capability": "artifact.convert.pptx",
+      "version": "1.0",
+      "profile": "default",
+      "suite_version": "1.0.0",
+      "status": "passed",
+      "report_digest": "sha256:3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c",
+      "suite_id": "capability-provider",
+      "suite_digest": "sha256:261f8021c3a29cc0d21c1464ca5fa41166174c841278b6c4882459b78a86a791",
+      "suite_profile_id": "capability-core-v1"
+    }
+  ],
+  "conformance_set_digest": "sha256:5a3d4baf78a6f481b97425eb809fa5464bafbec93a4d0a17372b3cb90c64ac48",
+  "created_at": "2026-07-16T09:00:22Z",
+  "implementation": {
+    "implementation_id": "converter-provider.fixture",
+    "implementation_version": "1.0.0",
+    "distribution_type": "package",
+    "distribution_digest": "sha256:3737373737373737373737373737373737373737373737373737373737373737",
+    "manifest_digest": "sha256:3636363636363636363636363636363636363636363636363636363636363636",
+    "provenance": {
+      "source_revision": "2251cca58dd51fcc8576ed01cde49988693c245328d08664970b53b202b7059b",
+      "source_tree_digest": "sha256:de324776ca2fc656a882554433228bf24a5261c8edad31faa0d2ce0d2b4d5198",
+      "build_artifact_digest": "sha256:3737373737373737373737373737373737373737373737373737373737373737",
+      "sbom_digest": "sha256:0e16c0107b1b6a20c3c89ee5280e028b8adc9ffbf914c3d28c60c636adc4032c",
+      "provenance_statement_digest": "sha256:fdb92839e992ae3a10e6ba23b139877f2ebed04cdfc65767b4ea92a7fdeabfe8",
+      "build_system": "contract-fixture-build-v1"
+    }
+  },
+  "port": {
+    "protocol": "capability-provider",
+    "protocol_version": "v1",
+    "contract_digest": "sha256:82ab68c671d838e1c3f0e3e31368c985c118120c8c474d21fc648e312ce7d500",
+    "binding_digest": "sha256:3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a"
+  }
+}

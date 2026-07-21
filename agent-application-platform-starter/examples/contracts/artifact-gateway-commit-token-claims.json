@@ -8,7 +8,10 @@
   "exp": 1784192770,
   "operation": "commit_staging",
   "tenant_id": "ten_01J00000000000000000000000",
-  "work_order_id": "wrk_01J00000000000000000000000",
+  "execution_scope": {
+    "kind": "work_order",
+    "work_order_id": "wrk_01J00000000000000000000000"
+  },
   "invocation_id": "inv_cap_01J000000000000000000000",
   "invocation_attempt_id": "iat_cap_01J00000000000000000000",
   "fencing_token": 1,
@@ -16,5 +19,5 @@
   "operation_contract_id": "urn:agent-platform:artifact-staging-commit-request:v1",
   "operation_digest_profile": "rfc8785-request-excluding-request-digest-v1",
   "request_digest": "sha256:fb08c486941869da85df925508b7f62b89469579e6b7295ef5c0ac0730d1e96b",
-  "staging_grant_digest": "sha256:7e086f12b648800ef195e7f104095e102320db132164ee33cb27f97e81e16d01"
+  "staging_grant_digest": "sha256:ff086f67572bb2077cf9ac522aff6210d1be81dbfbb2473c538e6649e830d877"
 }

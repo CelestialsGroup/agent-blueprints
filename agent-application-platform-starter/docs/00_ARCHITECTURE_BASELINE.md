@@ -67,7 +67,11 @@ Sub-agent 由 Parent Runtime 的类型化 SpawnRequest 触发，但其身份、P
 - 核心 Runtime Event、PolicyDecision、TechnicalUsage 和 Runtime Gateway Frame 使用闭合 Schema；RunManifest 绑定 Event Registry ID/Version/Digest，未知 Provider Payload 不能驱动核心 Projection。
 - Runtime/Sandbox/Capability 认证绑定不可变 Conformance Suite/Profile/Digest；Runtime 调用令牌绑定 Tenant、Run、Attempt、Fencing、Policy、Budget 和请求摘要。
 - Capability Provider 是独立通用 Port，请求携带完整执行授权并绑定 ProviderResolution/Instance/Audience；Invoke、Status、Cancel、Event 以正式 Contract/Profile/Digest 绑定且使用不可跨操作重放、按前驱续期的 Token。Model/Tool 复用该 Port，Artifact/Egress 使用各自 OpenAPI 与短期操作 Token；Egress 绑定不可变 DestinationRevision/Class；Plugin 只是可选实现方式。
-- BusinessSettlementEnvelope 嵌入完整不可变 UsageReport，但不包含价格、货币、余额或商业结论。
+- Preview/Edit/Conversion 统一为 ArtifactOperation ExecutionScope；公开请求不接受 Platform-owned Operation ID、Policy/Budget/Permissions、Gateway 或 Provider 事实。Platform 分配 Operation 后派生并持久绑定这些事实，再复用 Capability/Provider、Invocation/Attempt、Artifact Gateway、TechnicalUsage 与 Settlement，不创建第二套执行账本。ArtifactIngest 在 Session 分配后派生 Policy/Budget/Permissions，是不调度 Provider 的 Platform 分阶段状态机。
+- Agent Access 对同时出现在 URL 与正文中的 WorkOrder、Artifact、IngestSession、Conversation 和 CommercialAuthorization 标识使用机器可读 `x-path-body-bindings`，错绑在授权消费和对象查找前 fail-closed。
+- BusinessSettlementEnvelope 嵌入完整不可变 UsageReport，或在可证明没有任何执行 Attempt/TechnicalUsage 时绑定 NoUsageAttestation；缺失用量不等于零，Envelope 不包含价格、货币、余额或商业结论。
+- Runtime Checkpoint 与 Sandbox Snapshot 的跨 Revision 恢复必须绑定 Platform CompatibilityDecision/Evidence；Secret 只由 SecretGrant + 单操作 Credential Gateway 交付，二者都 fail-closed。
+- CommercialAuthorization 撤销收据同步建立 deny，并以可恢复 CAS/Outbox intents 覆盖 WorkSession、WorkOrder、ArtifactOperation 与 ArtifactIngest。ArtifactOperation 的 intent 先持久进入 `cancel_requested`；已派发取消和未知结果分别进入 `cancelling`/`cancellation_reconciling`，不以取消意图冒充终态证据。
 - 系统不承诺全局 Exactly-once。
 
 ## 当前状态

@@ -1,0 +1,29 @@
+{
+  "entry_id": "use_aop_01J000000000000000000000",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "invocation_id": "inv_preview_01J000000000000000000",
+  "meter_id": "model.input_tokens",
+  "meter_version": 1,
+  "meter_definition_digest": "sha256:5fb9469a79d57e8867f640bd6d1e30fa3d74dfc56b630897fd3599b677dac841",
+  "quantity": 1200,
+  "unit": "token",
+  "producer": {
+    "type": "provider",
+    "id": "rpi_html_preview",
+    "provider_revision_id": "rpr_01J00000000000000000000000",
+    "provider_revision_digest": "sha256:f2730e7377bc8918460730328465d72a0da531e73350bdb1fbd76a7eabb6b5c3"
+  },
+  "provider_operation_id": "provider-op-artifact-preview-001",
+  "meter_source": "provider_reported",
+  "measurement_status": "confirmed",
+  "idempotency_key": "usage-artifact-preview-0001",
+  "evidence_reference": "https://evidence.agent.internal/provider-usage/uobs_aop_01",
+  "occurred_at": "2026-07-16T09:06:03Z",
+  "recorded_at": "2026-07-16T09:06:06Z",
+  "evidence_digest": "sha256:2e81c9923af4f94c013060c17573469b38876b557f3fa939458aa2e5557e62bd",
+  "source_observation_id": "uobs_aop_01J0000000000000000000",
+  "execution_scope": {
+    "kind": "artifact_operation",
+    "artifact_operation_id": "aop_preview_01J000000000000000000"
+  }
+}

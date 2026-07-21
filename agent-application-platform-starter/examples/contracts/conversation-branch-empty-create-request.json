@@ -1,0 +1,8 @@
+{
+  "branch_request_id": "breq_empty_01J0000000000000000000",
+  "conversation_id": "conv_01J00000000000000000000000",
+  "branch_id": "parallel-empty-01",
+  "mode": "create",
+  "idempotency_key": "conversation-branch-create-idempotency-0001",
+  "request_digest": "sha256:7e1fd978fdff32d9ef71b7820eaf80ee2662af733d2d680650f7a4a608e09596"
+}

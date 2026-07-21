@@ -8,7 +8,7 @@
     "work_order_id",
     "status",
     "artifacts",
-    "usage_report_id",
+    "usage_accounting",
     "completed_at"
   ],
   "properties": {
@@ -84,8 +84,27 @@
         "additionalProperties": false
       }
     },
-    "usage_report_id": {
-      "type": "string"
+    "usage_accounting": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind", "usage_report"],
+          "properties": {
+            "kind": { "const": "usage_report" },
+            "usage_report": { "$ref": "urn:agent-platform:usage-report:v1" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["kind", "no_usage_attestation"],
+          "properties": {
+            "kind": { "const": "confirmed_no_usage" },
+            "no_usage_attestation": { "$ref": "urn:agent-platform:no-usage-attestation:v1" }
+          },
+          "additionalProperties": false
+        }
+      ]
     },
     "warnings": {
       "type": "array",
@@ -111,5 +130,9 @@
       "format": "date-time"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "delivery remains pending until usage is represented by a non-empty UsageReport or an immutable NoUsageAttestation; missing accounting never means zero",
+    "usage accounting tenant and CommercialAuthorization match the delivered WorkOrder and execution_scope is exactly that work_order_id"
+  ]
 }

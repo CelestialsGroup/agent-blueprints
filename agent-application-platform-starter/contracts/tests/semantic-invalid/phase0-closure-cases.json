@@ -18,6 +18,8 @@
     { "id": "semantic-traceability-missing-constraint", "mutation": "traceability_missing_constraint" },
     { "id": "semantic-traceability-unknown-check-id", "mutation": "traceability_unknown_check_id" },
     { "id": "semantic-traceability-unexecuted-check-id", "mutation": "traceability_unexecuted_check_id" },
+    { "id": "semantic-traceability-missing-markdown-responsibility", "mutation": "traceability_missing_markdown_responsibility" },
+    { "id": "semantic-traceability-missing-suite-test-id", "mutation": "traceability_missing_suite_test_id" },
     { "id": "control-grant-carries-stale-turn", "mutation": "control_grant_stale_turn_binding" },
     { "id": "principal-context-digest-mismatch", "mutation": "principal_context_digest_mismatch" },
     { "id": "execution-grant-outlives-principal-snapshot", "mutation": "execution_grant_snapshot_expired" },

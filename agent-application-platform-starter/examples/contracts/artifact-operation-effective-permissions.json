@@ -1,0 +1,26 @@
+{
+  "permissions_id": "perm_preview_01J00000000000000000",
+  "permissions_digest": "sha256:4b628137b325089843ba19eb9ccbb7d6d1b23ac5a119abeaf4e2fe15315af3eb",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "model": {
+    "allowed_model_profiles": []
+  },
+  "tool": {
+    "allowed_capabilities": [
+      "artifact.preview.html"
+    ]
+  },
+  "artifact": {
+    "read": true,
+    "stage_new_version": true
+  },
+  "egress": {
+    "mode": "none",
+    "allowed_destination_classes": []
+  },
+  "sandbox_slots": [],
+  "execution_scope": {
+    "kind": "artifact_operation",
+    "artifact_operation_id": "aop_preview_01J000000000000000000"
+  }
+}

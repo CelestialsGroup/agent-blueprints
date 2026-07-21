@@ -3,12 +3,11 @@
   "tenant_id": "ten_01J00000000000000000000000",
   "client_app_id": "html-product",
   "principal_context_digest": "sha256:bfb1d517260890b1df9744f3b1420dda3865f1a382e9735ecbeb895bbc8e5862",
-  "work_order_id": "wrk_01J00000000000000000000000",
   "invocation_id": "inv_cap_01J000000000000000000000",
   "invocation_attempt_id": "iat_cap_01J00000000000000000000",
   "fencing_token": 1,
   "idempotency_key": "capability-invocation-key-0001",
-  "request_digest": "sha256:b934f4b9addb10a06f3b4cf50a7ae10f0928d0c3273849032f57921ae40c96ec",
+  "request_digest": "sha256:c2c79f63badb8a9a1cf72a3b80edf9c0ee2c13327f2518e9a8acbc0474d3484a",
   "provider_revision_id": "hpr_01J00000000000000000000000",
   "capability": {
     "id": "html.generate",
@@ -25,7 +24,6 @@
     {
       "grant_id": "artg_cap_01J0000000000000000000",
       "tenant_id": "ten_01J00000000000000000000000",
-      "work_order_id": "wrk_01J00000000000000000000000",
       "artifact_id": "art_workspace_manifest_01J000000000000000",
       "version_id": "ver_workspace_manifest_01J00000000000000",
       "artifact_digest": "sha256:ef0e25f8c192d97c4c99db13fba26569c7f78ca505e6b0db999c86398e4d86f5",
@@ -35,9 +33,8 @@
       "issued_at": "2026-07-16T09:01:00Z",
       "expires_at": "2026-07-16T09:20:00Z",
       "execution_scope": {
-        "kind": "capability_invocation",
-        "invocation_id": "inv_cap_01J000000000000000000000",
-        "invocation_attempt_id": "iat_cap_01J00000000000000000000"
+        "kind": "work_order",
+        "work_order_id": "wrk_01J00000000000000000000000"
       },
       "gateway_binding": {
         "gateway_kind": "artifact",
@@ -49,7 +46,9 @@
         "binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
         "audience": "agent-artifact-gateway"
       },
-      "grant_digest": "sha256:6fcd61f8e10cf4132c9cddb0940edf4a2c560c94b382aa79cdb3518589e2bcd2"
+      "grant_digest": "sha256:bac738a087ef73c3234fbfea639de0f32893e6ecc9dac1288e01dd2ca6be26fe",
+      "invocation_id": "inv_cap_01J000000000000000000000",
+      "invocation_attempt_id": "iat_cap_01J00000000000000000000"
     }
   ],
   "trace_context": {
@@ -64,12 +63,11 @@
   },
   "policy_decision": {
     "decision_id": "pol_cap_01J000000000000000000000",
-    "decision_digest": "sha256:dd05f6fe93df0c9791f571cfdd7186baf76e2a476a140f6bda3f2d36b0ea535a",
+    "decision_digest": "sha256:3df3cbac68dbdf5962a8363168db53d580189242b6d08ecdde012899f05a240e",
     "tenant_id": "ten_01J00000000000000000000000",
-    "work_order_id": "wrk_01J00000000000000000000000",
     "policy_bundle_digest": "sha256:6161616161616161616161616161616161616161616161616161616161616161",
     "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
-    "execution_budget_digest": "sha256:af98dd43e2a018f9df3a6bc97b17f4cea7ec2dae69d62f24e2cd367eefc3fba4",
+    "execution_budget_digest": "sha256:a9965ff61c94ed866a5ddcc58156ec2c159cdb74c7dd445c338b7456ccf85598",
     "evaluations": [
       {
         "subject_kind": "runtime",
@@ -87,18 +85,21 @@
       }
     ],
     "outcome": "allow",
-    "effective_permissions_digest": "sha256:258682bb254cc4fafff41ccea043261e9c9381ca9a42e0efef0e3f20e9c1b70c",
+    "effective_permissions_digest": "sha256:d8bd8d96a7a79a2d7d8a49f56930fadc940d74c253004550ba27e461eda32e42",
     "decided_at": "2026-07-16T09:00:59Z",
     "expires_at": "2026-07-16T09:30:00Z",
     "decision_point": "invocation",
     "commercial_authorization_id": "cauth_01J00000000000000000000000",
-    "execution_budget_id": "bud_01J00000000000000000000000"
+    "execution_budget_id": "bud_01J00000000000000000000000",
+    "execution_scope": {
+      "kind": "work_order",
+      "work_order_id": "wrk_01J00000000000000000000000"
+    }
   },
   "effective_permissions": {
     "permissions_id": "perm_01J00000000000000000000000",
-    "permissions_digest": "sha256:258682bb254cc4fafff41ccea043261e9c9381ca9a42e0efef0e3f20e9c1b70c",
+    "permissions_digest": "sha256:d8bd8d96a7a79a2d7d8a49f56930fadc940d74c253004550ba27e461eda32e42",
     "tenant_id": "ten_01J00000000000000000000000",
-    "work_order_id": "wrk_01J00000000000000000000000",
     "model": {
       "allowed_model_profiles": [
         "general-balanced"
@@ -133,12 +134,19 @@
           "snapshot"
         ]
       }
-    ]
+    ],
+    "execution_scope": {
+      "kind": "work_order",
+      "work_order_id": "wrk_01J00000000000000000000000"
+    }
   },
   "output_staging_grant": {
     "staging_grant_id": "stgg_01J0000000000000000000000",
     "tenant_id": "ten_01J00000000000000000000000",
-    "work_order_id": "wrk_01J00000000000000000000000",
+    "execution_scope": {
+      "kind": "work_order",
+      "work_order_id": "wrk_01J00000000000000000000000"
+    },
     "invocation_id": "inv_cap_01J000000000000000000000",
     "invocation_attempt_id": "iat_cap_01J00000000000000000000",
     "staging_session_id": "stg_01J00000000000000000000000",
@@ -160,6 +168,11 @@
     "max_total_bytes": 8388608,
     "issued_at": "2026-07-16T09:01:00Z",
     "expires_at": "2026-07-16T09:20:00Z",
-    "grant_digest": "sha256:7e086f12b648800ef195e7f104095e102320db132164ee33cb27f97e81e16d01"
-  }
+    "grant_digest": "sha256:ff086f67572bb2077cf9ac522aff6210d1be81dbfbb2473c538e6649e830d877"
+  },
+  "execution_scope": {
+    "kind": "work_order",
+    "work_order_id": "wrk_01J00000000000000000000000"
+  },
+  "execution_owner_request_digest": "sha256:f80da1ee511b349d6a065df4591220c6422b7c26884f2e8459ff694720ef2a50"
 }

@@ -1,7 +1,10 @@
 {
   "staging_grant_id": "stgg_01J0000000000000000000000",
   "tenant_id": "ten_01J00000000000000000000000",
-  "work_order_id": "wrk_01J00000000000000000000000",
+  "execution_scope": {
+    "kind": "work_order",
+    "work_order_id": "wrk_01J00000000000000000000000"
+  },
   "invocation_id": "inv_cap_01J000000000000000000000",
   "invocation_attempt_id": "iat_cap_01J00000000000000000000",
   "staging_session_id": "stg_01J00000000000000000000000",
@@ -23,5 +26,5 @@
   "max_total_bytes": 8388608,
   "issued_at": "2026-07-16T09:01:00Z",
   "expires_at": "2026-07-16T09:20:00Z",
-  "grant_digest": "sha256:7e086f12b648800ef195e7f104095e102320db132164ee33cb27f97e81e16d01"
+  "grant_digest": "sha256:ff086f67572bb2077cf9ac522aff6210d1be81dbfbb2473c538e6649e830d877"
 }

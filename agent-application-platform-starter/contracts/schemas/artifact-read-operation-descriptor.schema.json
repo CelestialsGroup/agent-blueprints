@@ -4,13 +4,16 @@
   "title": "ArtifactReadOperationDescriptor",
   "type": "object",
   "required": [
-    "operation", "tenant_id", "work_order_id", "invocation_id", "invocation_attempt_id",
+    "operation", "tenant_id", "execution_scope", "invocation_id", "invocation_attempt_id",
     "fencing_token", "artifact_id", "version_id"
   ],
   "properties": {
     "operation": { "const": "read_content" },
     "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
-    "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "execution_scope": { "allOf": [
+      { "$ref": "urn:agent-platform:execution-scope:v1" },
+      { "not": { "properties": { "kind": { "const": "artifact_ingest" } }, "required": ["kind"] } }
+    ] },
     "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "fencing_token": { "type": "integer", "minimum": 1 },

@@ -64,5 +64,28 @@
     "max_gpu_count": 0,
     "max_lease_seconds": 14400,
     "max_exec_seconds": 3600
-  }
+  },
+  "snapshot_restore_profiles": [
+    {
+      "profile_id": "sandbox-snapshot-workspace-v1",
+      "level": "workspace",
+      "suite_id": "sandbox-provider",
+      "suite_version": "1.0.0",
+      "suite_digest": "sha256:bdebf6fba1cd41072a46b47de451bf039485047e9a9478fad2d6c69ee8ff38b7"
+    },
+    {
+      "profile_id": "sandbox-snapshot-filesystem-v1",
+      "level": "filesystem",
+      "suite_id": "sandbox-provider",
+      "suite_version": "1.0.0",
+      "suite_digest": "sha256:bdebf6fba1cd41072a46b47de451bf039485047e9a9478fad2d6c69ee8ff38b7"
+    },
+    {
+      "profile_id": "sandbox-snapshot-process-v1",
+      "level": "process",
+      "suite_id": "sandbox-provider",
+      "suite_version": "1.0.0",
+      "suite_digest": "sha256:bdebf6fba1cd41072a46b47de451bf039485047e9a9478fad2d6c69ee8ff38b7"
+    }
+  ]
 }

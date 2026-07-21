@@ -8,11 +8,11 @@
   "trigger_evidence": {
     "evidence_id": "rauth_01J000000000000000000000",
     "evidence_contract_id": "urn:agent-platform:runtime-authorization:v1",
-    "evidence_digest": "sha256:2f81a8bebec72997796228cc659d03766a961065183f97d577634463ea031495",
+    "evidence_digest": "sha256:293ba3d16c08559c497d4ac197a774e5669e71537fc8ea8e2f6f211b9d10ceb7",
     "observed_at": "2026-07-16T09:15:01Z"
   },
   "issued_by": "platform_safety_controller",
   "issuer_subject_id": "spn_agent_safety_controller",
   "issued_at": "2026-07-16T09:16:00Z",
-  "control_digest": "sha256:a738e9e61bd61faf384bbecf7b64bcfdae5e0a8a42bda1e34e5ee27c7c6918c6"
+  "control_digest": "sha256:60836985379de1d96ddf093ec816a990fb70bb1053fabaa6e1537ea6df69650b"
 }

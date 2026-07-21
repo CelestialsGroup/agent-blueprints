@@ -1,0 +1,17 @@
+{
+  "evidence_id": "cevd_sandbox_01J00000000000000000",
+  "evidence_digest": "sha256:b4b185d31932e82af5f84ea47eefb492b7fc1adacf7d2c3506e3023f71e2e220",
+  "subject_kind": "sandbox_snapshot",
+  "source_provider_revision_id": "spr_01J00000000000000000000000",
+  "source_runtime_revision": "sandbox-runtime-1.0.0",
+  "target_provider_revision_id": "spr_01J00000000000000000000000",
+  "target_runtime_revision": "sandbox-runtime-1.1.0",
+  "suite_id": "sandbox-provider",
+  "suite_version": "1.0.0",
+  "suite_digest": "sha256:bdebf6fba1cd41072a46b47de451bf039485047e9a9478fad2d6c69ee8ff38b7",
+  "profile_id": "sandbox-snapshot-workspace-v1",
+  "test_run_reference": "conformance://sandbox/snapshot-workspace/run-01",
+  "test_run_digest": "sha256:6f99249ce5e02786e44c702052f969abcad1a069c5a111b74f7ef330c49f002c",
+  "result": "passed",
+  "completed_at": "2026-07-16T10:05:00Z"
+}

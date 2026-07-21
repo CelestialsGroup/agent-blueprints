@@ -1,0 +1,23 @@
+{
+  "jti": "agt_aop_commit_01J000000000000000",
+  "iss": "agent-platform",
+  "sub": "urn:agent-platform:provider-instance:rpi_html_preview",
+  "aud": "agent-artifact-gateway",
+  "iat": 1784192762,
+  "nbf": 1784192762,
+  "exp": 1784193062,
+  "operation": "commit_staging",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "execution_scope": {
+    "kind": "artifact_operation",
+    "artifact_operation_id": "aop_preview_01J000000000000000000"
+  },
+  "invocation_id": "inv_preview_01J000000000000000000",
+  "invocation_attempt_id": "iat_preview_01J00000000000000000",
+  "fencing_token": 1,
+  "gateway_binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
+  "operation_contract_id": "urn:agent-platform:artifact-staging-commit-request:v1",
+  "operation_digest_profile": "rfc8785-request-excluding-request-digest-v1",
+  "request_digest": "sha256:2a0813f6d7b5e739bd5148e616bd315bf274626747e924f629d514d7bfa17131",
+  "staging_grant_digest": "sha256:bf4cbe47b4696ee516fab5e645abe5a588e8acd483341208793ff3184d6e2a54"
+}

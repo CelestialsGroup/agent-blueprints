@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:artifact-operation:v1",
+  "title": "ArtifactOperation",
+  "description": "Platform-owned aggregate for Preview, Edit and Conversion execution. Invocation remains the only external side-effect ledger.",
+  "type": "object",
+  "required": [
+    "artifact_operation_id", "operation_kind", "tenant_id", "client_app_id",
+    "principal_context_digest", "artifact_id", "source_version_id", "source_version_digest", "request_digest",
+    "commercial_authorization_id", "commercial_authorization_digest",
+    "quota_reservation_id", "quota_reservation_digest",
+    "policy_decision_id", "policy_decision_digest", "execution_budget_id",
+    "execution_budget_digest", "effective_permissions_id", "effective_permissions_digest",
+    "artifact_gateway_binding_digest", "status", "state_version", "created_at", "updated_at"
+  ],
+  "properties": {
+    "artifact_operation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "operation_kind": { "enum": ["preview", "edit", "conversion"] },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "client_app_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "principal_context_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "artifact_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "source_version_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "source_version_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "commercial_authorization_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "commercial_authorization_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "quota_reservation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "quota_reservation_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "policy_decision_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "policy_decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "execution_budget_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "execution_budget_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "effective_permissions_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "effective_permissions_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "artifact_gateway_binding_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "provider_resolution_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "provider_revision_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "invocation_request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "status": { "enum": ["accepted", "resolving", "queued", "running", "reconciling", "cancel_requested", "cancelling", "cancellation_reconciling", "succeeded", "failed", "cancelled"] },
+    "state_version": { "type": "integer", "minimum": 1 },
+    "cancellation_intent_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "cancellation_source_kind": {
+      "enum": [
+        "commercial_authorization_revocation_receipt",
+        "commercial_authorization_expiry",
+        "deadline",
+        "budget_exhaustion",
+        "tenant_suspension",
+        "provider_revocation",
+        "platform_emergency"
+      ]
+    },
+    "cancellation_source_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "cancellation_source_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "cancellation_outbox_message_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "cancellation_requested_at": { "type": "string", "format": "date-time" },
+    "cancellation_reconciliation_case_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "result_reference": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "terminal_evidence_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "terminal_stage": { "enum": ["admission", "resolution", "dispatch", "execution", "finalization"] },
+    "error": { "$ref": "urn:agent-platform:standard-error:v1" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "completed_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "enum": ["queued", "running", "reconciling", "cancelling", "cancellation_reconciling", "succeeded"] } }, "required": ["status"] },
+      "then": { "required": ["provider_resolution_id", "provider_revision_id"] }
+    },
+    {
+      "if": { "properties": { "status": { "enum": ["running", "reconciling", "cancelling", "cancellation_reconciling", "succeeded"] } }, "required": ["status"] },
+      "then": { "required": ["invocation_id", "invocation_request_digest"] }
+    },
+    {
+      "if": { "properties": { "status": { "enum": ["cancel_requested", "cancelling", "cancellation_reconciling", "cancelled"] } }, "required": ["status"] },
+      "then": {
+        "required": [
+          "cancellation_intent_id", "cancellation_source_kind", "cancellation_source_id",
+          "cancellation_source_digest", "cancellation_outbox_message_id", "cancellation_requested_at"
+        ]
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "cancellation_reconciling" } }, "required": ["status"] },
+      "then": { "required": ["cancellation_reconciliation_case_id"] }
+    },
+    {
+      "if": { "properties": { "status": { "enum": ["succeeded", "failed", "cancelled"] } }, "required": ["status"] },
+      "then": { "required": ["terminal_stage"] }
+    },
+    {
+      "if": { "properties": { "status": { "const": "succeeded" } }, "required": ["status"] },
+      "then": {
+        "required": ["result_reference", "terminal_evidence_digest", "completed_at"],
+        "properties": { "terminal_stage": { "const": "finalization" } },
+        "not": { "required": ["error"] }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "failed" } }, "required": ["status"] },
+      "then": { "required": ["error", "terminal_evidence_digest", "completed_at"], "not": { "required": ["result_reference"] } }
+    },
+    {
+      "if": { "properties": { "status": { "const": "cancelled" } }, "required": ["status"] },
+      "then": { "required": ["terminal_evidence_digest", "completed_at"], "not": { "required": ["result_reference"] } }
+    },
+    {
+      "if": { "properties": { "terminal_stage": { "enum": ["admission", "resolution", "dispatch"] } }, "required": ["terminal_stage"] },
+      "then": {
+        "not": { "anyOf": [
+          { "required": ["invocation_id"] },
+          { "required": ["invocation_request_digest"] }
+        ] }
+      }
+    },
+    {
+      "if": { "properties": { "terminal_stage": { "const": "admission" } }, "required": ["terminal_stage"] },
+      "then": {
+        "not": { "anyOf": [
+          { "required": ["provider_resolution_id"] },
+          { "required": ["provider_revision_id"] }
+        ] }
+      }
+    },
+    {
+      "if": { "properties": { "terminal_stage": { "enum": ["execution", "finalization"] } }, "required": ["terminal_stage"] },
+      "then": { "required": ["provider_resolution_id", "provider_revision_id", "invocation_id", "invocation_request_digest"] }
+    }
+  ],
+  "x-semantic-constraints": [
+    "ArtifactOperation owns request admission and state while Invocation and InvocationAttempt exclusively own Provider dispatch, retry, fencing and reconciliation",
+    "ProviderResolution execution scope equals this artifact_operation_id and selected ProviderRevision equals provider_revision_id",
+    "the Invocation execution scope, invocation_request_digest, ProviderResolution and ProviderRevision match this aggregate while request_digest remains the client admission request digest",
+    "state_version is contiguous and terminal states require terminal_stage plus immutable evidence; pre-dispatch terminal stages forbid fabricated Invocation facts and outcome_unknown is represented as reconciling",
+    "every active-state cancellation first records cancel_requested with an immutable source, cancellation intent, CAS-bound Outbox message and timestamp; cancelling requires the unique Invocation and cancellation_reconciling requires its reconciliation case",
+    "cancel_requested is not cancellation proof; a dispatched operation reaches cancelled only after its unique Invocation cancelled state is committed or reconciled, cancellation reconciliation cannot retry execution, and succeeded after cancellation requires proof that Platform finalization committed before the cancellation CAS",
+    "a successful edit or conversion only references Platform-finalized ArtifactVersion state; a Provider result or staging commit is not finalization"
+  ]
+}

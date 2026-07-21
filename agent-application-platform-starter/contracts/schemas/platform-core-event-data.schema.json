@@ -330,6 +330,148 @@
         "receipt_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
       },
       "additionalProperties": false
+    },
+    "conversationBranchChanged": {
+      "type": "object",
+      "required": ["branch_request_id", "branch_id", "mode", "request_digest", "workspace_revision_id", "workspace_revision_digest"],
+      "properties": {
+        "branch_request_id": { "type": "string", "minLength": 1 },
+        "branch_id": { "type": "string", "minLength": 1 },
+        "mode": { "enum": ["create", "fork"] },
+        "source_branch_id": { "type": "string", "minLength": 1 },
+        "source_message_id": { "type": ["string", "null"] },
+        "source_message_sequence": { "type": "integer", "minimum": 0 },
+        "workspace_revision_id": { "type": "string", "minLength": 1 },
+        "workspace_revision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "artifactOperationStateChanged": {
+      "type": "object",
+      "required": ["artifact_operation_id", "operation_kind", "state", "state_version", "request_digest"],
+      "properties": {
+        "artifact_operation_id": { "type": "string", "minLength": 1 },
+        "operation_kind": { "enum": ["preview", "edit", "conversion"] },
+        "state": { "enum": ["accepted", "resolving", "queued", "running", "reconciling", "cancel_requested", "cancelling", "cancellation_reconciling", "succeeded", "failed", "cancelled"] },
+        "state_version": { "type": "integer", "minimum": 1 },
+        "provider_resolution_id": { "type": "string", "minLength": 1 },
+        "invocation_id": { "type": "string", "minLength": 1 },
+        "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "invocation_request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "cancellation_intent_id": { "type": "string", "minLength": 1 },
+        "cancellation_source_kind": {
+          "enum": [
+            "commercial_authorization_revocation_receipt", "commercial_authorization_expiry",
+            "deadline", "budget_exhaustion", "tenant_suspension", "provider_revocation",
+            "platform_emergency"
+          ]
+        },
+        "cancellation_source_id": { "type": "string", "minLength": 1 },
+        "cancellation_source_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "cancellation_outbox_message_id": { "type": "string", "minLength": 1 },
+        "cancellation_requested_at": { "type": "string", "format": "date-time" },
+        "cancellation_reconciliation_case_id": { "type": "string", "minLength": 1 },
+        "terminal_stage": { "enum": ["admission", "resolution", "dispatch", "execution", "finalization"] },
+        "terminal_evidence_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "state": { "enum": ["running", "reconciling", "cancelling", "cancellation_reconciling", "succeeded"] } }, "required": ["state"] },
+          "then": { "required": ["provider_resolution_id", "invocation_id", "invocation_request_digest"] }
+        },
+        {
+          "if": { "properties": { "state": { "enum": ["cancel_requested", "cancelling", "cancellation_reconciling", "cancelled"] } }, "required": ["state"] },
+          "then": {
+            "required": [
+              "cancellation_intent_id", "cancellation_source_kind", "cancellation_source_id",
+              "cancellation_source_digest", "cancellation_outbox_message_id", "cancellation_requested_at"
+            ]
+          }
+        },
+        {
+          "if": { "properties": { "state": { "const": "cancellation_reconciling" } }, "required": ["state"] },
+          "then": { "required": ["cancellation_reconciliation_case_id"] }
+        },
+        {
+          "if": { "properties": { "state": { "enum": ["succeeded", "failed", "cancelled"] } }, "required": ["state"] },
+          "then": { "required": ["terminal_stage", "terminal_evidence_digest"] }
+        },
+        {
+          "if": { "properties": { "terminal_stage": { "enum": ["admission", "resolution", "dispatch"] } }, "required": ["terminal_stage"] },
+          "then": { "not": { "anyOf": [
+            { "required": ["invocation_id"] }, { "required": ["invocation_request_digest"] }
+          ] } }
+        },
+        {
+          "if": { "properties": { "terminal_stage": { "enum": ["execution", "finalization"] } }, "required": ["terminal_stage"] },
+          "then": { "required": ["provider_resolution_id", "invocation_id", "invocation_request_digest"] }
+        }
+      ]
+    },
+    "noUsageConfirmed": {
+      "type": "object",
+      "required": ["attestation_id", "attestation_digest", "reason", "evidence_digest"],
+      "properties": {
+        "attestation_id": { "type": "string", "minLength": 1 },
+        "attestation_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "reason": { "enum": ["failed_before_dispatch", "cancelled_before_dispatch", "admission_rejected_before_dispatch"] },
+        "evidence_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "artifactIngestStateChanged": {
+      "type": "object",
+      "required": ["ingest_session_id", "state", "state_version", "content_digest"],
+      "properties": {
+        "ingest_session_id": { "type": "string", "minLength": 1 },
+        "state": { "enum": ["created", "uploading", "uploaded", "scan_pending", "scanning", "ready_to_finalize", "finalized", "rejected", "expired"] },
+        "state_version": { "type": "integer", "minimum": 1 },
+        "content_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "scan_result_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "artifact_version_id": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "compatibilityDecided": {
+      "type": "object",
+      "required": ["decision_id", "decision_digest", "subject_kind", "subject_id", "result", "source_provider_revision_id", "target_provider_revision_id"],
+      "properties": {
+        "decision_id": { "type": "string", "minLength": 1 },
+        "decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "subject_kind": { "enum": ["runtime_checkpoint", "sandbox_snapshot"] },
+        "subject_id": { "type": "string", "minLength": 1 },
+        "result": { "enum": ["compatible", "incompatible"] },
+        "source_provider_revision_id": { "type": "string", "minLength": 1 },
+        "target_provider_revision_id": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "secretGrantChanged": {
+      "type": "object",
+      "required": ["secret_grant_id", "secret_grant_digest", "state", "evidence_digest"],
+      "properties": {
+        "secret_grant_id": { "type": "string", "minLength": 1 },
+        "secret_grant_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "state": { "enum": ["issued", "consumed", "revoked", "expired"] },
+        "evidence_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "credentialAccessed": {
+      "type": "object",
+      "required": ["credential_request_id", "secret_grant_id", "provider_revision_id", "target_kind", "target_id", "purpose", "request_digest"],
+      "properties": {
+        "credential_request_id": { "type": "string", "minLength": 1 },
+        "secret_grant_id": { "type": "string", "minLength": 1 },
+        "provider_revision_id": { "type": "string", "minLength": 1 },
+        "target_kind": { "enum": ["sandbox_exec", "capability_invocation", "artifact_operation"] },
+        "target_id": { "type": "string", "minLength": 1 },
+        "purpose": { "enum": ["process_environment", "file_mount", "http_header"] },
+        "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
     }
   },
   "oneOf": [
@@ -354,6 +496,13 @@
     { "$ref": "#/$defs/workspaceRevisionCommitted" },
     { "$ref": "#/$defs/runtimeSessionOpened" },
     { "$ref": "#/$defs/runtimeRecordingReady" },
-    { "$ref": "#/$defs/deliveryStateChanged" }
+    { "$ref": "#/$defs/deliveryStateChanged" },
+    { "$ref": "#/$defs/conversationBranchChanged" },
+    { "$ref": "#/$defs/artifactOperationStateChanged" },
+    { "$ref": "#/$defs/noUsageConfirmed" },
+    { "$ref": "#/$defs/artifactIngestStateChanged" },
+    { "$ref": "#/$defs/compatibilityDecided" },
+    { "$ref": "#/$defs/secretGrantChanged" },
+    { "$ref": "#/$defs/credentialAccessed" }
   ]
 }

@@ -8,13 +8,16 @@
   "exp": 1784193370,
   "operation": "read_content",
   "tenant_id": "ten_01J00000000000000000000000",
-  "work_order_id": "wrk_01J00000000000000000000000",
+  "execution_scope": {
+    "kind": "work_order",
+    "work_order_id": "wrk_01J00000000000000000000000"
+  },
   "invocation_id": "inv_cap_01J000000000000000000000",
   "invocation_attempt_id": "iat_cap_01J00000000000000000000",
   "fencing_token": 1,
   "gateway_binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
   "operation_contract_id": "urn:agent-platform:artifact-read-operation-descriptor:v1",
   "operation_digest_profile": "rfc8785-full-document-v1",
-  "request_digest": "sha256:0488fb9735283a3fe1afe0d4b41db624757f111ad472f265251c89b52243c59f",
-  "artifact_grant_digest": "sha256:6fcd61f8e10cf4132c9cddb0940edf4a2c560c94b382aa79cdb3518589e2bcd2"
+  "request_digest": "sha256:412ab511cf6ee5dc5ee23e51df1320da5ddbdd63e6884d1daa95c3be5afc3f72",
+  "artifact_grant_digest": "sha256:bac738a087ef73c3234fbfea639de0f32893e6ecc9dac1288e01dd2ca6be26fe"
 }

@@ -1,31 +1,20 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:agent-platform:create-edit-session:v1",
+  "$id": "urn:agent-platform:edit-session-request:v1",
   "title": "CreateEditSessionRequest",
   "type": "object",
-  "required": [
-    "base_version_id",
-    "mode"
-  ],
+  "required": ["operation_context", "mode"],
   "properties": {
-    "base_version_id": {
-      "type": "string"
-    },
-    "mode": {
-      "enum": [
-        "native",
-        "source",
-        "structural",
-        "annotation",
-        "metadata"
-      ]
-    },
-    "editor_capability": {
-      "type": "string"
-    },
+    "operation_context": { "$ref": "urn:agent-platform:artifact-operation-context:v1" },
+    "mode": { "enum": ["native", "source", "structural", "annotation", "metadata"] },
     "options": {
-      "type": "object"
+      "type": "object", "maxProperties": 32,
+      "additionalProperties": { "type": ["string", "number", "integer", "boolean", "null"] }
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "operation_context.operation_kind equals edit and its source ArtifactVersion matches the path",
+    "draft mutation and commit remain scoped to the admitted ArtifactOperation, Principal and immutable base version"
+  ]
 }

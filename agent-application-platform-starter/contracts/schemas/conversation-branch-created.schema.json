@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:conversation-branch-created:v1",
+  "title": "ConversationBranchCreated",
+  "type": "object",
+  "required": ["branch_request_id", "request_digest", "branch", "workspace_revision"],
+  "properties": {
+    "branch_request_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "branch": { "$ref": "urn:agent-platform:conversation-branch:v1" },
+    "workspace_revision": { "$ref": "urn:agent-platform:workspace-revision:v1" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "workspace_revision is immutable revision one on the new branch; its digest equals the new Workspace Head and forked_from_revision_id identifies the exact source cut"
+  ]
+}

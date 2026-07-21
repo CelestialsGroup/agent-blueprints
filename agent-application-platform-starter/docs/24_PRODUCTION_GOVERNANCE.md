@@ -4,7 +4,7 @@
 
 必须观测 Access 延迟/可用性、Temporal 队列延迟、Invocation 重试/未知结果/对账时长、Event 追加/SSE 延迟、各 AgentRuntimeProvider/SandboxProvider 启动与恢复、Runtime 连接、Artifact/Delivery 和 Gateway 预算/拒绝指标。指标必须携带 ProviderInstance/ProviderRevision 维度，支持跨框架比较。
 
-初始目标：Agent Access 月可用性 99.9%，已接受 WorkOrder 持久化丢失 0，P95 接受延迟 < 500ms，P95 持久 Event 延迟 < 3s，`outcome_unknown` 24 小时内对账率 99%，Delivery 24 小时最终送达率 99.9%。这些目标必须经容量测试后按部署等级修订。
+初始目标：Agent Access 月可用性 99.9%，P95 接受延迟 < 500ms，P95 持久 Event 延迟 < 3s，`outcome_unknown` 24 小时内对账率 99%，Delivery 24 小时最终送达率 99.9%。只有在 WorkOrder、GrantConsumption、Workflow Start Outbox 和接受事件所在 PostgreSQL 写入采用跨故障域同步复制，并有提交确认、故障切换与恢复演练证据的部署等级，才可承诺“已返回 accepted 的 WorkOrder RPO=0”；异步副本/PITR 的基线不得宣称零丢失。
 
 ## 恢复目标
 
@@ -12,7 +12,8 @@
 
 | 数据 | RPO | RTO |
 |---|---:|---:|
-| Agent PostgreSQL | 5 分钟 | 60 分钟 |
+| Agent PostgreSQL 通用状态/PITR 基线 | 5 分钟 | 60 分钟 |
+| 已确认 accepted 的 WorkOrder 事务（仅同步复制等级） | 0 | 60 分钟 |
 | Temporal Persistence | 5 分钟 | 60 分钟 |
 | Artifact Object Storage | 15 分钟 | 120 分钟 |
 | Signing/Verification Keys | 0 | 30 分钟 |
@@ -133,6 +134,8 @@ RuntimeRecording 使用同样的 Fail-closed 原则，但不属于 Telemetry：�
 - Event Projection 重建
 
 多节点验收至少覆盖：任意 API/Worker/Provider Pod 删除、跨 Pod SSE 续传、Redis 通知丢失补拉、Provider Controller 故障转移、Sandbox Node 故障、Runtime 重路由、Temporal 回放、Artifact 并发提交和 Migration 回滚。
+
+`RPO=0` 的验收必须证明同步副本 quorum、故障域隔离、主库确认后副本可见、自动/人工故障切换、PITR 与 Temporal/Outbox 重放不会重复消费 Grant 或丢失已接受 WorkOrder。仅配置参数、备份成功或 Gate 通过不构成该生产证据。
 
 ## Sandbox 容量
 

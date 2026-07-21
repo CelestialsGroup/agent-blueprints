@@ -1,0 +1,43 @@
+{
+  "event_id": "evt_compatibility-decided_01J00000000000000000",
+  "schema_version": 2,
+  "tenant_id": "ten_01J00000000000000000000000",
+  "producer_id": "platform-core-ledger",
+  "provider_revision_id": null,
+  "source_stream_id": "compatibility_decision/cmpd_runtime_01J0000000000000000",
+  "source_event_id": "compatibility.decided/1",
+  "source_cursor": "1",
+  "dedupe_key": "sha256:0ea62c86bd7acd573e386a52b9f232917210ad35c6b81516abd9c98db3bd034f",
+  "aggregate": {
+    "type": "compatibility_decision",
+    "id": "cmpd_runtime_01J0000000000000000",
+    "sequence": 1
+  },
+  "type": "compatibility.decided",
+  "occurred_at": "2026-07-16T09:10:00Z",
+  "actor": {
+    "type": "system",
+    "id": "artifact-service"
+  },
+  "data": {
+    "decision_id": "cmpd_runtime_01J0000000000000000",
+    "decision_digest": "sha256:75459612357dd9c6155f9f2dabb6afd1ce552ac2fd64612db5c1d1731489c83b",
+    "subject_kind": "runtime_checkpoint",
+    "subject_id": "ckp_01J00000000000000000000000",
+    "result": "compatible",
+    "source_provider_revision_id": "apr_01J00000000000000000000000",
+    "target_provider_revision_id": "apr_01J00000000000000000000001"
+  },
+  "metadata": {
+    "trace_id": "trace-compatibility-decided",
+    "correlation_id": "cmpd_runtime_01J0000000000000000"
+  },
+  "data_version": 1,
+  "recorded_at": "2026-07-16T09:10:00.100Z",
+  "event_registry": {
+    "registry_id": "platform-core",
+    "registry_version": 1,
+    "registry_digest": "sha256:a9e717df6ee3d524e9805b1d1d78b39957618985d7d3ff9ad0e984362d1ddde6"
+  },
+  "producer_kind": "platform"
+}

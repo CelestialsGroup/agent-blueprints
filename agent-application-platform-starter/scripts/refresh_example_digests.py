@@ -67,6 +67,7 @@ suite_paths = {
     "runtime_gateway": "contracts/conformance/runtime-gateway/v1/suite.json",
     "capability_provider": "contracts/conformance/capability/v1/suite.json",
     "execution_gateway": "contracts/conformance/execution-gateway/v1/suite.json",
+    "credential_gateway": "contracts/conformance/credential/v1/suite.json",
 }
 suites: dict[str, dict[str, Any]] = {}
 for target_kind, path in suite_paths.items():
@@ -74,6 +75,79 @@ for target_kind, path in suite_paths.items():
     suite["suite_digest"] = digest_without(suite, "suite_digest")
     suites[target_kind] = suite
     write(path, suite)
+
+sandbox_capabilities = read("examples/contracts/sandbox-capabilities.json")
+sandbox_capabilities["snapshot_restore_profiles"] = [
+    {
+        "profile_id": profile_id,
+        "level": level,
+        "suite_id": suites["sandbox"]["suite_id"],
+        "suite_version": suites["sandbox"]["suite_version"],
+        "suite_digest": suites["sandbox"]["suite_digest"],
+    }
+    for profile_id, level in (
+        ("sandbox-snapshot-workspace-v1", "workspace"),
+        ("sandbox-snapshot-filesystem-v1", "filesystem"),
+        ("sandbox-snapshot-process-v1", "process"),
+    )
+]
+write("examples/contracts/sandbox-capabilities.json", sandbox_capabilities)
+
+runtime_checkpoint = read("examples/contracts/agent-runtime-checkpoint-manifest.json")
+runtime_checkpoint["source_runtime_revision"] = runtime_checkpoint.pop(
+    "runtime_version", "native-runtime-2026.07"
+)
+runtime_checkpoint["compatibility_profile"] = "runtime-checkpoint-compatibility-v1"
+runtime_checkpoint["portability"] = "compatible_revision"
+runtime_compatibility_evidence = {
+    "evidence_id": "cevd_runtime_01J00000000000000000",
+    "evidence_digest": "sha256:" + "0" * 64,
+    "subject_kind": "runtime_checkpoint",
+    "source_provider_revision_id": runtime_checkpoint["provider_revision_id"],
+    "source_runtime_revision": runtime_checkpoint["source_runtime_revision"],
+    "target_provider_revision_id": "apr_01J00000000000000000000001",
+    "target_runtime_revision": "native-runtime-2026.08",
+    "suite_id": suites["agent_runtime"]["suite_id"],
+    "suite_version": suites["agent_runtime"]["suite_version"],
+    "suite_digest": suites["agent_runtime"]["suite_digest"],
+    "profile_id": runtime_checkpoint["compatibility_profile"],
+    "test_run_reference": "conformance://runtime/checkpoint/run-01",
+    "test_run_digest": digest({"runtime_checkpoint_test_run": "run-01"}),
+    "result": "passed",
+    "completed_at": "2026-07-16T10:11:00Z",
+}
+runtime_compatibility_evidence["evidence_digest"] = digest_without(
+    runtime_compatibility_evidence, "evidence_digest"
+)
+runtime_compatibility_decision = {
+    "decision_id": "cmpd_runtime_01J0000000000000000",
+    "decision_digest": "sha256:" + "0" * 64,
+    "subject_kind": "runtime_checkpoint",
+    "subject_id": runtime_checkpoint["checkpoint_id"],
+    "subject_digest": runtime_checkpoint["digest"],
+    "source_provider_revision_id": runtime_checkpoint["provider_revision_id"],
+    "source_runtime_revision": runtime_checkpoint["source_runtime_revision"],
+    "target_provider_revision_id": runtime_compatibility_evidence["target_provider_revision_id"],
+    "target_runtime_revision": runtime_compatibility_evidence["target_runtime_revision"],
+    "compatibility_profile": runtime_checkpoint["compatibility_profile"],
+    "evidence": [runtime_compatibility_evidence],
+    "result": "compatible",
+    "reason_codes": ["suite_passed"],
+    "decided_at": "2026-07-16T10:12:00Z",
+}
+runtime_compatibility_decision["decision_digest"] = digest_without(
+    runtime_compatibility_decision, "decision_digest"
+)
+runtime_checkpoint["compatibility_decision"] = copy.deepcopy(runtime_compatibility_decision)
+write("examples/contracts/runtime-compatibility-evidence.json", runtime_compatibility_evidence)
+write("examples/contracts/runtime-compatibility-decision.json", runtime_compatibility_decision)
+write("examples/contracts/agent-runtime-checkpoint-manifest.json", runtime_checkpoint)
+runtime_checkpoint_missing_decision = copy.deepcopy(runtime_checkpoint)
+runtime_checkpoint_missing_decision.pop("compatibility_decision")
+write(
+    "contracts/tests/invalid/runtime-checkpoint-compatible-missing-decision.json",
+    runtime_checkpoint_missing_decision,
+)
 
 for path in (
     "examples/capabilities/html.generate.yaml",
@@ -88,6 +162,28 @@ for path in (
     }
     write_yaml(path, capability)
 
+for provider_kind, prefix, instance_id, capability_id, decision_prefix in (
+    ("editor", "epr", "epi_artifact_editor", "artifact.edit.html", "pad_editor"),
+    ("converter", "cpr", "cpi_html_to_pptx", "artifact.convert.pptx", "pad_converter"),
+):
+    generated_revision = read("examples/contracts/renderer-provider-revision.json")
+    generated_revision["provider_revision_id"] = f"{prefix}_01J00000000000000000000000"
+    generated_revision["provider_instance_id"] = instance_id
+    generated_revision["provider_kind"] = provider_kind
+    generated_revision["conformance"][0].update({
+        "capability": capability_id,
+        "profile": "default",
+    })
+    generated_revision["implementation"]["implementation_id"] = f"{provider_kind}-provider.fixture"
+    generated_revision["provider_revision_digest"] = "sha256:" + "0" * 64
+    write(f"examples/contracts/{provider_kind}-provider-revision.json", generated_revision)
+    generated_decision = read("examples/contracts/renderer-provider-admission-decision.json")
+    generated_decision["decision_id"] = f"{decision_prefix}_01J000000000000000000"
+    generated_decision["provider_revision_id"] = generated_revision["provider_revision_id"]
+    generated_decision["provider_revision_digest"] = generated_revision["provider_revision_digest"]
+    generated_decision["decision_digest"] = "sha256:" + "0" * 64
+    write(f"examples/contracts/{provider_kind}-provider-admission-decision.json", generated_decision)
+
 
 revision_paths = [
     "examples/contracts/sandbox-provider-revision.json",
@@ -96,6 +192,8 @@ revision_paths = [
     "examples/contracts/html-skill-provider-revision.json",
     "examples/contracts/renderer-provider-revision.json",
     "examples/contracts/template-provider-revision.json",
+    "examples/contracts/editor-provider-revision.json",
+    "examples/contracts/converter-provider-revision.json",
 ]
 decision_paths = [
     "examples/contracts/provider-admission-decision.json",
@@ -104,6 +202,8 @@ decision_paths = [
     "examples/contracts/html-skill-provider-admission-decision.json",
     "examples/contracts/renderer-provider-admission-decision.json",
     "examples/contracts/template-provider-admission-decision.json",
+    "examples/contracts/editor-provider-admission-decision.json",
+    "examples/contracts/converter-provider-admission-decision.json",
 ]
 revisions: dict[str, dict[str, Any]] = {}
 for path in revision_paths:
@@ -252,6 +352,16 @@ capability_definitions = [
         "definition_digest": "sha256:" + "32" * 32,
         "allowed_provider_kinds": ["agent_runtime"],
     },
+    {
+        "id": "artifact.edit.html", "version": "1.0", "profile": "default",
+        "definition_digest": "sha256:" + "36" * 32,
+        "allowed_provider_kinds": ["editor"],
+    },
+    {
+        "id": "artifact.convert.pptx", "version": "1.0", "profile": "default",
+        "definition_digest": "sha256:" + "37" * 32,
+        "allowed_provider_kinds": ["converter"],
+    },
 ]
 definition_by_capability = {item["id"]: item for item in capability_definitions}
 
@@ -268,13 +378,18 @@ write(principal_context_path, principal_context)
 def resolution(
     resolution_id: str, capability: dict[str, Any], revision_id: str,
     decision_id: str, resolved_at: str,
+    execution_scope: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     revision = revisions[revision_id]
+    scope = execution_scope or {
+        "kind": "work_order",
+        "work_order_id": "wrk_01J00000000000000000000000",
+    }
     provider_audience = f"urn:agent-platform:provider-instance:{revision['provider_instance_id']}"
     resolution_input = {
         "tenant_id": "ten_01J00000000000000000000000",
         "client_app_id": "html-product",
-        "work_order_id": "wrk_01J00000000000000000000000",
+        "execution_scope": copy.deepcopy(scope),
         "principal_context_digest": principal_context["principal_context_digest"],
         "capability": capability,
         "capability_definition_digest": definition_by_capability[capability["id"]]["definition_digest"],
@@ -301,8 +416,7 @@ def resolution(
         "resolution_id": resolution_id,
         "tenant_id": "ten_01J00000000000000000000000",
         "client_app_id": "html-product",
-        "work_order_id": "wrk_01J00000000000000000000000",
-        "execution_scope": "work_order",
+        "execution_scope": copy.deepcopy(scope),
         "principal_context_digest": principal_context["principal_context_digest"],
         "identity_dependency": {
             "mode": "principal_context",
@@ -437,6 +551,78 @@ sandbox_restore["spec"]["workspace"]["base_revision_digest"] = workspace_revisio
 sandbox_restore["spec"]["workspace"].pop("base_branch_version", None)
 sandbox_restore["spec"]["workspace"]["base_workspace_head_version"] = conversation_branch["workspace_head_version"]
 sandbox_restore["spec"]["workspace"]["commit_mode"] = "cas_new_revision"
+sandbox_snapshot = sandbox_restore["snapshot"]
+sandbox_snapshot["source_provider_revision_id"] = sandbox_snapshot.pop(
+    "provider_revision_id", "spr_01J00000000000000000000000"
+)
+sandbox_snapshot["source_runtime_revision"] = "sandbox-runtime-1.0.0"
+sandbox_snapshot["portability"] = "portable"
+sandbox_snapshot.pop("portable", None)
+sandbox_snapshot.pop("compatibility", None)
+sandbox_snapshot["compatibility_profile"] = "sandbox-snapshot-workspace-v1"
+sandbox_compatibility_evidence = {
+    "evidence_id": "cevd_sandbox_01J00000000000000000",
+    "evidence_digest": "sha256:" + "0" * 64,
+    "subject_kind": "sandbox_snapshot",
+    "source_provider_revision_id": sandbox_snapshot["source_provider_revision_id"],
+    "source_runtime_revision": sandbox_snapshot["source_runtime_revision"],
+    "target_provider_revision_id": sandbox_restore["spec"]["provider_revision_id"],
+    "target_runtime_revision": "sandbox-runtime-1.1.0",
+    "suite_id": suites["sandbox"]["suite_id"],
+    "suite_version": suites["sandbox"]["suite_version"],
+    "suite_digest": suites["sandbox"]["suite_digest"],
+    "profile_id": sandbox_snapshot["compatibility_profile"],
+    "test_run_reference": "conformance://sandbox/snapshot-workspace/run-01",
+    "test_run_digest": digest({"sandbox_snapshot_test_run": "run-01"}),
+    "result": "passed",
+    "completed_at": "2026-07-16T10:05:00Z",
+}
+sandbox_compatibility_evidence["evidence_digest"] = digest_without(
+    sandbox_compatibility_evidence, "evidence_digest"
+)
+sandbox_compatibility_decision = {
+    "decision_id": "cmpd_sandbox_01J0000000000000000",
+    "decision_digest": "sha256:" + "0" * 64,
+    "subject_kind": "sandbox_snapshot",
+    "subject_id": sandbox_snapshot["snapshot_id"],
+    "subject_digest": sandbox_snapshot["digest"],
+    "source_provider_revision_id": sandbox_snapshot["source_provider_revision_id"],
+    "source_runtime_revision": sandbox_snapshot["source_runtime_revision"],
+    "target_provider_revision_id": sandbox_restore["spec"]["provider_revision_id"],
+    "target_runtime_revision": "sandbox-runtime-1.1.0",
+    "compatibility_profile": sandbox_snapshot["compatibility_profile"],
+    "evidence": [sandbox_compatibility_evidence],
+    "result": "compatible",
+    "reason_codes": ["suite_passed"],
+    "decided_at": "2026-07-16T10:06:00Z",
+}
+sandbox_compatibility_decision["decision_digest"] = digest_without(
+    sandbox_compatibility_decision, "decision_digest"
+)
+sandbox_snapshot["compatibility_decision"] = copy.deepcopy(sandbox_compatibility_decision)
+sandbox_restore["target_provider_revision_id"] = sandbox_compatibility_decision["target_provider_revision_id"]
+sandbox_restore["target_runtime_revision"] = sandbox_compatibility_decision["target_runtime_revision"]
+sandbox_restore["compatibility_decision"] = copy.deepcopy(sandbox_compatibility_decision)
+write("examples/contracts/sandbox-compatibility-evidence.json", sandbox_compatibility_evidence)
+write("examples/contracts/sandbox-compatibility-decision.json", sandbox_compatibility_decision)
+sandbox_snapshot_missing_decision = copy.deepcopy(sandbox_snapshot)
+sandbox_snapshot_missing_decision.pop("compatibility_decision")
+write(
+    "contracts/tests/invalid/sandbox-snapshot-portable-missing-decision.json",
+    sandbox_snapshot_missing_decision,
+)
+write("contracts/tests/semantic-invalid/compatibility-decision-cases.json", {
+    "runtime_subject": runtime_checkpoint,
+    "runtime_decision": runtime_compatibility_decision,
+    "sandbox_subject": sandbox_snapshot,
+    "sandbox_decision": sandbox_compatibility_decision,
+    "sandbox_restore": sandbox_restore,
+    "cases": [
+        {"id": "runtime-compatible-with-failed-evidence", "mutation": "runtime_failed_evidence"},
+        {"id": "runtime-compatible-target-mismatch", "mutation": "runtime_target_mismatch"},
+        {"id": "sandbox-restore-target-mismatch", "mutation": "sandbox_restore_target_mismatch"},
+    ],
+})
 sandbox_restore["request_digest"] = digest_without(sandbox_restore, "request_digest")
 write("examples/contracts/sandbox-restore-request.json", sandbox_restore)
 sandbox_requests: dict[str, tuple[str, dict[str, Any], str]] = {
@@ -454,6 +640,8 @@ for operation, filename in {
 }.items():
     path = f"examples/contracts/{filename}"
     request = read(path)
+    if operation == "snapshot":
+        request["compatibility_profile"] = "sandbox-snapshot-workspace-v1"
     request["request_digest"] = digest_without(request, "request_digest")
     write(path, request)
     sandbox_requests[operation] = (path, request, sandbox_spec["sandbox_id"])
@@ -470,7 +658,9 @@ write(meter_path, meter)
 budget_path = "examples/contracts/execution-budget.json"
 budget = read(budget_path)
 budget["tenant_id"] = "ten_01J00000000000000000000000"
-budget["work_order_id"] = "wrk_01J00000000000000000000000"
+work_order_id = "wrk_01J00000000000000000000000"
+budget.pop("work_order_id", None)
+budget["execution_scope"] = {"kind": "work_order", "work_order_id": work_order_id}
 budget["limits"] = copy.deepcopy(commercial["authorized_limits"])
 budget["budget_digest"] = digest_without(budget, "budget_digest")
 write(budget_path, budget)
@@ -479,7 +669,7 @@ root_budget_allocation = {
     "allocation_id": "abal_root_01J000000000000000000000",
     "allocation_digest": "sha256:" + "0" * 64,
     "tenant_id": budget["tenant_id"],
-    "work_order_id": budget["work_order_id"],
+    "work_order_id": work_order_id,
     "agent_run_id": "agr_01J00000000000000000000000",
     "work_order_budget_id": budget["budget_id"],
     "work_order_budget_digest": budget["budget_digest"],
@@ -497,7 +687,8 @@ write("examples/contracts/agent-run-budget-allocation.json", root_budget_allocat
 permissions_path = "examples/contracts/effective-permissions.json"
 permissions = read(permissions_path)
 permissions["tenant_id"] = budget["tenant_id"]
-permissions["work_order_id"] = budget["work_order_id"]
+permissions.pop("work_order_id", None)
+permissions["execution_scope"] = {"kind": "work_order", "work_order_id": work_order_id}
 legacy_artifact_permissions = permissions["artifact"]
 permissions["artifact"] = {
     "read": legacy_artifact_permissions["read"],
@@ -564,7 +755,7 @@ write(
 plugin_request = read("examples/contracts/plugin-invocation-request.json")
 plugin_request["tenant_id"] = budget["tenant_id"]
 plugin_request["client_app_id"] = principal_context["client_app_id"]
-plugin_request["work_order_id"] = budget["work_order_id"]
+plugin_request["work_order_id"] = work_order_id
 plugin_request["deadline_at"] = "2026-07-16T09:20:00Z"
 for artifact in plugin_request["input_artifacts"]:
     artifact["expires_at"] = "2026-07-16T09:10:00Z"
@@ -697,7 +888,7 @@ child_spawn_request = {
     "spawn_request_id": "spawn_01J0000000000000000000000",
     "request_digest": "sha256:" + "0" * 64,
     "tenant_id": budget["tenant_id"],
-    "work_order_id": budget["work_order_id"],
+    "work_order_id": work_order_id,
     "workflow_run_id": "wfr_01J00000000000000000000000",
     "root_agent_run_id": "agr_01J00000000000000000000000",
     "parent_agent_run_id": "agr_01J00000000000000000000000",
@@ -774,13 +965,14 @@ write("examples/contracts/runtime-gateway-bindings.json", gateway_bindings)
 
 artifact_grant = read("examples/contracts/artifact-grant.json")
 artifact_grant["artifact_digest"] = workspace_manifest["manifest_digest"]
-artifact_grant.pop("runtime_run_id", None)
 artifact_grant["execution_scope"] = {
-    "kind": "runtime_invocation",
-    "runtime_run_id": "rtr_01J00000000000000000000000",
-    "invocation_id": "inv_runtime_start_01J000000000000",
-    "invocation_attempt_id": "iat_runtime_start_01J00000000000",
+    "kind": "work_order",
+    "work_order_id": work_order_id,
 }
+artifact_grant["runtime_run_id"] = "rtr_01J00000000000000000000000"
+artifact_grant["invocation_id"] = "inv_runtime_start_01J000000000000"
+artifact_grant["invocation_attempt_id"] = "iat_runtime_start_01J00000000000"
+artifact_grant.pop("work_order_id", None)
 artifact_grant["permissions"] = [
     "stage_new_version" if permission == "write_new_version" else permission
     for permission in artifact_grant["permissions"]
@@ -792,13 +984,16 @@ artifact_grant["grant_digest"] = digest_without(artifact_grant, "grant_digest")
 write("examples/contracts/artifact-grant.json", artifact_grant)
 artifact_requirement_path = "examples/contracts/artifact-access-requirement.json"
 artifact_requirement = read(artifact_requirement_path)
-for field in ("tenant_id", "work_order_id", "artifact_id", "version_id", "artifact_digest"):
+for field in ("tenant_id", "artifact_id", "version_id", "artifact_digest"):
     artifact_requirement[field] = artifact_grant[field]
+artifact_requirement["work_order_id"] = work_order_id
 artifact_requirement["allowed_permissions"] = copy.deepcopy(artifact_grant["permissions"])
 write(artifact_requirement_path, artifact_requirement)
 
 usage_entry_path = "examples/contracts/technical-usage-entry.json"
 usage_entry = read(usage_entry_path)
+usage_entry.pop("work_order_id", None)
+usage_entry["execution_scope"] = {"kind": "work_order", "work_order_id": work_order_id}
 usage_entry["meter_id"] = meter["meter_id"]
 usage_entry["meter_version"] = meter["meter_version"]
 usage_entry["meter_definition_digest"] = meter["definition_digest"]
@@ -829,6 +1024,8 @@ write(usage_entry_path, usage_entry)
 
 usage_report_path = "examples/contracts/usage-report.json"
 usage_report = read(usage_report_path)
+usage_report.pop("work_order_id", None)
+usage_report["execution_scope"] = copy.deepcopy(usage_entry["execution_scope"])
 usage_report["commercial_authorization_id"] = commercial["commercial_authorization_id"]
 usage_report["commercial_authorization_digest"] = commercial["commercial_authorization_digest"]
 usage_report["quota_reservation_id"] = commercial["quota_reservation_id"]
@@ -852,6 +1049,10 @@ write("contracts/tests/invalid/usage-report-first-correction.json", first_correc
 
 settlement_path = "examples/contracts/business-settlement-envelope.json"
 settlement = read(settlement_path)
+settlement.pop("work_order_id", None)
+settlement.pop("work_order_terminal_status", None)
+settlement["execution_scope"] = copy.deepcopy(usage_report["execution_scope"])
+settlement["terminal_status"] = "completed"
 settlement["commercial_authorization_id"] = commercial["commercial_authorization_id"]
 settlement["commercial_authorization_digest"] = commercial["commercial_authorization_digest"]
 settlement["quota_reservation_id"] = commercial["quota_reservation_id"]
@@ -875,6 +1076,8 @@ write("contracts/tests/invalid/settlement-reconcile-final-report.json", reconcil
 
 policy_path = "examples/contracts/policy-decision.json"
 policy = read(policy_path)
+policy.pop("work_order_id", None)
+policy["execution_scope"] = {"kind": "work_order", "work_order_id": work_order_id}
 policy["decision_point"] = "run_admission"
 policy["commercial_authorization_id"] = commercial["commercial_authorization_id"]
 policy["commercial_authorization_digest"] = commercial["commercial_authorization_digest"]
@@ -883,6 +1086,788 @@ policy["execution_budget_digest"] = budget["budget_digest"]
 policy["effective_permissions_digest"] = permissions["permissions_digest"]
 policy["decision_digest"] = digest_without(policy, "decision_digest")
 write(policy_path, policy)
+
+for invocation_path in (
+    "examples/contracts/invocation-record.json",
+    "examples/contracts/invocation-attempt-sequence-record.json",
+    "examples/contracts/invocation-non-idempotent-retry.json",
+):
+    invocation_fixture = read(invocation_path)
+    invocation_fixture["execution_scope"] = {
+        "kind": "work_order",
+        "work_order_id": invocation_fixture["work_order_id"],
+    }
+    write(invocation_path, invocation_fixture)
+
+
+def digest_artifact_operation_request(value: dict[str, Any]) -> str:
+    unsigned = copy.deepcopy(value)
+    unsigned["operation_context"].pop("request_digest", None)
+    return digest(unsigned)
+
+
+def build_artifact_operation(
+    operation_kind: str,
+    capability: dict[str, Any],
+    revision_id: str,
+    decision_id: str,
+) -> tuple[
+    dict[str, Any], dict[str, Any], dict[str, Any],
+    dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any],
+]:
+    operation_id = f"aop_{operation_kind}_01J000000000000000000"
+    scope = {"kind": "artifact_operation", "artifact_operation_id": operation_id}
+    operation_budget = copy.deepcopy(budget)
+    operation_budget["budget_id"] = f"bud_{operation_kind}_01J000000000000000000"
+    operation_budget["execution_scope"] = copy.deepcopy(scope)
+    operation_budget["created_at"] = "2026-07-16T09:06:01Z"
+    operation_budget["limits"]["max_agent_runs"] = 1
+    operation_budget["limits"]["max_agent_depth"] = 1
+    operation_budget["limits"]["max_parallel_agent_runs"] = 1
+    operation_budget["policies"]["model_gateway_required"] = False
+    operation_budget["policies"]["tool_gateway_required"] = False
+    operation_budget["policies"]["egress_gateway_required"] = False
+    operation_budget["policies"]["external_communication"] = False
+    operation_budget["budget_digest"] = digest_without(operation_budget, "budget_digest")
+    operation_policy = copy.deepcopy(policy)
+    operation_policy["decision_id"] = f"pol_{operation_kind}_01J000000000000000000"
+    operation_policy["execution_scope"] = copy.deepcopy(scope)
+    operation_policy["decision_point"] = "artifact_operation"
+    operation_policy["decided_at"] = "2026-07-16T09:06:01Z"
+    operation_policy["execution_budget_id"] = operation_budget["budget_id"]
+    operation_policy["execution_budget_digest"] = operation_budget["budget_digest"]
+    operation_policy["evaluations"] = [{
+        "subject_kind": "artifact",
+        "subject_id": capability["id"],
+        "action": "allow",
+        "source": "commercial",
+        "rule_digest": digest({"artifact_operation_policy": operation_kind}),
+    }]
+    operation_policy["decision_digest"] = digest_without(operation_policy, "decision_digest")
+    operation_permissions = copy.deepcopy(permissions)
+    operation_permissions["permissions_id"] = f"perm_{operation_kind}_01J00000000000000000"
+    operation_permissions["execution_scope"] = copy.deepcopy(scope)
+    operation_permissions["model"]["allowed_model_profiles"] = []
+    operation_permissions["tool"]["allowed_capabilities"] = [capability["id"]]
+    operation_permissions["artifact"] = {"read": True, "stage_new_version": True}
+    operation_permissions["egress"] = {"mode": "none", "allowed_destination_classes": []}
+    operation_permissions["sandbox_slots"] = []
+    operation_permissions["permissions_digest"] = digest_without(
+        operation_permissions, "permissions_digest"
+    )
+    operation_policy["effective_permissions_digest"] = operation_permissions["permissions_digest"]
+    operation_policy["decision_digest"] = digest_without(operation_policy, "decision_digest")
+    context = {
+        "operation_kind": operation_kind,
+        "tenant_id": budget["tenant_id"],
+        "client_app_id": principal_context["client_app_id"],
+        "principal_context": copy.deepcopy(principal_context),
+        "artifact_id": "art_01J00000000000000000000000",
+        "source_version_id": "ver_01J00000000000000000000000",
+        "source_version_digest": digest({"artifact_version": "source-v1"}),
+        "capability": copy.deepcopy(capability),
+        "commercial_authorization": copy.deepcopy(commercial_binding),
+        "quota_reservation_id": commercial["quota_reservation_id"],
+        "quota_reservation_digest": commercial["quota_reservation_digest"],
+        "idempotency_key": f"artifact-{operation_kind}-idempotency-0001",
+        "request_digest": "sha256:" + "0" * 64,
+        "requested_at": "2026-07-16T09:06:00Z",
+    }
+    operation_resolution = resolution(
+        f"res_{operation_kind}_01J000000000000000000",
+        capability,
+        revision_id,
+        decision_id,
+        "2026-07-16T09:06:01Z",
+        execution_scope=scope,
+    )
+    invocation = {
+        "invocation_id": f"inv_{operation_kind}_01J000000000000000000",
+        "tenant_id": context["tenant_id"],
+        "execution_scope": copy.deepcopy(scope),
+        "artifact_operation_id": operation_id,
+        "capability_id": capability["id"],
+        "capability_version": capability["version"],
+        "provider_instance_id": operation_resolution["selected_provider_instance_id"],
+        "provider_resolution_id": operation_resolution["resolution_id"],
+        "provider_revision_id": operation_resolution["selected_provider_revision"]["provider_revision_id"],
+        "idempotency_key": f"invocation-{operation_kind}-idempotency-0001",
+        "request_digest": "sha256:" + "0" * 64,
+        "side_effect": "idempotent",
+        "status": "succeeded",
+        "current_attempt_id": f"iat_{operation_kind}_01J00000000000000000",
+        "result_reference": f"artifact-operation-result://{operation_id}",
+        "created_at": "2026-07-16T09:06:02Z",
+        "updated_at": "2026-07-16T09:06:05Z",
+        "completed_at": "2026-07-16T09:06:05Z",
+        "attempt_count": 1,
+        "max_attempts": 3,
+    }
+    operation = {
+        "artifact_operation_id": operation_id,
+        "operation_kind": operation_kind,
+        "tenant_id": context["tenant_id"],
+        "client_app_id": context["client_app_id"],
+        "principal_context_digest": principal_context["principal_context_digest"],
+        "artifact_id": context["artifact_id"],
+        "source_version_id": context["source_version_id"],
+        "source_version_digest": context["source_version_digest"],
+        "request_digest": "sha256:" + "0" * 64,
+        "invocation_request_digest": "sha256:" + "0" * 64,
+        "commercial_authorization_id": commercial_binding["commercial_authorization_id"],
+        "commercial_authorization_digest": commercial_binding["commercial_authorization_digest"],
+        "quota_reservation_id": commercial["quota_reservation_id"],
+        "quota_reservation_digest": commercial["quota_reservation_digest"],
+        "policy_decision_id": operation_policy["decision_id"],
+        "policy_decision_digest": operation_policy["decision_digest"],
+        "execution_budget_id": operation_budget["budget_id"],
+        "execution_budget_digest": operation_budget["budget_digest"],
+        "effective_permissions_id": operation_permissions["permissions_id"],
+        "effective_permissions_digest": operation_permissions["permissions_digest"],
+        "artifact_gateway_binding_digest": gateway_bindings["artifact"]["port"]["binding_digest"],
+        "provider_resolution_id": operation_resolution["resolution_id"],
+        "provider_revision_id": operation_resolution["selected_provider_revision"]["provider_revision_id"],
+        "invocation_id": invocation["invocation_id"],
+        "status": "succeeded",
+        "state_version": 5,
+        "terminal_stage": "finalization",
+        "result_reference": invocation["result_reference"],
+        "terminal_evidence_digest": digest({"artifact_operation_outcome": operation_id}),
+        "created_at": "2026-07-16T09:06:00Z",
+        "updated_at": "2026-07-16T09:06:05Z",
+        "completed_at": "2026-07-16T09:06:05Z",
+    }
+    return (
+        context, operation_budget, operation_policy, operation_permissions,
+        operation_resolution, invocation, operation,
+    )
+
+
+artifact_operation_materials = {}
+for operation_kind, capability, revision_id, decision_id in (
+    (
+        "preview", {"id": "artifact.preview.html", "version": "1.0", "profile": "default"},
+        "rpr_01J00000000000000000000000", "pad_renderer_01J0000000000000000",
+    ),
+    (
+        "edit", {"id": "artifact.edit.html", "version": "1.0", "profile": "default"},
+        "epr_01J00000000000000000000000", "pad_editor_01J000000000000000000",
+    ),
+    (
+        "conversion", {"id": "artifact.convert.pptx", "version": "1.0", "profile": "default"},
+        "cpr_01J00000000000000000000000", "pad_converter_01J000000000000000000",
+    ),
+):
+    artifact_operation_materials[operation_kind] = build_artifact_operation(
+        operation_kind, capability, revision_id, decision_id
+    )
+
+preview_context, preview_budget, preview_policy, preview_permissions, preview_resolution, preview_invocation, preview_operation = artifact_operation_materials["preview"]
+preview_request = {"operation_context": copy.deepcopy(preview_context), "options": {"theme": "system"}}
+preview_request["operation_context"]["request_digest"] = digest_artifact_operation_request(preview_request)
+preview_invocation["request_digest"] = preview_request["operation_context"]["request_digest"]
+preview_operation["request_digest"] = preview_request["operation_context"]["request_digest"]
+write("examples/contracts/artifact-operation-context.json", preview_request["operation_context"])
+write("examples/contracts/artifact-operation-execution-budget.json", preview_budget)
+write("examples/contracts/artifact-operation-policy-decision.json", preview_policy)
+write("examples/contracts/artifact-operation-effective-permissions.json", preview_permissions)
+write("examples/contracts/artifact-operation-provider-resolution.json", preview_resolution)
+write("examples/contracts/artifact-operation-invocation.json", preview_invocation)
+write("examples/contracts/artifact-operation.json", preview_operation)
+write("examples/contracts/preview-session-request.json", preview_request)
+artifact_operation_client_supplied_admission = copy.deepcopy(preview_request)
+artifact_operation_client_supplied_admission["operation_context"].update({
+    "artifact_operation_id": preview_operation["artifact_operation_id"],
+    "policy_decision_id": preview_policy["decision_id"],
+    "policy_decision_digest": preview_policy["decision_digest"],
+    "execution_budget_id": preview_budget["budget_id"],
+    "execution_budget_digest": preview_budget["budget_digest"],
+    "effective_permissions_id": preview_permissions["permissions_id"],
+    "effective_permissions_digest": preview_permissions["permissions_digest"],
+    "artifact_gateway_binding": copy.deepcopy(gateway_bindings["artifact"]["port"]),
+})
+write(
+    "contracts/tests/invalid/artifact-operation-client-supplied-admission.json",
+    artifact_operation_client_supplied_admission,
+)
+write("examples/contracts/preview-session.json", {
+    "preview_session_id": "prv_01J00000000000000000000000",
+    "artifact_operation": preview_operation,
+    "status": "ready",
+    "preview_url": "https://preview.agent-platform.test/session/prv_01",
+    "expires_at": "2026-07-16T09:16:05Z",
+})
+
+edit_context, _, _, _, _, edit_invocation, edit_operation = artifact_operation_materials["edit"]
+edit_request = {"operation_context": copy.deepcopy(edit_context), "mode": "source", "options": {}}
+edit_request["operation_context"]["request_digest"] = digest_artifact_operation_request(edit_request)
+edit_invocation["request_digest"] = edit_request["operation_context"]["request_digest"]
+edit_operation["request_digest"] = edit_request["operation_context"]["request_digest"]
+write("examples/contracts/edit-session-request.json", edit_request)
+write("examples/contracts/edit-session.json", {
+    "edit_session_id": "edt_01J00000000000000000000000",
+    "artifact_operation": edit_operation,
+    "status": "active",
+    "mode": "source",
+    "draft_reference": "artifact-draft://edt_01",
+    "created_at": "2026-07-16T09:06:05Z",
+    "expires_at": "2026-07-16T09:26:05Z",
+    "draft_revision": 0,
+})
+
+conversion_context, _, _, _, _, conversion_invocation, conversion_operation = artifact_operation_materials["conversion"]
+conversion_request = {
+    "operation_context": copy.deepcopy(conversion_context),
+    "target_media_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "options": {"page_size": "wide"},
+}
+conversion_request["operation_context"]["request_digest"] = digest_artifact_operation_request(conversion_request)
+conversion_invocation["request_digest"] = conversion_request["operation_context"]["request_digest"]
+conversion_operation["request_digest"] = conversion_request["operation_context"]["request_digest"]
+write("examples/contracts/conversion-request.json", conversion_request)
+write("examples/contracts/conversion-job.json", {
+    "conversion_job_id": "cnv_01J00000000000000000000000",
+    "artifact_operation": conversion_operation,
+    "target_media_type": conversion_request["target_media_type"],
+    "result_artifact_id": "art_derived_01J0000000000000000000",
+    "result_version_id": "ver_derived_01J0000000000000000000",
+})
+
+artifact_operation_admission_failed = copy.deepcopy(preview_operation)
+for field in (
+    "provider_resolution_id", "provider_revision_id", "invocation_id",
+    "invocation_request_digest", "result_reference",
+):
+    artifact_operation_admission_failed.pop(field, None)
+artifact_operation_admission_failed.update({
+    "artifact_operation_id": "aop_admission_failed_01J000000000000",
+    "status": "failed",
+    "state_version": 1,
+    "terminal_stage": "admission",
+    "error": {
+        "code": "ARTIFACT_OPERATION_ADMISSION_DENIED",
+        "message": "Artifact operation admission was denied before Provider resolution.",
+        "retryable": False,
+        "trace_id": "trace-artifact-operation-admission-denied",
+    },
+    "terminal_evidence_digest": digest({"admission_decision": "denied"}),
+    "updated_at": "2026-07-16T09:06:01Z",
+    "completed_at": "2026-07-16T09:06:01Z",
+})
+write(
+    "examples/contracts/artifact-operation-admission-failed.json",
+    artifact_operation_admission_failed,
+)
+
+write("contracts/tests/semantic-invalid/artifact-operation-cases.json", {
+    "operation": copy.deepcopy(preview_operation),
+    "request": copy.deepcopy(preview_request),
+    "budget": copy.deepcopy(preview_budget),
+    "policy": copy.deepcopy(preview_policy),
+    "permissions": copy.deepcopy(preview_permissions),
+    "resolution": copy.deepcopy(preview_resolution),
+    "invocation": copy.deepcopy(preview_invocation),
+    "cases": [
+        {"id": "provider-resolution-mismatch", "mutation": "provider_resolution_mismatch"},
+        {"id": "invocation-scope-mismatch", "mutation": "invocation_scope_mismatch"},
+        {"id": "invocation-request-digest-mismatch", "mutation": "invocation_request_digest_mismatch"},
+        {"id": "permissions-scope-mismatch", "mutation": "permissions_scope_mismatch"},
+        {"id": "provider-revision-mismatch", "mutation": "provider_revision_mismatch"},
+        {"id": "source-version-digest-mismatch", "mutation": "source_version_digest_mismatch"},
+        {"id": "terminal-evidence-missing", "mutation": "terminal_evidence_missing"},
+        {"id": "provider-request-owner-digest-mismatch", "mutation": "provider_request_owner_digest_mismatch"},
+        {"id": "platform-policy-binding-mismatch", "mutation": "platform_policy_binding_mismatch"},
+        {"id": "platform-gateway-binding-mismatch", "mutation": "platform_gateway_binding_mismatch"},
+    ],
+})
+invalid_ingest_invocation = copy.deepcopy(preview_invocation)
+invalid_ingest_invocation["execution_scope"] = {
+    "kind": "artifact_ingest",
+    "artifact_ingest_session_id": "ing_01J00000000000000000000000",
+}
+write("contracts/tests/invalid/invocation-artifact-ingest-scope.json", invalid_ingest_invocation)
+
+branch_create_request = {
+    "branch_request_id": "breq_01J00000000000000000000000",
+    "conversation_id": conversation_branch["conversation_id"],
+    "branch_id": "debug-rerun-01",
+    "mode": "fork",
+    "source_branch_id": conversation_branch["branch_id"],
+    "source_message_id": conversation_branch["head_message_id"],
+    "source_message_sequence": conversation_branch["head_message_sequence"],
+    "source_message_head_version": conversation_branch["message_head_version"],
+    "source_workspace_revision_id": conversation_branch["workspace_head_revision_id"],
+    "source_workspace_revision_digest": conversation_branch["workspace_head_revision_digest"],
+    "source_workspace_head_version": conversation_branch["workspace_head_version"],
+    "idempotency_key": "conversation-branch-fork-idempotency-0001",
+    "request_digest": "sha256:" + "0" * 64,
+}
+branch_create_request["request_digest"] = digest_without(branch_create_request, "request_digest")
+fork_workspace_revision = copy.deepcopy(workspace_revision)
+fork_workspace_revision.update({
+    "workspace_revision_id": "wsr_fork_01J000000000000000000000",
+    "branch_id": branch_create_request["branch_id"],
+    "revision_number": 1,
+    "parent_revision_id": None,
+    "forked_from_revision_id": workspace_revision["workspace_revision_id"],
+    "created_at": "2026-07-16T09:07:00Z",
+})
+fork_workspace_revision["revision_digest"] = digest_without(
+    fork_workspace_revision, "revision_digest"
+)
+forked_branch = copy.deepcopy(conversation_branch)
+forked_branch.update({
+    "branch_id": branch_create_request["branch_id"],
+    "forked_from_branch_id": branch_create_request["source_branch_id"],
+    "forked_from_message_id": branch_create_request["source_message_id"],
+    "active_work_order_id": None,
+    "workspace_head_revision_id": fork_workspace_revision["workspace_revision_id"],
+    "workspace_head_revision_digest": fork_workspace_revision["revision_digest"],
+    "message_head_version": 1,
+    "workspace_head_version": 1,
+    "active_work_version": 1,
+    "branch_version": 1,
+    "created_at": "2026-07-16T09:07:00Z",
+    "updated_at": "2026-07-16T09:07:00Z",
+})
+write("examples/contracts/conversation-branch-create-request.json", branch_create_request)
+branch_created = {
+    "branch_request_id": branch_create_request["branch_request_id"],
+    "request_digest": branch_create_request["request_digest"],
+    "branch": forked_branch,
+    "workspace_revision": fork_workspace_revision,
+}
+write("examples/contracts/conversation-branch-created.json", branch_created)
+
+empty_branch_request = {
+    "branch_request_id": "breq_empty_01J0000000000000000000",
+    "conversation_id": conversation_branch["conversation_id"],
+    "branch_id": "parallel-empty-01",
+    "mode": "create",
+    "idempotency_key": "conversation-branch-create-idempotency-0001",
+    "request_digest": "sha256:" + "0" * 64,
+}
+empty_branch_request["request_digest"] = digest_without(
+    empty_branch_request, "request_digest"
+)
+empty_workspace_revision = copy.deepcopy(workspace_revision)
+empty_workspace_revision.update({
+    "workspace_revision_id": "wsr_empty_01J00000000000000000000",
+    "branch_id": empty_branch_request["branch_id"],
+    "revision_number": 1,
+    "parent_revision_id": None,
+    "forked_from_revision_id": workspace_revision["workspace_revision_id"],
+    "created_at": "2026-07-16T09:07:30Z",
+})
+empty_workspace_revision.pop("produced_by_work_order_id", None)
+empty_workspace_revision["revision_digest"] = digest_without(
+    empty_workspace_revision, "revision_digest"
+)
+empty_branch = copy.deepcopy(conversation_branch)
+empty_branch.update({
+    "branch_id": empty_branch_request["branch_id"],
+    "head_message_id": None,
+    "head_message_sequence": 0,
+    "active_work_order_id": None,
+    "workspace_head_revision_id": empty_workspace_revision["workspace_revision_id"],
+    "workspace_head_revision_digest": empty_workspace_revision["revision_digest"],
+    "message_head_version": 1,
+    "workspace_head_version": 1,
+    "active_work_version": 1,
+    "branch_version": 1,
+    "created_at": "2026-07-16T09:07:30Z",
+    "updated_at": "2026-07-16T09:07:30Z",
+})
+empty_branch.pop("forked_from_branch_id", None)
+empty_branch.pop("forked_from_message_id", None)
+empty_branch_created = {
+    "branch_request_id": empty_branch_request["branch_request_id"],
+    "request_digest": empty_branch_request["request_digest"],
+    "branch": empty_branch,
+    "workspace_revision": empty_workspace_revision,
+}
+write("examples/contracts/conversation-branch-empty-create-request.json", empty_branch_request)
+write("examples/contracts/conversation-branch-empty-created.json", empty_branch_created)
+write("contracts/tests/semantic-invalid/conversation-branch-create-cases.json", {
+    "request": branch_create_request,
+    "created": branch_created,
+    "source_branch": conversation_branch,
+    "source_message": read("examples/contracts/conversation-message.json"),
+    "source_workspace": workspace_revision,
+    "empty_request": empty_branch_request,
+    "empty_created": empty_branch_created,
+    "cases": [
+        {"id": "fork-message-cas-stale", "mutation": "message_cas_stale"},
+        {"id": "fork-workspace-digest-mismatch", "mutation": "workspace_digest_mismatch"},
+        {"id": "fork-created-at-wrong-cut", "mutation": "created_wrong_cut"},
+        {"id": "create-inherits-message", "mutation": "create_inherits_message"},
+        {"id": "create-wrong-initial-workspace", "mutation": "create_wrong_workspace"},
+    ],
+})
+
+no_usage_attestation = {
+    "attestation_id": "nua_01J00000000000000000000000",
+    "attestation_digest": "sha256:" + "0" * 64,
+    "tenant_id": budget["tenant_id"],
+    "execution_scope": {"kind": "work_order", "work_order_id": work_order_id},
+    "commercial_authorization_id": commercial["commercial_authorization_id"],
+    "commercial_authorization_digest": commercial["commercial_authorization_digest"],
+    "quota_reservation_id": commercial["quota_reservation_id"],
+    "quota_reservation_digest": commercial["quota_reservation_digest"],
+    "reason": "failed_before_dispatch",
+    "evidence_reference": "ledger://work-orders/wrk_01/no-dispatch-proof",
+    "evidence_digest": digest({"dispatch_attempt_count": 0, "technical_usage_count": 0}),
+    "confirmed_at": "2026-07-16T09:07:30Z",
+}
+no_usage_attestation["attestation_digest"] = digest_without(
+    no_usage_attestation, "attestation_digest"
+)
+write("examples/contracts/no-usage-attestation.json", no_usage_attestation)
+delivery_no_usage = {
+    "delivery_id": "del_no_usage_01J00000000000000000",
+    "work_order_id": work_order_id,
+    "status": "failed",
+    "summary": "Admission failed before any Provider or Gateway dispatch.",
+    "artifacts": [],
+    "usage_accounting": {
+        "kind": "confirmed_no_usage",
+        "no_usage_attestation": copy.deepcopy(no_usage_attestation),
+    },
+    "completed_at": "2026-07-16T09:07:31Z",
+}
+write("examples/contracts/delivery-package-no-usage.json", delivery_no_usage)
+release_settlement = copy.deepcopy(settlement)
+release_settlement.update({
+    "settlement_envelope_id": "set_release_01J0000000000000000000",
+    "terminal_status": "failed",
+    "action": "release",
+    "idempotency_key": "settlement-release-idempotency-0001",
+    "no_usage_attestation": copy.deepcopy(no_usage_attestation),
+})
+release_settlement.pop("usage_report", None)
+release_settlement["settlement_envelope_digest"] = digest_without(
+    release_settlement, "settlement_envelope_digest"
+)
+write("examples/contracts/business-settlement-release-envelope.json", release_settlement)
+artifact_operation_no_usage = copy.deepcopy(no_usage_attestation)
+artifact_operation_no_usage.update({
+    "attestation_id": "nua_aop_01J000000000000000000000",
+    "execution_scope": {
+        "kind": "artifact_operation",
+        "artifact_operation_id": "aop_admission_failed_01J000000000000",
+    },
+    "evidence_reference": "ledger://artifact-operations/aop_admission_failed/no-dispatch-proof",
+    "evidence_digest": digest({
+        "artifact_operation_id": "aop_admission_failed_01J000000000000",
+        "dispatch_attempt_count": 0,
+        "technical_usage_count": 0,
+    }),
+})
+artifact_operation_no_usage["attestation_digest"] = digest_without(
+    artifact_operation_no_usage, "attestation_digest"
+)
+write(
+    "examples/contracts/artifact-operation-no-usage-attestation.json",
+    artifact_operation_no_usage,
+)
+artifact_operation_release = copy.deepcopy(release_settlement)
+artifact_operation_release.update({
+    "settlement_envelope_id": "set_release_aop_01J00000000000000000",
+    "execution_scope": copy.deepcopy(artifact_operation_no_usage["execution_scope"]),
+    "terminal_status": "failed",
+    "idempotency_key": "settlement-release-artifact-operation-0001",
+    "no_usage_attestation": copy.deepcopy(artifact_operation_no_usage),
+})
+artifact_operation_release["settlement_envelope_digest"] = digest_without(
+    artifact_operation_release, "settlement_envelope_digest"
+)
+write(
+    "examples/contracts/artifact-operation-business-settlement-release-envelope.json",
+    artifact_operation_release,
+)
+invalid_no_usage = copy.deepcopy(no_usage_attestation)
+invalid_no_usage["reason"] = "failed_before_dispatch"
+write("contracts/tests/semantic-invalid/no-usage-cases.json", {
+    "attestation": invalid_no_usage,
+    "cases": [{"id": "attempt-dispatched-before-zero-confirmation", "mutation": "dispatched_attempt_exists"}],
+})
+
+sandbox_exec_request = sandbox_requests["exec"][1]
+secret_operation_intent = copy.deepcopy(sandbox_exec_request)
+for field in ("request_digest", "secret_reference_ids", "secret_grant_id", "secret_grant_digest"):
+    secret_operation_intent.pop(field, None)
+secret_target_digest = digest(secret_operation_intent)
+secret_grant = {
+    "secret_grant_id": "secg_01J00000000000000000000000",
+    "secret_grant_digest": "sha256:" + "0" * 64,
+    "tenant_id": sandbox_spec["tenant_id"],
+    "principal_context_digest": principal_context["principal_context_digest"],
+    "execution_scope": {"kind": "work_order", "work_order_id": sandbox_spec["work_order_id"]},
+    "provider_instance_id": "spi_native_sandbox",
+    "provider_revision_id": "spr_01J00000000000000000000000",
+    "provider_audience": "urn:agent-platform:provider-instance:spi_native_sandbox",
+    "workload_identity": "spiffe://agent-platform/provider/spi_native_sandbox/workload/exec",
+    "secret_reference_ids": ["secret-ref-api-token-01"],
+    "purpose": "process_environment",
+    "target": {
+        "target_kind": "sandbox_exec",
+        "target_id": sandbox_exec_request["operation_id"],
+        "target_digest": secret_target_digest,
+    },
+    "operation": "credential_access",
+    "target_request_contract_id": "urn:agent-platform:sandbox-exec-request:v1",
+    "target_request_digest_profile": "rfc8785-sandbox-exec-intent-excluding-secret-grant-and-request-digest-v1",
+    "target_request_digest": secret_target_digest,
+    "sender_constraint": {
+        "method": "mtls_spiffe",
+        "subject": "spiffe://agent-platform/provider/spi_native_sandbox/workload/exec",
+    },
+    "issued_at": "2026-07-16T09:08:00Z",
+    "expires_at": "2026-07-16T09:13:00Z",
+    "max_uses": 1,
+    "persistence_policy": {
+        "provider_cache_allowed": False,
+        "provider_persistence_allowed": False,
+        "platform_event_material_allowed": False,
+        "temporal_history_material_allowed": False,
+    },
+}
+secret_grant["secret_grant_digest"] = digest_without(secret_grant, "secret_grant_digest")
+sandbox_exec_request["secret_reference_ids"] = copy.deepcopy(secret_grant["secret_reference_ids"])
+sandbox_exec_request["secret_grant_id"] = secret_grant["secret_grant_id"]
+sandbox_exec_request["secret_grant_digest"] = secret_grant["secret_grant_digest"]
+sandbox_exec_request["request_digest"] = digest_without(sandbox_exec_request, "request_digest")
+write("examples/contracts/sandbox-exec-request.json", sandbox_exec_request)
+credential_request = {
+    "credential_request_id": "creq_01J00000000000000000000000",
+    "secret_grant_id": secret_grant["secret_grant_id"],
+    "secret_grant_digest": secret_grant["secret_grant_digest"],
+    "secret_reference_ids": copy.deepcopy(secret_grant["secret_reference_ids"]),
+    "target": copy.deepcopy(secret_grant["target"]),
+    "purpose": secret_grant["purpose"],
+    "request_digest": "sha256:" + "0" * 64,
+}
+credential_request["request_digest"] = digest_without(credential_request, "request_digest")
+credential_token = {
+    "iss": "agent-platform",
+    "sub": secret_grant["workload_identity"],
+    "aud": "urn:agent-platform:credential-gateway:primary",
+    "jti": "cot_01J00000000000000000000000",
+    "iat": 1784192880,
+    "nbf": 1784192880,
+    "exp": 1784193180,
+    "tenant_id": secret_grant["tenant_id"],
+    "secret_grant_id": secret_grant["secret_grant_id"],
+    "secret_grant_digest": secret_grant["secret_grant_digest"],
+    "operation": "credential_access",
+    "request_contract_id": "urn:agent-platform:credential-access-request:v1",
+    "request_digest_profile": "rfc8785-request-excluding-request-digest-v1",
+    "request_digest": credential_request["request_digest"],
+}
+credential_delivery = {
+    "credential_request_id": credential_request["credential_request_id"],
+    "delivery_handle": "opaque-workload-bound-single-operation-handle-000000000001",
+    "delivery_mode": secret_grant["purpose"],
+    "expires_at": "2026-07-16T09:13:00Z",
+    "audit_event_id": "evt_credential_access_01J000000000000",
+}
+secret_revocation = {
+    "revocation_id": "secr_01J00000000000000000000000",
+    "revocation_digest": "sha256:" + "0" * 64,
+    "tenant_id": secret_grant["tenant_id"],
+    "secret_grant_id": secret_grant["secret_grant_id"],
+    "secret_grant_digest": secret_grant["secret_grant_digest"],
+    "reason": "operation_cancelled",
+    "revoked_at": "2026-07-16T09:09:00Z",
+}
+secret_revocation["revocation_digest"] = digest_without(secret_revocation, "revocation_digest")
+write("examples/contracts/secret-grant.json", secret_grant)
+write("examples/contracts/secret-grant-revocation.json", secret_revocation)
+write("examples/contracts/credential-access-request.json", credential_request)
+write("examples/contracts/credential-operation-token-claims.json", credential_token)
+write("examples/contracts/credential-operation-jws-header.json", {
+    "alg": "EdDSA", "kid": "credential-gateway-key-2026-01", "typ": "agent-credential-operation+jwt",
+})
+write("examples/contracts/credential-delivery.json", credential_delivery)
+missing_secret_grant = copy.deepcopy(sandbox_exec_request)
+missing_secret_grant.pop("secret_grant_id")
+missing_secret_grant.pop("secret_grant_digest")
+write("contracts/tests/invalid/sandbox-exec-secret-reference-missing-grant.json", missing_secret_grant)
+write("contracts/tests/semantic-invalid/credential-mediation-cases.json", {
+    "secret_grant": secret_grant,
+    "request": credential_request,
+    "token": credential_token,
+    "delivery": credential_delivery,
+    "cases": [
+        {"id": "target-digest-mismatch", "mutation": "target_digest_mismatch"},
+        {"id": "sender-mismatch", "mutation": "sender_mismatch"},
+        {"id": "token-expiry-exceeds-grant", "mutation": "expiry_exceeds_grant"},
+        {"id": "revoked-before-use", "mutation": "revoked_before_use"},
+    ],
+})
+
+ingest_session_id = "ing_01J00000000000000000000000"
+ingest_scope = {
+    "kind": "artifact_ingest", "artifact_ingest_session_id": ingest_session_id,
+}
+ingest_budget = copy.deepcopy(preview_budget)
+ingest_budget["budget_id"] = "bud_ingest_01J0000000000000000000"
+ingest_budget["execution_scope"] = copy.deepcopy(ingest_scope)
+ingest_budget["created_at"] = "2026-07-16T09:10:01Z"
+ingest_budget["budget_digest"] = digest_without(ingest_budget, "budget_digest")
+ingest_permissions = copy.deepcopy(preview_permissions)
+ingest_permissions["permissions_id"] = "perm_ingest_01J00000000000000000"
+ingest_permissions["execution_scope"] = copy.deepcopy(ingest_scope)
+ingest_permissions["tool"]["allowed_capabilities"] = []
+ingest_permissions["artifact"] = {"read": False, "stage_new_version": True}
+ingest_permissions["permissions_digest"] = digest_without(
+    ingest_permissions, "permissions_digest"
+)
+ingest_policy = copy.deepcopy(preview_policy)
+ingest_policy["decision_id"] = "pol_ingest_01J0000000000000000000"
+ingest_policy["execution_scope"] = copy.deepcopy(ingest_scope)
+ingest_policy["decision_point"] = "artifact"
+ingest_policy["decided_at"] = "2026-07-16T09:10:01Z"
+ingest_policy["execution_budget_id"] = ingest_budget["budget_id"]
+ingest_policy["execution_budget_digest"] = ingest_budget["budget_digest"]
+ingest_policy["effective_permissions_digest"] = ingest_permissions["permissions_digest"]
+ingest_policy["evaluations"] = [{
+    "subject_kind": "artifact",
+    "subject_id": "art_ingest_01J0000000000000000000",
+    "action": "allow",
+    "source": "commercial",
+    "rule_digest": digest({
+        "artifact_id": "art_ingest_01J0000000000000000000",
+        "media_type": "application/pdf",
+    }),
+}]
+ingest_policy["decision_digest"] = digest_without(ingest_policy, "decision_digest")
+ingest_request = {
+    "ingest_request_id": "ireq_01J00000000000000000000000",
+    "tenant_id": budget["tenant_id"],
+    "client_app_id": principal_context["client_app_id"],
+    "principal_context": copy.deepcopy(principal_context),
+    "artifact_id": "art_ingest_01J0000000000000000000",
+    "name": "research-input.pdf",
+    "media_type": "application/pdf",
+    "size_bytes": 4096,
+    "content_digest": bytes_digest(b"artifact-ingest-fixture-bytes"),
+    "commercial_authorization": copy.deepcopy(commercial_binding),
+    "idempotency_key": "artifact-ingest-idempotency-0001",
+    "request_digest": "sha256:" + "0" * 64,
+    "requested_at": "2026-07-16T09:10:00Z",
+}
+ingest_request["request_digest"] = digest_without(ingest_request, "request_digest")
+artifact_ingest_client_supplied_admission = copy.deepcopy(ingest_request)
+artifact_ingest_client_supplied_admission.update({
+    "policy_decision_id": ingest_policy["decision_id"],
+    "policy_decision_digest": ingest_policy["decision_digest"],
+    "execution_budget_id": ingest_budget["budget_id"],
+    "execution_budget_digest": ingest_budget["budget_digest"],
+    "effective_permissions_id": ingest_permissions["permissions_id"],
+    "effective_permissions_digest": ingest_permissions["permissions_digest"],
+})
+write(
+    "contracts/tests/invalid/artifact-ingest-client-supplied-admission.json",
+    artifact_ingest_client_supplied_admission,
+)
+ingest_session = {
+    "ingest_session_id": ingest_session_id,
+    "tenant_id": ingest_request["tenant_id"],
+    "client_app_id": ingest_request["client_app_id"],
+    "principal_context_digest": principal_context["principal_context_digest"],
+    "artifact_id": ingest_request["artifact_id"],
+    "request_digest": ingest_request["request_digest"],
+    "commercial_authorization_id": commercial_binding["commercial_authorization_id"],
+    "commercial_authorization_digest": commercial_binding["commercial_authorization_digest"],
+    "policy_decision_id": ingest_policy["decision_id"],
+    "policy_decision_digest": ingest_policy["decision_digest"],
+    "execution_budget_id": ingest_budget["budget_id"],
+    "execution_budget_digest": ingest_budget["budget_digest"],
+    "effective_permissions_id": ingest_permissions["permissions_id"],
+    "effective_permissions_digest": ingest_permissions["permissions_digest"],
+    "status": "finalized",
+    "state_version": 7,
+    "confirmed_upload_digest": ingest_request["content_digest"],
+    "scan_result_id": "iscan_01J0000000000000000000000",
+    "scan_result_digest": "sha256:" + "0" * 64,
+    "artifact_version_id": "ver_ingest_01J0000000000000000000",
+    "artifact_version_digest": digest({"artifact_ingest_version": "v1"}),
+    "created_at": "2026-07-16T09:10:00Z",
+    "expires_at": "2026-07-16T09:40:00Z",
+    "updated_at": "2026-07-16T09:11:00Z",
+    "completed_at": "2026-07-16T09:11:00Z",
+}
+ingest_confirm = {
+    "ingest_session_id": ingest_session_id,
+    "upload_object_id": "quarantine/object/ing-01",
+    "media_type": ingest_request["media_type"],
+    "size_bytes": ingest_request["size_bytes"],
+    "content_digest": ingest_request["content_digest"],
+    "request_digest": "sha256:" + "0" * 64,
+}
+ingest_confirm["request_digest"] = digest_without(ingest_confirm, "request_digest")
+ingest_scan = {
+    "scan_result_id": ingest_session["scan_result_id"],
+    "scan_result_digest": "sha256:" + "0" * 64,
+    "ingest_session_id": ingest_session_id,
+    "content_digest": ingest_request["content_digest"],
+    "scanner_provider_revision_id": "spr_scanner_01J0000000000000000000",
+    "scanner_profile": "artifact-malware-and-content-v1",
+    "scanner_suite_digest": digest({"scanner_suite": "artifact-malware-and-content-v1"}),
+    "result": "passed",
+    "evidence_reference": "scan-evidence://ing-01",
+    "evidence_digest": digest({"scan_evidence": "ing-01"}),
+    "completed_at": "2026-07-16T09:10:50Z",
+}
+ingest_scan["scan_result_digest"] = digest_without(ingest_scan, "scan_result_digest")
+ingest_session["scan_result_digest"] = ingest_scan["scan_result_digest"]
+ingest_finalize = {
+    "finalize_command_id": "ifin_01J00000000000000000000000",
+    "command_digest": "sha256:" + "0" * 64,
+    "authority": "platform_artifact_ledger",
+    "ingest_session_id": ingest_session_id,
+    "expected_state_version": 6,
+    "confirmed_upload_digest": ingest_session["confirmed_upload_digest"],
+    "scan_result_id": ingest_scan["scan_result_id"],
+    "scan_result_digest": ingest_scan["scan_result_digest"],
+    "idempotency_key": "artifact-ingest-finalize-idempotency-0001",
+    "issued_at": "2026-07-16T09:10:55Z",
+}
+ingest_finalize["command_digest"] = digest_without(ingest_finalize, "command_digest")
+write("examples/contracts/artifact-ingest-request.json", ingest_request)
+write("examples/contracts/artifact-ingest-execution-budget.json", ingest_budget)
+write("examples/contracts/artifact-ingest-policy-decision.json", ingest_policy)
+write("examples/contracts/artifact-ingest-effective-permissions.json", ingest_permissions)
+write("examples/contracts/artifact-ingest-session.json", ingest_session)
+write("examples/contracts/artifact-ingest-response.json", {
+    "session": ingest_session,
+    "upload_url": "https://upload.agent-platform.test/quarantine/ing-01",
+    "required_headers": {"Digest": "sha-256=:fixture:"},
+})
+write("examples/contracts/artifact-ingest-confirm-request.json", ingest_confirm)
+write("examples/contracts/artifact-ingest-status-operation-descriptor.json", {
+    "operation": "read_artifact_ingest_session", "ingest_session_id": ingest_session_id,
+})
+write("examples/contracts/artifact-ingest-scan-result.json", ingest_scan)
+write("examples/contracts/artifact-ingest-finalize-command.json", ingest_finalize)
+write("contracts/tests/semantic-invalid/artifact-ingest-cases.json", {
+    "session": ingest_session,
+    "request": ingest_request,
+    "budget": ingest_budget,
+    "policy": ingest_policy,
+    "permissions": ingest_permissions,
+    "scan_result": ingest_scan,
+    "finalize_command": ingest_finalize,
+    "cases": [
+        {"id": "finalize-with-failed-scan", "mutation": "failed_scan"},
+        {"id": "finalize-digest-mismatch", "mutation": "scan_digest_mismatch"},
+        {"id": "provider-authority-finalize", "mutation": "provider_finalize_authority"},
+        {"id": "session-policy-binding-mismatch", "mutation": "session_policy_binding_mismatch"},
+        {"id": "policy-media-binding-mismatch", "mutation": "policy_media_binding_mismatch"},
+        {"id": "permissions-scope-mismatch", "mutation": "permissions_scope_mismatch"},
+    ],
+})
 
 event_data_schema = read("contracts/schemas/agent-runtime-event-data.schema.json")
 event_registry_path = "contracts/event-types/agent-runtime-core-v1.json"
@@ -938,6 +1923,138 @@ canonical_event["dedupe_key"] = digest({
 })
 write("examples/contracts/canonical-event-v2.json", canonical_event)
 write("examples/contracts/platform-core-event-data.json", canonical_event["data"])
+
+
+def platform_core_event(
+    fixture_name: str, event_type: str, aggregate_type: str, aggregate_id: str,
+    data: dict[str, Any], *, conversation_id: str | None = None,
+    execution_scope: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    event = copy.deepcopy(canonical_event)
+    for field in (
+        "conversation_id", "work_order_id", "turn_id", "branch_id",
+        "input_message_id", "workspace_id", "work_sequence", "references",
+        "execution_scope",
+    ):
+        event.pop(field, None)
+    event.update({
+        "event_id": f"evt_{fixture_name}_01J00000000000000000",
+        "producer_id": "platform-core-ledger",
+        "source_stream_id": f"{aggregate_type}/{aggregate_id}",
+        "source_event_id": f"{event_type}/1",
+        "source_cursor": "1",
+        "aggregate": {"type": aggregate_type, "id": aggregate_id, "sequence": 1},
+        "type": event_type,
+        "data": data,
+        "occurred_at": "2026-07-16T09:10:00Z",
+        "recorded_at": "2026-07-16T09:10:00.100Z",
+        "metadata": {
+            "trace_id": f"trace-{fixture_name}",
+            "correlation_id": aggregate_id,
+        },
+    })
+    if conversation_id is not None:
+        event["conversation_id"] = conversation_id
+    if execution_scope is not None:
+        event["execution_scope"] = copy.deepcopy(execution_scope)
+    event["dedupe_key"] = digest({
+        "tenant_id": event["tenant_id"],
+        "producer_id": event["producer_id"],
+        "source_stream_id": event["source_stream_id"],
+        "source_event_id": event["source_event_id"],
+    })
+    write(f"examples/contracts/canonical-event-{fixture_name}.json", event)
+    return event
+
+
+branch_core_event = platform_core_event(
+    "conversation-branch-forked", "conversation.branch.forked",
+    "conversation_branch", branch_created["branch"]["branch_id"],
+    {
+        "branch_request_id": branch_create_request["branch_request_id"],
+        "branch_id": branch_created["branch"]["branch_id"],
+        "mode": "fork",
+        "source_branch_id": branch_create_request["source_branch_id"],
+        "source_message_id": branch_create_request["source_message_id"],
+        "source_message_sequence": branch_create_request["source_message_sequence"],
+        "workspace_revision_id": branch_created["workspace_revision"]["workspace_revision_id"],
+        "workspace_revision_digest": branch_created["workspace_revision"]["revision_digest"],
+        "request_digest": branch_create_request["request_digest"],
+    },
+    conversation_id=branch_create_request["conversation_id"],
+)
+artifact_operation_core_event = platform_core_event(
+    "artifact-operation-succeeded", "artifact.operation.state.changed",
+    "artifact_operation", preview_operation["artifact_operation_id"],
+    {
+        "artifact_operation_id": preview_operation["artifact_operation_id"],
+        "operation_kind": preview_operation["operation_kind"],
+        "state": preview_operation["status"],
+        "state_version": preview_operation["state_version"],
+        "provider_resolution_id": preview_operation["provider_resolution_id"],
+        "invocation_id": preview_operation["invocation_id"],
+        "request_digest": preview_operation["request_digest"],
+        "invocation_request_digest": preview_operation["invocation_request_digest"],
+        "terminal_stage": preview_operation["terminal_stage"],
+        "terminal_evidence_digest": preview_operation["terminal_evidence_digest"],
+    },
+    execution_scope={
+        "kind": "artifact_operation",
+        "artifact_operation_id": preview_operation["artifact_operation_id"],
+    },
+)
+artifact_ingest_core_event = platform_core_event(
+    "artifact-ingest-finalized", "artifact.ingest.state.changed",
+    "artifact_ingest", ingest_session["ingest_session_id"],
+    {
+        "ingest_session_id": ingest_session["ingest_session_id"],
+        "state": ingest_session["status"],
+        "state_version": ingest_session["state_version"],
+        "content_digest": ingest_session["confirmed_upload_digest"],
+        "scan_result_digest": ingest_scan["scan_result_digest"],
+        "artifact_version_id": ingest_session["artifact_version_id"],
+    },
+    execution_scope={
+        "kind": "artifact_ingest",
+        "artifact_ingest_session_id": ingest_session["ingest_session_id"],
+    },
+)
+compatibility_core_event = platform_core_event(
+    "compatibility-decided", "compatibility.decided", "compatibility_decision",
+    runtime_compatibility_decision["decision_id"],
+    {
+        "decision_id": runtime_compatibility_decision["decision_id"],
+        "decision_digest": runtime_compatibility_decision["decision_digest"],
+        "subject_kind": runtime_compatibility_decision["subject_kind"],
+        "subject_id": runtime_compatibility_decision["subject_id"],
+        "result": runtime_compatibility_decision["result"],
+        "source_provider_revision_id": runtime_compatibility_decision["source_provider_revision_id"],
+        "target_provider_revision_id": runtime_compatibility_decision["target_provider_revision_id"],
+    },
+)
+secret_grant_core_event = platform_core_event(
+    "secret-grant-issued", "secret.grant.state.changed", "secret_grant",
+    secret_grant["secret_grant_id"],
+    {
+        "secret_grant_id": secret_grant["secret_grant_id"],
+        "secret_grant_digest": secret_grant["secret_grant_digest"],
+        "state": "issued",
+        "evidence_digest": digest({"secret_grant_issued": secret_grant["secret_grant_id"]}),
+    },
+    execution_scope=secret_grant["execution_scope"],
+)
+write("contracts/tests/semantic-invalid/canonical-core-event-cases.json", {
+    "artifact_operation": artifact_operation_core_event,
+    "artifact_ingest": artifact_ingest_core_event,
+    "compatibility": compatibility_core_event,
+    "secret_grant": secret_grant_core_event,
+    "cases": [
+        {"id": "artifact-operation-event-missing-scope", "mutation": "artifact_operation_missing_scope"},
+        {"id": "artifact-ingest-event-cross-scope", "mutation": "artifact_ingest_cross_scope"},
+        {"id": "compatibility-event-with-execution-scope", "mutation": "compatibility_with_scope"},
+        {"id": "secret-grant-event-missing-scope", "mutation": "secret_grant_missing_scope"},
+    ],
+})
 
 
 manifest_path = "examples/contracts/run-manifest-v2.json"
@@ -1285,20 +2402,264 @@ commercial_revocation["revocation_digest"] = digest_without(
     commercial_revocation, "revocation_digest"
 )
 write(commercial_revocation_path, commercial_revocation)
-commercial_revocation_accepted = read(
-    "examples/contracts/commercial-authorization-revocation-accepted.json"
+commercial_revocation_accepted = {
+    "revocation_id": commercial_revocation["revocation_id"],
+    "revocation_receipt_id": "carcp_01J0000000000000000000000",
+    "revocation_receipt_digest": "sha256:" + "0" * 64,
+    "revocation_digest": commercial_revocation["revocation_digest"],
+    "tenant_id": manifest["tenant_id"],
+    "client_app_id": grant["client_app_id"],
+    "commercial_authorization_id": commercial["commercial_authorization_id"],
+    "commercial_authorization_digest": commercial["commercial_authorization_digest"],
+    "status": "accepted",
+    "deny_effective_at": "2026-07-16T09:10:02Z",
+    "work_session_revocations": [{
+        "work_session_id": work_session_claims["jti"],
+        "expected_session_version": work_session_claims["session_version"],
+        "revocation_intent_id": "wsri_01J0000000000000000000000",
+        "outbox_message_id": "out_wsri_01J0000000000000000000",
+        "status": "enqueued",
+    }],
+    "execution_cancellation_targets": [
+        {
+            "execution_scope": {"kind": "work_order", "work_order_id": manifest["work_order_id"]},
+            "expected_owner_state_version": 1,
+            "action": "cancel",
+            "cancellation_intent_id": "cani_work_01J000000000000000000",
+            "outbox_message_id": "out_cani_work_01J00000000000000",
+            "status": "enqueued",
+        },
+        {
+            "execution_scope": {
+                "kind": "artifact_operation",
+                "artifact_operation_id": preview_operation["artifact_operation_id"],
+            },
+            "expected_owner_state_version": 4,
+            "action": "cancel",
+            "cancellation_intent_id": "cani_aop_01J0000000000000000000",
+            "outbox_message_id": "out_cani_aop_01J000000000000000",
+            "status": "enqueued",
+        },
+        {
+            "execution_scope": {
+                "kind": "artifact_ingest",
+                "artifact_ingest_session_id": ingest_session["ingest_session_id"],
+            },
+            "expected_owner_state_version": 4,
+            "action": "cancel",
+            "cancellation_intent_id": "cani_ing_01J0000000000000000000",
+            "outbox_message_id": "out_cani_ing_01J000000000000000",
+            "status": "enqueued",
+        },
+    ],
+    "fanout_status": "in_progress",
+    "accepted_at": "2026-07-16T09:10:02Z",
+}
+commercial_revocation_accepted["revocation_receipt_digest"] = digest_without(
+    commercial_revocation_accepted, "revocation_receipt_digest"
 )
-commercial_revocation_accepted["revocation_id"] = commercial_revocation["revocation_id"]
 write(
     "examples/contracts/commercial-authorization-revocation-accepted.json",
     commercial_revocation_accepted,
 )
+artifact_operation_cancel_target = next(
+    target
+    for target in commercial_revocation_accepted["execution_cancellation_targets"]
+    if target["execution_scope"] == {
+        "kind": "artifact_operation",
+        "artifact_operation_id": preview_operation["artifact_operation_id"],
+    }
+)
+artifact_operation_cancel_requested = copy.deepcopy(preview_operation)
+for field in (
+    "result_reference", "terminal_evidence_digest", "terminal_stage", "completed_at",
+):
+    artifact_operation_cancel_requested.pop(field, None)
+artifact_operation_cancel_requested.update({
+    "status": "cancel_requested",
+    "state_version": artifact_operation_cancel_target["expected_owner_state_version"] + 1,
+    "cancellation_intent_id": artifact_operation_cancel_target["cancellation_intent_id"],
+    "cancellation_source_kind": "commercial_authorization_revocation_receipt",
+    "cancellation_source_id": commercial_revocation_accepted["revocation_receipt_id"],
+    "cancellation_source_digest": commercial_revocation_accepted["revocation_receipt_digest"],
+    "cancellation_outbox_message_id": artifact_operation_cancel_target["outbox_message_id"],
+    "cancellation_requested_at": commercial_revocation_accepted["accepted_at"],
+    "updated_at": commercial_revocation_accepted["accepted_at"],
+})
+write(
+    "examples/contracts/artifact-operation-cancel-requested.json",
+    artifact_operation_cancel_requested,
+)
+artifact_operation_cancel_invocation = copy.deepcopy(preview_invocation)
+artifact_operation_cancel_invocation.update({
+    "status": "executing",
+    "updated_at": commercial_revocation_accepted["accepted_at"],
+})
+for field in ("result_reference", "completed_at"):
+    artifact_operation_cancel_invocation.pop(field, None)
+write(
+    "examples/contracts/artifact-operation-cancel-requested-invocation.json",
+    artifact_operation_cancel_invocation,
+)
+artifact_operation_cancellation_reconciling = copy.deepcopy(
+    artifact_operation_cancel_requested
+)
+artifact_operation_cancellation_reconciling.update({
+    "status": "cancellation_reconciling",
+    "state_version": artifact_operation_cancel_requested["state_version"] + 2,
+    "cancellation_reconciliation_case_id": "irc_aop_cancel_01J000000000000000000",
+    "updated_at": "2026-07-16T09:10:04Z",
+})
+write(
+    "examples/contracts/artifact-operation-cancellation-reconciling.json",
+    artifact_operation_cancellation_reconciling,
+)
+artifact_operation_cancellation_reconciling_invocation = copy.deepcopy(
+    artifact_operation_cancel_invocation
+)
+artifact_operation_cancellation_reconciling_invocation.update({
+    "status": "reconciling",
+    "reconciliation_case_id": artifact_operation_cancellation_reconciling[
+        "cancellation_reconciliation_case_id"
+    ],
+    "reconciliation_deadline_at": "2026-07-16T10:10:04Z",
+    "updated_at": artifact_operation_cancellation_reconciling["updated_at"],
+})
+write(
+    "examples/contracts/artifact-operation-cancellation-reconciling-invocation.json",
+    artifact_operation_cancellation_reconciling_invocation,
+)
+artifact_operation_cancel_event = platform_core_event(
+    "artifact-operation-cancel-requested", "artifact.operation.state.changed",
+    "artifact_operation", artifact_operation_cancel_requested["artifact_operation_id"],
+    {
+        "artifact_operation_id": artifact_operation_cancel_requested["artifact_operation_id"],
+        "operation_kind": artifact_operation_cancel_requested["operation_kind"],
+        "state": artifact_operation_cancel_requested["status"],
+        "state_version": artifact_operation_cancel_requested["state_version"],
+        "provider_resolution_id": artifact_operation_cancel_requested["provider_resolution_id"],
+        "invocation_id": artifact_operation_cancel_requested["invocation_id"],
+        "request_digest": artifact_operation_cancel_requested["request_digest"],
+        "invocation_request_digest": artifact_operation_cancel_requested["invocation_request_digest"],
+        "cancellation_intent_id": artifact_operation_cancel_requested["cancellation_intent_id"],
+        "cancellation_source_kind": artifact_operation_cancel_requested["cancellation_source_kind"],
+        "cancellation_source_id": artifact_operation_cancel_requested["cancellation_source_id"],
+        "cancellation_source_digest": artifact_operation_cancel_requested["cancellation_source_digest"],
+        "cancellation_outbox_message_id": artifact_operation_cancel_requested["cancellation_outbox_message_id"],
+        "cancellation_requested_at": artifact_operation_cancel_requested["cancellation_requested_at"],
+    },
+    execution_scope={
+        "kind": "artifact_operation",
+        "artifact_operation_id": artifact_operation_cancel_requested["artifact_operation_id"],
+    },
+)
+artifact_operation_cancel_event["aggregate"]["sequence"] = (
+    artifact_operation_cancel_requested["state_version"]
+)
+artifact_operation_cancel_event["source_event_id"] = (
+    f"artifact.operation.state.changed/{artifact_operation_cancel_requested['state_version']}"
+)
+artifact_operation_cancel_event["source_cursor"] = str(
+    artifact_operation_cancel_requested["state_version"]
+)
+artifact_operation_cancel_event["occurred_at"] = (
+    artifact_operation_cancel_requested["cancellation_requested_at"]
+)
+artifact_operation_cancel_event["recorded_at"] = "2026-07-16T09:10:02.100Z"
+artifact_operation_cancel_event["dedupe_key"] = digest({
+    "tenant_id": artifact_operation_cancel_event["tenant_id"],
+    "producer_id": artifact_operation_cancel_event["producer_id"],
+    "source_stream_id": artifact_operation_cancel_event["source_stream_id"],
+    "source_event_id": artifact_operation_cancel_event["source_event_id"],
+})
+write(
+    "examples/contracts/canonical-event-artifact-operation-cancel-requested.json",
+    artifact_operation_cancel_event,
+)
+artifact_operation_cancel_missing_source = copy.deepcopy(
+    artifact_operation_cancel_requested
+)
+artifact_operation_cancel_missing_source.pop("cancellation_source_digest")
+write(
+    "contracts/tests/invalid/artifact-operation-cancel-requested-missing-source.json",
+    artifact_operation_cancel_missing_source,
+)
+write("contracts/tests/semantic-invalid/artifact-operation-cancellation-cases.json", {
+    "cancel_requested_operation": copy.deepcopy(artifact_operation_cancel_requested),
+    "cancel_requested_invocation": copy.deepcopy(artifact_operation_cancel_invocation),
+    "cancellation_reconciling_operation": copy.deepcopy(
+        artifact_operation_cancellation_reconciling
+    ),
+    "cancellation_reconciling_invocation": copy.deepcopy(
+        artifact_operation_cancellation_reconciling_invocation
+    ),
+    "receipt": copy.deepcopy(commercial_revocation_accepted),
+    "state_machine_cases": [
+        {
+            "id": "running-missing-cancel-intent-path",
+            "mutation": "remove_active_cancel_path",
+            "state": "running",
+        },
+        {
+            "id": "running-directly-cancelled",
+            "mutation": "direct_active_cancelled",
+            "state": "running",
+        },
+        {"id": "cancellation-reconciliation-retry", "mutation": "cancellation_retry"},
+        {
+            "id": "cancellation-ambiguous-success",
+            "mutation": "ambiguous_cancellation_success",
+        },
+        {
+            "id": "cancel-unknown-without-reconciliation",
+            "mutation": "remove_unknown_reconciliation",
+        },
+    ],
+    "binding_cases": [
+        {
+            "id": "cancellation-source-receipt-digest-mismatch",
+            "mutation": "source_receipt_digest_mismatch",
+        },
+        {"id": "cancellation-intent-id-mismatch", "mutation": "intent_id_mismatch"},
+        {"id": "cancellation-outbox-mismatch", "mutation": "outbox_message_mismatch"},
+        {"id": "cancellation-before-receipt", "mutation": "requested_before_receipt"},
+        {"id": "cancellation-stale-owner-cas", "mutation": "stale_owner_cas"},
+        {
+            "id": "cancellation-invocation-already-terminal",
+            "mutation": "invocation_status_terminal",
+        },
+        {
+            "id": "cancellation-invocation-binding-mismatch",
+            "mutation": "invocation_binding_mismatch",
+        },
+        {
+            "id": "cancellation-reconciliation-case-mismatch",
+            "mutation": "reconciliation_case_mismatch",
+            "owner": "cancellation_reconciling",
+        },
+    ],
+})
 invalid_commercial_revocation = copy.deepcopy(commercial_revocation)
 invalid_commercial_revocation["work_order_id"] = manifest["work_order_id"]
 write(
     "contracts/tests/invalid/commercial-authorization-revocation-with-platform-command.json",
     invalid_commercial_revocation,
 )
+write("contracts/tests/semantic-invalid/commercial-revocation-fanout-cases.json", {
+    "notice": copy.deepcopy(commercial_revocation),
+    "receipt": copy.deepcopy(commercial_revocation_accepted),
+    "expected_execution_scopes": [
+        copy.deepcopy(item["execution_scope"])
+        for item in commercial_revocation_accepted["execution_cancellation_targets"]
+    ],
+    "cases": [
+        {"id": "revocation-receipt-digest-mismatch", "mutation": "digest_mismatch"},
+        {"id": "revocation-missing-active-target", "mutation": "missing_target"},
+        {"id": "revocation-duplicate-outbox", "mutation": "duplicate_outbox"},
+        {"id": "revocation-completed-with-pending-target", "mutation": "premature_completed"},
+        {"id": "revocation-receipt-authorization-mismatch", "mutation": "authorization_mismatch"},
+    ],
+})
 
 recording_path = "examples/contracts/runtime-recording.json"
 recording = read(recording_path)
@@ -1331,10 +2692,8 @@ runtime_start["workspace_revision_id"] = workspace_revision["workspace_revision_
 runtime_start["workspace_revision_digest"] = workspace_revision["revision_digest"]
 runtime_start["deadline_at"] = "2026-07-16T09:15:00Z"
 artifact_grant["execution_scope"] = {
-    "kind": "runtime_invocation",
-    "runtime_run_id": runtime_start["runtime_run_id"],
-    "invocation_id": runtime_start["invocation_id"],
-    "invocation_attempt_id": runtime_start["invocation_attempt_id"],
+    "kind": "work_order",
+    "work_order_id": manifest["work_order_id"],
 }
 artifact_grant["expires_at"] = "2026-07-16T09:15:00Z"
 artifact_grant["grant_digest"] = digest_without(artifact_grant, "grant_digest")
@@ -1366,7 +2725,7 @@ def make_runtime_authorization(
         "expires_at": "2026-07-16T09:15:00Z",
     })
     value["artifact_grants"][0]["grant_id"] = f"artg_{authorization_id}"
-    value["artifact_grants"][0]["execution_scope"].update({
+    value["artifact_grants"][0].update({
         "runtime_run_id": start_value["runtime_run_id"],
         "invocation_id": start_value["invocation_id"],
         "invocation_attempt_id": start_value["invocation_attempt_id"],
@@ -1392,7 +2751,7 @@ renewed_authorization.update({
 })
 renewed_authorization["artifact_grants"][0]["grant_id"] = "artg_01J0000000000000000000001"
 renewed_authorization["artifact_grants"][0]["issued_at"] = "2026-07-16T09:05:00Z"
-renewed_authorization["artifact_grants"][0]["execution_scope"]["invocation_attempt_id"] = (
+renewed_authorization["artifact_grants"][0]["invocation_attempt_id"] = (
     "iat_runtime_01J0000000000000001"
 )
 renewed_authorization["artifact_grants"][0]["grant_digest"] = digest_without(
@@ -1446,7 +2805,7 @@ child_budget_allocation = {
     "allocation_id": "abal_child_01J00000000000000000000",
     "allocation_digest": "sha256:" + "0" * 64,
     "tenant_id": budget["tenant_id"],
-    "work_order_id": budget["work_order_id"],
+    "work_order_id": work_order_id,
     "agent_run_id": "agr_child_01J0000000000000000000",
     "parent_allocation_id": root_budget_allocation["allocation_id"],
     "parent_allocation_digest": root_budget_allocation["allocation_digest"],
@@ -1599,6 +2958,7 @@ runtime_status = read("examples/contracts/agent-runtime-run-status.json")
 runtime_status["tenant_id"] = manifest["tenant_id"]
 runtime_status["workflow_run_id"] = manifest["workflow_run_id"]
 runtime_status["agent_run_id"] = manifest["agent_run_id"]
+runtime_status["checkpoint"] = copy.deepcopy(runtime_checkpoint)
 write("examples/contracts/agent-runtime-run-status.json", runtime_status)
 
 runtime_command = read("examples/contracts/agent-runtime-command.json")
@@ -1701,6 +3061,12 @@ runtime_capabilities["event_registries"] = [{
     "registry_id": event_registry["registry_id"],
     "registry_version": event_registry["registry_version"],
     "registry_digest": event_registry["registry_digest"],
+}]
+runtime_capabilities["checkpoint_profiles"] = [{
+    "profile_id": "runtime-checkpoint-compatibility-v1",
+    "suite_id": suites["agent_runtime"]["suite_id"],
+    "suite_version": suites["agent_runtime"]["suite_version"],
+    "suite_digest": suites["agent_runtime"]["suite_digest"],
 }]
 write("examples/contracts/agent-runtime-capabilities.json", runtime_capabilities)
 
@@ -2035,7 +3401,8 @@ capability_request.update({
     "tenant_id": manifest["tenant_id"],
     "client_app_id": grant["client_app_id"],
     "principal_context_digest": grant["principal_context_digest"],
-    "work_order_id": manifest["work_order_id"],
+    "execution_scope": {"kind": "work_order", "work_order_id": manifest["work_order_id"]},
+    "execution_owner_request_digest": manifest["request_binding"]["request_digest"],
     "provider_resolution_id": capability_resolution["resolution_id"],
     "provider_instance_id": capability_resolution["selected_provider_instance_id"],
     "provider_revision_id": capability_resolution["selected_provider_revision"]["provider_revision_id"],
@@ -2045,6 +3412,7 @@ capability_request.update({
     "policy_decision": capability_policy,
     "effective_permissions": copy.deepcopy(permissions),
 })
+capability_request.pop("work_order_id", None)
 for legacy_field in (
     "output_staging_session_id", "policy_decision_digest",
     "execution_budget_digest", "permissions_digest",
@@ -2052,11 +3420,10 @@ for legacy_field in (
     capability_request.pop(legacy_field, None)
 capability_artifact_grant = copy.deepcopy(artifact_grant)
 capability_artifact_grant["grant_id"] = "artg_cap_01J0000000000000000000"
-capability_artifact_grant["execution_scope"] = {
-    "kind": "capability_invocation",
-    "invocation_id": capability_request["invocation_id"],
-    "invocation_attempt_id": capability_request["invocation_attempt_id"],
-}
+capability_artifact_grant["execution_scope"] = copy.deepcopy(capability_request["execution_scope"])
+capability_artifact_grant.pop("runtime_run_id", None)
+capability_artifact_grant["invocation_id"] = capability_request["invocation_id"]
+capability_artifact_grant["invocation_attempt_id"] = capability_request["invocation_attempt_id"]
 capability_artifact_grant["expires_at"] = capability_request["deadline_at"]
 capability_artifact_grant["grant_digest"] = digest_without(
     capability_artifact_grant, "grant_digest"
@@ -2065,7 +3432,7 @@ capability_request["input_artifact_grants"] = [capability_artifact_grant]
 staging_grant = {
     "staging_grant_id": "stgg_01J0000000000000000000000",
     "tenant_id": capability_request["tenant_id"],
-    "work_order_id": capability_request["work_order_id"],
+    "execution_scope": copy.deepcopy(capability_request["execution_scope"]),
     "invocation_id": capability_request["invocation_id"],
     "invocation_attempt_id": capability_request["invocation_attempt_id"],
     "staging_session_id": "stg_01J00000000000000000000000",
@@ -2105,7 +3472,7 @@ capability_token = {
     "tenant_id": capability_request["tenant_id"],
     "client_app_id": capability_request["client_app_id"],
     "principal_context_digest": capability_request["principal_context_digest"],
-    "work_order_id": capability_request["work_order_id"],
+    "execution_scope": copy.deepcopy(capability_request["execution_scope"]),
     "provider_resolution_id": capability_request["provider_resolution_id"],
     "provider_instance_id": capability_request["provider_instance_id"],
     "provider_revision_id": capability_request["provider_revision_id"],
@@ -2247,7 +3614,7 @@ artifact_stage_token = {
     "exp": 1784192770,
     "operation": "stage_object",
     "tenant_id": capability_request["tenant_id"],
-    "work_order_id": capability_request["work_order_id"],
+    "execution_scope": copy.deepcopy(capability_request["execution_scope"]),
     "invocation_id": capability_request["invocation_id"],
     "invocation_attempt_id": capability_request["invocation_attempt_id"],
     "fencing_token": capability_request["fencing_token"],
@@ -2262,7 +3629,7 @@ write("examples/contracts/artifact-gateway-stage-token-claims.json", artifact_st
 artifact_read_descriptor = {
     "operation": "read_content",
     "tenant_id": capability_request["tenant_id"],
-    "work_order_id": capability_request["work_order_id"],
+    "execution_scope": copy.deepcopy(capability_request["execution_scope"]),
     "invocation_id": capability_request["invocation_id"],
     "invocation_attempt_id": capability_request["invocation_attempt_id"],
     "fencing_token": capability_request["fencing_token"],
@@ -2280,7 +3647,7 @@ artifact_read_token = {
     "exp": 1784193370,
     "operation": "read_content",
     "tenant_id": capability_request["tenant_id"],
-    "work_order_id": capability_request["work_order_id"],
+    "execution_scope": copy.deepcopy(capability_request["execution_scope"]),
     "invocation_id": capability_request["invocation_id"],
     "invocation_attempt_id": capability_request["invocation_attempt_id"],
     "fencing_token": capability_request["fencing_token"],
@@ -2319,6 +3686,607 @@ artifact_commit_token.update({
     "request_digest": staging_commit["request_digest"],
 })
 write("examples/contracts/artifact-gateway-commit-token-claims.json", artifact_commit_token)
+
+# Prove that a standalone ArtifactOperation can use the same Capability and
+# Artifact Gateway protocols without inventing a WorkOrder or RunManifest.
+artifact_operation_capability_request = copy.deepcopy(capability_request)
+artifact_operation_capability_request.update({
+    "tenant_id": preview_context["tenant_id"],
+    "client_app_id": preview_context["client_app_id"],
+    "principal_context_digest": preview_context["principal_context"]["principal_context_digest"],
+    "execution_scope": {
+        "kind": "artifact_operation",
+        "artifact_operation_id": preview_operation["artifact_operation_id"],
+    },
+    "execution_owner_request_digest": preview_request["operation_context"]["request_digest"],
+    "invocation_id": preview_invocation["invocation_id"],
+    "invocation_attempt_id": preview_invocation["current_attempt_id"],
+    "fencing_token": 1,
+    "idempotency_key": "artifact-operation-provider-dispatch-0001",
+    "provider_resolution_id": preview_resolution["resolution_id"],
+    "provider_instance_id": preview_resolution["selected_provider_instance_id"],
+    "provider_revision_id": preview_resolution["selected_provider_revision"]["provider_revision_id"],
+    "capability": {
+        "id": preview_context["capability"]["id"],
+        "version": preview_context["capability"]["version"],
+        "profile": preview_context["capability"]["profile"],
+        "input_schema_digest": capability_request["capability"]["input_schema_digest"],
+        "output_schema_digest": capability_request["capability"]["output_schema_digest"],
+    },
+    "deadline_at": "2026-07-16T09:20:00Z",
+    "input": {
+        "artifact_id": preview_context["artifact_id"],
+        "source_version_id": preview_context["source_version_id"],
+        "source_version_digest": preview_context["source_version_digest"],
+        "options": preview_request["options"],
+    },
+    "commercial_authorization": copy.deepcopy(preview_context["commercial_authorization"]),
+    "execution_budget": copy.deepcopy(preview_budget),
+    "policy_decision": copy.deepcopy(preview_policy),
+    "effective_permissions": copy.deepcopy(preview_permissions),
+})
+artifact_operation_input_grant = copy.deepcopy(capability_artifact_grant)
+artifact_operation_input_grant.update({
+    "grant_id": "artg_aop_01J0000000000000000000",
+    "execution_scope": copy.deepcopy(artifact_operation_capability_request["execution_scope"]),
+    "invocation_id": artifact_operation_capability_request["invocation_id"],
+    "invocation_attempt_id": artifact_operation_capability_request["invocation_attempt_id"],
+    "artifact_id": preview_context["artifact_id"],
+    "version_id": preview_context["source_version_id"],
+    "artifact_digest": preview_context["source_version_digest"],
+    "permissions": ["read"],
+    "gateway_binding": copy.deepcopy(gateway_bindings["artifact"]["port"]),
+    "issued_at": "2026-07-16T09:06:01Z",
+    "expires_at": artifact_operation_capability_request["deadline_at"],
+})
+artifact_operation_input_grant.pop("runtime_run_id", None)
+artifact_operation_input_grant["grant_digest"] = digest_without(
+    artifact_operation_input_grant, "grant_digest"
+)
+artifact_operation_staging_grant = copy.deepcopy(staging_grant)
+artifact_operation_staging_grant.update({
+    "staging_grant_id": "stgg_aop_01J0000000000000000000",
+    "execution_scope": copy.deepcopy(artifact_operation_capability_request["execution_scope"]),
+    "invocation_id": artifact_operation_capability_request["invocation_id"],
+    "invocation_attempt_id": artifact_operation_capability_request["invocation_attempt_id"],
+    "staging_session_id": "stg_aop_01J00000000000000000000",
+    "gateway_binding": copy.deepcopy(gateway_bindings["artifact"]["port"]),
+    "allowed_media_types": ["text/html"],
+    "issued_at": "2026-07-16T09:06:01Z",
+    "expires_at": artifact_operation_capability_request["deadline_at"],
+})
+artifact_operation_staging_grant["grant_digest"] = digest_without(
+    artifact_operation_staging_grant, "grant_digest"
+)
+artifact_operation_capability_request["input_artifact_grants"] = [artifact_operation_input_grant]
+artifact_operation_capability_request["output_staging_grant"] = artifact_operation_staging_grant
+
+artifact_operation_secret_intent = copy.deepcopy(artifact_operation_capability_request)
+for field in ("request_digest", "secret_reference_ids", "secret_grant_id", "secret_grant_digest"):
+    artifact_operation_secret_intent.pop(field, None)
+artifact_operation_secret_target_digest = digest(artifact_operation_secret_intent)
+artifact_operation_secret_grant = {
+    "secret_grant_id": "secg_aop_01J000000000000000000000",
+    "secret_grant_digest": "sha256:" + "0" * 64,
+    "tenant_id": artifact_operation_capability_request["tenant_id"],
+    "principal_context_digest": artifact_operation_capability_request["principal_context_digest"],
+    "execution_scope": copy.deepcopy(artifact_operation_capability_request["execution_scope"]),
+    "provider_instance_id": artifact_operation_capability_request["provider_instance_id"],
+    "provider_revision_id": artifact_operation_capability_request["provider_revision_id"],
+    "provider_audience": preview_resolution["selected_provider_audience"],
+    "workload_identity": "spiffe://agent-platform/provider/rpi_html_preview/workload/invoke",
+    "secret_reference_ids": ["secret-ref-artifact-preview-api-01"],
+    "purpose": "http_header",
+    "target": {
+        "target_kind": "capability_invocation",
+        "target_id": artifact_operation_capability_request["invocation_id"],
+        "target_digest": artifact_operation_secret_target_digest,
+    },
+    "operation": "credential_access",
+    "target_request_contract_id": "urn:agent-platform:capability-invocation-request:v1",
+    "target_request_digest_profile": "rfc8785-capability-intent-excluding-secret-grant-and-request-digest-v1",
+    "target_request_digest": artifact_operation_secret_target_digest,
+    "sender_constraint": {
+        "method": "mtls_spiffe",
+        "subject": "spiffe://agent-platform/provider/rpi_html_preview/workload/invoke",
+    },
+    "issued_at": "2026-07-16T09:06:02Z",
+    "expires_at": "2026-07-16T09:11:02Z",
+    "max_uses": 1,
+    "persistence_policy": {
+        "provider_cache_allowed": False,
+        "provider_persistence_allowed": False,
+        "platform_event_material_allowed": False,
+        "temporal_history_material_allowed": False,
+    },
+}
+artifact_operation_secret_grant["secret_grant_digest"] = digest_without(
+    artifact_operation_secret_grant, "secret_grant_digest"
+)
+artifact_operation_capability_request["secret_reference_ids"] = copy.deepcopy(
+    artifact_operation_secret_grant["secret_reference_ids"]
+)
+artifact_operation_capability_request["secret_grant_id"] = artifact_operation_secret_grant["secret_grant_id"]
+artifact_operation_capability_request["secret_grant_digest"] = artifact_operation_secret_grant["secret_grant_digest"]
+artifact_operation_capability_request["request_digest"] = digest_without(
+    artifact_operation_capability_request, "request_digest"
+)
+preview_invocation["request_digest"] = artifact_operation_capability_request["request_digest"]
+preview_operation["invocation_request_digest"] = artifact_operation_capability_request["request_digest"]
+write("examples/contracts/artifact-operation-capability-invocation-request.json", artifact_operation_capability_request)
+write("examples/contracts/artifact-operation-input-artifact-grant.json", artifact_operation_input_grant)
+write("examples/contracts/artifact-operation-staging-grant.json", artifact_operation_staging_grant)
+
+artifact_operation_credential_request = {
+    "credential_request_id": "creq_aop_01J000000000000000000000",
+    "secret_grant_id": artifact_operation_secret_grant["secret_grant_id"],
+    "secret_grant_digest": artifact_operation_secret_grant["secret_grant_digest"],
+    "secret_reference_ids": copy.deepcopy(artifact_operation_secret_grant["secret_reference_ids"]),
+    "target": copy.deepcopy(artifact_operation_secret_grant["target"]),
+    "purpose": artifact_operation_secret_grant["purpose"],
+    "request_digest": "sha256:" + "0" * 64,
+}
+artifact_operation_credential_request["request_digest"] = digest_without(
+    artifact_operation_credential_request, "request_digest"
+)
+artifact_operation_credential_token = {
+    "iss": "agent-platform",
+    "sub": artifact_operation_secret_grant["workload_identity"],
+    "aud": "urn:agent-platform:credential-gateway:primary",
+    "jti": "cot_aop_01J000000000000000000000",
+    "iat": 1784192762,
+    "nbf": 1784192762,
+    "exp": 1784193062,
+    "tenant_id": artifact_operation_secret_grant["tenant_id"],
+    "secret_grant_id": artifact_operation_secret_grant["secret_grant_id"],
+    "secret_grant_digest": artifact_operation_secret_grant["secret_grant_digest"],
+    "operation": "credential_access",
+    "request_contract_id": "urn:agent-platform:credential-access-request:v1",
+    "request_digest_profile": "rfc8785-request-excluding-request-digest-v1",
+    "request_digest": artifact_operation_credential_request["request_digest"],
+}
+artifact_operation_credential_delivery = {
+    "credential_request_id": artifact_operation_credential_request["credential_request_id"],
+    "delivery_handle": "opaque-artifact-operation-workload-bound-handle-000000000001",
+    "delivery_mode": artifact_operation_secret_grant["purpose"],
+    "expires_at": artifact_operation_secret_grant["expires_at"],
+    "audit_event_id": "evt_credential_access_aop_01J000000000",
+}
+for path, value in (
+    ("examples/contracts/artifact-operation-secret-grant.json", artifact_operation_secret_grant),
+    ("examples/contracts/artifact-operation-credential-access-request.json", artifact_operation_credential_request),
+    ("examples/contracts/artifact-operation-credential-operation-token-claims.json", artifact_operation_credential_token),
+    ("examples/contracts/artifact-operation-credential-delivery.json", artifact_operation_credential_delivery),
+):
+    write(path, value)
+write("contracts/tests/semantic-invalid/artifact-operation-credential-mediation-cases.json", {
+    "secret_grant": artifact_operation_secret_grant,
+    "request": artifact_operation_credential_request,
+    "token": artifact_operation_credential_token,
+    "delivery": artifact_operation_credential_delivery,
+    "target_request": artifact_operation_capability_request,
+    "cases": [
+        {"id": "artifact-operation-scope-mismatch", "mutation": "execution_scope_mismatch"},
+        {"id": "artifact-operation-provider-revision-mismatch", "mutation": "provider_revision_mismatch"},
+        {"id": "artifact-operation-target-intent-mismatch", "mutation": "target_request_digest_mismatch"},
+    ],
+})
+artifact_operation_core_event["data"].update({
+    "provider_resolution_id": preview_operation["provider_resolution_id"],
+    "invocation_id": preview_operation["invocation_id"],
+    "request_digest": preview_operation["request_digest"],
+    "invocation_request_digest": preview_operation["invocation_request_digest"],
+    "terminal_stage": preview_operation["terminal_stage"],
+    "terminal_evidence_digest": preview_operation["terminal_evidence_digest"],
+})
+artifact_operation_core_event["aggregate"]["sequence"] = preview_operation["state_version"]
+artifact_operation_core_event["source_event_id"] = (
+    f"artifact.operation.state.changed/{preview_operation['state_version']}"
+)
+artifact_operation_core_event["source_cursor"] = str(preview_operation["state_version"])
+artifact_operation_core_event["dedupe_key"] = digest({
+    "tenant_id": artifact_operation_core_event["tenant_id"],
+    "producer_id": artifact_operation_core_event["producer_id"],
+    "source_stream_id": artifact_operation_core_event["source_stream_id"],
+    "source_event_id": artifact_operation_core_event["source_event_id"],
+})
+write(
+    "examples/contracts/canonical-event-artifact-operation-succeeded.json",
+    artifact_operation_core_event,
+)
+canonical_core_negative = read("contracts/tests/semantic-invalid/canonical-core-event-cases.json")
+canonical_core_negative["artifact_operation"] = artifact_operation_core_event
+write("contracts/tests/semantic-invalid/canonical-core-event-cases.json", canonical_core_negative)
+platform_core_event(
+    "artifact-operation-secret-grant-issued", "secret.grant.state.changed", "secret_grant",
+    artifact_operation_secret_grant["secret_grant_id"],
+    {
+        "secret_grant_id": artifact_operation_secret_grant["secret_grant_id"],
+        "secret_grant_digest": artifact_operation_secret_grant["secret_grant_digest"],
+        "state": "issued",
+        "evidence_digest": digest({
+            "secret_grant_issued": artifact_operation_secret_grant["secret_grant_id"],
+        }),
+    },
+    execution_scope=artifact_operation_secret_grant["execution_scope"],
+)
+
+artifact_operation_capability_token = copy.deepcopy(capability_token)
+artifact_operation_capability_token.update({
+    "jti": "cit_aop_01J0000000000000000000000",
+    "iat": 1784192762,
+    "nbf": 1784192762,
+    "exp": 1784193062,
+    "aud": preview_resolution["selected_provider_audience"],
+    "tenant_id": artifact_operation_capability_request["tenant_id"],
+    "client_app_id": artifact_operation_capability_request["client_app_id"],
+    "principal_context_digest": artifact_operation_capability_request["principal_context_digest"],
+    "execution_scope": copy.deepcopy(artifact_operation_capability_request["execution_scope"]),
+    "provider_resolution_id": artifact_operation_capability_request["provider_resolution_id"],
+    "provider_instance_id": artifact_operation_capability_request["provider_instance_id"],
+    "provider_revision_id": artifact_operation_capability_request["provider_revision_id"],
+    "capability_id": artifact_operation_capability_request["capability"]["id"],
+    "capability_version": artifact_operation_capability_request["capability"]["version"],
+    "invocation_id": artifact_operation_capability_request["invocation_id"],
+    "invocation_attempt_id": artifact_operation_capability_request["invocation_attempt_id"],
+    "fencing_token": artifact_operation_capability_request["fencing_token"],
+    "invocation_request_digest": artifact_operation_capability_request["request_digest"],
+    "operation_request_digest": artifact_operation_capability_request["request_digest"],
+    "policy_decision_digest": preview_policy["decision_digest"],
+    "execution_budget_digest": preview_budget["budget_digest"],
+    "permissions_digest": preview_permissions["permissions_digest"],
+    "staging_grant_digest": artifact_operation_staging_grant["grant_digest"],
+})
+write("examples/contracts/artifact-operation-capability-invocation-token-claims.json", artifact_operation_capability_token)
+
+artifact_operation_staging_object = copy.deepcopy(staging_object)
+artifact_operation_staging_object.update({
+    "staging_session_id": artifact_operation_staging_grant["staging_session_id"],
+    "invocation_id": artifact_operation_capability_request["invocation_id"],
+    "invocation_attempt_id": artifact_operation_capability_request["invocation_attempt_id"],
+    "fencing_token": artifact_operation_capability_request["fencing_token"],
+})
+artifact_operation_stage_descriptor = copy.deepcopy(artifact_operation_staging_object)
+artifact_operation_stage_descriptor.pop("request_digest", None)
+artifact_operation_stage_descriptor.pop("content_base64", None)
+artifact_operation_staging_object["request_digest"] = digest(artifact_operation_stage_descriptor)
+artifact_operation_stage_token = copy.deepcopy(artifact_stage_token)
+artifact_operation_stage_token.update({
+    "jti": "agt_aop_stage_01J000000000000000",
+    "iat": 1784192762,
+    "nbf": 1784192762,
+    "exp": 1784193062,
+    "sub": preview_resolution["selected_provider_audience"],
+    "aud": artifact_operation_staging_grant["gateway_binding"]["audience"],
+    "tenant_id": artifact_operation_capability_request["tenant_id"],
+    "execution_scope": copy.deepcopy(artifact_operation_capability_request["execution_scope"]),
+    "invocation_id": artifact_operation_capability_request["invocation_id"],
+    "invocation_attempt_id": artifact_operation_capability_request["invocation_attempt_id"],
+    "fencing_token": artifact_operation_capability_request["fencing_token"],
+    "gateway_binding_digest": artifact_operation_staging_grant["gateway_binding"]["binding_digest"],
+    "request_digest": artifact_operation_staging_object["request_digest"],
+    "staging_grant_digest": artifact_operation_staging_grant["grant_digest"],
+})
+
+artifact_operation_read_descriptor = copy.deepcopy(artifact_read_descriptor)
+artifact_operation_read_descriptor.update({
+    "tenant_id": artifact_operation_capability_request["tenant_id"],
+    "execution_scope": copy.deepcopy(artifact_operation_capability_request["execution_scope"]),
+    "invocation_id": artifact_operation_capability_request["invocation_id"],
+    "invocation_attempt_id": artifact_operation_capability_request["invocation_attempt_id"],
+    "fencing_token": artifact_operation_capability_request["fencing_token"],
+    "artifact_id": artifact_operation_input_grant["artifact_id"],
+    "version_id": artifact_operation_input_grant["version_id"],
+})
+artifact_operation_read_token = copy.deepcopy(artifact_read_token)
+artifact_operation_read_token.update({
+    "jti": "agt_aop_read_01J0000000000000000",
+    "sub": preview_resolution["selected_provider_audience"],
+    "aud": artifact_operation_input_grant["gateway_binding"]["audience"],
+    "tenant_id": artifact_operation_capability_request["tenant_id"],
+    "execution_scope": copy.deepcopy(artifact_operation_capability_request["execution_scope"]),
+    "invocation_id": artifact_operation_capability_request["invocation_id"],
+    "invocation_attempt_id": artifact_operation_capability_request["invocation_attempt_id"],
+    "fencing_token": artifact_operation_capability_request["fencing_token"],
+    "gateway_binding_digest": artifact_operation_input_grant["gateway_binding"]["binding_digest"],
+    "request_digest": digest(artifact_operation_read_descriptor),
+    "artifact_grant_digest": artifact_operation_input_grant["grant_digest"],
+})
+
+artifact_operation_staging_commit = copy.deepcopy(staging_commit)
+artifact_operation_staging_commit.update({
+    "staging_session_id": artifact_operation_staging_grant["staging_session_id"],
+    "invocation_id": artifact_operation_capability_request["invocation_id"],
+    "invocation_attempt_id": artifact_operation_capability_request["invocation_attempt_id"],
+    "fencing_token": artifact_operation_capability_request["fencing_token"],
+})
+artifact_operation_staging_commit["request_digest"] = digest_without(
+    artifact_operation_staging_commit, "request_digest"
+)
+artifact_operation_commit_token = copy.deepcopy(artifact_operation_stage_token)
+artifact_operation_commit_token.update({
+    "jti": "agt_aop_commit_01J000000000000000",
+    "operation": "commit_staging",
+    "operation_contract_id": "urn:agent-platform:artifact-staging-commit-request:v1",
+    "operation_digest_profile": "rfc8785-request-excluding-request-digest-v1",
+    "request_digest": artifact_operation_staging_commit["request_digest"],
+})
+for path, value in (
+    ("examples/contracts/artifact-operation-artifact-staging-object-request.json", artifact_operation_staging_object),
+    ("examples/contracts/artifact-operation-artifact-gateway-stage-token-claims.json", artifact_operation_stage_token),
+    ("examples/contracts/artifact-operation-artifact-read-operation-descriptor.json", artifact_operation_read_descriptor),
+    ("examples/contracts/artifact-operation-artifact-gateway-read-token-claims.json", artifact_operation_read_token),
+    ("examples/contracts/artifact-operation-artifact-staging-commit-request.json", artifact_operation_staging_commit),
+    ("examples/contracts/artifact-operation-artifact-gateway-commit-token-claims.json", artifact_operation_commit_token),
+):
+    write(path, value)
+
+write("examples/contracts/artifact-operation-invocation.json", preview_invocation)
+write("examples/contracts/artifact-operation.json", preview_operation)
+for cancellation_operation in (
+    artifact_operation_cancel_requested,
+    artifact_operation_cancellation_reconciling,
+    artifact_operation_cancel_missing_source,
+):
+    cancellation_operation["invocation_request_digest"] = preview_invocation["request_digest"]
+for cancellation_invocation in (
+    artifact_operation_cancel_invocation,
+    artifact_operation_cancellation_reconciling_invocation,
+):
+    cancellation_invocation["request_digest"] = preview_invocation["request_digest"]
+for path, value in (
+    ("examples/contracts/artifact-operation-cancel-requested.json", artifact_operation_cancel_requested),
+    ("examples/contracts/artifact-operation-cancellation-reconciling.json", artifact_operation_cancellation_reconciling),
+    ("examples/contracts/artifact-operation-cancel-requested-invocation.json", artifact_operation_cancel_invocation),
+    ("examples/contracts/artifact-operation-cancellation-reconciling-invocation.json", artifact_operation_cancellation_reconciling_invocation),
+    ("contracts/tests/invalid/artifact-operation-cancel-requested-missing-source.json", artifact_operation_cancel_missing_source),
+):
+    write(path, value)
+artifact_operation_cancel_event["data"]["invocation_request_digest"] = (
+    preview_invocation["request_digest"]
+)
+write(
+    "examples/contracts/canonical-event-artifact-operation-cancel-requested.json",
+    artifact_operation_cancel_event,
+)
+artifact_operation_cancellation_cases = read(
+    "contracts/tests/semantic-invalid/artifact-operation-cancellation-cases.json"
+)
+artifact_operation_cancellation_cases.update({
+    "cancel_requested_operation": copy.deepcopy(artifact_operation_cancel_requested),
+    "cancel_requested_invocation": copy.deepcopy(artifact_operation_cancel_invocation),
+    "cancellation_reconciling_operation": copy.deepcopy(
+        artifact_operation_cancellation_reconciling
+    ),
+    "cancellation_reconciling_invocation": copy.deepcopy(
+        artifact_operation_cancellation_reconciling_invocation
+    ),
+})
+write(
+    "contracts/tests/semantic-invalid/artifact-operation-cancellation-cases.json",
+    artifact_operation_cancellation_cases,
+)
+write("examples/contracts/preview-session.json", {
+    "preview_session_id": "prv_01J00000000000000000000000",
+    "artifact_operation": preview_operation,
+    "status": "ready",
+    "preview_url": "https://preview.agent-platform.test/session/prv_01",
+    "expires_at": "2026-07-16T09:16:05Z",
+})
+
+
+def build_secondary_artifact_dispatch(
+    operation_kind: str,
+    client_request: dict[str, Any],
+    operation_budget: dict[str, Any],
+    operation_policy: dict[str, Any],
+    operation_permissions: dict[str, Any],
+    operation_resolution: dict[str, Any],
+    invocation: dict[str, Any],
+    operation: dict[str, Any],
+) -> dict[str, Any]:
+    context = client_request["operation_context"]
+    provider_request = copy.deepcopy(artifact_operation_capability_request)
+    provider_request.update({
+        "execution_scope": {
+            "kind": "artifact_operation",
+            "artifact_operation_id": operation["artifact_operation_id"],
+        },
+        "execution_owner_request_digest": context["request_digest"],
+        "invocation_id": invocation["invocation_id"],
+        "invocation_attempt_id": invocation["current_attempt_id"],
+        "idempotency_key": f"artifact-{operation_kind}-provider-dispatch-0001",
+        "provider_resolution_id": operation_resolution["resolution_id"],
+        "provider_instance_id": operation_resolution["selected_provider_instance_id"],
+        "provider_revision_id": operation_resolution["selected_provider_revision"]["provider_revision_id"],
+        "capability": {
+            "id": context["capability"]["id"],
+            "version": context["capability"]["version"],
+            "profile": context["capability"]["profile"],
+            "input_schema_digest": capability_request["capability"]["input_schema_digest"],
+            "output_schema_digest": capability_request["capability"]["output_schema_digest"],
+        },
+        "input": {
+            "artifact_id": context["artifact_id"],
+            "source_version_id": context["source_version_id"],
+            "source_version_digest": context["source_version_digest"],
+            "operation_options": {
+                key: copy.deepcopy(value)
+                for key, value in client_request.items()
+                if key != "operation_context"
+            },
+        },
+        "commercial_authorization": copy.deepcopy(context["commercial_authorization"]),
+        "execution_budget": copy.deepcopy(operation_budget),
+        "policy_decision": copy.deepcopy(operation_policy),
+        "effective_permissions": copy.deepcopy(operation_permissions),
+    })
+    input_grant = copy.deepcopy(artifact_operation_input_grant)
+    input_grant.update({
+        "grant_id": f"artg_{operation_kind}_01J00000000000000000",
+        "execution_scope": copy.deepcopy(provider_request["execution_scope"]),
+        "invocation_id": provider_request["invocation_id"],
+        "invocation_attempt_id": provider_request["invocation_attempt_id"],
+        "artifact_id": context["artifact_id"],
+        "version_id": context["source_version_id"],
+        "artifact_digest": context["source_version_digest"],
+        "gateway_binding": copy.deepcopy(gateway_bindings["artifact"]["port"]),
+    })
+    input_grant["grant_digest"] = digest_without(input_grant, "grant_digest")
+    output_grant = copy.deepcopy(artifact_operation_staging_grant)
+    output_grant.update({
+        "staging_grant_id": f"stgg_{operation_kind}_01J0000000000000000",
+        "execution_scope": copy.deepcopy(provider_request["execution_scope"]),
+        "invocation_id": provider_request["invocation_id"],
+        "invocation_attempt_id": provider_request["invocation_attempt_id"],
+        "staging_session_id": f"stg_{operation_kind}_01J00000000000000000",
+        "gateway_binding": copy.deepcopy(gateway_bindings["artifact"]["port"]),
+    })
+    output_grant["grant_digest"] = digest_without(output_grant, "grant_digest")
+    provider_request["input_artifact_grants"] = [input_grant]
+    provider_request["output_staging_grant"] = output_grant
+    provider_request["request_digest"] = digest_without(provider_request, "request_digest")
+    invocation["request_digest"] = provider_request["request_digest"]
+    operation["invocation_request_digest"] = provider_request["request_digest"]
+    write(
+        f"examples/contracts/{operation_kind}-artifact-operation-capability-invocation-request.json",
+        provider_request,
+    )
+    write(
+        f"examples/contracts/{operation_kind}-artifact-operation-invocation.json",
+        invocation,
+    )
+    write(
+        f"examples/contracts/{operation_kind}-artifact-operation-provider-resolution.json",
+        operation_resolution,
+    )
+    return provider_request
+
+
+edit_budget, edit_policy, edit_permissions, edit_resolution = (
+    artifact_operation_materials["edit"][1], artifact_operation_materials["edit"][2],
+    artifact_operation_materials["edit"][3], artifact_operation_materials["edit"][4],
+)
+edit_provider_request = build_secondary_artifact_dispatch(
+    "edit", edit_request, edit_budget, edit_policy, edit_permissions, edit_resolution,
+    edit_invocation, edit_operation,
+)
+write("examples/contracts/edit-session.json", {
+    "edit_session_id": "edt_01J00000000000000000000000",
+    "artifact_operation": edit_operation,
+    "status": "active",
+    "mode": "source",
+    "draft_reference": "artifact-draft://edt_01",
+    "created_at": "2026-07-16T09:06:05Z",
+    "expires_at": "2026-07-16T09:26:05Z",
+    "draft_revision": 0,
+})
+
+conversion_budget, conversion_policy, conversion_permissions, conversion_resolution = (
+    artifact_operation_materials["conversion"][1], artifact_operation_materials["conversion"][2],
+    artifact_operation_materials["conversion"][3], artifact_operation_materials["conversion"][4],
+)
+conversion_provider_request = build_secondary_artifact_dispatch(
+    "conversion", conversion_request, conversion_budget, conversion_policy,
+    conversion_permissions, conversion_resolution, conversion_invocation,
+    conversion_operation,
+)
+write("examples/contracts/conversion-job.json", {
+    "conversion_job_id": "cnv_01J00000000000000000000000",
+    "artifact_operation": conversion_operation,
+    "target_media_type": conversion_request["target_media_type"],
+    "result_artifact_id": "art_derived_01J0000000000000000000",
+    "result_version_id": "ver_derived_01J0000000000000000000",
+})
+
+artifact_operation_negative = read(
+    "contracts/tests/semantic-invalid/artifact-operation-cases.json"
+)
+artifact_operation_negative.update({
+    "operation": copy.deepcopy(preview_operation),
+    "request": copy.deepcopy(preview_request),
+    "budget": copy.deepcopy(preview_budget),
+    "policy": copy.deepcopy(preview_policy),
+    "permissions": copy.deepcopy(preview_permissions),
+    "resolution": copy.deepcopy(preview_resolution),
+    "invocation": copy.deepcopy(preview_invocation),
+    "provider_request": copy.deepcopy(artifact_operation_capability_request),
+})
+write("contracts/tests/semantic-invalid/artifact-operation-cases.json", artifact_operation_negative)
+
+artifact_operation_usage_entry = copy.deepcopy(usage_entry)
+artifact_operation_usage_entry.update({
+    "entry_id": "use_aop_01J000000000000000000000",
+    "execution_scope": {
+        "kind": "artifact_operation",
+        "artifact_operation_id": preview_operation["artifact_operation_id"],
+    },
+    "invocation_id": preview_invocation["invocation_id"],
+    "producer": {
+        "type": "provider",
+        "id": preview_resolution["selected_provider_instance_id"],
+        "provider_revision_id": preview_resolution["selected_provider_revision"]["provider_revision_id"],
+        "provider_revision_digest": preview_resolution["selected_provider_revision"]["provider_revision_digest"],
+    },
+    "provider_operation_id": "provider-op-artifact-preview-001",
+    "source_observation_id": "uobs_aop_01J0000000000000000000",
+    "idempotency_key": "usage-artifact-preview-0001",
+    "evidence_reference": "https://evidence.agent.internal/provider-usage/uobs_aop_01",
+    "occurred_at": "2026-07-16T09:06:03Z",
+    "recorded_at": "2026-07-16T09:06:06Z",
+})
+artifact_operation_usage_entry.pop("agent_run_id", None)
+artifact_operation_usage_entry.pop("runtime_run_id", None)
+artifact_operation_usage_entry.pop("sandbox_operation_id", None)
+artifact_operation_usage_entry["evidence_digest"] = digest({
+    "evidence_reference": artifact_operation_usage_entry["evidence_reference"]
+})
+write("examples/contracts/artifact-operation-technical-usage-entry.json", artifact_operation_usage_entry)
+
+artifact_operation_usage_report = copy.deepcopy(usage_report)
+artifact_operation_usage_report.update({
+    "usage_report_id": "usr_aop_01J000000000000000000000",
+    "execution_scope": copy.deepcopy(artifact_operation_usage_entry["execution_scope"]),
+    "idempotency_key": "usage-report-artifact-preview-final-0001",
+    "entries": [copy.deepcopy(artifact_operation_usage_entry)],
+    "created_at": "2026-07-16T09:06:07Z",
+})
+artifact_operation_usage_report["usage_report_digest"] = digest_without(
+    artifact_operation_usage_report, "usage_report_digest"
+)
+write("examples/contracts/artifact-operation-usage-report.json", artifact_operation_usage_report)
+
+artifact_operation_settlement = copy.deepcopy(settlement)
+artifact_operation_settlement.update({
+    "settlement_envelope_id": "set_aop_01J000000000000000000000",
+    "execution_scope": copy.deepcopy(artifact_operation_usage_entry["execution_scope"]),
+    "terminal_status": "succeeded",
+    "idempotency_key": "settlement-artifact-preview-0001",
+    "usage_report": copy.deepcopy(artifact_operation_usage_report),
+    "created_at": "2026-07-16T09:06:08Z",
+})
+artifact_operation_settlement["settlement_envelope_digest"] = digest_without(
+    artifact_operation_settlement, "settlement_envelope_digest"
+)
+write(
+    "examples/contracts/artifact-operation-business-settlement-envelope.json",
+    artifact_operation_settlement,
+)
+write("contracts/tests/semantic-invalid/artifact-operation-usage-cases.json", {
+    "meter": copy.deepcopy(meter),
+    "entry": copy.deepcopy(artifact_operation_usage_entry),
+    "report": copy.deepcopy(artifact_operation_usage_report),
+    "settlement": copy.deepcopy(artifact_operation_settlement),
+    "operation": copy.deepcopy(preview_operation),
+    "invocation": copy.deepcopy(preview_invocation),
+    "resolution": copy.deepcopy(preview_resolution),
+    "cases": [
+        {"id": "artifact-usage-wrong-invocation", "mutation": "wrong_invocation"},
+        {"id": "artifact-usage-wrong-provider-revision", "mutation": "wrong_provider_revision"},
+        {"id": "artifact-report-cross-scope-entry", "mutation": "cross_scope_entry"},
+        {"id": "artifact-settlement-cross-scope", "mutation": "settlement_cross_scope"},
+    ],
+})
 
 egress_destination = {
     "destination_id": "public-docs-origin",
@@ -3088,6 +5056,26 @@ traceability_profiles = {
             "conformance_test", "contracts/conformance/runtime/v1/suite.json",
             "system-safety-control",
         ),
+        implementation_check(
+            "conformance_test", "contracts/conformance/agent-access/v1/suite.json",
+            "resource-path-request-binding",
+        ),
+    ],
+    "commercial-authorization-revocation-accepted.schema.json": [
+        contract_check("commercial_revocation.fanout"),
+        contract_check("commercial_revocation.fanout"),
+        contract_check("commercial_revocation.fanout") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "commercial_authorization_revocation_fanout",
+        ),
+        contract_check("commercial_revocation.fanout") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "commercial_authorization_revocation_fanout",
+        ),
+        contract_check("commercial_revocation.fanout") + implementation_check(
+            "conformance_test", "contracts/conformance/agent-access/v1/suite.json",
+            "commercial-authorization-revocation-ingest",
+        ),
     ],
     "sandbox-operation-token-claims.schema.json": [
         contract_check("sandbox_token.lifetime"),
@@ -3112,6 +5100,11 @@ traceability_profiles = {
         contract_check("work_order_control.grant_binding"),
         contract_check("work_order_control.conditional_cas"),
         implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "work_order_control_input_allocation_and_outbox"),
+        contract_check("work_order_control.authority_exclusive"),
+        implementation_check(
+            "conformance_test", "contracts/conformance/agent-access/v1/suite.json",
+            "resource-path-request-binding",
+        ),
     ],
     "conversation-branch.schema.json": [
         contract_check("conversation_branch.head_consistency"),
@@ -3131,11 +5124,15 @@ traceability_profiles = {
     ],
     "capability-invocation-request.schema.json": [
         contract_check("capability_invocation.request_digest"),
+        contract_check("capability_invocation.owner_request_binding"),
         implementation_check("conformance_test", "contracts/conformance/capability/v1/suite.json", "request-schema-boundaries"),
         contract_check("capability_invocation.resolution_binding") + implementation_check("conformance_test", "contracts/conformance/capability/v1/suite.json", "token-binding"),
         contract_check("capability_invocation.execution_context") + implementation_check("conformance_test", "contracts/conformance/capability/v1/suite.json", "budget-policy-enforced"),
         contract_check("capability_invocation.token_binding") + implementation_check("conformance_test", "contracts/conformance/capability/v1/suite.json", "token-binding"),
         contract_check("capability_invocation.artifact_grant_expiry") + contract_check("capability_invocation.staging_grant") + implementation_check("conformance_test", "contracts/conformance/capability/v1/suite.json", "artifact-contract"),
+        contract_check("secret_mediation.binding") + implementation_check(
+            "conformance_test", "contracts/conformance/credential/v1/suite.json", "grant-token-request-binding"
+        ),
     ],
     "capability-invocation-token-claims.schema.json": [
         contract_check("capability_invocation.token_lifetime"),
@@ -3187,6 +5184,7 @@ traceability_profiles = {
     "canonical-event-v2.schema.json": [
         implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "conversation_event_omits_work_scope"),
         contract_check("canonical_event.work_binding"),
+        contract_check("canonical_event.execution_scope"),
         implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "aggregate_and_work_sequence_ledgers"),
         contract_check("canonical_event.source_dedupe"),
         implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "canonical_event_inbox_source_uniqueness"),
@@ -3337,6 +5335,262 @@ traceability_profiles = {
         contract_check("usage_observation.incomplete_status"),
     ],
 }
+
+traceability_profiles.update({
+    "provider-revision.schema.json": [
+        contract_check("provider_revision.integrity"),
+        contract_check("provider_revision.integrity"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "provider_revision_immutable"),
+        contract_check("provider_revision.integrity"),
+        contract_check("provider_revision.integrity") + implementation_check(
+            "conformance_test", "tasks/PHASE0.md", "provider_revision_conformance_evidence"
+        ),
+    ],
+    "policy-decision.schema.json": [
+        contract_check("policy_decision.outcome_time"),
+        contract_check("policy_decision.outcome_time"),
+        contract_check("policy_decision.outcome_time"),
+        implementation_check("conformance_test", "tasks/PHASE0.md", "policy_complete_requirement_evaluation"),
+        contract_check("policy_decision.outcome_time"),
+        implementation_check("conformance_test", "tasks/PHASE0.md", "policy_defense_in_depth_enforcement"),
+    ],
+    "technical-usage-entry.schema.json": [
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "technical_usage_identity_uniqueness"),
+        contract_check("technical_usage.binding"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "technical_usage_correction_chain"),
+        contract_check("technical_usage.binding") + implementation_check(
+            "conformance_test", "tasks/PHASE0.md", "technical_usage_unknown_not_zero"
+        ),
+        implementation_check("conformance_test", "tasks/PHASE0.md", "technical_usage_evidence_resolution"),
+        contract_check("technical_usage.binding"),
+        contract_check("technical_usage.binding") + implementation_check(
+            "conformance_test", "tasks/PHASE0.md", "technical_usage_platform_ownership"
+        ),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "technical_usage_multi_agent_attribution"),
+    ],
+    "usage-report.schema.json": [
+        contract_check("usage_report.finality"),
+        contract_check("usage_report.finality"),
+        contract_check("usage_report.finality"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "usage_report_sequence_and_predecessor"),
+        contract_check("usage_report.finality") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "usage_report_append_only_correction"
+        ),
+    ],
+    "business-settlement-envelope.schema.json": [
+        contract_check("settlement.accounting"),
+        contract_check("settlement.accounting"),
+        contract_check("settlement.accounting"),
+        contract_check("settlement.accounting"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "settlement_envelope_sequence"),
+        implementation_check("conformance_test", "tasks/PHASE0.md", "business_settlement_dedupe_and_evidence_immutability"),
+        implementation_check("conformance_test", "tasks/PHASE0.md", "business_settlement_technical_facts_only"),
+    ],
+    "runtime-gateway-frame.schema.json": [
+        implementation_check("conformance_test", "contracts/conformance/runtime-gateway/v1/suite.json", "stale-generation-rejected"),
+        contract_check("runtime_gateway.frame_integrity") + implementation_check(
+            "conformance_test", "contracts/conformance/runtime-gateway/v1/suite.json", "stale-generation-rejected"
+        ),
+        implementation_check("conformance_test", "contracts/conformance/runtime-gateway/v1/suite.json", "ack-backpressure"),
+        contract_check("runtime_gateway.frame_integrity"),
+        implementation_check("conformance_test", "contracts/conformance/runtime-gateway/v1/suite.json", "resume-expired-explicit"),
+        contract_check("runtime_gateway.frame_integrity") + implementation_check(
+            "conformance_test", "contracts/conformance/runtime-gateway/v1/suite.json", "control-idempotent"
+        ),
+        implementation_check("conformance_test", "contracts/conformance/runtime-gateway/v1/suite.json", "recording-alignment"),
+        implementation_check("conformance_test", "contracts/conformance/runtime-gateway/v1/suite.json", "port-forward-live-only"),
+    ],
+    "workspace-revision.schema.json": [
+        contract_check("workspace_revision.chain"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "workspace_revision_contiguous"),
+        contract_check("workspace_revision.chain") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "workspace_revision_immediate_predecessor"
+        ),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "workspace_revision_fork_origin"),
+        implementation_check("conformance_test", "tasks/PHASE0.md", "workspace_manifest_admission"),
+    ],
+    "work-order-state.schema.json": [
+        contract_check("work_order_state.machine"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "work_order_sequence_and_outbox"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "workflow_root_binding_authority"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "work_order_terminal_usage_accounting"),
+    ],
+    "artifact-operation-context.schema.json": [
+        contract_check("artifact_operation.binding"),
+        contract_check("artifact_operation.binding"),
+        contract_check("artifact_operation.binding"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "artifact_operation_idempotency_scope"),
+        implementation_check(
+            "conformance_test", "contracts/conformance/agent-access/v1/suite.json",
+            "resource-path-request-binding",
+        ),
+    ],
+    "artifact-operation.schema.json": [
+        contract_check("artifact_operation.binding"),
+        contract_check("artifact_operation.binding"),
+        contract_check("artifact_operation.binding"),
+        contract_check("artifact_operation.binding") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "artifact_operation_state_and_terminal_evidence"
+        ),
+        contract_check("artifact_operation.cancellation") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "artifact_operation_cancellation_outbox"
+        ),
+        contract_check("artifact_operation.cancellation") + implementation_check(
+            "conformance_test", "tasks/PHASE0.md", "artifact_operation_cancellation_reconciliation"
+        ),
+        implementation_check("conformance_test", "tasks/PHASE0.md", "artifact_operation_platform_finalization"),
+    ],
+    "conversation-branch-create-request.schema.json": [
+        contract_check("conversation_branch.create"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "conversation_branch_create_idempotency"),
+        contract_check("conversation_branch.create"),
+        contract_check("conversation_branch.create"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "conversation_branch_create_atomic_outbox"),
+        implementation_check(
+            "conformance_test", "contracts/conformance/agent-access/v1/suite.json",
+            "resource-path-request-binding",
+        ),
+    ],
+    "conversation-branch-created.schema.json": [
+        contract_check("conversation_branch.created_workspace") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "conversation_branch_create_atomic_outbox",
+        ),
+    ],
+    "no-usage-attestation.schema.json": [
+        contract_check("no_usage.accounting"),
+        contract_check("no_usage.accounting") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "no_usage_absence_proof"
+        ),
+        contract_check("no_usage.accounting") + implementation_check(
+            "conformance_test", "tasks/PHASE0.md", "unknown_usage_never_zero"
+        ),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "no_usage_attestation_append_only"),
+    ],
+    "delivery-package.schema.json": [
+        contract_check("no_usage.accounting") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "delivery_usage_accounting_required"
+        ),
+        contract_check("no_usage.accounting"),
+    ],
+    "compatibility-evidence.schema.json": [
+        contract_check("compatibility.fail_closed"),
+        contract_check("compatibility.fail_closed") + implementation_check(
+            "conformance_test", "tasks/PHASE0.md", "compatibility_suite_evidence_authenticity"
+        ),
+        contract_check("compatibility.fail_closed"),
+    ],
+    "compatibility-decision.schema.json": [
+        contract_check("compatibility.fail_closed"),
+        contract_check("compatibility.fail_closed"),
+        contract_check("compatibility.fail_closed") + implementation_check(
+            "conformance_test", "tasks/PHASE0.md", "compatibility_restore_dispatch_guard"
+        ),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "compatibility_decision_platform_ownership"),
+    ],
+    "agent-runtime-checkpoint-manifest.schema.json": [
+        contract_check("compatibility.fail_closed"),
+        contract_check("compatibility.fail_closed"),
+        implementation_check("conformance_test", "contracts/conformance/runtime/v1/suite.json", "checkpoint-restore-fail-closed"),
+    ],
+    "sandbox-snapshot-manifest.schema.json": [
+        contract_check("compatibility.fail_closed"),
+        contract_check("compatibility.fail_closed"),
+        implementation_check("conformance_test", "contracts/conformance/sandbox/v1/suite.json", "workspace-restore-fail-closed"),
+    ],
+    "sandbox-restore-request.schema.json": [
+        contract_check("compatibility.fail_closed"),
+        implementation_check("conformance_test", "contracts/conformance/sandbox/v1/suite.json", "workspace-restore-fail-closed"),
+    ],
+    "secret-grant.schema.json": [
+        contract_check("secret_mediation.binding"),
+        contract_check("secret_mediation.binding"),
+        contract_check("secret_mediation.binding"),
+        contract_check("secret_mediation.binding") + implementation_check(
+            "conformance_test", "contracts/conformance/credential/v1/suite.json", "single-use-and-revocation"
+        ),
+        contract_check("secret_mediation.binding") + implementation_check(
+            "conformance_test", "contracts/conformance/credential/v1/suite.json", "no-secret-persistence"
+        ),
+        implementation_check("conformance_test", "contracts/conformance/credential/v1/suite.json", "audit-before-delivery"),
+    ],
+    "secret-grant-revocation.schema.json": [
+        contract_check("secret_mediation.binding"),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "secret_grant_revocation_synchronous_deny"),
+    ],
+    "credential-access-request.schema.json": [
+        contract_check("secret_mediation.binding"),
+        contract_check("secret_mediation.binding"),
+    ],
+    "credential-operation-token-claims.schema.json": [
+        contract_check("secret_mediation.binding"),
+        contract_check("secret_mediation.binding"),
+        contract_check("secret_mediation.binding") + implementation_check(
+            "conformance_test", "contracts/conformance/credential/v1/suite.json", "single-use-and-revocation"
+        ),
+    ],
+    "artifact-ingest-request.schema.json": [
+        contract_check("artifact_ingest.lifecycle"),
+        implementation_check(
+            "conformance_test", "tasks/PHASE0.md", "artifact_ingest_authorization"
+        ),
+        contract_check("artifact_ingest.lifecycle") + implementation_check(
+            "conformance_test", "tasks/PHASE0.md", "artifact_ingest_authorization"
+        ),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "artifact_ingest_idempotency_scope"),
+    ],
+    "artifact-ingest-confirm-request.schema.json": [
+        implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "artifact_ingest_digest_idempotency",
+        ),
+        implementation_check(
+            "conformance_test", "tasks/PHASE0.md", "artifact_ingest_authorization",
+        ),
+        implementation_check(
+            "conformance_test", "contracts/conformance/agent-access/v1/suite.json",
+            "resource-path-request-binding",
+        ),
+    ],
+    "artifact-ingest-session.schema.json": [
+        contract_check("artifact_ingest.lifecycle") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "artifact_ingest_state_version"
+        ),
+        implementation_check("conformance_test", "tasks/PHASE0.md", "artifact_ingest_authorized_status"),
+        contract_check("artifact_ingest.lifecycle"),
+        contract_check("artifact_ingest.lifecycle") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "artifact_ingest_platform_finalize_transaction"
+        ),
+        implementation_check("ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "artifact_ingest_digest_idempotency"),
+    ],
+    "artifact-ingest-scan-result.schema.json": [
+        contract_check("artifact_ingest.lifecycle"),
+        contract_check("artifact_ingest.lifecycle") + implementation_check(
+            "conformance_test", "tasks/PHASE0.md", "artifact_ingest_scan_evidence"
+        ),
+        contract_check("artifact_ingest.lifecycle"),
+    ],
+    "artifact-ingest-finalize-command.schema.json": [
+        contract_check("artifact_ingest.lifecycle"),
+        contract_check("artifact_ingest.lifecycle") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md", "artifact_ingest_platform_finalize_transaction"
+        ),
+        contract_check("artifact_ingest.lifecycle"),
+    ],
+})
+
+for schema_path in sorted(Path("contracts/schemas").glob("*.json")):
+    schema = read(str(schema_path))
+    statements = schema.get("x-semantic-constraints", [])
+    if statements and schema_path.name not in traceability_profiles:
+        traceability_profiles[schema_path.name] = [
+            implementation_check(
+                "conformance_test", "tasks/PHASE0.md",
+                "stable_semantic_constraint_implementation_evidence",
+            )
+            for _statement in statements
+        ]
+
 traceability_constraints = []
 for schema_filename, constraint_enforcements in traceability_profiles.items():
     schema = read(f"contracts/schemas/{schema_filename}")

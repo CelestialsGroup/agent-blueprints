@@ -32,6 +32,14 @@ SandboxOperationRecord、Attempt、ReconciliationCase 和 ManualReviewDecision �
 
 权威文件：`contracts/state-machines/runtime-recording-v1.json`。Capture 停止后进入 `finalizing`，只有完整 Manifest 原子提交后才能进入 `ready`；Capture/Finalization 失败进入带错误证据的 `failed`。`ready`/`failed` 内容可按保留策略删除，`deleted` 是不可逆 Tombstone。
 
+## ArtifactOperation
+
+权威文件：`contracts/state-machines/artifact-operation-v1.json`。Admission、Resolution、Dispatch、Execution 与 Finalization 分层；Dispatch 前失败不得伪造 ProviderResolution 或 Invocation，Dispatch 后未知结果进入 `reconciling`。所有活动态取消都先以 Owner State CAS 和同事务 Outbox 进入 `cancel_requested`；未派发证明可进入 `cancelled`，已派发则进入 `cancelling`，取消结果未知进入 `cancellation_reconciling`。取消对账禁止重新派发执行；已派发 Operation 只有在唯一 Invocation 的 cancelled 状态提交或对账完成后才可进入 `cancelled`，成功竞态必须证明 Platform Finalization 在取消 CAS 前已经提交。Preview/Edit/Conversion Projection 不拥有迁移权，成功终态必须绑定唯一 Invocation 与 Platform Finalization 证据。
+
+## ArtifactIngest
+
+权威文件：`contracts/state-machines/artifact-ingest-v1.json`。Create/Upload/Confirm/Scan/Finalize 分阶段且版本连续；商业授权撤销在 Finalize 前进入拒绝闭合。只有绑定确认上传摘要且通过扫描的 `ready_to_finalize` 可由 Platform 内部事务进入 `finalized`。
+
 ## 强制执行
 
 - 状态更新使用数据库 Expected-state/Fencing 条件；

@@ -1,0 +1,205 @@
+{
+  "session": {
+    "ingest_session_id": "ing_01J00000000000000000000000",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "client_app_id": "html-product",
+    "principal_context_digest": "sha256:bfb1d517260890b1df9744f3b1420dda3865f1a382e9735ecbeb895bbc8e5862",
+    "artifact_id": "art_ingest_01J0000000000000000000",
+    "request_digest": "sha256:9c5199d3703bc285343f8dccdfd45f349882fe098436245bf9dc8a3261732dee",
+    "commercial_authorization_id": "cauth_01J00000000000000000000000",
+    "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
+    "policy_decision_id": "pol_ingest_01J0000000000000000000",
+    "policy_decision_digest": "sha256:f04650ba71f37898c1f1e77f9aa0ac5db5ff035bdf24024e67cfdf10543eca70",
+    "execution_budget_id": "bud_ingest_01J0000000000000000000",
+    "execution_budget_digest": "sha256:915216b1c8f1e7a0cc18d99ae2ce603fc5fa671f7eff05418adc99170493a3d7",
+    "effective_permissions_id": "perm_ingest_01J00000000000000000",
+    "effective_permissions_digest": "sha256:2166c778c95f205cbfe5fc68c863f7d32fd9d3b063a25570cf94b74f47034ac9",
+    "status": "finalized",
+    "state_version": 7,
+    "confirmed_upload_digest": "sha256:40d373b4910150e8845bba107f985bb8502deeefbfc22a549a7288fa5a8213b8",
+    "scan_result_id": "iscan_01J0000000000000000000000",
+    "scan_result_digest": "sha256:ca29a06a0d55d4b89c8ba7f2b31a804c8b6d2330773f4528ef541e29f76aabd1",
+    "artifact_version_id": "ver_ingest_01J0000000000000000000",
+    "artifact_version_digest": "sha256:9aaf6afd088890226445ced0b282c8a11ef26ab35c1b16678344afe10bac01bf",
+    "created_at": "2026-07-16T09:10:00Z",
+    "expires_at": "2026-07-16T09:40:00Z",
+    "updated_at": "2026-07-16T09:11:00Z",
+    "completed_at": "2026-07-16T09:11:00Z"
+  },
+  "request": {
+    "ingest_request_id": "ireq_01J00000000000000000000000",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "client_app_id": "html-product",
+    "principal_context": {
+      "snapshot_version": 1,
+      "client_app_id": "html-product",
+      "external_tenant_id": "org-456",
+      "external_principal_id": "user-123",
+      "principal_type": "user",
+      "roles": [
+        "member"
+      ],
+      "groups": [
+        "design-team"
+      ],
+      "attributes": {
+        "data_classification": "internal",
+        "region": "cn"
+      },
+      "issued_at": "2026-07-16T08:59:30Z",
+      "expires_at": "2026-07-16T09:30:00Z",
+      "digest_profile": "rfc8785-principal-context-excluding-digest-v1",
+      "principal_context_digest": "sha256:bfb1d517260890b1df9744f3b1420dda3865f1a382e9735ecbeb895bbc8e5862"
+    },
+    "artifact_id": "art_ingest_01J0000000000000000000",
+    "name": "research-input.pdf",
+    "media_type": "application/pdf",
+    "size_bytes": 4096,
+    "content_digest": "sha256:40d373b4910150e8845bba107f985bb8502deeefbfc22a549a7288fa5a8213b8",
+    "commercial_authorization": {
+      "commercial_authorization_id": "cauth_01J00000000000000000000000",
+      "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
+      "expires_at": "2026-07-16T09:30:00Z"
+    },
+    "idempotency_key": "artifact-ingest-idempotency-0001",
+    "request_digest": "sha256:9c5199d3703bc285343f8dccdfd45f349882fe098436245bf9dc8a3261732dee",
+    "requested_at": "2026-07-16T09:10:00Z"
+  },
+  "budget": {
+    "budget_id": "bud_ingest_01J0000000000000000000",
+    "budget_digest": "sha256:915216b1c8f1e7a0cc18d99ae2ce603fc5fa671f7eff05418adc99170493a3d7",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "limits": {
+      "max_input_tokens": 100000,
+      "max_output_tokens": 20000,
+      "max_model_requests": 200,
+      "max_sandbox_seconds": 1800,
+      "max_network_bytes": 104857600,
+      "max_storage_bytes": 104857600,
+      "max_artifact_count": 20,
+      "max_conversion_count": 3,
+      "max_agent_runs": 1,
+      "max_agent_depth": 1,
+      "max_parallel_agent_runs": 1
+    },
+    "policies": {
+      "model_gateway_required": false,
+      "tool_gateway_required": false,
+      "egress_gateway_required": false,
+      "external_communication": false,
+      "require_approval_for": [
+        "external_communication"
+      ],
+      "data_classification": "confidential"
+    },
+    "created_at": "2026-07-16T09:10:01Z",
+    "expires_at": "2026-07-16T09:30:00Z",
+    "execution_scope": {
+      "kind": "artifact_ingest",
+      "artifact_ingest_session_id": "ing_01J00000000000000000000000"
+    }
+  },
+  "policy": {
+    "decision_id": "pol_ingest_01J0000000000000000000",
+    "decision_digest": "sha256:f04650ba71f37898c1f1e77f9aa0ac5db5ff035bdf24024e67cfdf10543eca70",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "policy_bundle_digest": "sha256:6161616161616161616161616161616161616161616161616161616161616161",
+    "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
+    "execution_budget_digest": "sha256:915216b1c8f1e7a0cc18d99ae2ce603fc5fa671f7eff05418adc99170493a3d7",
+    "evaluations": [
+      {
+        "subject_kind": "artifact",
+        "subject_id": "art_ingest_01J0000000000000000000",
+        "action": "allow",
+        "source": "commercial",
+        "rule_digest": "sha256:d5dbf8958ae0b621c121bd5e1d0bf31b87abe3a96c0f8c57d3814031dd7dcaf3"
+      }
+    ],
+    "outcome": "allow",
+    "effective_permissions_digest": "sha256:2166c778c95f205cbfe5fc68c863f7d32fd9d3b063a25570cf94b74f47034ac9",
+    "decided_at": "2026-07-16T09:10:01Z",
+    "expires_at": "2026-07-16T09:30:00Z",
+    "decision_point": "artifact",
+    "commercial_authorization_id": "cauth_01J00000000000000000000000",
+    "execution_budget_id": "bud_ingest_01J0000000000000000000",
+    "execution_scope": {
+      "kind": "artifact_ingest",
+      "artifact_ingest_session_id": "ing_01J00000000000000000000000"
+    }
+  },
+  "permissions": {
+    "permissions_id": "perm_ingest_01J00000000000000000",
+    "permissions_digest": "sha256:2166c778c95f205cbfe5fc68c863f7d32fd9d3b063a25570cf94b74f47034ac9",
+    "tenant_id": "ten_01J00000000000000000000000",
+    "model": {
+      "allowed_model_profiles": []
+    },
+    "tool": {
+      "allowed_capabilities": []
+    },
+    "artifact": {
+      "read": false,
+      "stage_new_version": true
+    },
+    "egress": {
+      "mode": "none",
+      "allowed_destination_classes": []
+    },
+    "sandbox_slots": [],
+    "execution_scope": {
+      "kind": "artifact_ingest",
+      "artifact_ingest_session_id": "ing_01J00000000000000000000000"
+    }
+  },
+  "scan_result": {
+    "scan_result_id": "iscan_01J0000000000000000000000",
+    "scan_result_digest": "sha256:ca29a06a0d55d4b89c8ba7f2b31a804c8b6d2330773f4528ef541e29f76aabd1",
+    "ingest_session_id": "ing_01J00000000000000000000000",
+    "content_digest": "sha256:40d373b4910150e8845bba107f985bb8502deeefbfc22a549a7288fa5a8213b8",
+    "scanner_provider_revision_id": "spr_scanner_01J0000000000000000000",
+    "scanner_profile": "artifact-malware-and-content-v1",
+    "scanner_suite_digest": "sha256:b913fb78bd24bba26d8ca14d53bb3cbafe32a95b46e0ad3814c7d46f93476aa0",
+    "result": "passed",
+    "evidence_reference": "scan-evidence://ing-01",
+    "evidence_digest": "sha256:f0f29b277e097955e6ee7c70d2c07d880982a3dcf04b9b500a71a13fdbd34cd2",
+    "completed_at": "2026-07-16T09:10:50Z"
+  },
+  "finalize_command": {
+    "finalize_command_id": "ifin_01J00000000000000000000000",
+    "command_digest": "sha256:58de3ad6cf4fe2384be3e4013c45a3a8c016c9dead631f0c57e9da1ea96811f7",
+    "authority": "platform_artifact_ledger",
+    "ingest_session_id": "ing_01J00000000000000000000000",
+    "expected_state_version": 6,
+    "confirmed_upload_digest": "sha256:40d373b4910150e8845bba107f985bb8502deeefbfc22a549a7288fa5a8213b8",
+    "scan_result_id": "iscan_01J0000000000000000000000",
+    "scan_result_digest": "sha256:ca29a06a0d55d4b89c8ba7f2b31a804c8b6d2330773f4528ef541e29f76aabd1",
+    "idempotency_key": "artifact-ingest-finalize-idempotency-0001",
+    "issued_at": "2026-07-16T09:10:55Z"
+  },
+  "cases": [
+    {
+      "id": "finalize-with-failed-scan",
+      "mutation": "failed_scan"
+    },
+    {
+      "id": "finalize-digest-mismatch",
+      "mutation": "scan_digest_mismatch"
+    },
+    {
+      "id": "provider-authority-finalize",
+      "mutation": "provider_finalize_authority"
+    },
+    {
+      "id": "session-policy-binding-mismatch",
+      "mutation": "session_policy_binding_mismatch"
+    },
+    {
+      "id": "policy-media-binding-mismatch",
+      "mutation": "policy_media_binding_mismatch"
+    },
+    {
+      "id": "permissions-scope-mismatch",
+      "mutation": "permissions_scope_mismatch"
+    }
+  ]
+}

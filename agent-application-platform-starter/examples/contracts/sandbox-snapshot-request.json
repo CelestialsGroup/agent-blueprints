@@ -3,12 +3,13 @@
   "attempt_id": "sat_snapshot_01",
   "fencing_token": 10,
   "idempotency_key": "sop_snapshot_01-idempotency-0001",
-  "request_digest": "sha256:b80f7cc8b65607dae8b630ddc9c0334769014376e3ad23dd7c32520d6d095df6",
+  "request_digest": "sha256:4551eb0a573fa89e7e2aa2433cdd1cb465f2fc86328619f08cad11e372520dc7",
   "deadline_at": "2026-07-16T10:30:00Z",
   "expected_generation": 4,
   "level": "workspace",
   "consistency": "application_quiesced",
   "include_paths": [
     "/workspace"
-  ]
+  ],
+  "compatibility_profile": "sandbox-snapshot-workspace-v1"
 }

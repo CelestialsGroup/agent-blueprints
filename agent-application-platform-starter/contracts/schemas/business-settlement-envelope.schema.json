@@ -8,12 +8,12 @@
     "settlement_envelope_id",
     "settlement_envelope_digest",
     "tenant_id",
-    "work_order_id",
+    "execution_scope",
     "commercial_authorization_id",
     "commercial_authorization_digest",
     "quota_reservation_id",
     "quota_reservation_digest",
-    "work_order_terminal_status",
+    "terminal_status",
     "action",
     "envelope_sequence",
     "settlement_target_id",
@@ -24,13 +24,14 @@
     "settlement_envelope_id": { "type": "string", "minLength": 1 },
     "settlement_envelope_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "tenant_id": { "type": "string", "minLength": 1 },
-    "work_order_id": { "type": "string", "minLength": 1 },
+    "execution_scope": { "$ref": "urn:agent-platform:execution-scope:v1" },
     "commercial_authorization_id": { "type": "string", "minLength": 1 },
     "commercial_authorization_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "quota_reservation_id": { "type": "string", "minLength": 1 },
     "quota_reservation_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "usage_report": { "$ref": "urn:agent-platform:usage-report:v1" },
-    "work_order_terminal_status": { "enum": ["completed", "partial", "failed", "cancelled"] },
+    "no_usage_attestation": { "$ref": "urn:agent-platform:no-usage-attestation:v1" },
+    "terminal_status": { "enum": ["completed", "partial", "succeeded", "failed", "cancelled", "finalized", "rejected", "expired"] },
     "action": { "enum": ["settle", "release", "reconcile"] },
     "envelope_sequence": { "type": "integer", "minimum": 1 },
     "supersedes_settlement_envelope_id": { "type": "string", "minLength": 1 },
@@ -42,11 +43,11 @@
   "allOf": [
     {
       "if": { "properties": { "action": { "enum": ["settle", "reconcile"] } }, "required": ["action"] },
-      "then": { "required": ["usage_report"] }
+      "then": { "required": ["usage_report"], "not": { "required": ["no_usage_attestation"] } }
     },
     {
       "if": { "properties": { "action": { "const": "release" } }, "required": ["action"] },
-      "then": { "not": { "required": ["usage_report"] } }
+      "then": { "required": ["no_usage_attestation"], "not": { "required": ["usage_report"] } }
     },
     {
       "if": { "properties": { "envelope_sequence": { "const": 1 } }, "required": ["envelope_sequence"] },
@@ -86,9 +87,10 @@
   ],
   "x-semantic-constraints": [
     "settlement_envelope_digest is RFC 8785 JCS SHA-256 over the envelope excluding settlement_envelope_digest",
-    "embedded UsageReport matches tenant, WorkOrder, CommercialAuthorization and QuotaReservation bindings",
-    "settle embeds a final UsageReport; reconcile embeds a correction UsageReport and supersedes the immediately preceding envelope",
-    "envelope_sequence is contiguous per tenant, WorkOrder and QuotaReservation",
+    "embedded UsageReport or NoUsageAttestation matches tenant, execution_scope, CommercialAuthorization and QuotaReservation bindings",
+    "settle embeds a final non-empty UsageReport; reconcile embeds a correction UsageReport; release embeds a confirmed NoUsageAttestation and never infers zero from missing usage",
+    "terminal_status is valid for the bound execution_scope owner and matches its immutable terminal state",
+    "envelope_sequence is contiguous per tenant, execution_scope and QuotaReservation",
     "Business deduplicates by tenant_id plus idempotency_key and never mutates Platform TechnicalUsage evidence",
     "the envelope contains no price, currency, plan calculation or balance mutation"
   ]

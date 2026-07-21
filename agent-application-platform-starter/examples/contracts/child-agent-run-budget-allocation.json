@@ -1,13 +1,13 @@
 {
   "allocation_id": "abal_child_01J00000000000000000000",
-  "allocation_digest": "sha256:ab93f925bded5a93b050db27f9518e494d8e45866e9348f1484059bddee8fc7b",
+  "allocation_digest": "sha256:b888e7b656b58932b1f1130c17308b89a33dec8e292006fab0193dee74c33a6b",
   "tenant_id": "ten_01J00000000000000000000000",
   "work_order_id": "wrk_01J00000000000000000000000",
   "agent_run_id": "agr_child_01J0000000000000000000",
   "parent_allocation_id": "abal_root_01J000000000000000000000",
-  "parent_allocation_digest": "sha256:465ec922331064033923a0ca34742d7837e52cb399e264a2aecf2b39d1808f75",
+  "parent_allocation_digest": "sha256:e4e56166aad1bc6b0cf21fa6b93ab8a206a2d97baad8e5c299f04b1a7475da5e",
   "work_order_budget_id": "bud_01J00000000000000000000000",
-  "work_order_budget_digest": "sha256:af98dd43e2a018f9df3a6bc97b17f4cea7ec2dae69d62f24e2cd367eefc3fba4",
+  "work_order_budget_digest": "sha256:a9965ff61c94ed866a5ddcc58156ec2c159cdb74c7dd445c338b7456ccf85598",
   "limits": {
     "max_input_tokens": 20000,
     "max_output_tokens": 5000,

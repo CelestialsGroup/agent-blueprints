@@ -7,7 +7,7 @@
     "budget_id",
     "budget_digest",
     "tenant_id",
-    "work_order_id",
+    "execution_scope",
     "limits",
     "policies",
     "created_at",
@@ -26,10 +26,7 @@
       "type": "string",
       "minLength": 1
     },
-    "work_order_id": {
-      "type": "string",
-      "minLength": 1
-    },
+    "execution_scope": { "$ref": "urn:agent-platform:execution-scope:v1" },
     "limits": { "$ref": "urn:agent-platform:effective-execution-limits:v1" },
     "policies": {
       "type": "object",
@@ -80,6 +77,6 @@
   "additionalProperties": false,
   "x-semantic-constraints": [
     "budget_digest is RFC 8785 JCS SHA-256 over the budget excluding budget_digest",
-    "the budget is immutable, tenant-qualified and expires after created_at"
+    "the budget is immutable, tenant-qualified, bound to exactly one WorkOrder, ArtifactOperation or ArtifactIngestSession, and expires after created_at"
   ]
 }

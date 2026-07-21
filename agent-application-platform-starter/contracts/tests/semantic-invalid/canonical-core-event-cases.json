@@ -1,0 +1,203 @@
+{
+  "artifact_operation": {
+    "event_id": "evt_artifact-operation-succeeded_01J00000000000000000",
+    "schema_version": 2,
+    "tenant_id": "ten_01J00000000000000000000000",
+    "producer_id": "platform-core-ledger",
+    "provider_revision_id": null,
+    "source_stream_id": "artifact_operation/aop_preview_01J000000000000000000",
+    "source_event_id": "artifact.operation.state.changed/5",
+    "source_cursor": "5",
+    "dedupe_key": "sha256:00b11067662319ed23e6e58bde72eaa470c10f5201f4f4826d89bd73eea0b740",
+    "aggregate": {
+      "type": "artifact_operation",
+      "id": "aop_preview_01J000000000000000000",
+      "sequence": 5
+    },
+    "type": "artifact.operation.state.changed",
+    "occurred_at": "2026-07-16T09:10:00Z",
+    "actor": {
+      "type": "system",
+      "id": "artifact-service"
+    },
+    "data": {
+      "artifact_operation_id": "aop_preview_01J000000000000000000",
+      "operation_kind": "preview",
+      "state": "succeeded",
+      "state_version": 5,
+      "provider_resolution_id": "res_preview_01J000000000000000000",
+      "invocation_id": "inv_preview_01J000000000000000000",
+      "request_digest": "sha256:a4ef0fb82260822297ca0095e25cb26d732e5a8494c680a8f0761f5e8cc87c4a",
+      "invocation_request_digest": "sha256:8c0e799920cf80586dfe76073788705cd45948946af4a768ad69f85af1e1fd02",
+      "terminal_stage": "finalization",
+      "terminal_evidence_digest": "sha256:2328ea766e6d2ada3a4c84ff8d0a70e1099a48bc6af581bfb5f8dd6779c345cb"
+    },
+    "metadata": {
+      "trace_id": "trace-artifact-operation-succeeded",
+      "correlation_id": "aop_preview_01J000000000000000000"
+    },
+    "data_version": 1,
+    "recorded_at": "2026-07-16T09:10:00.100Z",
+    "event_registry": {
+      "registry_id": "platform-core",
+      "registry_version": 1,
+      "registry_digest": "sha256:a9e717df6ee3d524e9805b1d1d78b39957618985d7d3ff9ad0e984362d1ddde6"
+    },
+    "producer_kind": "platform",
+    "execution_scope": {
+      "kind": "artifact_operation",
+      "artifact_operation_id": "aop_preview_01J000000000000000000"
+    }
+  },
+  "artifact_ingest": {
+    "event_id": "evt_artifact-ingest-finalized_01J00000000000000000",
+    "schema_version": 2,
+    "tenant_id": "ten_01J00000000000000000000000",
+    "producer_id": "platform-core-ledger",
+    "provider_revision_id": null,
+    "source_stream_id": "artifact_ingest/ing_01J00000000000000000000000",
+    "source_event_id": "artifact.ingest.state.changed/1",
+    "source_cursor": "1",
+    "dedupe_key": "sha256:a3792074848ec5b771dea0d10583fe8de46cebe1c50beb1d24c0b3a32b6c3b58",
+    "aggregate": {
+      "type": "artifact_ingest",
+      "id": "ing_01J00000000000000000000000",
+      "sequence": 1
+    },
+    "type": "artifact.ingest.state.changed",
+    "occurred_at": "2026-07-16T09:10:00Z",
+    "actor": {
+      "type": "system",
+      "id": "artifact-service"
+    },
+    "data": {
+      "ingest_session_id": "ing_01J00000000000000000000000",
+      "state": "finalized",
+      "state_version": 7,
+      "content_digest": "sha256:40d373b4910150e8845bba107f985bb8502deeefbfc22a549a7288fa5a8213b8",
+      "scan_result_digest": "sha256:ca29a06a0d55d4b89c8ba7f2b31a804c8b6d2330773f4528ef541e29f76aabd1",
+      "artifact_version_id": "ver_ingest_01J0000000000000000000"
+    },
+    "metadata": {
+      "trace_id": "trace-artifact-ingest-finalized",
+      "correlation_id": "ing_01J00000000000000000000000"
+    },
+    "data_version": 1,
+    "recorded_at": "2026-07-16T09:10:00.100Z",
+    "event_registry": {
+      "registry_id": "platform-core",
+      "registry_version": 1,
+      "registry_digest": "sha256:a9e717df6ee3d524e9805b1d1d78b39957618985d7d3ff9ad0e984362d1ddde6"
+    },
+    "producer_kind": "platform",
+    "execution_scope": {
+      "kind": "artifact_ingest",
+      "artifact_ingest_session_id": "ing_01J00000000000000000000000"
+    }
+  },
+  "compatibility": {
+    "event_id": "evt_compatibility-decided_01J00000000000000000",
+    "schema_version": 2,
+    "tenant_id": "ten_01J00000000000000000000000",
+    "producer_id": "platform-core-ledger",
+    "provider_revision_id": null,
+    "source_stream_id": "compatibility_decision/cmpd_runtime_01J0000000000000000",
+    "source_event_id": "compatibility.decided/1",
+    "source_cursor": "1",
+    "dedupe_key": "sha256:0ea62c86bd7acd573e386a52b9f232917210ad35c6b81516abd9c98db3bd034f",
+    "aggregate": {
+      "type": "compatibility_decision",
+      "id": "cmpd_runtime_01J0000000000000000",
+      "sequence": 1
+    },
+    "type": "compatibility.decided",
+    "occurred_at": "2026-07-16T09:10:00Z",
+    "actor": {
+      "type": "system",
+      "id": "artifact-service"
+    },
+    "data": {
+      "decision_id": "cmpd_runtime_01J0000000000000000",
+      "decision_digest": "sha256:75459612357dd9c6155f9f2dabb6afd1ce552ac2fd64612db5c1d1731489c83b",
+      "subject_kind": "runtime_checkpoint",
+      "subject_id": "ckp_01J00000000000000000000000",
+      "result": "compatible",
+      "source_provider_revision_id": "apr_01J00000000000000000000000",
+      "target_provider_revision_id": "apr_01J00000000000000000000001"
+    },
+    "metadata": {
+      "trace_id": "trace-compatibility-decided",
+      "correlation_id": "cmpd_runtime_01J0000000000000000"
+    },
+    "data_version": 1,
+    "recorded_at": "2026-07-16T09:10:00.100Z",
+    "event_registry": {
+      "registry_id": "platform-core",
+      "registry_version": 1,
+      "registry_digest": "sha256:a9e717df6ee3d524e9805b1d1d78b39957618985d7d3ff9ad0e984362d1ddde6"
+    },
+    "producer_kind": "platform"
+  },
+  "secret_grant": {
+    "event_id": "evt_secret-grant-issued_01J00000000000000000",
+    "schema_version": 2,
+    "tenant_id": "ten_01J00000000000000000000000",
+    "producer_id": "platform-core-ledger",
+    "provider_revision_id": null,
+    "source_stream_id": "secret_grant/secg_01J00000000000000000000000",
+    "source_event_id": "secret.grant.state.changed/1",
+    "source_cursor": "1",
+    "dedupe_key": "sha256:65f5cceca68398873ed74e1813966c253f307198c49481d679d982f47eaac7ee",
+    "aggregate": {
+      "type": "secret_grant",
+      "id": "secg_01J00000000000000000000000",
+      "sequence": 1
+    },
+    "type": "secret.grant.state.changed",
+    "occurred_at": "2026-07-16T09:10:00Z",
+    "actor": {
+      "type": "system",
+      "id": "artifact-service"
+    },
+    "data": {
+      "secret_grant_id": "secg_01J00000000000000000000000",
+      "secret_grant_digest": "sha256:a376866d4be26035eb75b9f018c9fb3b2a1b6732d700a4c7a4529b669d0e8919",
+      "state": "issued",
+      "evidence_digest": "sha256:0a9ad9a85db8ff4cf2a5cfd87f4378016678d58e890ac24bb1edc32c3bcfb7aa"
+    },
+    "metadata": {
+      "trace_id": "trace-secret-grant-issued",
+      "correlation_id": "secg_01J00000000000000000000000"
+    },
+    "data_version": 1,
+    "recorded_at": "2026-07-16T09:10:00.100Z",
+    "event_registry": {
+      "registry_id": "platform-core",
+      "registry_version": 1,
+      "registry_digest": "sha256:a9e717df6ee3d524e9805b1d1d78b39957618985d7d3ff9ad0e984362d1ddde6"
+    },
+    "producer_kind": "platform",
+    "execution_scope": {
+      "kind": "work_order",
+      "work_order_id": "wrk_01J00000000000000000000000"
+    }
+  },
+  "cases": [
+    {
+      "id": "artifact-operation-event-missing-scope",
+      "mutation": "artifact_operation_missing_scope"
+    },
+    {
+      "id": "artifact-ingest-event-cross-scope",
+      "mutation": "artifact_ingest_cross_scope"
+    },
+    {
+      "id": "compatibility-event-with-execution-scope",
+      "mutation": "compatibility_with_scope"
+    },
+    {
+      "id": "secret-grant-event-missing-scope",
+      "mutation": "secret_grant_missing_scope"
+    }
+  ]
+}
