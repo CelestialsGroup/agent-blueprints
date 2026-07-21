@@ -1,6 +1,6 @@
 {
   "budget_id": "bud_01J00000000000000000000000",
-  "budget_digest": "sha256:4e8aac35b4943db25ecbb3ea6fa2259cdb2f3c144bb837f1cc6c97b0b6f94096",
+  "budget_digest": "sha256:af98dd43e2a018f9df3a6bc97b17f4cea7ec2dae69d62f24e2cd367eefc3fba4",
   "tenant_id": "ten_01J00000000000000000000000",
   "work_order_id": "wrk_01J00000000000000000000000",
   "limits": {
@@ -11,7 +11,10 @@
     "max_network_bytes": 104857600,
     "max_storage_bytes": 104857600,
     "max_artifact_count": 20,
-    "max_conversion_count": 3
+    "max_conversion_count": 3,
+    "max_agent_runs": 8,
+    "max_agent_depth": 4,
+    "max_parallel_agent_runs": 3
   },
   "policies": {
     "model_gateway_required": true,

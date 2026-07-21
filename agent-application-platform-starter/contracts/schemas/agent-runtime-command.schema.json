@@ -20,7 +20,7 @@
     "command_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "runtime_run_id": { "type": "string", "minLength": 1 },
     "command_sequence": { "type": "integer", "minimum": 1 },
-    "type": { "enum": ["append_input", "interrupt", "pause", "resume", "cancel", "approval_decision", "checkpoint"] },
+    "type": { "enum": ["append_input", "interrupt", "pause", "resume", "cancel", "approval_decision", "checkpoint", "subagent_spawn_decision"] },
     "authorized_control_request_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "system_safety_control_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "system_safety_control_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
@@ -28,6 +28,18 @@
     "input_content_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "approval_id": { "type": "string", "minLength": 1 },
     "decision": { "$ref": "urn:agent-platform:approval-decision:v1" },
+    "spawn_request_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "child_agent_run_admission_decision_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "child_agent_run_admission_decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "spawn_outcome": { "enum": ["accepted", "rejected"] },
+    "spawn_reason_codes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": { "$ref": "urn:agent-platform:child-agent-run-admission-reason-code:v1" }
+    },
+    "child_agent_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "reason": { "type": "string", "minLength": 1, "maxLength": 1000 },
     "invocation_id": { "type": "string", "minLength": 1 },
     "invocation_attempt_id": { "type": "string", "minLength": 1 },
@@ -138,6 +150,51 @@
           ]
         }
       }
+    },
+    {
+      "if": {
+        "properties": { "type": { "not": { "const": "subagent_spawn_decision" } } },
+        "required": ["type"]
+      },
+      "then": {
+        "not": {
+          "anyOf": [
+            { "required": ["spawn_request_id"] },
+            { "required": ["child_agent_run_admission_decision_id"] },
+            { "required": ["child_agent_run_admission_decision_digest"] },
+            { "required": ["spawn_outcome"] },
+            { "required": ["spawn_reason_codes"] },
+            { "required": ["child_agent_run_id"] }
+          ]
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "subagent_spawn_decision" } }, "required": ["type"] },
+      "then": {
+        "required": [
+          "spawn_request_id", "child_agent_run_admission_decision_id",
+          "child_agent_run_admission_decision_digest", "spawn_outcome", "spawn_reason_codes"
+        ],
+        "not": {
+          "anyOf": [
+            { "required": ["authorized_control_request_id"] },
+            { "required": ["system_safety_control_id"] },
+            { "required": ["system_safety_control_digest"] },
+            { "required": ["input_id"] },
+            { "required": ["input_content_digest"] },
+            { "required": ["approval_id"] },
+            { "required": ["decision"] }
+          ]
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "spawn_outcome": { "const": "accepted" } }, "required": ["spawn_outcome"] },
+            "then": { "required": ["child_agent_run_id"] },
+            "else": { "not": { "required": ["child_agent_run_id"] } }
+          }
+        ]
+      }
     }
   ],
   "x-semantic-constraints": [
@@ -147,6 +204,7 @@
     "a stale fencing_token cannot mutate runtime state",
     "user-originated commands reference a persisted WorkOrderControlRequest with the same action and immutable input; Runtime transport never accepts an unbound message ID",
     "pause and cancel use exactly one authority source; a SystemSafetyControl must match Tenant, WorkOrder, RuntimeRun, action and digest, while Resume, Append, Interrupt, Approval and Checkpoint cannot use it",
+    "subagent_spawn_decision is emitted only by the Platform Workflow after an immutable ChildAgentRunAdmissionDecision; it cannot use user or safety-control authority and accepted decisions bind the allocated child AgentRun",
     "the RuntimeInvocation token operation_request_digest equals command_digest and binds the same logical Invocation"
   ]
 }

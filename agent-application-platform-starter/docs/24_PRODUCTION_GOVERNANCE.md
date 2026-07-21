@@ -24,6 +24,7 @@
 - Scenario 并发量
 - Capability 队列深度
 - Provider 并发量
+- WorkOrder AgentRun 总数、深度与并发量
 - Resource Class 容量
 - 全局上限
 
@@ -98,6 +99,7 @@ RuntimeRecording 使用同样的 Fail-closed 原则，但不属于 Telemetry：�
 估算：
 
 - WorkOrder QPS/并发
+- Child Spawn Admission QPS、AgentRun 深度/扇出、共享预算锁竞争与孤儿 Run 数
 - SSE/Runtime Gateway 连接
 - Event 写入率
 - Work Sequence 锁竞争

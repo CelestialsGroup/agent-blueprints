@@ -52,4 +52,4 @@ make validate-architecture
 
 ## 下一里程碑
 
-0A.1 契约收口完成并通过本地 Gate 后，按 `tasks/PHASE0.md` 实现持久化脊柱和 Native Minimal Runtime Probe，再进入 Business 纵向链、主 Runtime/Sandbox、Runtime Gateway/Recording、nexu Provider、第二可部署 Runtime、故障注入和最小恢复证据。GitHub CI 只在正式冻结前补齐。
+0A.2 契约收口完成并通过本地 Gate 后，按 `tasks/PHASE0.md` 实现持久化脊柱和 Native Runtime Core，再进入 Business 纵向链、Native Runtime General/Sandbox、Runtime Gateway/Recording、nexu Provider、独立 Reference Contract Probe、故障注入和最小恢复证据。第三方 Agent 项目只作参考；GitHub CI 只在正式冻结前补齐。

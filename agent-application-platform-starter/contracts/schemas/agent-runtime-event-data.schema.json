@@ -111,6 +111,9 @@
       },
       "additionalProperties": false
     },
+    "subagentSpawnRequested": {
+      "$ref": "urn:agent-platform:child-agent-run-spawn-request:v1"
+    },
     "taskBase": {
       "type": "object",
       "required": ["task_id", "task_kind", "status", "title", "updated_at"],
@@ -118,6 +121,7 @@
         "task_id": { "type": "string", "minLength": 1 },
         "parent_task_id": { "type": "string", "minLength": 1 },
         "child_agent_run_id": { "type": "string", "minLength": 1 },
+        "spawn_request_id": { "type": "string", "minLength": 1, "maxLength": 200 },
         "invocation_id": { "type": "string", "minLength": 1 },
         "sandbox_operation_id": { "type": "string", "minLength": 1 },
         "task_kind": { "enum": ["subagent", "background_command", "monitor", "scheduled"] },
@@ -132,11 +136,18 @@
       "allOf": [
         {
           "if": { "properties": { "task_kind": { "const": "subagent" } }, "required": ["task_kind"] },
-          "then": { "required": ["child_agent_run_id"] }
+          "then": { "required": ["child_agent_run_id", "spawn_request_id"] }
         },
         {
           "if": { "properties": { "task_kind": { "not": { "const": "subagent" } } }, "required": ["task_kind"] },
-          "then": { "not": { "required": ["child_agent_run_id"] } }
+          "then": {
+            "not": {
+              "anyOf": [
+                { "required": ["child_agent_run_id"] },
+                { "required": ["spawn_request_id"] }
+              ]
+            }
+          }
         }
       ]
     },
@@ -209,7 +220,7 @@
       "additionalProperties": false
     }
   },
-  "oneOf": [
+  "anyOf": [
     { "$ref": "#/$defs/runStarted" },
     { "$ref": "#/$defs/messageDelta" },
     { "$ref": "#/$defs/messageCompleted" },
@@ -219,6 +230,7 @@
     { "$ref": "#/$defs/artifactStaged" },
     { "$ref": "#/$defs/checkpointCreated" },
     { "$ref": "#/$defs/waitingInput" },
+    { "$ref": "#/$defs/subagentSpawnRequested" },
     { "$ref": "#/$defs/taskStarted" },
     { "$ref": "#/$defs/taskUpdated" },
     { "$ref": "#/$defs/taskCompleted" },

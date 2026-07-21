@@ -21,12 +21,13 @@
 | RLS | PostgreSQL 原生 RLS +事务内 `SET LOCAL` TenantContext | 独立数据库/Schema 做更强隔离等级 | 仅 Repository WHERE 条件 | RLS 是纵深防御，不替代应用授权；连接池归还前事务结束。策略、FK、Unique 和触发器由 Migration 与数据库集成测试证明。 |
 | Outbox/Inbox | PostgreSQL 事务表 + `FOR UPDATE SKIP LOCKED` dispatcher | 成熟后评估 Debezium/Kafka Connect | DB + broker 双写；Redis Stream 作事实源 | Phase 0 运维低、可对账；吞吐证据不足再引入 CDC。至少一次、幂等和 Fencing 保持不变。 |
 | Temporal | Temporal Server/Cloud + Go SDK；Worker Build ID/Deployment Versioning | 自建持久状态机仅用于局部短流程 | Celery/Redis 队列替代持久编排；框架 Checkpoint 作平台 History | Temporal 生态和长任务恢复成熟、MIT；运维中高。服务端与 SDK 分别精确锁定，Workflow Replay、Patch、Continue-as-New 和双 Worker 版本是升级前置。 |
-| Native Runtime Probe | 独立 Go AgentRuntimeProvider | Python 极简 Probe | 直接拿 DeerFlow 当协议定义 | Go Probe 依赖少，最早暴露框架泄漏；只用于 Contract/Recovery 探针，不宣称生产能力。 |
+| Native Runtime | Python Agent Loop/Context/Skill 层 + Go Platform/Gateway 边界，通过 AgentRuntimeProvider 独立部署 | 全 Go Runtime Core；Python Capability Worker | 直接拿 DeerFlow、Dify 或其他完整项目当产品 Runtime | 自研 Native Runtime 是正式主实现。Python 适合 Agent/模型生态，Go 负责治理、账本和强制 Gateway；内部框架可替换，公共 Port 不变。0B 先实现 Core Profile，0D 扩展 General/Governed。 |
 | Adapter SDK | OpenAPI/JSON Schema 生成模型 + 手写薄 Port SDK；共享 JCS 向量 | 后续发布 Go/TS SDK | 跨语言共享数据库包；复制领域模型 | SDK 不拥有事实，只处理鉴权、摘要、错误、Cursor 和 Conformance。SDK major 与 Port major 对齐，生成代码不可手改。 |
-| DeerFlow Adapter | 独立 Python 服务，锁定上游 Commit、Patch Ledger、wheel/image digest | 外部 Capability/Skill 服务减少 Patch | 把 DeerFlow 整仓复制进稳定内核；采用其 Thread/Checkpoint 作事实源 | 作为主 Runtime Adapter 候选，成熟度与许可证必须在锁定 Commit 时重新核验并写入 SBOM；升级产生新 ProviderRevision，旧 Run 不静默切换。 |
-| 第二 Runtime | OpenAI Agents SDK Adapter 候选；Native Probe 先行 | 其他通过同一 Suite 的 Runtime | 与 DeerFlow 共用内部 Checkpoint/事件模型 | 只有通过 `runtime-core-v1` 的可部署 Adapter 才计入可替换性证据。OpenAI Agents SDK 的当期 Python 3.14 支持与许可证在锁定版本时核验，未知时不得猜测。 |
+| Reference Runtime Probe | 独立 Go 最小 Provider，只实现 `runtime-core-v1` | 第二个极简 Python Provider | 为证明抽象而适配完整第三方项目 | 只验证 Port/Recovery/Workbench 不依赖 Native Runtime 内部模型，不承担产品能力或第三方兼容承诺。 |
+| 第三方 Agent 项目 | 锁定 Tag/Commit 研究模块边界、算法、功能和 UX | 周期性冻结新的只读研究快照 | Fork、包装或整体适配 DeerFlow/Dify/OpenHands 等 | 参考结论进入 ADR/Feature Radar；源码复用必须另做许可证、来源、安全和升级审查。参考不等于依赖或适配。 |
+| Dify 参考 | 当期最新稳定 Tag/Commit 只作 Workflow、Plugin、RAG、契约生成和 SSE 参考 | Dify 2 Beta 只作 Knowledge Pipeline、Graph 模块和产品 Feature Radar | 整体嵌入或连接 Dify；复制前端；以 Dify Agent、Redis Run Store、Graph Engine 或 Local Sandbox 替代平台组件 | 2026-07-21 稳定参考为 `1.16.0@5c6372d`；`2.0.0-beta.2@2a84832` 创建更早且代码谱系分叉，不能因版本号更大而视为更稳定。修改版 Apache-2.0 存在多租户和前端附加限制，因此只提炼设计结论并由平台重新实现。 |
 | Capability/Model/Tool/MCP Gateway | Go 服务实现统一 `capability-provider-v1`、Policy、Ledger 与限额；Provider connector 可用官方 SDK | 受控 LiteLLM/远程 MCP 作为 Connector | 让 Runtime 直连模型/工具；把 LiteLLM/MCP SDK 设为事实源 | 核心执行与审计留在平台；第三方 SDK 可替换。MCP transport/版本由 ProviderRevision 固化，未知能力 fail-closed。 |
-| Sandbox Phase 0 | SandboxProvider Port + DeerFlow Built-in Sandbox Adapter | Kubernetes Provider Adapter | 直接把 Pod/VM/Endpoint 写入稳定模型 | 先验证 Port 与对账，后端私有标识不外泄。Provider 独立升级/Draining。 |
+| Sandbox Phase 0 | 平台 SandboxProvider + Native Controller/隔离执行后端 | Kubernetes Provider Adapter、远程 VM Provider | 包装第三方 Agent 项目的本地 Sandbox；把 Pod/VM/Endpoint 写入稳定模型 | 先验证 Port、隔离与对账，后端私有标识不外泄。Provider 独立升级/Draining。 |
 | Sandbox Controller | Go controller；Kubernetes 后端使用 controller-runtime | sandbox-runtime；远程 VM Provider | Agent API/普通 Worker持有集群管理员权限 | controller-runtime 生态成熟、Apache-2.0；仅 Controller 有最小 RBAC。Phase 0 可先不部署自建 Controller。 |
 | Runtime Gateway | Go `net/http` +维护中的 WebSocket 库；不透明路由表 | Envoy 扩展用于纯代理层 | API Pod 粘性代理；暴露 Sandbox 原始 Endpoint | Gateway 自己执行 Generation/Sequence/ACK/Token/Recording Gate。WebSocket 库在实现时核验维护状态和许可证并精确锁定。 |
 | SSE | Go HTTP streaming + PostgreSQL Cursor 补拉 + Redis/Valkey 唤醒 | NATS 仅在容量证据后 | Redis Pub/Sub 作为 Event 真相 | SSE 可跨 Pod 重连；丢唤醒后按 `work_sequence` 补拉。标准库实现运维低。 |
@@ -43,6 +44,13 @@
 | 测试与故障注入 | Go test/Testcontainers、pytest/Hypothesis、Vitest、Playwright、Temporal Replay、Toxiproxy | kind/k3d 集成环境 | 只有 mock/单次 Happy Path | Toxiproxy MIT；本地 Docker 固定 Postgres/Temporal/Redis/MinIO 镜像 digest。真实故障证据到 0H 才可声称完成。 |
 | Kubernetes 发布 | Deployment/Stateful 依赖托管服务、Migration Job、Helm/Kustomize 中择一并固定 | Argo Rollouts/Argo CD 在生产阶段 | Pod 身份作领域 ID；应用启动迁移；所有逻辑 Worker立即拆 Deployment | Kubernetes Apache-2.0。0B 先维持最少工作负载；Canary、PDB、Topology、NetworkPolicy、最小 RBAC 在生产 Gate 验证。 |
 
+## Dify 双轨参考基线
+
+- 稳定代码轨：每次实施检查点只审阅当期最新正式稳定 Tag，记录完整 Commit、发布日期、镜像 Digest、许可证与安全公告；不追随 `main`、RC、Beta 或浮动镜像。当前调研快照为 `1.16.0@5c6372d2f76d240265b92fd27c16bc772ffcb107`。稳定 Release 中仍标为 Beta 的子功能继续按 Beta 治理；Dify Agent 不能继承 `1.16.0` 整体的稳定性标签。
+- Feature Radar 轨：Dify 2 Beta 的 Knowledge Pipeline、Graph 模块、Agent/Workflow Builder 只用于识别产品和模块候选。当前 `2.0.0-beta.2@2a84832998b4a005373859a82919a62a1bbbec42` 早于稳定快照且已分叉，不能直接回移代码或据此宣称成熟。
+- 实现轨：被采纳的行为重新落到本仓库的 Scenario、ProviderRevision、Temporal Workflow、CanonicalEvent、Artifact、Usage 和 Workbench 契约；Dify 原生 Tenant、WorkflowRun、Thread、Snapshot、Redis Event、SQLite/tmux 或 Endpoint 不进入稳定事实源。
+- 非连接边界：当前不规划 Dify Workflow、Agent、MCP 或 Sandbox Provider；通用 Provider Port 继续为平台自有实现和未来独立需求服务，不能反向推导出第三方适配承诺。
+
 ## 推荐总体栈
 
 ```text
@@ -54,11 +62,11 @@ Go 1.26.5
   agent-access + domain kernel + pgx/sqlc + goose
   Temporal workers + Outbox/Inbox dispatchers
   Capability/Artifact/Egress/Runtime Gateways
-  Native Runtime Probe + optional Sandbox Controller
+  Reference Runtime Contract Probe + Sandbox Controller
 
 Python 3.14.6 primary, 3.13 compatibility channel
-  DeerFlow Adapter
-  second framework Adapter when its compatibility is proven
+  Native Runtime Core/General/Governed
+  Agent/Model ecosystem workers behind platform-owned Ports
 
 PostgreSQL + Temporal + S3-compatible Object Storage
 Redis/Valkey only for Cache, Presence and Wakeup
@@ -92,11 +100,11 @@ Python 只负责确实依赖 Python Agent/ML 生态的 Runtime/Capability Adapte
 
 ## 冻结时点
 
-现在固定：三语言边界、pnpm、Go 内核、PostgreSQL/Temporal/对象存储/非权威 Redis 分工、HTTP/OpenAPI Port、pgx/sqlc/SQL-first Migration、Native Probe 先行、独立 DeerFlow Adapter、Gateway 强制中介、OTel、ProviderRevision/BuildProvenance 升级模型。
+现在固定：三语言边界、pnpm、Go 平台内核、自研 Native Runtime 主线、PostgreSQL/Temporal/对象存储/非权威 Redis 分工、HTTP/OpenAPI Port、pgx/sqlc/SQL-first Migration、Native Runtime Core 先行、独立 Reference Probe、Gateway 强制中介、OTel、ProviderRevision/BuildProvenance 升级模型，以及第三方项目“稳定 Tag/Commit 作代码参考、Beta 只作 Feature Radar”的版本策略。
 
-仅作 Phase 0 候选：DeerFlow 精确 Commit/Image、第二 Runtime、Python/TS 生成器、WebSocket 库、MinIO/Redis 本地镜像、Sandbox Kubernetes Adapter、Next/React 精确依赖版本。它们首次实现前完成维护状态、许可证、CPython/Node 兼容性和安全审查。
+仅作 Phase 0 候选：Native Runtime 内部 Agent Loop/Context/Skill 库、Python/TS 生成器、WebSocket 库、MinIO/Redis 本地镜像、Sandbox Kubernetes Adapter、Next/React 精确依赖版本。它们首次实现前完成维护状态、许可证、CPython/Node 兼容性和安全审查。
 
-推迟到 Phase 1/生产：Temporal Cloud 或自建拓扑、云 PostgreSQL/S3/KMS 供应商、Redis 或 Valkey、Kubernetes 发行版、Service Mesh、GitOps/Rollout Controller、跨 Region/Cell、GPU/MicroVM 后端和观测供应商。
+推迟到 Phase 1/生产：可复用 Agent Roster/可视化 Workflow Builder 的产品范围、Temporal Cloud 或自建拓扑、云 PostgreSQL/S3/KMS 供应商、Redis 或 Valkey、Kubernetes 发行版、Service Mesh、GitOps/Rollout Controller、跨 Region/Cell、GPU/MicroVM 后端和观测供应商。第三方 Agent 项目保持只读参考，不列入实施阶段。
 
 ## 七项缺口与技术落点
 
@@ -119,8 +127,8 @@ Python 只负责确实依赖 Python Agent/ML 生态的 Runtime/Capability Adapte
 3. 0B-1 建仓库骨架、锁定首次依赖与镜像，将许可证/SBOM/Provenance 写入构建证据。
 4. 0B-2 实现 PostgreSQL Migration/RLS/Repository/Outbox/Inbox、AgentRuntimeCommand/SystemSafetyControl Ledger，并提供空库升级、兼容回滚和 Redis 清空测试。
 5. 0B-3 实现 Temporal Workflow/Activity、Safety Controller 与 Replay；先接 Native Probe，通过含 fenced 系统 Cancel 的 `runtime-core-v1`。
-6. 0C 先完成 Business Reference 到 Conversation/WorkOrder 的双事实源链路，以及 CommercialAuthorizationRevocation、WorkSession deny/revoke 和活动 WorkOrder fan-out；0D 才接 DeerFlow 并锁定独立 ProviderRevision。
-7. 0D/0E 完成 Sandbox、Gateway、Artifact、SSE、Recording 与 Workbench；0G 完成第二 Runtime；0H 才形成故障和恢复证据。
+6. 0C 先完成 Business Reference 到 Conversation/WorkOrder 的双事实源链路，以及 CommercialAuthorizationRevocation、WorkSession deny/revoke 和覆盖所有活动 AgentRun 的可恢复 fan-out。
+7. 0D 将 Native Runtime 从 Core 扩展到 General/Governed 并完成平台 SandboxProvider；0E 完成 Gateway、Artifact、SSE、Recording 与 Workbench；0G 用独立 Reference Probe 验证 Port 可替换性；0H 才形成故障和恢复证据。
 
 四种结论必须分开：Architecture/Contract Gate 只证明设计内部一致；组件测试证明单组件实现；端到端证据证明集成链路；容量、隔离、故障注入、Replay 和恢复演练才证明生产可靠性。
 

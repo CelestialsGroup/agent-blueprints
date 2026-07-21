@@ -1,0 +1,85 @@
+{
+  "sandbox_id": "sbx_child_01J0000000000000000000",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "workspace_id": "wsp_01J00000000000000000000000",
+  "branch_id": "main",
+  "provider_resolution_id": "res_sandbox_exec_01J0000000000000",
+  "provider_revision_id": "spr_01J00000000000000000000000",
+  "image": {
+    "reference": "registry.example.com/agent/base",
+    "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "architecture": "arm64"
+  },
+  "runtime_profile": "hardened",
+  "resources": {
+    "cpu_millis": 2000,
+    "memory_bytes": 4294967296,
+    "ephemeral_storage_bytes": 10737418240,
+    "workspace_bytes": 10737418240,
+    "gpu_count": 0,
+    "pids_limit": 512
+  },
+  "required_capabilities": [
+    {
+      "id": "sandbox.exec",
+      "version": "1.0"
+    },
+    {
+      "id": "sandbox.terminal",
+      "version": "1.0"
+    },
+    {
+      "id": "sandbox.workspace.persistent",
+      "version": "1.0"
+    },
+    {
+      "id": "sandbox.network-policy",
+      "version": "1.0"
+    }
+  ],
+  "optional_capabilities": [
+    {
+      "id": "sandbox.browser",
+      "version": "1.0"
+    },
+    {
+      "id": "sandbox.snapshot.workspace",
+      "version": "1.0"
+    }
+  ],
+  "network": {
+    "mode": "restricted",
+    "policy_reference": "netpol_01J00000000000000000000000",
+    "egress_gateway_required": true
+  },
+  "workspace": {
+    "mode": "persistent",
+    "base_revision_id": "wsr_01J00000000000000000000000",
+    "base_revision_digest": "sha256:b8e661287a6861876e0e28cf94cc7f638653ea3b023367bfe046f54481381291",
+    "commit_mode": "cas_new_revision",
+    "mount_path": "/workspace",
+    "base_workspace_head_version": 1
+  },
+  "lease": {
+    "expires_at": "2026-07-16T09:15:00Z",
+    "max_extension_seconds": 600
+  },
+  "placement_constraints": {
+    "region_id": "ap-southeast-1",
+    "resource_class": "standard",
+    "architecture": "arm64"
+  },
+  "security": {
+    "privilege_level": "unprivileged",
+    "root_filesystem": "writable_overlay",
+    "service_account_mode": "none",
+    "allow_privilege_escalation": false,
+    "host_namespace_access": false,
+    "seccomp_profile": "runtime-default"
+  },
+  "labels": {
+    "scenario": "coding"
+  },
+  "sandbox_slot_key": "subagent/researcher"
+}

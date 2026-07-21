@@ -35,8 +35,9 @@
 
 ## 2. Phase 0 实现验收
 
-- WorkOrder、Tenant-qualified WorkflowRun、Root/Sub-agent AgentRun、RunManifest 和 AgentRuntimeRun 引用闭合；
-- Native Minimal Probe 在 DeerFlow 主实现前完整通过 `runtime-core-v1`；主 Runtime 通过 `runtime-general-v1 + governed-v1`；
+- WorkOrder、Tenant-qualified WorkflowRun、单次赋值 RootBinding、Root/Sub-agent AgentRun、RunManifest 和 AgentRuntimeRun 引用闭合；Orchestration 或 Root Admission 前失败不需要伪造下游对象；
+- 自研 Native Runtime 先通过 `runtime-core-v1`，再通过 `runtime-general-v1 + governed-v1`；独立 Reference Probe 在冻结前通过 `runtime-core-v1`，不要求第三方项目适配；
+- Child Spawn/Admission 覆盖委派输入、Parent/Root/Depth、ProviderResolution、不可降级的 Workspace Mount/Commit/CAS 模式、Sandbox、共享 WorkOrder Budget Ledger、AgentRun Resource Allocation、幂等、拒绝、子树 Pause/Cancel、终态汇总和孤儿对账；
 - PostgreSQL Constraint 实现 Tenant、Branch WorkspaceRevision、Outbox/Inbox、Sequence、Ledger、Fencing 和 CAS 不变量；
 - Business → ExecutionGrant → ConversationTurn → Temporal → Runtime/Sandbox → Event/Artifact/Usage 可重复运行和恢复；
 - RuntimeRecording 只持久化经过 Emit-time Scrub/Schema Gate 的 Chunk，并绑定 Redaction Evidence；

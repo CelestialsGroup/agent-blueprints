@@ -1,0 +1,17 @@
+{
+  "agent_run_id": "agr_child_01J0000000000000000000",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "runtime_run_id": "rtr_child_01J0000000000000000000",
+  "workflow_run_id": "wfr_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "root_agent_run_id": "agr_01J00000000000000000000000",
+  "parent_agent_run_id": "agr_other",
+  "spawn_request_id": "spawn_01J0000000000000000000000",
+  "run_kind": "subagent",
+  "run_depth": 1,
+  "required_for_work_order_completion": true,
+  "agent_role": "researcher",
+  "runtime_provider_resolution_id": "res_agent_general_01J00000000000000",
+  "run_manifest_digest": "sha256:86595c1d95b44c7e9956486efbacfe243bab118a7a43031c086bec0ea9bb5131",
+  "created_at": "2026-07-16T09:02:01Z"
+}

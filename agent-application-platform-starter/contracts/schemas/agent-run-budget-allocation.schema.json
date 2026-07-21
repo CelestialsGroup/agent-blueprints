@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:agent-run-budget-allocation:v1",
+  "title": "AgentRunBudgetAllocation",
+  "description": "Immutable per-AgentRun resource ceiling layered under one shared WorkOrder ExecutionBudget ledger; topology limits are never copied here.",
+  "type": "object",
+  "required": [
+    "allocation_id", "allocation_digest", "tenant_id", "work_order_id", "agent_run_id",
+    "work_order_budget_id", "work_order_budget_digest", "limits", "issued_at", "expires_at"
+  ],
+  "properties": {
+    "allocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "allocation_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "agent_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "parent_allocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "parent_allocation_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "work_order_budget_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "work_order_budget_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "limits": { "$ref": "urn:agent-platform:agent-run-resource-limits:v1" },
+    "issued_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "dependentRequired": {
+    "parent_allocation_id": ["parent_allocation_digest"],
+    "parent_allocation_digest": ["parent_allocation_id"]
+  },
+  "x-semantic-constraints": [
+    "allocation_digest is RFC 8785 JCS SHA-256 over the allocation excluding allocation_digest",
+    "the root allocation has no parent and equals the resource fields of the WorkOrder ExecutionBudget; every child allocation references its parent allocation and is equal to or narrower than both parent and WorkOrder resource limits",
+    "all AgentRuns in the WorkOrder consume atomically from one PostgreSQL WorkOrder budget ledger keyed by work_order_budget_id; per-Run allocations never create independent copies of the shared hard ceiling",
+    "AgentRun count, depth and parallel admission use only max_agent_runs, max_agent_depth and max_parallel_agent_runs from the shared WorkOrder ExecutionBudget and are checked transactionally before a Child admission is accepted"
+  ]
+}

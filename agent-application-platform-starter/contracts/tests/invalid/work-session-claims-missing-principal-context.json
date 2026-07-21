@@ -11,7 +11,7 @@
   "principal_id": "user-123",
   "conversation_id": "conv_01J00000000000000000000000",
   "commercial_authorization_id": "cauth_01J00000000000000000000000",
-  "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7",
+  "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
   "commercial_authorization_expires_at": "2026-07-16T09:30:00Z",
   "scopes": [
     "work:read",

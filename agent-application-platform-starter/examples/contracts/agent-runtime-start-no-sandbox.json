@@ -9,9 +9,9 @@
   "invocation_attempt_id": "iat_runtime_01J0000000000000000",
   "fencing_token": 1,
   "idempotency_key": "runtime-start-key-0001",
-  "request_digest": "sha256:6dd0c0a3533fd20e9b46e47833a7054f7566d6d98117ff9a4f6f091c2c26b660",
+  "request_digest": "sha256:851a87e22513541f8b5578b1dd8ebc29c40895cf0be79303c3b89e1cc0f6ee29",
   "deadline_at": "2026-07-16T09:15:00Z",
-  "run_manifest_digest": "sha256:22a43082feb6211b4f5fdfa682bff5cd8af5587efaa243bb7068b81b2ac1a5ca",
+  "run_manifest_digest": "sha256:b42f8b703e81b72d5879cd9e66fb62348ad289970ca66880a7f7078e809c9d62",
   "input_message_id": "msg_01J00000000000000000000000",
   "sandbox_bindings": [],
   "tenant_id": "ten_01J00000000000000000000000",
@@ -20,6 +20,7 @@
   "workspace_revision_digest": "sha256:b8e661287a6861876e0e28cf94cc7f638653ea3b023367bfe046f54481381291",
   "input": {
     "input_id": "rin_01J00000000000000000000000",
+    "source_kind": "conversation_message",
     "input_message_id": "msg_01J00000000000000000000000",
     "content_digest": "sha256:b5703a5ce400f7e037913ea6ec96bad2ce954a9b6b327fe752fa25e8515eb2ef",
     "content": [
@@ -114,15 +115,15 @@
     "tenant_id": "ten_01J00000000000000000000000",
     "work_order_id": "wrk_01J00000000000000000000000",
     "runtime_run_id": "rtr_01J00000000000000000000000",
-    "run_manifest_digest": "sha256:22a43082feb6211b4f5fdfa682bff5cd8af5587efaa243bb7068b81b2ac1a5ca",
+    "run_manifest_digest": "sha256:b42f8b703e81b72d5879cd9e66fb62348ad289970ca66880a7f7078e809c9d62",
     "commercial_authorization": {
       "commercial_authorization_id": "cauth_01J00000000000000000000000",
-      "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7",
+      "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
       "expires_at": "2026-07-16T09:30:00Z"
     },
     "execution_budget": {
       "budget_id": "bud_01J00000000000000000000000",
-      "budget_digest": "sha256:4e8aac35b4943db25ecbb3ea6fa2259cdb2f3c144bb837f1cc6c97b0b6f94096",
+      "budget_digest": "sha256:af98dd43e2a018f9df3a6bc97b17f4cea7ec2dae69d62f24e2cd367eefc3fba4",
       "tenant_id": "ten_01J00000000000000000000000",
       "work_order_id": "wrk_01J00000000000000000000000",
       "limits": {
@@ -133,7 +134,10 @@
         "max_network_bytes": 104857600,
         "max_storage_bytes": 104857600,
         "max_artifact_count": 20,
-        "max_conversion_count": 3
+        "max_conversion_count": 3,
+        "max_agent_runs": 8,
+        "max_agent_depth": 4,
+        "max_parallel_agent_runs": 3
       },
       "policies": {
         "model_gateway_required": true,
@@ -150,12 +154,12 @@
     },
     "policy_decision": {
       "decision_id": "pol_01J00000000000000000000000",
-      "decision_digest": "sha256:01ce551eb16d4e2f1fee789c56ed0f630d1496fa7c5d80ab4c16454ee2015ea3",
+      "decision_digest": "sha256:49955634a2eadd54fd72cfc0d95f8b1720cc4c0c555206c8b5b649281484c11b",
       "tenant_id": "ten_01J00000000000000000000000",
       "work_order_id": "wrk_01J00000000000000000000000",
       "policy_bundle_digest": "sha256:6161616161616161616161616161616161616161616161616161616161616161",
-      "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7",
-      "execution_budget_digest": "sha256:4e8aac35b4943db25ecbb3ea6fa2259cdb2f3c144bb837f1cc6c97b0b6f94096",
+      "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
+      "execution_budget_digest": "sha256:af98dd43e2a018f9df3a6bc97b17f4cea7ec2dae69d62f24e2cd367eefc3fba4",
       "evaluations": [
         {
           "subject_kind": "runtime",
@@ -212,7 +216,7 @@
     },
     "artifact_grants": [
       {
-        "grant_id": "artg_01J0000000000000000000000",
+        "grant_id": "artg_rauth_no_sandbox_01J000000000000000",
         "tenant_id": "ten_01J00000000000000000000000",
         "work_order_id": "wrk_01J00000000000000000000000",
         "artifact_id": "art_workspace_manifest_01J000000000000000",
@@ -239,11 +243,46 @@
           "binding_digest": "sha256:33647b3a7c5cb44be525b29b7c3c405b72238760f11ab8e5ff2ea9ddae1cc4a6",
           "audience": "agent-artifact-gateway"
         },
-        "grant_digest": "sha256:3705c3655495f76438427c10a63c0b820df854a09fcf0bd657dab6c3b21a9cad"
+        "grant_digest": "sha256:b398abdf49376d3aa16ccbb6ae90c36ca99d73eefb3723b0f5e4fcd0533a3221"
       }
     ],
     "issued_at": "2026-07-16T09:01:00Z",
     "expires_at": "2026-07-16T09:15:00Z",
-    "authorization_digest": "sha256:60740d552dc364a13925824e6cc68c1e51633985ad7ae87edd1f318262637724"
+    "authorization_digest": "sha256:5deb021e773c2b8ecd6fa8a21f86a3b1aeb1cd26f721c9835ef1285ebbc2401d",
+    "agent_run_budget_allocation": {
+      "allocation_id": "abal_root_01J000000000000000000000",
+      "allocation_digest": "sha256:465ec922331064033923a0ca34742d7837e52cb399e264a2aecf2b39d1808f75",
+      "tenant_id": "ten_01J00000000000000000000000",
+      "work_order_id": "wrk_01J00000000000000000000000",
+      "agent_run_id": "agr_01J00000000000000000000000",
+      "work_order_budget_id": "bud_01J00000000000000000000000",
+      "work_order_budget_digest": "sha256:af98dd43e2a018f9df3a6bc97b17f4cea7ec2dae69d62f24e2cd367eefc3fba4",
+      "limits": {
+        "max_input_tokens": 100000,
+        "max_output_tokens": 20000,
+        "max_model_requests": 200,
+        "max_sandbox_seconds": 1800,
+        "max_network_bytes": 104857600,
+        "max_storage_bytes": 104857600,
+        "max_artifact_count": 20,
+        "max_conversion_count": 3
+      },
+      "issued_at": "2026-07-16T09:01:00Z",
+      "expires_at": "2026-07-16T09:30:00Z"
+    }
+  },
+  "run_topology": {
+    "run_kind": "root",
+    "root_agent_run_id": "agr_01J00000000000000000000000",
+    "run_depth": 0,
+    "required_for_work_order_completion": true
+  },
+  "workspace_binding": {
+    "workspace_mode": "shared_branch_cas",
+    "base_workspace_revision_id": "wsr_01J00000000000000000000000",
+    "base_workspace_revision_digest": "sha256:b8e661287a6861876e0e28cf94cc7f638653ea3b023367bfe046f54481381291",
+    "mount_access": "copy_on_write",
+    "commit_mode": "shared_branch_cas",
+    "expected_workspace_head_version": 1
   }
 }

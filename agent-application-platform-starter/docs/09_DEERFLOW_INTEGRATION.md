@@ -1,8 +1,8 @@
-# Agent Runtime 与 DeerFlow 参考 Adapter
+# 自研 Agent Runtime 与第三方项目参考边界
 
 ## 平台定位
 
-Agent Platform 拥有 `agent-runtime-provider-v1.yaml` 定义的稳定 Port，不拥有也不依赖任何单一 Agent 框架。DeerFlow 是 Phase 0 的主参考 Adapter 候选，不是默认事实源、编译时依赖或唯一实现。
+Agent Platform 拥有 `agent-runtime-provider-v1.yaml` 定义的稳定 Port，自研 Native Runtime 是 Phase 0 和产品主实现。DeerFlow、Dify、OpenHands 等第三方项目只用于研究架构、能力拆分、交互和运维经验，不是需要整体适配、嵌入或兼容的实施目标。
 
 Runtime Provider 不拥有 User、Membership、WorkOrder、Artifact Metadata、TechnicalUsage、Delivery 或 Business Workflow。框架原生 Agent、Thread、Run、Checkpoint、Event 和 Trace 只存在于 Adapter 私有模型。
 
@@ -61,26 +61,26 @@ RunManifest 在准入时通过唯一 ProviderResolution 锁定 Agent Runtime Pro
 | `runtime-general-v1` | Core + Append-input/Interrupt、Pause/Resume、Approval、Plan、Background Task、Sub-agent、Checkpoint Export/Restore |
 | `governed-v1` | 强制 Model/Tool/Artifact/Egress Gateway、预算执行和敏感凭据隔离 |
 
-承担 Manus-like 主链路的 Provider 必须通过 `runtime-general-v1 + governed-v1`。冻结 AgentRuntimeProvider v1 前，至少两个 Adapter 必须通过 `runtime-core-v1`，并证明相同 Workbench、Timeline、Artifact、Usage 和 Recording 路径不依赖某个框架。
+自研 Native Runtime 必须通过 `runtime-general-v1 + governed-v1`。冻结 AgentRuntimeProvider v1 前，Native Runtime 与一个独立、最小的 Reference Contract Probe 必须通过 `runtime-core-v1`，并证明相同 Workbench、Timeline、Artifact、Usage 和 Recording 路径不依赖主实现内部模型；这不要求适配任一第三方 Agent 项目。
 
 不支持的 Capability 必须在准入阶段明确拒绝，不得静默降级。Provider 原生 Checkpoint 不得被宣称为跨框架可移植。
 
-## DeerFlow 参考 Adapter
+## DeerFlow 等项目的参考方式
 
-DeerFlow Adapter 可以借鉴通用 Agent、研究、编码、Sub-agent、Skill、Sandbox 和前端交互，但所有 Platform 交互仍经过 AgentRuntimeProvider、SandboxProvider 和强制 Gateway。
+自研 Runtime 可以借鉴 DeerFlow 的通用 Agent、研究、编码、Sub-agent、Skill、Sandbox 和前端交互，也可以借鉴其他项目的 Workflow、RAG、Steering、Evaluation 与 Workbench 设计；被采纳的行为必须重新落入本平台的领域模型、Provider Port、SandboxProvider 和强制 Gateway。
 
-对 DeerFlow 的修改按以下优先级处理：Configuration、Skill、受治理 MCP、External Adapter、Capability Provider Service、Gateway Extension、Core Patch。Core Patch 必须记录上游 Commit、Patch Ledger 和 Rebase Test。DeerFlow 不需要整仓复制进稳定内核；以锁定 Commit/Image 的独立 Runtime Adapter 和可选 Sandbox Adapter 接入。
+不以修改、Fork 或包装 DeerFlow 作为 Phase 0 路线，也不复制其 Thread、Checkpoint、前端或 Sandbox 实现。若未来出现明确互操作需求，必须作为新的独立项目重新评估 ProviderRevision、许可证、安全、数据迁移和 Conformance，不能由“参考过该项目”推导出适配承诺。
 
-首个 Sandbox 实现可以是：
+首个 Sandbox 实现是平台自己的 SandboxProvider：
 
 ```text
-SandboxProvider -> DeerFlowSandboxAdapter
+SandboxProvider -> Native Sandbox Controller / isolated execution backend
 ```
 
-后续可以替换为：
+后续可以替换后端实现，但不改变公共 Port：
 
 ```text
-SandboxProvider -> sandbox-runtime
+SandboxProvider -> alternate isolated execution backend
 ```
 
 替换只影响新 Run 的 ProviderResolution；稳定 Schema、WorkOrder、Artifact、Event、Usage、Recording 和前端不随之变化。
@@ -105,28 +105,34 @@ Session Core 可以私有实现 Prompt Queue、Interjection、Compaction、Backg
 
 ## 参考项目
 
-以下项目只用于边界、产品和实现方式调研，不构成准入或依赖。结论基于 2026-07-17 的公开仓库状态；实际引入必须锁定 Commit，并重新进行许可证、来源和安全审查。
+以下项目只用于边界、产品和实现方式调研，不构成准入或依赖。结论基于 2026-07-21 的公开仓库状态；实际引入必须锁定 Commit，并重新进行许可证、来源和安全审查。
 
 | 项目 | 主要参考方向 | 平台定位 |
 |---|---|---|
-| [DeerFlow](https://github.com/bytedance/deer-flow) | 通用 Agent、Sub-agent、Skill、Sandbox、Workbench | Phase 0 主参考 Adapter |
+| [DeerFlow](https://github.com/bytedance/deer-flow) | 通用 Agent、Sub-agent、Skill、Sandbox、Workbench | 架构与产品参考，不作适配目标 |
+| [Dify 1.16.0](https://github.com/langgenius/dify/tree/1.16.0) | Workflow 草稿/发布/运行、Plugin Catalog、模型/工具、RAG、OpenAPI codegen、SSE | 当期最新稳定代码参考；不作为 Runtime、编排或事实源 |
+| [Dify 2.0.0-beta.2](https://github.com/langgenius/dify/tree/2.0.0-beta.2) | Knowledge Pipeline、queue-based Graph 模块拆分和产品 Feature Radar | Beta 概念参考；不以版本号替代发布日期、代码谱系和成熟度证据 |
 | [OpenHands](https://github.com/OpenHands/OpenHands) | Agent Server、多 Backend、远程 Workspace、Agent Canvas | 编码 Agent 与产品边界参考 |
 | [Magentic-UI / MagenticLite](https://github.com/microsoft/magentic-ui) | Steering、Approval、Takeover、Browser/Desktop | Workbench 和 Human-in-the-loop 参考 |
 | [Open Deep Research](https://github.com/langchain-ai/open_deep_research) | Supervisor/Researcher、并行研究和评测 | Research Scenario 参考 |
 | [OpenManus](https://github.com/FoundationAgents/OpenManus) | 简洁 Plan/Tool/Browser/Flow | 行为原型，不作为生产内核 |
 | [AutoGPT](https://github.com/Significant-Gravitas/AutoGPT) | Block/Workflow Builder、Preset、Marketplace | Experience Catalog 概念参考；复用前需许可证审查 |
 | [AgenticSeek](https://github.com/Fosowl/agenticSeek) | 本地模型、Browser/Coding Agent | Local/Offline Profile 调研，不并入核心 |
-| [LangGraph / Deep Agents](https://github.com/langchain-ai/langgraph) | 状态循环、Checkpoint、人工介入 | 通用 Runtime 候选 |
-| [OpenAI Agents SDK](https://github.com/openai/openai-agents-python) | Agent Loop、Handoff、Guardrail、MCP | 第二个最小 Adapter 优先候选 |
+| [LangGraph / Deep Agents](https://github.com/langchain-ai/langgraph) | 状态循环、Checkpoint、人工介入 | Runtime 内部机制参考，不作 Adapter 计划 |
+| [OpenAI Agents SDK](https://github.com/openai/openai-agents-python) | Agent Loop、Handoff、Guardrail、MCP | Agent Loop 与治理边界参考，不作 Adapter 计划 |
 | [Grok Build](https://github.com/xai-org/grok-build) | Session Core、多 Presentation、Prompt Queue/Interjection、Background Task、Workspace Adapter、权限分层、Telemetry Redaction | Runtime Harness 与 Engineering UX 参考；ACP、JSONL/SQLite、宿主机 Bash、Hook 和私有 Checkpoint 不作为平台事实源 |
-| [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) / [Google ADK](https://github.com/google/adk-python) / [Mastra](https://github.com/mastra-ai/mastra) / [LlamaIndex](https://github.com/run-llama/llama_index) / [CrewAI](https://github.com/crewAIInc/crewAI) | 多 Agent、Graph、文档和云场景 | 场景或企业 Runtime 候选 |
+| [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) / [Google ADK](https://github.com/google/adk-python) / [Mastra](https://github.com/mastra-ai/mastra) / [LlamaIndex](https://github.com/run-llama/llama_index) / [CrewAI](https://github.com/crewAIInc/crewAI) | 多 Agent、Graph、文档和云场景 | 场景与企业能力参考，不作 Adapter 计划 |
 | [browser-use](https://github.com/browser-use/browser-use) | Browser 状态、动作模型和评测 | Browser Capability Provider 参考 |
 | [Letta Code](https://github.com/letta-ai/letta-code) | Memory Block、长期上下文和 Skill 学习 | 版本化 Memory 策略参考 |
 | [Quicksand](https://github.com/microsoft/quicksand) | VM、网络隔离、Snapshot、Desktop | 自研 sandbox-runtime 参考 |
 | [E2B](https://github.com/e2b-dev/infra) / [Daytona](https://github.com/daytonaio/daytona) | Sandbox 控制面、Workspace、Terminal/VNC | SandboxProvider 和容量模型参考 |
 | [LLM Space](https://github.com/deer-flow/llm-space) | Run Snapshot、Trace 调试、Run 对比、Evaluation UX | Agent Engineering Workbench 参考，不是 Runtime 或事实源 |
 
-推荐采用顺序：DeerFlow 主 Adapter；OpenAI Agents SDK 或 Native Minimal 第二 Adapter；Magentic-UI 验证 Steering/Takeover；Open Deep Research 验证 Research Scenario；LLM Space 验证只读证据到调试副本的体验；Quicksand、E2B 和 Daytona 验证后续 Sandbox 方向。
+推荐参考顺序：先提炼 DeerFlow/OpenHands 的通用 Agent、Sub-agent、Skill 与 Workbench 边界；用 Dify 稳定版研究 Workflow、Catalog、RAG、契约生成和 SSE 产品化方式，Dify 2 Beta 只进入 Feature Radar；用 Magentic-UI 研究 Steering/Takeover、Open Deep Research 研究 Research Scenario、LLM Space 研究只读证据与 Evaluation UX；用 Quicksand、E2B 和 Daytona 研究 Sandbox 控制面。所有采纳项由自研 Runtime/Platform 重新实现，不形成第三方适配义务。
+
+Dify 的参考基线采用双轨策略。2026-07-21 审阅时，稳定基线为 `1.16.0`、Commit `5c6372d2f76d240265b92fd27c16bc772ffcb107`；最新 `2.0.0-beta.2` Tag 对应 Commit `2a84832998b4a005373859a82919a62a1bbbec42`，创建于 2025-09-08，并与后续 `1.16.0` 分叉。稳定 Tag 用于代码和运维方式参考，Beta 只用于发现未来能力；任何参考升级都重新记录 Tag、Commit、发布日期、代码谱系、许可证和安全结论，不追随 `main` 或浮动镜像。`1.16.0` 是稳定发布，但其中 Dify Agent 仍由官方标为 Open Beta，并明确只应提供给可信、非恶意用户；子功能不能继承整个 Release 的成熟度声明。
+
+Dify 使用附加多租户限制的修改版 Apache-2.0 License；未经书面授权不得用其源码运营定义中的多租户环境，前端还受 Logo 条款和交互设计权利声明约束。因此不复制 Dify 前端、资产或整体源码，也不规划 Dify Workflow、Agent、MCP 或 Sandbox Adapter。Dify Agent、Redis Run Store、进程内 Scheduler、queue-based Graph Engine 与 Local Sandbox 均不能替代 AgentRuntimeProvider、Temporal、PostgreSQL 或 SandboxProvider；参考结论只能重新实现到平台自有契约与组件中。
 
 第三方 Trace、本地 JSON、宿主机 Bash、明文凭据和无 Cursor 桌面 RPC 只能用于隔离实验，不得复制到 SaaS 生产链路。
 

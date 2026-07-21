@@ -1,0 +1,28 @@
+{
+  "fanout_id": "fan_01J00000000000000000000000",
+  "fanout_version": 1,
+  "previous_fanout_digest": null,
+  "fanout_digest": "sha256:ec20be4e32dd13ec6e9daa1645dd456b43bfd900b0c22f9404f3cd21b404828d",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "action": "cancel",
+  "authority_kind": "work_order_control_request",
+  "authority_id": "ctl_cancel_01J0000000000000000000",
+  "authority_digest": "sha256:2bc67f169c1fa4957c92af914d709c9d236556b414e999c1a0079d634d604fac",
+  "targets": [
+    {
+      "agent_run_id": "agr_01J00000000000000000000000",
+      "runtime_run_id": "rtr_01J00000000000000000000000",
+      "target_fencing_token": 3,
+      "control_state": "pending"
+    },
+    {
+      "agent_run_id": "agr_child_01J0000000000000000000",
+      "runtime_run_id": "rtr_child_01J0000000000000000000",
+      "target_fencing_token": 2,
+      "control_state": "pending"
+    }
+  ],
+  "created_at": "2026-07-16T09:03:00Z",
+  "updated_at": "2026-07-16T09:03:00Z"
+}

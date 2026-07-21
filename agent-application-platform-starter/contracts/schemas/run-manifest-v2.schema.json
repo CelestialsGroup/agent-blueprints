@@ -4,9 +4,9 @@
   "title": "RunManifestV2",
   "type": "object",
   "required": [
-    "agent_run_id", "workflow_run_id", "tenant_id", "work_order_id", "scenario", "workflow", "capability_resolutions",
+    "agent_run_id", "workflow_run_id", "tenant_id", "work_order_id", "run_topology", "workspace_binding", "scenario", "workflow", "capability_resolutions",
     "sandboxes", "location", "request_binding", "input", "context_package", "artifact_access_requirements",
-    "execution_budget", "policy_decision", "effective_permissions", "gateway_bindings", "admission_limits",
+    "execution_budget", "agent_run_budget_allocation", "policy_decision", "effective_permissions", "gateway_bindings", "admission_limits",
     "authorization_renewal_policy",
     "event_registry", "agent_runtime",
     "run_manifest_digest", "orchestration_binding",
@@ -17,6 +17,8 @@
     "workflow_run_id": { "type": "string", "minLength": 1 },
     "tenant_id": { "type": "string", "minLength": 1 },
     "work_order_id": { "type": "string", "minLength": 1 },
+    "run_topology": { "$ref": "urn:agent-platform:agent-run-topology:v1" },
+    "workspace_binding": { "$ref": "urn:agent-platform:agent-run-workspace-binding:v1" },
     "conversation": {
       "type": "object",
       "required": [
@@ -115,6 +117,7 @@
       "items": { "$ref": "urn:agent-platform:artifact-access-requirement:v1" }
     },
     "execution_budget": { "$ref": "urn:agent-platform:execution-budget:v1" },
+    "agent_run_budget_allocation": { "$ref": "urn:agent-platform:agent-run-budget-allocation:v1" },
     "policy_decision": { "$ref": "urn:agent-platform:policy-decision:v1" },
     "effective_permissions": { "$ref": "urn:agent-platform:effective-permissions:v1" },
     "gateway_bindings": { "$ref": "urn:agent-platform:runtime-gateway-bindings:v1" },
@@ -220,9 +223,10 @@
     ,"every selected experience ProviderRevision is certified and conformant for its capability"
     ,"tenant_id and conversation binding match the WorkOrder, input message and ExecutionGrant"
     ,"conversation WorkspaceRevision matches the admitted branch head captured for this Run"
-    ,"agent_run_id and workflow_run_id match the immutable AgentRun and WorkflowRun records"
+    ,"agent_run_id, workflow_run_id and run_topology match the immutable AgentRun, WorkflowRun and accepted ChildAgentRunAdmissionDecision when applicable"
     ,"input, context_package and artifact_access_requirements are the complete bounded execution inputs admitted for this Run"
-    ,"execution_budget, policy_decision and effective_permissions are immutable initial ceilings; short-lived RuntimeAuthorization revisions may remain equal or narrow them without changing the RunManifest"
+    ,"execution_budget is the shared WorkOrder hard ceiling, including AgentRun count/depth/concurrency, while agent_run_budget_allocation contains only immutable per-Run resource ceilings; short-lived RuntimeAuthorization revisions may remain equal or narrow them without changing the RunManifest"
+    ,"workspace_binding fixes the base WorkspaceRevision, mount access and commit/CAS mode for this AgentRun; child isolation requests cannot silently become shared writes"
     ,"gateway_bindings and authorization_renewal_policy are complete, typed and immutable for this Run"
     ,"commercial_authorization binds the exact immutable ID, digest and expiration ceiling while event_registry binds its exact immutable ID, version and digest"
     ,"orchestration_binding equals the WorkflowRun binding and contains no engine-native endpoint or mutable infrastructure identity",

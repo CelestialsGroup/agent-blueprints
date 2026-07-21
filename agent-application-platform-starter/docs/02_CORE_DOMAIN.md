@@ -31,9 +31,10 @@ Conversation Turn
     -> InvocationAttempt
 ```
 
-- 一个 WorkOrder 只有一个平台 WorkflowRun。Temporal Continue-as-New 或未来编排器分段属于 Orchestration Adapter 私有历史。
-- 一个 WorkflowRun 有且只有一个 Root AgentRun，可拥有显式父子关系的 Sub-agent AgentRun。
+- WorkOrder 在 Orchestration Start 成功后创建唯一 WorkflowRun；启动前取消或已确认失败可以没有 WorkflowRun。Temporal Continue-as-New 或未来编排器分段属于 Orchestration Adapter 私有历史。
+- WorkflowRun 在 Root Admission 成功后创建唯一的单次赋值 RootBinding；准入失败的 WorkflowRun 可以没有 Root AgentRun。已绑定的 WorkflowRun 可拥有显式父子关系的 Sub-agent AgentRun。
 - 一个 AgentRun 绑定一个 RunManifest 和一个 AgentRuntimeRun。Runtime/网络重试复用同一逻辑身份并追加 Attempt。
+- Sub-agent 只能由类型化 SpawnRequest 和 Platform AdmissionDecision 创建；委派输入、Parent/Root、深度、共享预算、Workspace 模式和是否影响 WorkOrder 终态均为平台事实。
 - 无法在兼容 Checkpoint 范围内恢复时，当前 AgentRun 明确失败；重试或调试重跑创建新的 AgentRun，必要时创建新的 WorkOrder/Branch/Grant。
 - 框架原生 Agent、Thread、Run、Checkpoint 和 Session ID 只保存在 Adapter 私有映射中。
 

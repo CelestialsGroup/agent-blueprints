@@ -4,6 +4,14 @@
   "generated_at": "2026-07-20T00:00:00Z",
   "critical_schema_ids": [
     "urn:agent-platform:run-manifest:v2",
+    "urn:agent-platform:workflow-run:v1",
+    "urn:agent-platform:workflow-run-root-binding:v1",
+    "urn:agent-platform:agent-run:v1",
+    "urn:agent-platform:agent-run-budget-allocation:v1",
+    "urn:agent-platform:child-agent-run-spawn-request:v1",
+    "urn:agent-platform:child-agent-run-admission-decision:v1",
+    "urn:agent-platform:agent-run-control-fanout:v1",
+    "urn:agent-platform:runtime-input-envelope:v1",
     "urn:agent-platform:agent-runtime-start-request:v1",
     "urn:agent-platform:agent-runtime-invocation-token-claims:v1",
     "urn:agent-platform:agent-runtime-command:v1",
@@ -285,10 +293,10 @@
       ]
     },
     {
-      "constraint_id": "sem-8b7fd20affa0d5c7",
+      "constraint_id": "sem-d38c0c0380a24d3d",
       "schema_id": "urn:agent-platform:run-manifest:v2",
       "constraint_index": 17,
-      "statement": "agent_run_id and workflow_run_id match the immutable AgentRun and WorkflowRun records",
+      "statement": "agent_run_id, workflow_run_id and run_topology match the immutable AgentRun, WorkflowRun and accepted ChildAgentRunAdmissionDecision when applicable",
       "enforcements": [
         {
           "kind": "semantic_validator",
@@ -313,10 +321,10 @@
       ]
     },
     {
-      "constraint_id": "sem-8e6af45fa9d7517b",
+      "constraint_id": "sem-0cb486cdb299164a",
       "schema_id": "urn:agent-platform:run-manifest:v2",
       "constraint_index": 19,
-      "statement": "execution_budget, policy_decision and effective_permissions are immutable initial ceilings; short-lived RuntimeAuthorization revisions may remain equal or narrow them without changing the RunManifest",
+      "statement": "execution_budget is the shared WorkOrder hard ceiling, including AgentRun count/depth/concurrency, while agent_run_budget_allocation contains only immutable per-Run resource ceilings; short-lived RuntimeAuthorization revisions may remain equal or narrow them without changing the RunManifest",
       "enforcements": [
         {
           "kind": "semantic_validator",
@@ -327,9 +335,23 @@
       ]
     },
     {
-      "constraint_id": "sem-32dd0fc0a1abb63b",
+      "constraint_id": "sem-9ec5f6ddae0dbf42",
       "schema_id": "urn:agent-platform:run-manifest:v2",
       "constraint_index": 20,
+      "statement": "workspace_binding fixes the base WorkspaceRevision, mount access and commit/CAS mode for this AgentRun; child isolation requests cannot silently become shared writes",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "run_manifest.workspace_binding",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-44779dcd37321e75",
+      "schema_id": "urn:agent-platform:run-manifest:v2",
+      "constraint_index": 21,
       "statement": "gateway_bindings and authorization_renewal_policy are complete, typed and immutable for this Run",
       "enforcements": [
         {
@@ -341,9 +363,9 @@
       ]
     },
     {
-      "constraint_id": "sem-eee2dac87b064bbc",
+      "constraint_id": "sem-19f19037648734dd",
       "schema_id": "urn:agent-platform:run-manifest:v2",
-      "constraint_index": 21,
+      "constraint_index": 22,
       "statement": "commercial_authorization binds the exact immutable ID, digest and expiration ceiling while event_registry binds its exact immutable ID, version and digest",
       "enforcements": [
         {
@@ -355,9 +377,9 @@
       ]
     },
     {
-      "constraint_id": "sem-18ac0fc42c37dfed",
+      "constraint_id": "sem-637158624c1d6348",
       "schema_id": "urn:agent-platform:run-manifest:v2",
-      "constraint_index": 22,
+      "constraint_index": 23,
       "statement": "orchestration_binding equals the WorkflowRun binding and contains no engine-native endpoint or mutable infrastructure identity",
       "enforcements": [
         {
@@ -369,15 +391,533 @@
       ]
     },
     {
-      "constraint_id": "sem-171b425bf93d499f",
+      "constraint_id": "sem-59f602a5acc767c2",
       "schema_id": "urn:agent-platform:run-manifest:v2",
-      "constraint_index": 23,
+      "constraint_index": 24,
       "statement": "location is a content-bound logical placement decision and contains no Cluster, Cell, Pod, Node, Runtime or Endpoint identity",
       "enforcements": [
         {
           "kind": "semantic_validator",
           "artifact": "scripts/validate_semantics.py",
           "check_id": "run_manifest.admission",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-c61d01e0da4006db",
+      "schema_id": "urn:agent-platform:workflow-run:v1",
+      "constraint_index": 0,
+      "statement": "work_order_id is unique and binds at most one WorkflowRun; a WorkOrder that terminates before orchestration start may have none",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "workflow_run.lifecycle",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "ddl_responsibility",
+          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
+          "check_id": "workflow_run_optional_unique_binding",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-d158e901d1871527",
+      "schema_id": "urn:agent-platform:workflow-run:v1",
+      "constraint_index": 1,
+      "statement": "the WorkflowRun is created after orchestration start confirmation and before provider or Sandbox admission, so admission failure remains representable without a fabricated AgentRun",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "workflow_run.lifecycle",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-e1ff9240ad79fd28",
+      "schema_id": "urn:agent-platform:workflow-run-root-binding:v1",
+      "constraint_index": 0,
+      "statement": "binding_digest is RFC 8785 JCS SHA-256 over the binding excluding binding_digest",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "workflow_root_binding.digest",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-092077ef7871b30d",
+      "schema_id": "urn:agent-platform:workflow-run-root-binding:v1",
+      "constraint_index": 1,
+      "statement": "workflow_run_id is unique and the referenced AgentRun is the only root Run in the same Tenant and WorkOrder",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "workflow_root_binding.scope",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "ddl_responsibility",
+          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
+          "check_id": "workflow_root_binding_unique_fk",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-f425f406f1add5dd",
+      "schema_id": "urn:agent-platform:workflow-run-root-binding:v1",
+      "constraint_index": 2,
+      "statement": "the RootBinding, root AgentRun and RunManifest are inserted atomically with deferred foreign-key validation; a failed pre-admission WorkflowRun has no RootBinding",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "workflow_root_binding.atomic_creation",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "ddl_responsibility",
+          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
+          "check_id": "workflow_root_binding_deferred_atomic_insert",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-d41cca5d9dd5eb2f",
+      "schema_id": "urn:agent-platform:agent-run:v1",
+      "constraint_index": 0,
+      "statement": "root AgentRun has root_agent_run_id equal to agent_run_id",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "agent_run.topology",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-86297a4a4dc934bc",
+      "schema_id": "urn:agent-platform:agent-run:v1",
+      "constraint_index": 1,
+      "statement": "subagent parent and root belong to the same tenant, WorkOrder and WorkflowRun; run_depth equals parent run_depth plus one",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "agent_run.topology",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "ddl_responsibility",
+          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
+          "check_id": "agent_run_parent_root_depth_fk",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-cf5ae62dc2f7578f",
+      "schema_id": "urn:agent-platform:agent-run:v1",
+      "constraint_index": 2,
+      "statement": "subagent spawn_request_id references one accepted immutable ChildAgentRunAdmissionDecision and is unique within the WorkOrder",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "agent_run.spawn_binding",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "ddl_responsibility",
+          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
+          "check_id": "agent_run_spawn_admission_unique_fk",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-a2c0feb9b13f4a41",
+      "schema_id": "urn:agent-platform:agent-run:v1",
+      "constraint_index": 3,
+      "statement": "one AgentRun binds exactly one runtime_run_id and one RunManifest; provider retry uses InvocationAttempt, while a new governed execution creates a new AgentRun",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "runtime_start.execution_topology",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-d64f568d73b3994c",
+      "schema_id": "urn:agent-platform:agent-run-budget-allocation:v1",
+      "constraint_index": 0,
+      "statement": "allocation_digest is RFC 8785 JCS SHA-256 over the allocation excluding allocation_digest",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "agent_budget.digest",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-3506e0a0654ae565",
+      "schema_id": "urn:agent-platform:agent-run-budget-allocation:v1",
+      "constraint_index": 1,
+      "statement": "the root allocation has no parent and equals the resource fields of the WorkOrder ExecutionBudget; every child allocation references its parent allocation and is equal to or narrower than both parent and WorkOrder resource limits",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "agent_budget.scope",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-902c1fa138b42fb8",
+      "schema_id": "urn:agent-platform:agent-run-budget-allocation:v1",
+      "constraint_index": 2,
+      "statement": "all AgentRuns in the WorkOrder consume atomically from one PostgreSQL WorkOrder budget ledger keyed by work_order_budget_id; per-Run allocations never create independent copies of the shared hard ceiling",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "agent_budget.shared_ledger",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "ddl_responsibility",
+          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
+          "check_id": "work_order_shared_budget_ledger",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-8320270e0d207e50",
+      "schema_id": "urn:agent-platform:agent-run-budget-allocation:v1",
+      "constraint_index": 3,
+      "statement": "AgentRun count, depth and parallel admission use only max_agent_runs, max_agent_depth and max_parallel_agent_runs from the shared WorkOrder ExecutionBudget and are checked transactionally before a Child admission is accepted",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "agent_budget.shared_ledger",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "ddl_responsibility",
+          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
+          "check_id": "child_admission_topology_limits",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-1023e80e7b0f9119",
+      "schema_id": "urn:agent-platform:child-agent-run-spawn-request:v1",
+      "constraint_index": 0,
+      "statement": "request_digest is RFC 8785 JCS SHA-256 over the request excluding request_digest",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "child_spawn.digest",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-2631cf5785a467c5",
+      "schema_id": "urn:agent-platform:child-agent-run-spawn-request:v1",
+      "constraint_index": 1,
+      "statement": "delegated_input uses source_kind delegated_task and its child_agent_spawn_request_id equals spawn_request_id",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "child_spawn.scope",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-b30ba4a0ce0f4be5",
+      "schema_id": "urn:agent-platform:child-agent-run-spawn-request:v1",
+      "constraint_index": 2,
+      "statement": "parent Runtime identity resolves to the same immutable parent and root AgentRun in the same Tenant, WorkOrder and WorkflowRun",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "child_spawn.scope",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-b96d3825fabe8c73",
+      "schema_id": "urn:agent-platform:child-agent-run-spawn-request:v1",
+      "constraint_index": 3,
+      "statement": "the Provider may request capabilities, role and isolation but cannot choose AgentRun identity, ProviderRevision, Sandbox identity, budget allocation or admission outcome",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "child_spawn.provider_boundary",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-d5a727a9e6a00983",
+      "schema_id": "urn:agent-platform:child-agent-run-spawn-request:v1",
+      "constraint_index": 4,
+      "statement": "repeated spawn_request_id plus request_digest is idempotent; a different digest conflicts and no child is created",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "child_spawn.idempotency",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "ddl_responsibility",
+          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
+          "check_id": "child_spawn_idempotency_unique",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-dd84443df85b2a57",
+      "schema_id": "urn:agent-platform:child-agent-run-admission-decision:v1",
+      "constraint_index": 0,
+      "statement": "decision_digest is RFC 8785 JCS SHA-256 over the decision excluding decision_digest",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "child_admission.digest",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-5bf327e1d7791d01",
+      "schema_id": "urn:agent-platform:child-agent-run-admission-decision:v1",
+      "constraint_index": 1,
+      "statement": "one spawn_request_id has exactly one immutable decision; duplicate requests return the same decision and conflicting digests are rejected",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "child_admission.outcome",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "ddl_responsibility",
+          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
+          "check_id": "child_admission_single_decision",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-f4a8e0e7fb046360",
+      "schema_id": "urn:agent-platform:child-agent-run-admission-decision:v1",
+      "constraint_index": 2,
+      "statement": "accepted admission atomically creates the child AgentRun, RunManifest, budget allocation, selected Workspace binding, runtime start Outbox and Platform events after provider and optional dedicated Sandbox admission",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "child_admission.atomic_creation",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "ddl_responsibility",
+          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
+          "check_id": "child_admission_atomic_insert",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-111d8af0bd420a4d",
+      "schema_id": "urn:agent-platform:child-agent-run-admission-decision:v1",
+      "constraint_index": 3,
+      "statement": "rejected admission creates no AgentRun, RuntimeRun, Sandbox or budget allocation",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "child_admission.outcome",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-22ab25d709c14003",
+      "schema_id": "urn:agent-platform:child-agent-run-admission-decision:v1",
+      "constraint_index": 4,
+      "statement": "the decision can only narrow the parent WorkOrder authorization and never accepts after cancellation, terminal state, revocation, deadline or shared budget exhaustion",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "child_admission.atomic_creation",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "ddl_responsibility",
+          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
+          "check_id": "child_admission_active_authorization_guard",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-f1dccea5b9456e0d",
+      "schema_id": "urn:agent-platform:agent-run-control-fanout:v1",
+      "constraint_index": 0,
+      "statement": "fanout_digest is RFC 8785 JCS SHA-256 over the fanout excluding fanout_digest",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "control_fanout.digest",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-4b319820f3439eaa",
+      "schema_id": "urn:agent-platform:agent-run-control-fanout:v1",
+      "constraint_index": 1,
+      "statement": "authority_id, authority_digest, action, Tenant and WorkOrder bind the immutable WorkOrderControlRequest or system safety trigger that caused this fan-out; user and system authority cannot be mixed",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "control_fanout.authority",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "ddl_responsibility",
+          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
+          "check_id": "agent_run_control_fanout_authority_fk",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-eacd49c190d1f4f4",
+      "schema_id": "urn:agent-platform:agent-run-control-fanout:v1",
+      "constraint_index": 2,
+      "statement": "version one targets are the transactionally locked set of every active AgentRun in the WorkOrder when the intent is accepted; later admitted children are forbidden and target identity is immutable across versions",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "control_fanout.coverage",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "ddl_responsibility",
+          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
+          "check_id": "agent_run_control_fanout_target_snapshot",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-854973fe2f752fcd",
+      "schema_id": "urn:agent-platform:agent-run-control-fanout:v1",
+      "constraint_index": 3,
+      "statement": "each target receives a distinct monotonic fencing token and, for system authority, a distinct SystemSafetyControl bound to that RuntimeRun",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "control_fanout.fencing",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-5b508ea714d787f4",
+      "schema_id": "urn:agent-platform:agent-run-control-fanout:v1",
+      "constraint_index": 4,
+      "statement": "fanout_version is contiguous, previous_fanout_digest binds the exact predecessor, updated_at is monotonic, and only monotonic control_state progress may change; missing delivery, Provider failure or outcome_unknown is reconciled before the WorkOrder is reported paused or cancelled",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "control_fanout.recovery",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "conformance_test",
+          "artifact": "contracts/conformance/runtime/v1/suite.json",
+          "check_id": "multi-agent-control-and-terminal",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-6a7f7e9ad9ebd320",
+      "schema_id": "urn:agent-platform:runtime-input-envelope:v1",
+      "constraint_index": 0,
+      "statement": "content_digest is RFC 8785 JCS SHA-256 over content",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "runtime_start.input_binding",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-875be3a3761064c1",
+      "schema_id": "urn:agent-platform:runtime-input-envelope:v1",
+      "constraint_index": 1,
+      "statement": "immutable_input_reference resolves through a platform-owned authenticated gateway and is immutable for the Run",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "runtime_start.input_binding",
+          "status": "contract_gate"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-cf8a06129dbd571e",
+      "schema_id": "urn:agent-platform:runtime-input-envelope:v1",
+      "constraint_index": 2,
+      "statement": "root input is bound to the admitted Conversation input message while delegated task input is bound to one accepted ChildAgentRunSpawnRequest",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "agent_run.spawn_binding",
           "status": "contract_gate"
         }
       ]
@@ -397,10 +937,10 @@
       ]
     },
     {
-      "constraint_id": "sem-90cbfefae4cccf5c",
+      "constraint_id": "sem-65143c941dc6f62b",
       "schema_id": "urn:agent-platform:agent-runtime-start-request:v1",
       "constraint_index": 1,
-      "statement": "workspace_revision_id and workspace_revision_digest match the RunManifest branch Workspace head",
+      "statement": "workspace_revision_id, workspace_revision_digest and workspace_binding match the RunManifest base revision, mount access and commit/CAS mode",
       "enforcements": [
         {
           "kind": "semantic_validator",
@@ -439,10 +979,10 @@
       ]
     },
     {
-      "constraint_id": "sem-c168e98ef6100c66",
+      "constraint_id": "sem-bad9c64bc17ba082",
       "schema_id": "urn:agent-platform:agent-runtime-start-request:v1",
       "constraint_index": 4,
-      "statement": "input carries the actual bounded input or an immutable platform reference and matches input_message_id",
+      "statement": "input carries the actual bounded input or an immutable platform reference; root input matches input_message_id while child input matches run_topology.spawn_request_id",
       "enforcements": [
         {
           "kind": "semantic_validator",
@@ -705,9 +1245,29 @@
       ]
     },
     {
-      "constraint_id": "sem-dede68610a5678ac",
+      "constraint_id": "sem-3e9c74b2ff4e5222",
       "schema_id": "urn:agent-platform:agent-runtime-command:v1",
       "constraint_index": 6,
+      "statement": "subagent_spawn_decision is emitted only by the Platform Workflow after an immutable ChildAgentRunAdmissionDecision; it cannot use user or safety-control authority and accepted decisions bind the allocated child AgentRun",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "scripts/validate_semantics.py",
+          "check_id": "runtime_command.child_admission_binding",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "ddl_responsibility",
+          "artifact": "docs/26_DATA_MODEL_INVARIANTS.md",
+          "check_id": "runtime_command_child_admission_fk",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-e9fc5b52148d1c31",
+      "schema_id": "urn:agent-platform:agent-runtime-command:v1",
+      "constraint_index": 7,
       "statement": "the RuntimeInvocation token operation_request_digest equals command_digest and binds the same logical Invocation",
       "enforcements": [
         {
@@ -2277,10 +2837,10 @@
       ]
     },
     {
-      "constraint_id": "sem-6ab84b3c561fd456",
+      "constraint_id": "sem-2e5998c8bf678416",
       "schema_id": "urn:agent-platform:runtime-authorization:v1",
       "constraint_index": 2,
-      "statement": "the first authorization equals the RunManifest budget, policy and permission ceilings; later revisions may only remain equal or narrow them",
+      "statement": "the first authorization equals the RunManifest WorkOrder budget, AgentRun allocation, policy and permission ceilings; later revisions keep the immutable AgentRun allocation binding and may only narrow effective budget, policy or permissions",
       "enforcements": [
         {
           "kind": "semantic_validator",
@@ -2305,10 +2865,10 @@
       ]
     },
     {
-      "constraint_id": "sem-3be051eb0f23e1b3",
+      "constraint_id": "sem-d3bdb5134be410e5",
       "schema_id": "urn:agent-platform:runtime-authorization:v1",
       "constraint_index": 4,
-      "statement": "commercial authorization, Tenant, WorkOrder, RuntimeRun and RunManifest bindings never change across renewal",
+      "statement": "commercial authorization, Tenant, WorkOrder, RuntimeRun, RunManifest, shared WorkOrder budget and AgentRun allocation bindings never change across renewal",
       "enforcements": [
         {
           "kind": "semantic_validator",

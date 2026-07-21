@@ -1,0 +1,15 @@
+{
+  "decision_id": "cadm_01J0000000000000000000000",
+  "decision_digest": "sha256:515489907973ec66edacdd7d435496dab3a8130f46a7eeaf308ee9c6988ae4f7",
+  "spawn_request_id": "spawn_01J0000000000000000000000",
+  "spawn_request_digest": "sha256:24b8944a13d69a33e75d8499bffd56ab3397f7b44f6ae886e83d05966833bb5d",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "workflow_run_id": "wfr_01J00000000000000000000000",
+  "parent_agent_run_id": "agr_01J00000000000000000000000",
+  "outcome": "rejected",
+  "reason_codes": [
+    "admitted"
+  ],
+  "decided_at": "2026-07-16T09:02:01Z"
+}

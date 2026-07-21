@@ -1,7 +1,7 @@
 {
   "iss": "https://agent-platform.example.test",
   "sub": "spn_agent_runtime_controller",
-  "aud": "agent-runtime-provider:api_deerflow_runtime",
+  "aud": "agent-runtime-provider:api_native_runtime",
   "jti": "runtime-token-jti-invalid",
   "iat": 1784192400,
   "nbf": 1784192400,

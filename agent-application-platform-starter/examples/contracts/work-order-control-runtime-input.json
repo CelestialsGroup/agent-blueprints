@@ -1,5 +1,6 @@
 {
   "input_id": "rin_01J00000000000000000000001",
+  "source_kind": "conversation_message",
   "input_message_id": "msg_01J00000000000000000000001",
   "content_digest": "sha256:3ee5da709dc141b215e943a10388da878f35902be68783b0fc7fbe4b5ebee529",
   "content": [

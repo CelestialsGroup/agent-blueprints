@@ -29,11 +29,21 @@ work-order/<work_order_id>
 
 Workflow 启动后通过幂等领域 Activity 将 WorkOrder 从 `accepted` 转为 `queued`/`running`。
 
+Orchestration Start 确认后先创建不含 Root 指针的 WorkflowRun。Provider/Sandbox 准入成功后，Root AgentRun、RunManifest 与 WorkflowRunRootBinding 在一个 PostgreSQL 事务中创建，循环外键使用 Deferred Constraint 并在提交时验证。若 ProviderResolution、Sandbox 或 Policy 在 Root Admission 前失败，WorkflowRun 保留但没有 RootBinding，WorkOrder 可以诚实进入 `failed`；不得伪造 AgentRun、RunManifest 或 Sandbox。
+
 Conversation Turn 事务先原子追加 Message、分配 message_sequence、创建 WorkOrder 和 Workflow Start Outbox。Conversation Workflow 只协调长期实体；每个 WorkOrder Workflow 保持可终止、可回放的执行边界。
 
 控制现有 WorkOrder 不创建新 Turn。`WorkOrderControlRequest` 与新的单次 ExecutionGrant 先原子保存控制输入和 Control Outbox，再由 Worker 发送只引用 `control_request_id` 的 Runtime Command。`interrupt_and_enqueue` 属于新 Turn 路径：先记录当前 WorkOrder 取消意图，再创建独立后继 WorkOrder。`accepted` 在尚未入队时也允许直接进入 `cancel_requested`。
 
-平台安全减权不依赖新的 Business Grant。Business 通过 sender-constrained Service Token 提交不可变 `CommercialAuthorizationRevocation`；Platform 原子保存 Inbox/收据和 fan-out intent，不修改 Business 快照。商业授权到期/撤销、执行 Deadline 或预算触发、Tenant/Provider 准入撤销、对账止损或操作员紧急停机时，唯一 Platform Safety Controller 的幂等 Domain Activity 在同一事务仅追加 `SystemSafetyControl`、`work_order.safety_control.issued` 和 Control Outbox。硬到期、撤销、Deadline、Tenant/Provider 撤销、预算耗尽与平台停机必须 Cancel；只有策略复核、对账止损和操作员介入可以选择 Pause。Runtime Command 的 Pause/Cancel 必须在 `authorized_control_request_id` 与 `system_safety_control_id + system_safety_control_digest` 之间二选一；系统路径绑定 Tenant/WorkOrder/RuntimeRun、枚举原因和不可变触发证据，绝不能用于 Resume、Append、Interrupt、Approval、Checkpoint 或任何新副作用。
+平台安全减权不依赖新的 Business Grant。Business 通过 sender-constrained Service Token 提交不可变 `CommercialAuthorizationRevocation`；Platform 原子保存 Inbox/收据和 fan-out intent，不修改 Business 快照。商业授权到期/撤销、执行 Deadline 或预算触发、Tenant/Provider 准入撤销、对账止损或操作员紧急停机时，唯一 Platform Safety Controller 的幂等 Domain Activity 事务锁定 WorkOrder、禁止新 Child Admission、创建 AgentRunControlFanout，并为每个活动 RuntimeRun 仅追加独立 `SystemSafetyControl`、`work_order.safety_control.issued` 和 Control Outbox。Fanout 以连续 `fanout_version + previous_fanout_digest` 仅追加更新，Authority、目标和 Fencing 不可变，只有 ControlState 单调推进。硬到期、撤销、Deadline、Tenant/Provider 撤销、预算耗尽与平台停机必须 Cancel；只有策略复核、对账止损和操作员介入可以选择 Pause。Runtime Command 的 Pause/Cancel 必须在 `authorized_control_request_id` 与 `system_safety_control_id + system_safety_control_digest` 之间二选一；系统路径绑定 Tenant/WorkOrder/RuntimeRun、枚举原因和不可变触发证据，绝不能用于 Resume、Append、Interrupt、Approval、Checkpoint 或任何新副作用。
+
+## Child AgentRun
+
+Parent Runtime 通过 `runtime.subagent.spawn.requested` 提交 ChildAgentRunSpawnRequest。Platform 先按 `(work_order_id, spawn_request_id)` 幂等落库，再锁定 WorkOrder Budget Ledger，检查 WorkOrder 活动状态、商业授权、父子拓扑、最大深度、总 AgentRun 数、并发、Policy、Capability、Provider 和 Workspace/Sandbox 隔离。Accepted Decision 与 Child AgentRun、RunManifest、AgentRunBudgetAllocation、Runtime Start Outbox 和 Platform Event 同事务；Rejected Decision 不创建任何执行或 Sandbox。`subagent_spawn_decision` Command 只回告已提交的决定，不是创建事实。
+
+Child 的 Workspace 请求不能只保留在 SpawnRequest。Accepted Decision、RunManifest 与 Runtime Start 必须固化同一个 AgentRunWorkspaceBinding：`read_only_parent_revision` 只读挂载且禁止 Commit；`isolated_revision` 以 Parent Revision 建立 Copy-on-write 层，完成后产生独立 Revision 并按 `expected_workspace_head_version` Merge CAS；`shared_branch_cas` 允许直接提交同一 Branch，但每次 Commit 仍执行 Workspace Head CAS。模式、Base Revision、Mount Access 或 Commit Policy 不一致即拒绝 Start，不能把隔离请求降级为共享写入。
+
+ExecutionBudget 是 WorkOrder 共享硬上限，所有 Model/Tool/Artifact/Egress Gateway、Sandbox Lease 和 Runtime Admission 对同一个 PostgreSQL Ledger 原子扣减或预留；AgentRunBudgetAllocation 只包含 token、请求、Sandbox 时间、网络、存储、Artifact 和转换等单 Run 资源上限，不能复制共享额度或 Agent 数/深度/并发上限。Root 终态不自动结束 WorkOrder：全部 required Child 必须终态，且不得存在任何活动 Child。取消、暂停、失败与部分完成的汇总规则由 WorkOrder Workflow 固化；对账器扫描终态 WorkOrder、失联 Parent、无进展 Runtime 和缺失 Event Cursor，发现孤儿 Child 后提高 Fencing、取消并对账。
 
 ## 权威状态
 

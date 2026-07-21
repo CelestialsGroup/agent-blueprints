@@ -1,7 +1,7 @@
 {
   "jti": "egt_01J00000000000000000000000",
   "iss": "agent-platform",
-  "sub": "urn:agent-platform:provider-instance:api_deerflow_runtime",
+  "sub": "urn:agent-platform:provider-instance:api_native_runtime",
   "aud": "agent-egress-gateway",
   "iat": 1784192470,
   "nbf": 1784192470,
@@ -22,8 +22,8 @@
   "operation_contract_id": "urn:agent-platform:egress-http-request:v1",
   "operation_digest_profile": "rfc8785-full-document-v1",
   "request_digest": "sha256:2d7bac06ceaa63062386b2f2295225c36ab4d814c0c2ede3d1ae7d5d257be925",
-  "runtime_authorization_digest": "sha256:e1afe2a4ca37353c6978dfa6dd3cc13a2b1a0015c87bd7dbbedb15eccae237ec",
-  "policy_decision_digest": "sha256:24066573c33b3c65f1ffddaa4be8600e9e8a27916dc94a647d0cfce3a3c1cfd5",
-  "execution_budget_digest": "sha256:4e8aac35b4943db25ecbb3ea6fa2259cdb2f3c144bb837f1cc6c97b0b6f94096",
+  "runtime_authorization_digest": "sha256:2f81a8bebec72997796228cc659d03766a961065183f97d577634463ea031495",
+  "policy_decision_digest": "sha256:7b2258697b2b7182feea3d697c689837e9993a5f396db53d3d9c255404ba1dad",
+  "execution_budget_digest": "sha256:af98dd43e2a018f9df3a6bc97b17f4cea7ec2dae69d62f24e2cd367eefc3fba4",
   "permissions_digest": "sha256:258682bb254cc4fafff41ccea043261e9c9381ca9a42e0efef0e3f20e9c1b70c"
 }

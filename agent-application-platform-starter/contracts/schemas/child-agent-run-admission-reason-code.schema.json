@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:child-agent-run-admission-reason-code:v1",
+  "title": "ChildAgentRunAdmissionReasonCode",
+  "type": "string",
+  "enum": [
+    "admitted",
+    "work_order_not_active",
+    "depth_limit",
+    "run_count_limit",
+    "parallel_limit",
+    "budget_unavailable",
+    "policy_denied",
+    "capability_unavailable",
+    "provider_unavailable",
+    "sandbox_unavailable",
+    "workspace_conflict"
+  ]
+}

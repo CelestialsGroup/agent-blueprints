@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:workflow-run-root-binding:v1",
+  "title": "WorkflowRunRootBinding",
+  "description": "Immutable single-assignment binding created only after the root AgentRun and RunManifest are admitted.",
+  "type": "object",
+  "required": [
+    "binding_id", "tenant_id", "work_order_id", "workflow_run_id",
+    "root_agent_run_id", "run_manifest_digest", "bound_at", "binding_digest"
+  ],
+  "properties": {
+    "binding_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "workflow_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "root_agent_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "run_manifest_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "bound_at": { "type": "string", "format": "date-time" },
+    "binding_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "binding_digest is RFC 8785 JCS SHA-256 over the binding excluding binding_digest",
+    "workflow_run_id is unique and the referenced AgentRun is the only root Run in the same Tenant and WorkOrder",
+    "the RootBinding, root AgentRun and RunManifest are inserted atomically with deferred foreign-key validation; a failed pre-admission WorkflowRun has no RootBinding"
+  ]
+}

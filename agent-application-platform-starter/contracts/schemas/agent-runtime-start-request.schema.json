@@ -12,6 +12,8 @@
     "work_order_id",
     "workflow_run_id",
     "agent_run_id",
+    "run_topology",
+    "workspace_binding",
     "invocation_id",
     "invocation_attempt_id",
     "fencing_token",
@@ -19,7 +21,6 @@
     "request_digest",
     "deadline_at",
     "run_manifest_digest",
-    "input_message_id",
     "input",
     "context_package",
     "runtime_authorization",
@@ -38,6 +39,8 @@
     "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "workflow_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "agent_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "run_topology": { "$ref": "urn:agent-platform:agent-run-topology:v1" },
+    "workspace_binding": { "$ref": "urn:agent-platform:agent-run-workspace-binding:v1" },
     "invocation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "invocation_attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "fencing_token": { "type": "integer", "minimum": 1 },
@@ -80,12 +83,27 @@
     }
   },
   "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "run_topology": {
+            "properties": { "run_kind": { "const": "root" } },
+            "required": ["run_kind"]
+          }
+        },
+        "required": ["run_topology"]
+      },
+      "then": { "required": ["input_message_id"] },
+      "else": { "not": { "required": ["input_message_id"] } }
+    }
+  ],
   "x-semantic-constraints": [
     "tenant_id, workflow_run_id, work_order_id, agent_run_id and runtime_run_id match the immutable execution topology",
-    "workspace_revision_id and workspace_revision_digest match the RunManifest branch Workspace head",
+    "workspace_revision_id, workspace_revision_digest and workspace_binding match the RunManifest base revision, mount access and commit/CAS mode",
     "sandbox_bindings exactly match the RunManifest Sandbox slots and may be empty when the Scenario does not require a Sandbox",
     "request_digest is RFC 8785 JCS SHA-256 over the request excluding request_digest",
-    "input carries the actual bounded input or an immutable platform reference and matches input_message_id",
+    "input carries the actual bounded input or an immutable platform reference; root input matches input_message_id while child input matches run_topology.spawn_request_id",
     "context_package and gateway_bindings exactly match the RunManifest while runtime_authorization binds fresh ArtifactGrants and values equal to or narrower than the immutable admission ceilings",
     "runtime_authorization is unexpired, belongs to this RuntimeRun, RunManifest and InvocationAttempt, and covers every ArtifactAccessRequirement",
     "the Provider rejects an encoded body above admission_limits.max_encoded_request_bytes before parsing with HTTP 413",

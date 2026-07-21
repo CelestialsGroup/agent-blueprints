@@ -3,7 +3,7 @@
   "data_version": 1,
   "data_schema": {
     "uri": "urn:agent-platform:platform-core-event-data:v1#/$defs/artifactVersionCreated",
-    "digest": "sha256:1d893dcf2551598decd75a4ef8b9003ab68c7e787f1bd7b9b60ba4fee4eccb0b",
+    "digest": "sha256:1da9f6f76bb3baee672ffc410ce78fbe3b2306abd45aceb707a39cbab8529d08",
     "dialect": "https://json-schema.org/draft/2020-12/schema",
     "digest_profile": "rfc8785-schema-closure-v1"
   },

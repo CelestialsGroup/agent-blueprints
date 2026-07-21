@@ -25,7 +25,7 @@ Agent Access 与稳定内核
   Model / Tool / Artifact / Egress / Runtime Gateway
         │
         ▼
-DeerFlow / OpenAI Agents SDK / Native Runtime / Sandbox Adapter / nexu Provider
+Native Runtime / Reference Contract Probe / Sandbox Provider / nexu Provider
 ```
 
 Agent Workbench 只访问 Agent Access API、SSE 和 Runtime Gateway。Agent Engineering Workbench 只消费不可变运行证据的只读投影；调试重跑必须创建新的 ConversationBranch、WorkOrder、ExecutionGrant、ProviderResolution 和 RunManifest。
@@ -46,13 +46,16 @@ Agent Workbench 只访问 Agent Access API、SSE 和 Runtime Gateway。Agent Eng
 ProviderRevision 由通用 Implementation、BuildProvenance、稳定 Port Binding、配置、权限和 Conformance 组成，不要求 Runtime 或 Sandbox 伪装成 Plugin。
 
 ```text
-WorkOrder 1 -> 1 WorkflowRun
-WorkflowRun 1 -> 1 root AgentRun + 0..N subagent AgentRun
+WorkOrder 1 -> 0..1 WorkflowRun（Orchestration Start 成功后恰好一个）
+WorkflowRun 1 -> 0..1 RootBinding（Root Admission 成功后恰好一个）
+RootBinding -> 1 root AgentRun；WorkflowRun -> 0..N subagent AgentRun
 AgentRun 1 -> 1 RunManifest + 1 AgentRuntimeRun
 AgentRuntimeRun mutation -> Invocation 1 -> N Attempt
 ```
 
 每个 AgentRun 由 Tenant/Conversation/Branch WorkspaceRevision、已消费 ExecutionGrant 的请求 Contract/Profile/Digest、实际有界输入、ContextPackage、ArtifactAccessRequirement、初始预算/策略/权限上限、商业授权 ID/Digest/到期上限、授权续期规则、四类 Gateway Binding、ProviderResolution、AdmissionDecision、Event Registry、Experience Revision、按需 Sandbox Slot 和 RunManifest 固化。短期 RuntimeAuthorization/ArtifactGrant 属于 InvocationAttempt，只能在同一 Manifest 与商业有效期内等价或缩权续期；其 Budget/Policy/Permissions 必须绑定同一 Tenant/WorkOrder/CommercialAuthorization，ArtifactGrant 不得早于 Authorization 签发或晚于其到期。Runtime 与 Sandbox Slot 只引用 ProviderResolution，避免重复快照产生冲突。没有 Sandbox Capability 的 Run 可以使用空 `sandboxes[]`；运行中的 Run 不得静默切换 Provider。
+
+Sub-agent 由 Parent Runtime 的类型化 SpawnRequest 触发，但其身份、Provider、预算、Workspace/Sandbox 和是否准入均由 Platform 决定。所有 AgentRun 共享同一个 WorkOrder ExecutionBudget Ledger，并各自持有只包含资源维度的更窄 AgentRunBudgetAllocation；深度、总数和并发只取 WorkOrder ExecutionBudget，在 Admission 事务中硬限制，不复制为 Child 配额。Pause/Cancel 通过持久 fan-out 覆盖所有活动 RuntimeRun，WorkOrder 终态等待 Root 和全部 required Child 收敛，孤儿 Child 由对账器发现并减权。
 
 ## 可靠性边界
 

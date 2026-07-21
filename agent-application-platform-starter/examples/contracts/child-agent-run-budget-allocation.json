@@ -1,0 +1,23 @@
+{
+  "allocation_id": "abal_child_01J00000000000000000000",
+  "allocation_digest": "sha256:ab93f925bded5a93b050db27f9518e494d8e45866e9348f1484059bddee8fc7b",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "agent_run_id": "agr_child_01J0000000000000000000",
+  "parent_allocation_id": "abal_root_01J000000000000000000000",
+  "parent_allocation_digest": "sha256:465ec922331064033923a0ca34742d7837e52cb399e264a2aecf2b39d1808f75",
+  "work_order_budget_id": "bud_01J00000000000000000000000",
+  "work_order_budget_digest": "sha256:af98dd43e2a018f9df3a6bc97b17f4cea7ec2dae69d62f24e2cd367eefc3fba4",
+  "limits": {
+    "max_input_tokens": 20000,
+    "max_output_tokens": 5000,
+    "max_model_requests": 40,
+    "max_sandbox_seconds": 600,
+    "max_network_bytes": 20971520,
+    "max_storage_bytes": 20971520,
+    "max_artifact_count": 5,
+    "max_conversion_count": 1
+  },
+  "issued_at": "2026-07-16T09:02:01Z",
+  "expires_at": "2026-07-16T09:30:00Z"
+}

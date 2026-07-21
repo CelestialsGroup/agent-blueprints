@@ -2,8 +2,8 @@
   "baseline": "v0.9.0",
   "status": "candidate-not-frozen",
   "digest_profile": "RFC8785-JCS+SHA-256; Strict-I-JSON-v2.0",
-  "resource_count": 239,
-  "resources_digest": "sha256:5c1c39fceff2cf30ad3b6bf8b7aecfff10d3f3f314a57975b4be4494ccd4f120",
+  "resource_count": 248,
+  "resources_digest": "sha256:b38dcf6a2f836156779a0dc49ccca52690f97dcfea1b55d3c245beb1dcfdb679",
   "resources": [
     {
       "path": "contracts/conformance/agent-access/v1/suite.json",
@@ -33,7 +33,7 @@
       "path": "contracts/conformance/runtime/v1/suite.json",
       "kind": "governance",
       "id": "contracts/conformance/runtime/v1/suite.json",
-      "digest": "sha256:a827e74f420984dbda57b305a698510ac5c1ca8fa51c0aa9316d3f2423078d31"
+      "digest": "sha256:a6132e22a9fb5b78919c7b8602ee59e76b70fc27b3a91be600401762a6271e3f"
     },
     {
       "path": "contracts/conformance/sandbox/v1/suite.json",
@@ -45,13 +45,13 @@
       "path": "contracts/event-types/agent-runtime-core-v1.json",
       "kind": "governance",
       "id": "contracts/event-types/agent-runtime-core-v1.json",
-      "digest": "sha256:0c7447470e10728fb9434e588ed7f0649e7f40115fb69314125f2f830b74aabb"
+      "digest": "sha256:d60c4b90063af5d3b889b10d3847fc431a3eee2f7fa3ba27ffe49ccbba251b43"
     },
     {
       "path": "contracts/event-types/platform-core-v1.json",
       "kind": "governance",
       "id": "contracts/event-types/platform-core-v1.json",
-      "digest": "sha256:c7ac7f0747c26e1aec4d70a06159f238894a5ac620f7fe9f20d7ca098356937b"
+      "digest": "sha256:cf5f6949fcba179c383a9c8366a3f9db3542a55562c69d877a2496399618864f"
     },
     {
       "path": "contracts/openapi/agent-access-v1.yaml",
@@ -63,7 +63,7 @@
       "path": "contracts/openapi/agent-runtime-provider-v1.yaml",
       "kind": "openapi",
       "id": "contracts/openapi/agent-runtime-provider-v1.yaml",
-      "digest": "sha256:7eeb82e512220c3fe30ccd6d6748403a2c149c13e2db50a43e0b5c6b6092e03d"
+      "digest": "sha256:f75bd9484d9059435021f65147cab1a22b4cb0376ea47ce6e165fde0494f5811"
     },
     {
       "path": "contracts/openapi/artifact-gateway-v1.yaml",
@@ -99,7 +99,7 @@
       "path": "contracts/openapi/sandbox-provider-v1.yaml",
       "kind": "openapi",
       "id": "contracts/openapi/sandbox-provider-v1.yaml",
-      "digest": "sha256:592e6700b1983b9e0c824f760b23bd92c65afbd2d9fa31bd2561b14b75e8ee56"
+      "digest": "sha256:173feeb61f47696778f1c457f275677fc8e5d287088094d0a3c7129c359cbe95"
     },
     {
       "path": "contracts/schemas/admitted-capability-definition.schema.json",
@@ -114,10 +114,40 @@
       "digest": "sha256:ec4e2a509f1ebfe41d106315eba88f014f08bc56e86956d4a0328750c27b8abb"
     },
     {
+      "path": "contracts/schemas/agent-run-budget-allocation.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:agent-run-budget-allocation:v1",
+      "digest": "sha256:ab532456b321cc68cb31852236fa56d87119102a20fdea12110029f1c226ec51"
+    },
+    {
+      "path": "contracts/schemas/agent-run-control-fanout.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:agent-run-control-fanout:v1",
+      "digest": "sha256:d5b408ff5ecf573553c5573a6433c642476458fd11c6035694b97946cec8262c"
+    },
+    {
+      "path": "contracts/schemas/agent-run-resource-limits.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:agent-run-resource-limits:v1",
+      "digest": "sha256:5ac9901f29048316406c9caec16dfed47d332eca32027e5cea47eb2844d5d4d7"
+    },
+    {
+      "path": "contracts/schemas/agent-run-topology.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:agent-run-topology:v1",
+      "digest": "sha256:8ea19b6e7264fcda5a1ea6291091a91c16ee82f38eeb8e3639f9c0fba755e301"
+    },
+    {
+      "path": "contracts/schemas/agent-run-workspace-binding.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:agent-run-workspace-binding:v1",
+      "digest": "sha256:d540f5844dd2125f77f7af917d62fd255dc6427b5d5b0f8bd7a52ee3f8e34633"
+    },
+    {
       "path": "contracts/schemas/agent-run.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:agent-run:v1",
-      "digest": "sha256:2566b645d1bf518bd1db833ed5eb0401dbe0ab621c23608e3825aa919c6e50dd"
+      "digest": "sha256:b00c809c113cac29b6ba19f8045e6242c9499891ab4844f3a5ab32f2eb6a7750"
     },
     {
       "path": "contracts/schemas/agent-runtime-capabilities.schema.json",
@@ -135,13 +165,13 @@
       "path": "contracts/schemas/agent-runtime-command.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:agent-runtime-command:v1",
-      "digest": "sha256:26c29a50aeb33f04b1f1d8144c1c1eacf6edf6ffc9a1d058fe0b8aabda92dfec"
+      "digest": "sha256:c9f8874faaa4b493005a11a06825c3ab5e9532e3e51b6e102c268818f87fcf9e"
     },
     {
       "path": "contracts/schemas/agent-runtime-event-data.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:agent-runtime-event-data:v1",
-      "digest": "sha256:bbc6feab06eee6fe28e48ed4a1563928cf3d36cae4a023cec5dc2c52b56f47e9"
+      "digest": "sha256:c9e5c06596a4148e113d2eafac09f41d266d5fa216b2548290d5a1adfae0de11"
     },
     {
       "path": "contracts/schemas/agent-runtime-event-page.schema.json",
@@ -159,7 +189,7 @@
       "path": "contracts/schemas/agent-runtime-event.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:agent-runtime-event:v1",
-      "digest": "sha256:ce12ec416b155a57dc9512a8f5d6071f6709d0b7401435d92f8385398c0fd168"
+      "digest": "sha256:3e4bc00c6c8802dbf6077f322d4e66515ef7fca89133bac52650b2c7ccb97829"
     },
     {
       "path": "contracts/schemas/agent-runtime-invocation-jws-header.schema.json",
@@ -183,7 +213,7 @@
       "path": "contracts/schemas/agent-runtime-start-request.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:agent-runtime-start-request:v1",
-      "digest": "sha256:77aaf158217605f3dbabd42945fc6f98e7b28d76c26a58f7c3655568f5af9460"
+      "digest": "sha256:a2913c6f23e42cdddaca257354e628fa9f041b441ca080648647e77ed839f22e"
     },
     {
       "path": "contracts/schemas/agent-runtime-status-operation-descriptor.schema.json",
@@ -432,6 +462,24 @@
       "digest": "sha256:d4024c26a884b11ef72f71ae246c4516904a7fceb365979044959cea3123f875"
     },
     {
+      "path": "contracts/schemas/child-agent-run-admission-decision.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:child-agent-run-admission-decision:v1",
+      "digest": "sha256:e45cf3bf840231afd9bd86cded234263ed9f7e12a98352634ecef17cef2987da"
+    },
+    {
+      "path": "contracts/schemas/child-agent-run-admission-reason-code.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:child-agent-run-admission-reason-code:v1",
+      "digest": "sha256:28b882986e12f1b223d11e20582ca01b2dddd1d7727534c766a8cacf44af61c9"
+    },
+    {
+      "path": "contracts/schemas/child-agent-run-spawn-request.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:child-agent-run-spawn-request:v1",
+      "digest": "sha256:a9f853da35cfe4fcd38e93bcbac39dfe3c3fd73be09c4482d22696919c76dc5f"
+    },
+    {
       "path": "contracts/schemas/commercial-authorization-binding.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:commercial-authorization-binding:v1",
@@ -579,7 +627,7 @@
       "path": "contracts/schemas/effective-execution-limits.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:effective-execution-limits:v1",
-      "digest": "sha256:3c2032274dc82006a76a6d7d8732d9974c89b847688b7afd768c1bc25e7dd6eb"
+      "digest": "sha256:55a7f5211b5cfcca0e5634773bb8d320689dc6b46a5290cf8c82bb84747471fa"
     },
     {
       "path": "contracts/schemas/effective-permissions.schema.json",
@@ -741,7 +789,7 @@
       "path": "contracts/schemas/platform-core-event-data.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:platform-core-event-data:v1",
-      "digest": "sha256:b2f9cc64f29b507f7d5ec99e8828b9f46cb396653612ff32db11af83c36d5380"
+      "digest": "sha256:2cdd84520f544a6171703ace529334c73fd4a4356485145faecc9646040e1f14"
     },
     {
       "path": "contracts/schemas/plugin-cancellation-request.schema.json",
@@ -909,13 +957,13 @@
       "path": "contracts/schemas/run-manifest-v2.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:run-manifest:v2",
-      "digest": "sha256:6c40832b6ac0eb9bd3ffd721d49e22c2d1c34823c05d05336421ce79643aea3d"
+      "digest": "sha256:b95a9990bd93f401ead69e19e1e7119175dc1c4f9dfdc07b792f05efc80fcc7e"
     },
     {
       "path": "contracts/schemas/runtime-authorization.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:runtime-authorization:v1",
-      "digest": "sha256:0138e3e35eccc88c5855067ac5b6fe80c90d5f9ea1eec977bf10a099c293dda2"
+      "digest": "sha256:7334882c04dba176a940781c71ba0e4f7a1f53a09bff923957f933e47674e5a2"
     },
     {
       "path": "contracts/schemas/runtime-gateway-bindings.schema.json",
@@ -939,7 +987,7 @@
       "path": "contracts/schemas/runtime-input-envelope.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:runtime-input-envelope:v1",
-      "digest": "sha256:76d710f3ac1350e85b2e518c7a5796941854218cf549bb435b08cac85987309c"
+      "digest": "sha256:c7a8848dc9729a54c005ed9d583f8754116deb60367351d3f9d8950214bf053b"
     },
     {
       "path": "contracts/schemas/runtime-recording-chunk.schema.json",
@@ -1227,7 +1275,7 @@
       "path": "contracts/schemas/technical-usage-entry.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:technical-usage-entry:v1",
-      "digest": "sha256:9a5c8ac2a596a7be456e3cae7eeabb98f5001efd6f74f65633d79afd863c7246"
+      "digest": "sha256:0ab2c4b4c3cf7b5b08a9922205909981c82de78dfe5611f944f2738192c36621"
     },
     {
       "path": "contracts/schemas/template-revision.schema.json",
@@ -1320,10 +1368,16 @@
       "digest": "sha256:e4936ce42a9a09b5f2ecda4b0bced35c6653cefa9c29edd6690265569163be75"
     },
     {
+      "path": "contracts/schemas/workflow-run-root-binding.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:workflow-run-root-binding:v1",
+      "digest": "sha256:20aea205d1211436ec20cbfd4d2be1fb3d2dce1a40614517ae68c001ab301a68"
+    },
+    {
       "path": "contracts/schemas/workflow-run.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:workflow-run:v1",
-      "digest": "sha256:0313f7ea5be5cbf1bc01fd1596221d13f0f97e15b9ed42bc48225304e7c827cf"
+      "digest": "sha256:2419507fdea6a62b97c1329ba862c637fc0f57c24c6f1ed89cd056cde17e12bb"
     },
     {
       "path": "contracts/schemas/workspace-content-manifest.schema.json",
@@ -1371,7 +1425,7 @@
       "path": "contracts/state-machines/work-order-v1.json",
       "kind": "state-machine",
       "id": "contracts/state-machines/work-order-v1.json",
-      "digest": "sha256:de9cbc33a90cad7ed57aa9c5dfb055ab5ab0c3c809cf4590631740c47cc08bdd"
+      "digest": "sha256:4fb7694e0c38f852b345320bb43bd2881320d298c8a50635a41e54c1ecb587e5"
     },
     {
       "path": "contracts/testdata/jcs-v1/vectors.json",
@@ -1383,13 +1437,13 @@
       "path": "docs/23_STATE_MACHINE_SPEC.md",
       "kind": "governance",
       "id": "docs/23_STATE_MACHINE_SPEC.md",
-      "digest": "sha256:4bce9ddc4a586afa0b580952ce80d06a16a1184c97caf8cfab126b695ec74e4b"
+      "digest": "sha256:38338a45c82022c5b8db0f3d15b5eb7901d04de5e32ccf68acabc8ca7f7efc60"
     },
     {
       "path": "docs/26_DATA_MODEL_INVARIANTS.md",
       "kind": "governance",
       "id": "docs/26_DATA_MODEL_INVARIANTS.md",
-      "digest": "sha256:4f7062d41c92867d5f28a5895257dd43c93f712c1396e79748a4833320cecf69"
+      "digest": "sha256:30d5533897d53f72bcfcc21181e13fcf1b9050997d03be2616c98b36a0503138"
     },
     {
       "path": "examples/schemas/html-anything-config.schema.json",
@@ -1440,5 +1494,5 @@
       "digest": "sha256:46d6fa17b4a8b06e6da4a016d776385952a12d2e59e51066fcd5173248258d8e"
     }
   ],
-  "manifest_digest": "sha256:2275be73681547eabb7fa5d6159901fbb95b68420188d1c57ebff7c285ea7ccc"
+  "manifest_digest": "sha256:42ba97b8765977c5a91fb83d68dd56ac3730ef117ce2364cb7ae45c520ba4df4"
 }

@@ -167,8 +167,8 @@
   "provider_revisions": [
     {
       "provider_revision_id": "spr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:5b549af23647d9567c0cdc9a0f8865e05f2e314c607009be1a64db721f7514ef",
-      "provider_instance_id": "spi_deerflow_builtin_sandbox",
+      "provider_revision_digest": "sha256:76c77ff375ea0363c130a9fea147d1de328b8ba0f2483bb5ee4ac715a6cde16d",
+      "provider_instance_id": "spi_native_sandbox",
       "configuration_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
       "approved_permissions_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
       "credential_binding_digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
@@ -189,7 +189,7 @@
       "conformance_set_digest": "sha256:4d8889e6063f7704daeea3dc0f3c2663614def9aa05c622a0a6c0201a2773c89",
       "created_at": "2026-07-16T09:00:00Z",
       "implementation": {
-        "implementation_id": "sandbox-provider.deerflow-built-in",
+        "implementation_id": "sandbox-provider.native",
         "implementation_version": "0.8.2",
         "distribution_type": "oci_image",
         "distribution_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
@@ -207,14 +207,14 @@
       "port": {
         "protocol": "sandbox-provider",
         "protocol_version": "v1",
-        "contract_digest": "sha256:592e6700b1983b9e0c824f760b23bd92c65afbd2d9fa31bd2561b14b75e8ee56",
+        "contract_digest": "sha256:173feeb61f47696778f1c457f275677fc8e5d287088094d0a3c7129c359cbe95",
         "binding_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666"
       }
     },
     {
       "provider_revision_id": "apr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:86b5143b00130794824f438e5c05adb35c219569d959a229cf567cb4914c0dda",
-      "provider_instance_id": "api_deerflow_runtime",
+      "provider_revision_digest": "sha256:2052a6b7f9fb2ddf13eddf3fcdbfde056187e9cce1ed1f724141c4e0d452ed93",
+      "provider_instance_id": "api_native_runtime",
       "configuration_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
       "approved_permissions_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
       "credential_binding_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
@@ -228,7 +228,7 @@
           "status": "passed",
           "report_digest": "sha256:1212121212121212121212121212121212121212121212121212121212121212",
           "suite_id": "agent-runtime-provider",
-          "suite_digest": "sha256:dbd08a0071a03dd8355dadcbcbf5db9139e4c0e462675d02b919dc8603c293e8",
+          "suite_digest": "sha256:6bd5bee33974860ca312f94a2eb43cd634ccb9e200b4419d439277546875aa68",
           "suite_profile_id": "governed-v1"
         },
         {
@@ -239,14 +239,14 @@
           "status": "passed",
           "report_digest": "sha256:1313131313131313131313131313131313131313131313131313131313131313",
           "suite_id": "agent-runtime-provider",
-          "suite_digest": "sha256:dbd08a0071a03dd8355dadcbcbf5db9139e4c0e462675d02b919dc8603c293e8",
+          "suite_digest": "sha256:6bd5bee33974860ca312f94a2eb43cd634ccb9e200b4419d439277546875aa68",
           "suite_profile_id": "runtime-general-v1"
         }
       ],
-      "conformance_set_digest": "sha256:c41ef1aec0036e83dfda0106449a673a9d8437e7698715ea65f5e4dbd103aec4",
+      "conformance_set_digest": "sha256:1ace3ac48a5191e17ef65dc13748aa98f6a2da5caf5d57550698fc2e9668fdb9",
       "created_at": "2026-07-16T09:00:10Z",
       "implementation": {
-        "implementation_id": "agent-runtime.deerflow",
+        "implementation_id": "agent-runtime.native",
         "implementation_version": "0.8.3",
         "distribution_type": "oci_image",
         "distribution_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
@@ -264,7 +264,7 @@
       "port": {
         "protocol": "agent-runtime-provider",
         "protocol_version": "v1",
-        "contract_digest": "sha256:7eeb82e512220c3fe30ccd6d6748403a2c149c13e2db50a43e0b5c6b6092e03d",
+        "contract_digest": "sha256:f75bd9484d9059435021f65147cab1a22b4cb0376ea47ce6e165fde0494f5811",
         "binding_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
       }
     },
@@ -453,24 +453,24 @@
     {
       "decision_id": "pad_01J00000000000000000000000",
       "provider_revision_id": "spr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:5b549af23647d9567c0cdc9a0f8865e05f2e314c607009be1a64db721f7514ef",
+      "provider_revision_digest": "sha256:76c77ff375ea0363c130a9fea147d1de328b8ba0f2483bb5ee4ac715a6cde16d",
       "decision_sequence": 1,
       "decision": "certified",
       "evidence_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
       "decided_by": "principal:platform-provider-certifier",
       "decided_at": "2026-07-16T09:00:30Z",
-      "decision_digest": "sha256:9172fd74d57be387c492b77882ef95a65fe728ed9006ff22f3fd14ec0a9def7d"
+      "decision_digest": "sha256:ef8102fddb956f1acd2de688adf99799317024e1db00d9a233cff36e7a711117"
     },
     {
       "decision_id": "pad_runtime_01J00000000000000000",
       "provider_revision_id": "apr_01J00000000000000000000000",
-      "provider_revision_digest": "sha256:86b5143b00130794824f438e5c05adb35c219569d959a229cf567cb4914c0dda",
+      "provider_revision_digest": "sha256:2052a6b7f9fb2ddf13eddf3fcdbfde056187e9cce1ed1f724141c4e0d452ed93",
       "decision_sequence": 1,
       "decision": "certified",
       "evidence_digest": "sha256:1414141414141414141414141414141414141414141414141414141414141414",
       "decided_by": "principal:platform-provider-certifier",
       "decided_at": "2026-07-16T09:00:40Z",
-      "decision_digest": "sha256:a6b2f38705932a572d439e884bf2293cc340bce0f11325cedfd3fc593ded56ce"
+      "decision_digest": "sha256:c90d8c792004b5a8ade261b0404d803439f600d46c3f147083a3003628da1d10"
     },
     {
       "decision_id": "pad_tool_01J000000000000000000",
@@ -524,7 +524,7 @@
     "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
     "business_account_id": "account-456",
     "plan_reference": "pro",
-    "authorized_limits_digest": "sha256:36b5a673a7d6b2636626f04ad6e28c5d43e54ee4510dfbba604692d0da028380",
+    "authorized_limits_digest": "sha256:2a33f2b17ca52330e36a7aa4823859f212dfee32ae5d25d1c7eb9572139b1d89",
     "issued_at": "2026-07-16T08:59:30Z",
     "expires_at": "2026-07-16T09:30:00Z",
     "settlement_target_id": "business-usage-settlement-v1",
@@ -545,10 +545,13 @@
       "max_network_bytes": 104857600,
       "max_storage_bytes": 104857600,
       "max_artifact_count": 20,
-      "max_conversion_count": 3
+      "max_conversion_count": 3,
+      "max_agent_runs": 8,
+      "max_agent_depth": 4,
+      "max_parallel_agent_runs": 3
     },
     "commercial_authorization_id": "cauth_01J00000000000000000000000",
-    "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7"
+    "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e"
   },
   "scenario_definition": {
     "api_version": "agent-platform/scenario/v1",

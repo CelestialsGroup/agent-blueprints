@@ -84,6 +84,6 @@ GET /v1/work-orders/{id}/events?after_work_sequence=152
 
 Delta 进行批量合并，最终 Completed Event 或 Artifact 必须可独立重建结果。
 
-Prompt Queue 和 Interjection 不新增本地 Session 事实源：客户端 Control Input 经授权后由平台分配内部 Input/Message ID，并通过连续、仅追加且带请求摘要、引用已授权 `control_request_id` 的 `append_input` 或 `interrupt` Runtime Command 传递。系统安全控制使用同一 Command 序列与 Fencing，但只允许引用不可变 `system_safety_control_id + digest` 的 Pause/Cancel；两类授权来源互斥。Sub-agent、后台命令、Monitor 和 Scheduler 统一投影为 `runtime.task.*`；Sub-agent Task 显式绑定 Child AgentRun，PID 与本地队列仍是 Runtime 私有状态。`runtime.usage.reported` 只传递可去重的 UsageObservation Batch，Platform 校验并创建 TechnicalUsageEntry 后再形成跨来源 UsageReport。
+Prompt Queue 和 Interjection 不新增本地 Session 事实源：客户端 Control Input 经授权后由平台分配内部 Input/Message ID，并通过连续、仅追加且带请求摘要、引用已授权 `control_request_id` 的 `append_input` 或 `interrupt` Runtime Command 传递。系统安全控制使用同一 Command 序列与 Fencing，但只允许引用不可变 `system_safety_control_id + digest` 的 Pause/Cancel；两类授权来源互斥。Sub-agent Spawn 使用独立 `runtime.subagent.spawn.requested`，Platform 以 `agent.run.admission.decided` 记录准入，并用 `subagent_spawn_decision` 回告；Accepted 后的 `runtime.task.*` 必须同时绑定 SpawnRequest 与 Child AgentRun。后台命令、Monitor 和 Scheduler 仍只投影为 Task，PID 与本地队列属于 Runtime 私有状态。Platform 用 `agent.run.state.changed`、`agent.run.control_fanout.created` 和 WorkOrder State Event 记录跨 Run 汇总，Provider Event 不能直接宣告 WorkOrder 终态。`runtime.usage.reported` 只传递可去重的 UsageObservation Batch，Platform 校验并创建 TechnicalUsageEntry 后再形成跨来源 UsageReport。
 
 Terminal/Browser/Desktop 录制字节进入加密 Artifact chunks，CanonicalEvent 只保存 recording/chunk 引用，不保存视频或完整终端流。

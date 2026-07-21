@@ -5,7 +5,7 @@
   "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
   "business_account_id": "account-456",
   "plan_reference": "pro",
-  "authorized_limits_digest": "sha256:36b5a673a7d6b2636626f04ad6e28c5d43e54ee4510dfbba604692d0da028380",
+  "authorized_limits_digest": "sha256:2a33f2b17ca52330e36a7aa4823859f212dfee32ae5d25d1c7eb9572139b1d89",
   "issued_at": "2026-07-16T08:59:30Z",
   "expires_at": "2026-07-16T09:30:00Z",
   "settlement_target_id": "business-usage-settlement-v1",
@@ -26,8 +26,11 @@
     "max_network_bytes": 104857600,
     "max_storage_bytes": 104857600,
     "max_artifact_count": 20,
-    "max_conversion_count": 3
+    "max_conversion_count": 3,
+    "max_agent_runs": 8,
+    "max_agent_depth": 4,
+    "max_parallel_agent_runs": 3
   },
   "commercial_authorization_id": "cauth_01J00000000000000000000000",
-  "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7"
+  "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e"
 }

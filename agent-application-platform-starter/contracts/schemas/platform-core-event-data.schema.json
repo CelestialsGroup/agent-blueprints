@@ -107,23 +107,113 @@
     },
     "workflowRunStarted": {
       "type": "object",
-      "required": ["workflow_run_id", "root_agent_run_id", "orchestration_binding_digest"],
+      "required": ["workflow_run_id", "orchestration_binding_digest"],
+      "properties": {
+        "workflow_run_id": { "type": "string", "minLength": 1 },
+        "orchestration_binding_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "workflowRunRootBound": {
+      "type": "object",
+      "required": ["workflow_run_id", "root_agent_run_id", "run_manifest_digest", "root_binding_digest"],
       "properties": {
         "workflow_run_id": { "type": "string", "minLength": 1 },
         "root_agent_run_id": { "type": "string", "minLength": 1 },
-        "orchestration_binding_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+        "run_manifest_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "root_binding_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
       },
       "additionalProperties": false
     },
     "agentRunStarted": {
       "type": "object",
-      "required": ["agent_run_id", "workflow_run_id", "runtime_run_id", "run_manifest_digest", "runtime_provider_resolution_id"],
+      "required": [
+        "agent_run_id", "workflow_run_id", "runtime_run_id", "run_manifest_digest",
+        "runtime_provider_resolution_id", "run_kind", "root_agent_run_id", "run_depth",
+        "required_for_work_order_completion"
+      ],
       "properties": {
         "agent_run_id": { "type": "string", "minLength": 1 },
         "workflow_run_id": { "type": "string", "minLength": 1 },
         "runtime_run_id": { "type": "string", "minLength": 1 },
         "run_manifest_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
-        "runtime_provider_resolution_id": { "type": "string", "minLength": 1 }
+        "runtime_provider_resolution_id": { "type": "string", "minLength": 1 },
+        "run_kind": { "enum": ["root", "subagent"] },
+        "root_agent_run_id": { "type": "string", "minLength": 1 },
+        "parent_agent_run_id": { "type": "string", "minLength": 1 },
+        "spawn_request_id": { "type": "string", "minLength": 1 },
+        "run_depth": { "type": "integer", "minimum": 0, "maximum": 64 },
+        "required_for_work_order_completion": { "type": "boolean" }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "run_kind": { "const": "subagent" } }, "required": ["run_kind"] },
+          "then": {
+            "required": ["parent_agent_run_id", "spawn_request_id"],
+            "properties": { "run_depth": { "minimum": 1 } }
+          }
+        },
+        {
+          "if": { "properties": { "run_kind": { "const": "root" } }, "required": ["run_kind"] },
+          "then": {
+            "properties": {
+              "run_depth": { "const": 0 },
+              "required_for_work_order_completion": { "const": true }
+            },
+            "not": {
+              "anyOf": [
+                { "required": ["parent_agent_run_id"] },
+                { "required": ["spawn_request_id"] }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "childAgentRunAdmissionDecided": {
+      "type": "object",
+      "required": ["decision_id", "decision_digest", "spawn_request_id", "outcome", "decided_at"],
+      "properties": {
+        "decision_id": { "type": "string", "minLength": 1 },
+        "decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "spawn_request_id": { "type": "string", "minLength": 1 },
+        "outcome": { "enum": ["accepted", "rejected"] },
+        "child_agent_run_id": { "type": "string", "minLength": 1 },
+        "decided_at": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "outcome": { "const": "accepted" } }, "required": ["outcome"] },
+          "then": { "required": ["child_agent_run_id"] },
+          "else": { "not": { "required": ["child_agent_run_id"] } }
+        }
+      ]
+    },
+    "agentRunStateChanged": {
+      "type": "object",
+      "required": ["agent_run_id", "runtime_run_id", "previous_state", "state", "state_version", "source"],
+      "properties": {
+        "agent_run_id": { "type": "string", "minLength": 1 },
+        "runtime_run_id": { "type": "string", "minLength": 1 },
+        "previous_state": { "enum": ["accepted", "running", "waiting_input", "waiting_approval", "paused", "cancel_requested", "succeeded", "failed", "cancelled", "outcome_unknown"] },
+        "state": { "enum": ["accepted", "running", "waiting_input", "waiting_approval", "paused", "cancel_requested", "succeeded", "failed", "cancelled", "outcome_unknown"] },
+        "state_version": { "type": "integer", "minimum": 1 },
+        "source": { "enum": ["provider_event", "status_reconciliation", "control_fanout"] },
+        "evidence_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "agentRunControlFanoutCreated": {
+      "type": "object",
+      "required": ["fanout_id", "fanout_digest", "action", "target_count", "authority_kind"],
+      "properties": {
+        "fanout_id": { "type": "string", "minLength": 1 },
+        "fanout_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "action": { "enum": ["pause", "cancel"] },
+        "target_count": { "type": "integer", "minimum": 0, "maximum": 10000 },
+        "authority_kind": { "enum": ["work_order_control_request", "system_safety_trigger"] }
       },
       "additionalProperties": false
     },
@@ -250,7 +340,11 @@
     { "$ref": "#/$defs/systemSafetyControlIssued" },
     { "$ref": "#/$defs/workOrderStateChanged" },
     { "$ref": "#/$defs/workflowRunStarted" },
+    { "$ref": "#/$defs/workflowRunRootBound" },
     { "$ref": "#/$defs/agentRunStarted" },
+    { "$ref": "#/$defs/childAgentRunAdmissionDecided" },
+    { "$ref": "#/$defs/agentRunStateChanged" },
+    { "$ref": "#/$defs/agentRunControlFanoutCreated" },
     { "$ref": "#/$defs/grantConsumed" },
     { "$ref": "#/$defs/approvalRequested" },
     { "$ref": "#/$defs/approvalResolved" },

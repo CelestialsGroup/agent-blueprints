@@ -47,10 +47,12 @@ Scenario
 
 - Conversation 拥有一个持久 Workspace 和仅追加的 Message 序列；WorkOrder 表示一个可执行 Turn。
 - WorkOrder、ExecutionGrant、RunManifest 与 Event 必须绑定 Conversation/Turn/Branch/Input Message。
-- 一个 WorkOrder 拥有一个平台 WorkflowRun；一个 WorkflowRun 拥有一个根 AgentRun 和零到多个显式父子关系的 Sub-agent AgentRun。一个 AgentRun 只绑定一个 RunManifest 和一个 AgentRuntimeRun；传输重试属于同一 Invocation 的 Attempt，不创建第二个逻辑 Run。
+- 一个 WorkOrder 在 Orchestration Start 确认后最多创建一个平台 WorkflowRun；若启动前取消或失败可以没有 WorkflowRun。WorkflowRun 在 Root Admission 成功后通过单次赋值 RootBinding 绑定一个根 AgentRun，并可拥有零到多个显式父子关系的 Sub-agent AgentRun。一个 AgentRun 只绑定一个 RunManifest 和一个 AgentRuntimeRun；传输重试属于同一 Invocation 的 Attempt，不创建第二个逻辑 Run。
 - WorkflowRun、AgentRun、RunManifest 和 Runtime Start 显式携带同一 `tenant_id`；RunManifest 的 Runtime 与每个 Sandbox Slot 都只引用已固化的 ProviderResolution，不复制第二份 Revision/Conformance 事实。
 - RunManifest Location 只固化内容绑定的逻辑 Placement 决策；Provider-managed/External Runtime 可以没有 Region。Cluster、Cell、Pod、Node、Runtime ID 和 Endpoint 不得为满足公共 Schema 而伪造或写入稳定 Manifest/Status/Health。
-- 所有 Agent Runtime（包括 DeerFlow、LangGraph、OpenAI Agents SDK 或 Native Runtime）都只能通过 AgentRuntimeProvider v1 接入；框架原生 Agent/Thread/Run/Checkpoint/Event 原始载荷属于 Adapter 私有模型。
+- 自研 Native Runtime 是产品主实现，也必须通过 AgentRuntimeProvider v1 接入。DeerFlow、Dify、OpenHands、LangGraph、OpenAI Agents SDK 等项目只用于架构、能力和 UX 参考，不在当前适配计划内；公共 Port 的存在不能反向推导出第三方兼容承诺。任何实现私有的 Agent/Thread/Run/Checkpoint/Event 载荷都不能进入稳定内核。
+- Sub-agent 是平台治理实体。Runtime 只能发出类型化 ChildAgentRunSpawnRequest；Platform 在共享预算、深度/数量/并发、Policy、ProviderResolution、Workspace 和 Sandbox 准入后创建不可变 AdmissionDecision、Child AgentRun、RunManifest 与 RuntimeRun。AgentRunWorkspaceBinding 必须固化只读/隔离/共享模式、Base Revision、Mount Access 与 Commit CAS，不能把隔离请求降级为共享写入。Provider 不得自行分配 Child AgentRun ID 或把私有 Task 冒充平台 Child。
+- WorkOrder Pause/Cancel 对事务锁定的全部活动 AgentRun 建立可恢复 fan-out；每个 RuntimeRun 使用独立 Fencing 和 SystemSafetyControl。Fanout 进度以连续版本和前驱摘要仅追加，Authority/目标/Fencing 不可变。WorkOrder 终态必须汇总 Root 与所有 required Child，禁止 Root 成功时遗留活动 Child。
 - 不得把任何单一 Agent 框架设为稳定内核的编译时依赖、领域事实源或唯一合法实现。
 - 每个 Run 在准入时锁定 Agent Runtime ProviderRevision；运行中不得自动切换框架。Provider 原生 Checkpoint 只能在明确声明并通过测试的兼容范围内恢复。
 - 每个可执行后续输入都需要新的 Business ExecutionGrant；WorkSession 不能扩大商业授权。
@@ -114,7 +116,7 @@ Runtime Gateway 使用 `runtime-gateway/v1` 类型化帧、Connection Generation
 - Provider 只返回 UsageObservation；`entry_id`、Platform Idempotency Key、归属和 `recorded_at` 由 Platform 校验后创建 TechnicalUsageEntry。
 - Provider 只允许读取已准入 ArtifactVersion 或写 Artifact Staging；正式 ArtifactVersion Finalize 是 Platform 内部事务，不能出现在 Provider Grant 或 EffectivePermissions 中。
 - UsageReport 与 BusinessSettlementEnvelope 按 Reservation 连续编号并只追加；Settlement Envelope 嵌入完整 Final/Correction UsageReport，Business 才能依据自己的价格事实结算。价格、余额、Settlement 决策和商业 Reconciliation 仍由 Business 拥有。
-- 冻结 AgentRuntimeProvider 前，两个 Adapter 必须执行机器可读 `runtime-core-v1`；主 Runtime 还必须通过 `runtime-general-v1 + governed-v1`。Sandbox、Runtime Gateway、Capability Provider 与 Artifact/Egress Execution Gateway 使用各自 Suite Manifest 和不可变证据。
+- 冻结 AgentRuntimeProvider 前，自研 Native Runtime 主实现和一个独立 Reference Provider/Probe 必须执行机器可读 `runtime-core-v1`；Native Runtime 还必须通过 `runtime-general-v1 + governed-v1`。这证明 Port 可替换，不要求适配任一参考项目。Sandbox、Runtime Gateway、Capability Provider 与 Artifact/Egress Execution Gateway 使用各自 Suite Manifest 和不可变证据。
 
 ## 契约规则
 

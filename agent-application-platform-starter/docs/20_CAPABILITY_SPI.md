@@ -148,6 +148,6 @@ Agent Runtime 使用同一 Revision/Admission/Conformance 治理，但不能按�
 
 每个新 Run 解析并锁定一个 Agent Runtime ProviderRevision。运行中的 Run 不允许因健康、成本或偏好变化自动切换框架；Provider Fallback 只适用于尚未开始的新 Run。框架原生 Checkpoint 只有在源和目标 Revision 明确声明兼容且对应测试通过时才能恢复。
 
-冻结 AgentRuntimeProvider v1 前，至少两个 Adapter 必须通过 `runtime-core-v1`，承担通用 Agent 主链路的 Provider 还必须通过 `runtime-general-v1 + governed-v1`。这用于证明 CapabilityDefinition、ProviderResolution、RunManifest、Workbench Event 和 Artifact/Usage 契约没有按 DeerFlow 或其他单一框架定制。
+冻结 AgentRuntimeProvider v1 前，自研 Native Runtime 与独立 Reference Contract Probe 必须通过 `runtime-core-v1`，Native Runtime 还必须通过 `runtime-general-v1 + governed-v1`。这用于证明 CapabilityDefinition、ProviderResolution、RunManifest、Workbench Event 和 Artifact/Usage 契约没有按主实现内部模型定制，不要求适配 DeerFlow 或其他参考项目。
 
 Profile 与 Test ID 以 `contracts/conformance/` 下的机器可读 Suite 为准。Suite 自带内容摘要；测试结果必须绑定 Suite ID/Version/Digest/Profile、ProviderRevision、环境和不可变 Evidence。Runtime、Sandbox、Runtime Gateway、通用 Capability Provider 和 Artifact/Egress Execution Gateway 使用各自 Suite；README 中的测试名称或人工声明不能构成认证。

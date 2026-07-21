@@ -1,10 +1,10 @@
 {
   "settlement_envelope_id": "set_01J00000000000000000000000",
-  "settlement_envelope_digest": "sha256:677483ce6f428a514af110172b4648d0820c74732e142d10d9261d19373f2ca7",
+  "settlement_envelope_digest": "sha256:ead2ef972e770c96d1a9c01b63fff43e75ebabdefa314676ae1d74d72574de6c",
   "tenant_id": "ten_01J00000000000000000000000",
   "work_order_id": "wrk_01J00000000000000000000000",
   "commercial_authorization_id": "cauth_01J00000000000000000000000",
-  "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7",
+  "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
   "quota_reservation_id": "qres_01J00000000000000000000000",
   "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
   "work_order_terminal_status": "completed",
@@ -14,11 +14,11 @@
   "created_at": "2026-07-16T09:21:00Z",
   "usage_report": {
     "usage_report_id": "usr_01J00000000000000000000000",
-    "usage_report_digest": "sha256:8b36bd7ff350396b90b8655d386a9cf3c6e8fabcc490b660c657b7a14edabdd9",
+    "usage_report_digest": "sha256:915807ec7d218010ba0ef3b9745efe72b9b66562b8ec6f7f83e8c857f6c0db6f",
     "tenant_id": "ten_01J00000000000000000000000",
     "work_order_id": "wrk_01J00000000000000000000000",
     "commercial_authorization_id": "cauth_01J00000000000000000000000",
-    "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7",
+    "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
     "quota_reservation_id": "qres_01J00000000000000000000000",
     "quota_reservation_digest": "sha256:7373737373737373737373737373737373737373737373737373737373737373",
     "report_status": "final",
@@ -38,9 +38,9 @@
         "unit": "token",
         "producer": {
           "type": "provider",
-          "id": "api_deerflow_runtime",
+          "id": "api_native_runtime",
           "provider_revision_id": "apr_01J00000000000000000000000",
-          "provider_revision_digest": "sha256:86b5143b00130794824f438e5c05adb35c219569d959a229cf567cb4914c0dda"
+          "provider_revision_digest": "sha256:2052a6b7f9fb2ddf13eddf3fcdbfde056187e9cce1ed1f724141c4e0d452ed93"
         },
         "provider_operation_id": "provider-op-model-001",
         "meter_source": "provider_reported",

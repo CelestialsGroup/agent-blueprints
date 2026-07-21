@@ -2,7 +2,7 @@
   "jti": "sot_invalid_contract_replay_01",
   "iss": "agent-platform",
   "sub": "spn_agent_sandbox_controller",
-  "aud": "urn:agent-platform:provider-instance:spi_deerflow_builtin_sandbox",
+  "aud": "urn:agent-platform:provider-instance:spi_native_sandbox",
   "iat": 1784192400,
   "nbf": 1784192400,
   "exp": 1784192700,

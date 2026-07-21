@@ -71,20 +71,20 @@ ProviderRevision 必须通过其声明能力对应的测试 Profile。
 - Exec count
 - Evidence
 
-## 参考 SandboxProvider 到 sandbox-runtime 的迁移
+## Native SandboxProvider 到新隔离后端的迁移
 
 ### 阶段 A：契约抽象
 
 ```text
 Agent Platform -> SandboxProvider Port
-              -> ReferenceSandboxAdapter
+              -> NativeSandboxAdapter
 ```
 
-首个 ReferenceSandboxAdapter 可以包装 DeerFlow Built-in Sandbox，但这不是契约要求。抽象阶段不改变现有运行行为。
+首个 SandboxProvider 由平台实现并连接隔离执行后端。第三方 Sandbox 项目只作架构与运维参考；未来替换后端仍必须通过同一 Conformance Suite。
 
 ### 阶段 B：影子验证
 
-sandbox-runtime 创建同等 Spec 的测试 Sandbox，运行一致性测试和非生产 Shadow Workload。
+候选隔离后端创建同等 Spec 的测试 Sandbox，运行一致性测试和非生产 Shadow Workload。
 
 ### 阶段 C：按场景进行 Canary
 
@@ -94,15 +94,15 @@ Capability/Provider Binding 将少量：
 - browser
 - standard
 
-任务路由到 sandbox-runtime。
+任务路由到候选 Sandbox ProviderRevision。
 
 ### 阶段 D：默认切换
 
-Platform 默认值改为 sandbox-runtime ProviderRevision。
+Platform 默认值改为新 Sandbox ProviderRevision。
 
 现有 Run 继续锁定旧 Revision。
 
-### 阶段 E：旧参考 Provider Draining
+### 阶段 E：旧 Native Provider Draining
 
 - 不接受新 Sandbox
 - 等待旧 Run 结束
@@ -113,8 +113,8 @@ Platform 默认值改为 sandbox-runtime ProviderRevision。
 
 切换失败时：
 
-- 新 WorkOrder Binding 回滚到旧参考 Provider。
-- 已创建 sandbox-runtime Sandbox 按其 Revision 完成或取消。
+- 新 WorkOrder Binding 回滚到旧 Native Provider。
+- 已创建的新后端 Sandbox 按其 Revision 完成或取消。
 - 禁止运行中直接把 Process Snapshot 恢复到不兼容 Provider。
 - Workspace Snapshot 可在兼容声明通过后恢复到旧 Provider。
 

@@ -12,6 +12,8 @@
     "work_order_id",
     "root_agent_run_id",
     "run_kind",
+    "run_depth",
+    "required_for_work_order_completion",
     "agent_role",
     "runtime_provider_resolution_id",
     "run_manifest_digest",
@@ -25,7 +27,10 @@
     "work_order_id": { "type": "string", "minLength": 1 },
     "root_agent_run_id": { "type": "string", "minLength": 1 },
     "parent_agent_run_id": { "type": "string", "minLength": 1 },
+    "spawn_request_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "run_kind": { "enum": ["root", "subagent"] },
+    "run_depth": { "type": "integer", "minimum": 0, "maximum": 64 },
+    "required_for_work_order_completion": { "type": "boolean" },
     "agent_role": { "type": "string", "minLength": 1, "maxLength": 128 },
     "runtime_provider_resolution_id": { "type": "string", "minLength": 1 },
     "run_manifest_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
@@ -35,16 +40,31 @@
   "allOf": [
     {
       "if": { "properties": { "run_kind": { "const": "root" } }, "required": ["run_kind"] },
-      "then": { "not": { "required": ["parent_agent_run_id"] } }
+      "then": {
+        "properties": {
+          "run_depth": { "const": 0 },
+          "required_for_work_order_completion": { "const": true }
+        },
+        "not": {
+          "anyOf": [
+            { "required": ["parent_agent_run_id"] },
+            { "required": ["spawn_request_id"] }
+          ]
+        }
+      }
     },
     {
       "if": { "properties": { "run_kind": { "const": "subagent" } }, "required": ["run_kind"] },
-      "then": { "required": ["parent_agent_run_id"] }
+      "then": {
+        "required": ["parent_agent_run_id", "spawn_request_id"],
+        "properties": { "run_depth": { "minimum": 1 } }
+      }
     }
   ],
   "x-semantic-constraints": [
     "root AgentRun has root_agent_run_id equal to agent_run_id",
-    "subagent parent and root belong to the same tenant, WorkOrder and WorkflowRun",
+    "subagent parent and root belong to the same tenant, WorkOrder and WorkflowRun; run_depth equals parent run_depth plus one",
+    "subagent spawn_request_id references one accepted immutable ChildAgentRunAdmissionDecision and is unique within the WorkOrder",
     "one AgentRun binds exactly one runtime_run_id and one RunManifest; provider retry uses InvocationAttempt, while a new governed execution creates a new AgentRun"
   ]
 }

@@ -115,6 +115,8 @@ min(
 
 平台必须在预算接近耗尽时发出事件，并在硬限制到达时停止后续调用。
 
+ExecutionBudget 以 WorkOrder 为唯一共享硬上限，不能为每个 AgentRun 复制一份独立可消费额度。每个 AgentRun 另有不可变 AgentRunBudgetAllocation，但它只包含八类资源上限；所有 Gateway、Sandbox Lease、Child Admission 和 Usage 导入对同一个 PostgreSQL Budget Ledger 原子预留或扣减。`max_agent_runs`、`max_agent_depth` 与 `max_parallel_agent_runs` 只属于 WorkOrder ExecutionBudget，任一上限到达即拒绝 Child Admission，并在硬预算耗尽时对全部活动 Run 发起 Cancel fan-out。
+
 ## Sandbox Provider
 
 ExecutionBudgetEnforcer 在创建 SandboxSpec 前计算：

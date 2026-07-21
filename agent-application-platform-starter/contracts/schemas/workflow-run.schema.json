@@ -4,12 +4,11 @@
   "title": "WorkflowRun",
   "description": "Immutable identity and durable orchestration binding for one WorkOrder. Engine-native Continue-as-New segments do not create additional Platform WorkflowRuns.",
   "type": "object",
-  "required": ["workflow_run_id", "tenant_id", "work_order_id", "root_agent_run_id", "workflow", "orchestration_binding", "created_at"],
+  "required": ["workflow_run_id", "tenant_id", "work_order_id", "workflow", "orchestration_binding", "created_at"],
   "properties": {
     "workflow_run_id": { "type": "string", "minLength": 1 },
     "tenant_id": { "type": "string", "minLength": 1 },
     "work_order_id": { "type": "string", "minLength": 1 },
-    "root_agent_run_id": { "type": "string", "minLength": 1 },
     "workflow": {
       "type": "object",
       "required": ["id", "version", "definition_build_id", "definition_digest"],
@@ -26,7 +25,7 @@
   },
   "additionalProperties": false,
   "x-semantic-constraints": [
-    "work_order_id is unique and binds exactly one WorkflowRun",
-    "root_agent_run_id references exactly one root AgentRun in the same tenant, WorkOrder and WorkflowRun"
+    "work_order_id is unique and binds at most one WorkflowRun; a WorkOrder that terminates before orchestration start may have none",
+    "the WorkflowRun is created after orchestration start confirmation and before provider or Sandbox admission, so admission failure remains representable without a fabricated AgentRun"
   ]
 }

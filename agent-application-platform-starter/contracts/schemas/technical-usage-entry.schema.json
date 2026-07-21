@@ -109,7 +109,7 @@
       "if": { "properties": { "meter_source": { "const": "provider_reported" } }, "required": ["meter_source"] },
       "then": {
         "properties": { "producer": { "properties": { "type": { "const": "provider" } } } },
-        "required": ["provider_operation_id", "source_observation_id"]
+        "required": ["provider_operation_id", "source_observation_id", "agent_run_id", "runtime_run_id"]
       }
     },
     {
@@ -125,5 +125,6 @@
     "evidence_reference resolves to immutable Platform-controlled evidence matching evidence_digest",
     "recorded_at is not earlier than occurred_at",
     "entry_id, idempotency_key and recorded_at are assigned by Platform; provider-reported entries bind a validated source_observation_id"
+    ,"provider-reported Runtime usage is attributed to one AgentRun and RuntimeRun so WorkOrder totals can be reconciled across a multi-agent tree"
   ]
 }

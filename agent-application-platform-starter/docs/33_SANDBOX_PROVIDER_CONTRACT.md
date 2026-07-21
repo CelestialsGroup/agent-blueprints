@@ -2,7 +2,7 @@
 
 ## 目标
 
-平台前期可以使用 DeerFlow Built-in Sandbox 作为首个参考实现，但不把它设为前置依赖；后期可以切换到自研 `sandbox-runtime` 或其他符合契约的 Provider。
+Phase 0 使用平台自己的 SandboxProvider 与隔离执行后端。DeerFlow、E2B、Daytona 等项目只用于研究控制面、Workspace、Terminal/VNC 和容量模型，不作为需要包装或适配的前置实现。
 
 两者必须实现同一个稳定接口：
 
@@ -12,7 +12,7 @@ Agent Platform 稳定内核
           ↓
 Sandbox Provider 契约
           ↓
-DeerFlow Sandbox Adapter | sandbox-runtime | 其他 Provider
+Native Sandbox Controller | alternate isolated execution Provider
 ```
 
 替换 Provider 时不得修改：

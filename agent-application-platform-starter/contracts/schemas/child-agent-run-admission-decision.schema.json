@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:child-agent-run-admission-decision:v1",
+  "title": "ChildAgentRunAdmissionDecision",
+  "description": "Immutable Platform decision for one child spawn request after policy, shared budget, provider and Sandbox admission.",
+  "type": "object",
+  "required": [
+    "decision_id", "decision_digest", "spawn_request_id", "spawn_request_digest",
+    "tenant_id", "work_order_id", "workflow_run_id", "parent_agent_run_id",
+    "outcome", "reason_codes", "decided_at"
+  ],
+  "properties": {
+    "decision_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "decision_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "spawn_request_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "spawn_request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "workflow_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "parent_agent_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "outcome": { "enum": ["accepted", "rejected"] },
+    "reason_codes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": { "$ref": "urn:agent-platform:child-agent-run-admission-reason-code:v1" }
+    },
+    "child_agent_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "runtime_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "runtime_provider_resolution_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "run_manifest_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "budget_allocation": { "$ref": "urn:agent-platform:agent-run-budget-allocation:v1" },
+    "workspace_binding": { "$ref": "urn:agent-platform:agent-run-workspace-binding:v1" },
+    "decided_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "outcome": { "const": "accepted" } }, "required": ["outcome"] },
+      "then": {
+        "required": [
+          "child_agent_run_id", "runtime_run_id", "runtime_provider_resolution_id",
+          "run_manifest_digest", "budget_allocation", "workspace_binding"
+        ],
+        "properties": {
+          "reason_codes": {
+            "maxItems": 1,
+            "items": { "const": "admitted" }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "reason_codes": {
+            "not": { "contains": { "const": "admitted" } }
+          }
+        },
+        "not": {
+          "anyOf": [
+            { "required": ["child_agent_run_id"] },
+            { "required": ["runtime_run_id"] },
+            { "required": ["runtime_provider_resolution_id"] },
+            { "required": ["run_manifest_digest"] },
+            { "required": ["budget_allocation"] },
+            { "required": ["workspace_binding"] }
+          ]
+        }
+      }
+    }
+  ],
+  "x-semantic-constraints": [
+    "decision_digest is RFC 8785 JCS SHA-256 over the decision excluding decision_digest",
+    "one spawn_request_id has exactly one immutable decision; duplicate requests return the same decision and conflicting digests are rejected",
+    "accepted admission atomically creates the child AgentRun, RunManifest, budget allocation, selected Workspace binding, runtime start Outbox and Platform events after provider and optional dedicated Sandbox admission",
+    "rejected admission creates no AgentRun, RuntimeRun, Sandbox or budget allocation",
+    "the decision can only narrow the parent WorkOrder authorization and never accepts after cancellation, terminal state, revocation, deadline or shared budget exhaustion"
+  ]
+}

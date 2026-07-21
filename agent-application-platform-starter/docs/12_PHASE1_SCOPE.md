@@ -1,6 +1,6 @@
 # v0.9.0 交付路线图
 
-`tasks/PHASE0.md` 是唯一 Phase 0 验收计划。Phase 1 只在真实纵向链路、第二 Runtime Adapter、故障测试和最小恢复证据完成后开始。
+`tasks/PHASE0.md` 是唯一 Phase 0 验收计划。Phase 1 只在真实纵向链路、独立 Reference Runtime Probe、故障测试和最小恢复证据完成后开始。
 
 ## Phase 0：纵向链路
 
@@ -14,7 +14,7 @@
 - 补全 html-to-pptx 和 html-video Converter Profile
 - 完成 Terminal、Browser、Desktop Recording 和多通道回放
 - 增加 Provider 管理、Draining、Canary 和跨 Provider 观测
-- 评估 Native Runtime，但不将其预设为平台依赖
+- 按实际互操作需求评估第三方 Runtime Provider；参考项目不自动进入适配范围
 
 ## Phase 1B：Business 产品化
 

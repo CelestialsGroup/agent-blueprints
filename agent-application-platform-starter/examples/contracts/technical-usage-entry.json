@@ -12,9 +12,9 @@
   "unit": "token",
   "producer": {
     "type": "provider",
-    "id": "api_deerflow_runtime",
+    "id": "api_native_runtime",
     "provider_revision_id": "apr_01J00000000000000000000000",
-    "provider_revision_digest": "sha256:86b5143b00130794824f438e5c05adb35c219569d959a229cf567cb4914c0dda"
+    "provider_revision_digest": "sha256:2052a6b7f9fb2ddf13eddf3fcdbfde056187e9cce1ed1f724141c4e0d452ed93"
   },
   "provider_operation_id": "provider-op-model-001",
   "meter_source": "provider_reported",

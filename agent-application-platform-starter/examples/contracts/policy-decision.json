@@ -1,11 +1,11 @@
 {
   "decision_id": "pol_01J00000000000000000000000",
-  "decision_digest": "sha256:24066573c33b3c65f1ffddaa4be8600e9e8a27916dc94a647d0cfce3a3c1cfd5",
+  "decision_digest": "sha256:7b2258697b2b7182feea3d697c689837e9993a5f396db53d3d9c255404ba1dad",
   "tenant_id": "ten_01J00000000000000000000000",
   "work_order_id": "wrk_01J00000000000000000000000",
   "policy_bundle_digest": "sha256:6161616161616161616161616161616161616161616161616161616161616161",
-  "commercial_authorization_digest": "sha256:b1d7de0e02ebabb929633419a2329ababf68b40047cf742d61ed4410e970eaf7",
-  "execution_budget_digest": "sha256:4e8aac35b4943db25ecbb3ea6fa2259cdb2f3c144bb837f1cc6c97b0b6f94096",
+  "commercial_authorization_digest": "sha256:4db7c70af758d395510dddfeeb64901afd74c4b8a1fd6d3421ad19314b12f69e",
+  "execution_budget_digest": "sha256:af98dd43e2a018f9df3a6bc97b17f4cea7ec2dae69d62f24e2cd367eefc3fba4",
   "evaluations": [
     {
       "subject_kind": "runtime",

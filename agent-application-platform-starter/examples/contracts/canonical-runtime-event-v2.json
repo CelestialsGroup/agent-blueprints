@@ -7,12 +7,12 @@
   "provider_revision_id": "apr_01J00000000000000000000000",
   "source_stream_id": "agent-runtime/rtr_01J00000000000000000000000",
   "source_event_id": "rtevt_01J0000000000000000000000",
-  "source_cursor": "deerflow-event-42",
+  "source_cursor": "native-event-42",
   "dedupe_key": "sha256:8321a02f72524956780638da6065536711e7ccc5aca01c8af88e8c4b0c8f5a70",
   "event_registry": {
     "registry_id": "agent-runtime-core",
     "registry_version": 1,
-    "registry_digest": "sha256:b664808d1a63374a78b5002e5fd58b1c04ea43aa866c2faf5c2027f42f692f2b"
+    "registry_digest": "sha256:eaae5ff3a467b85bbb5bb1cdbba4dd4b5546d7f5fb1cb1c17e37565bec55ae8c"
   },
   "conversation_id": "conv_01J00000000000000000000000",
   "work_order_id": "wrk_01J00000000000000000000000",
@@ -44,7 +44,7 @@
   "metadata": {
     "trace_id": "trace-runtime-001",
     "correlation_id": "wrk_01J00000000000000000000000",
-    "provider_instance_id": "api_deerflow_runtime"
+    "provider_instance_id": "api_native_runtime"
   },
   "data_version": 1,
   "recorded_at": "2026-07-15T10:10:00.100Z"

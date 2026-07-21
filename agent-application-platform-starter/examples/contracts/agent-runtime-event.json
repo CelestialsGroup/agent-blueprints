@@ -10,5 +10,5 @@
     "content_reference": "artifact://art_message/ver_01",
     "content_digest": "sha256:9191919191919191919191919191919191919191919191919191919191919191"
   },
-  "source_cursor": "deerflow-event-42"
+  "source_cursor": "native-event-42"
 }

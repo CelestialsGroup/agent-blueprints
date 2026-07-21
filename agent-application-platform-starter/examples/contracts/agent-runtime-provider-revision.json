@@ -1,7 +1,7 @@
 {
   "provider_revision_id": "apr_01J00000000000000000000000",
-  "provider_revision_digest": "sha256:86b5143b00130794824f438e5c05adb35c219569d959a229cf567cb4914c0dda",
-  "provider_instance_id": "api_deerflow_runtime",
+  "provider_revision_digest": "sha256:2052a6b7f9fb2ddf13eddf3fcdbfde056187e9cce1ed1f724141c4e0d452ed93",
+  "provider_instance_id": "api_native_runtime",
   "configuration_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   "approved_permissions_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
   "credential_binding_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
@@ -15,7 +15,7 @@
       "status": "passed",
       "report_digest": "sha256:1212121212121212121212121212121212121212121212121212121212121212",
       "suite_id": "agent-runtime-provider",
-      "suite_digest": "sha256:dbd08a0071a03dd8355dadcbcbf5db9139e4c0e462675d02b919dc8603c293e8",
+      "suite_digest": "sha256:6bd5bee33974860ca312f94a2eb43cd634ccb9e200b4419d439277546875aa68",
       "suite_profile_id": "governed-v1"
     },
     {
@@ -26,14 +26,14 @@
       "status": "passed",
       "report_digest": "sha256:1313131313131313131313131313131313131313131313131313131313131313",
       "suite_id": "agent-runtime-provider",
-      "suite_digest": "sha256:dbd08a0071a03dd8355dadcbcbf5db9139e4c0e462675d02b919dc8603c293e8",
+      "suite_digest": "sha256:6bd5bee33974860ca312f94a2eb43cd634ccb9e200b4419d439277546875aa68",
       "suite_profile_id": "runtime-general-v1"
     }
   ],
-  "conformance_set_digest": "sha256:c41ef1aec0036e83dfda0106449a673a9d8437e7698715ea65f5e4dbd103aec4",
+  "conformance_set_digest": "sha256:1ace3ac48a5191e17ef65dc13748aa98f6a2da5caf5d57550698fc2e9668fdb9",
   "created_at": "2026-07-16T09:00:10Z",
   "implementation": {
-    "implementation_id": "agent-runtime.deerflow",
+    "implementation_id": "agent-runtime.native",
     "implementation_version": "0.8.3",
     "distribution_type": "oci_image",
     "distribution_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
@@ -51,7 +51,7 @@
   "port": {
     "protocol": "agent-runtime-provider",
     "protocol_version": "v1",
-    "contract_digest": "sha256:7eeb82e512220c3fe30ccd6d6748403a2c149c13e2db50a43e0b5c6b6092e03d",
+    "contract_digest": "sha256:f75bd9484d9059435021f65147cab1a22b4cb0376ea47ce6e165fde0494f5811",
     "binding_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
   }
 }

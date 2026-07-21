@@ -3,16 +3,35 @@
   "$id": "urn:agent-platform:runtime-input-envelope:v1",
   "title": "RuntimeInputEnvelope",
   "type": "object",
-  "required": ["input_id", "input_message_id", "content_digest", "content"],
+  "required": ["input_id", "source_kind", "content_digest", "content"],
   "properties": {
     "input_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "source_kind": { "enum": ["conversation_message", "delegated_task"] },
     "input_message_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "child_agent_spawn_request_id": { "type": "string", "minLength": 1, "maxLength": 200 },
     "content_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "content": { "$ref": "urn:agent-platform:runtime-input-content:v1" }
   },
   "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "source_kind": { "const": "conversation_message" } }, "required": ["source_kind"] },
+      "then": {
+        "required": ["input_message_id"],
+        "not": { "required": ["child_agent_spawn_request_id"] }
+      }
+    },
+    {
+      "if": { "properties": { "source_kind": { "const": "delegated_task" } }, "required": ["source_kind"] },
+      "then": {
+        "required": ["child_agent_spawn_request_id"],
+        "not": { "required": ["input_message_id"] }
+      }
+    }
+  ],
   "x-semantic-constraints": [
     "content_digest is RFC 8785 JCS SHA-256 over content",
-    "immutable_input_reference resolves through a platform-owned authenticated gateway and is immutable for the Run"
+    "immutable_input_reference resolves through a platform-owned authenticated gateway and is immutable for the Run",
+    "root input is bound to the admitted Conversation input message while delegated task input is bound to one accepted ChildAgentRunSpawnRequest"
   ]
 }

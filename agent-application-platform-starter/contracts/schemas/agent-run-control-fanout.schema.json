@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:agent-run-control-fanout:v1",
+  "title": "AgentRunControlFanout",
+  "description": "Append-only versioned snapshot and progress ledger for applying one WorkOrder pause or cancel intent to every active AgentRun in scope.",
+  "type": "object",
+  "required": [
+    "fanout_id", "fanout_version", "previous_fanout_digest", "fanout_digest", "tenant_id", "work_order_id", "action",
+    "authority_kind", "authority_id", "authority_digest", "targets", "created_at", "updated_at"
+  ],
+  "properties": {
+    "fanout_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "fanout_version": { "type": "integer", "minimum": 1 },
+    "previous_fanout_digest": {
+      "type": ["string", "null"],
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "fanout_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "action": { "enum": ["pause", "cancel"] },
+    "authority_kind": { "enum": ["work_order_control_request", "system_safety_trigger"] },
+    "authority_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "authority_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "targets": {
+      "type": "array",
+      "maxItems": 10000,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": ["agent_run_id", "runtime_run_id", "target_fencing_token", "control_state"],
+        "properties": {
+          "agent_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "runtime_run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "target_fencing_token": { "type": "integer", "minimum": 1 },
+          "system_safety_control_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "system_safety_control_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+          "control_state": { "enum": ["pending", "dispatched", "confirmed", "terminal_before_control", "outcome_unknown"] }
+        },
+        "additionalProperties": false,
+        "dependentRequired": {
+          "system_safety_control_id": ["system_safety_control_digest"],
+          "system_safety_control_digest": ["system_safety_control_id"]
+        }
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "fanout_version": { "const": 1 } }, "required": ["fanout_version"] },
+      "then": { "properties": { "previous_fanout_digest": { "type": "null" } } },
+      "else": { "properties": { "previous_fanout_digest": { "type": "string" } } }
+    },
+    {
+      "if": {
+        "properties": { "authority_kind": { "const": "system_safety_trigger" } },
+        "required": ["authority_kind"]
+      },
+      "then": {
+        "properties": {
+          "targets": {
+            "items": {
+              "required": ["system_safety_control_id", "system_safety_control_digest"]
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "targets": {
+            "items": {
+              "not": {
+                "anyOf": [
+                  { "required": ["system_safety_control_id"] },
+                  { "required": ["system_safety_control_digest"] }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "x-semantic-constraints": [
+    "fanout_digest is RFC 8785 JCS SHA-256 over the fanout excluding fanout_digest",
+    "authority_id, authority_digest, action, Tenant and WorkOrder bind the immutable WorkOrderControlRequest or system safety trigger that caused this fan-out; user and system authority cannot be mixed",
+    "version one targets are the transactionally locked set of every active AgentRun in the WorkOrder when the intent is accepted; later admitted children are forbidden and target identity is immutable across versions",
+    "each target receives a distinct monotonic fencing token and, for system authority, a distinct SystemSafetyControl bound to that RuntimeRun",
+    "fanout_version is contiguous, previous_fanout_digest binds the exact predecessor, updated_at is monotonic, and only monotonic control_state progress may change; missing delivery, Provider failure or outcome_unknown is reconciled before the WorkOrder is reported paused or cancelled"
+  ]
+}

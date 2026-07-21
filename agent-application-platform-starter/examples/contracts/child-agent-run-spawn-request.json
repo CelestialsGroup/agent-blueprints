@@ -1,0 +1,35 @@
+{
+  "spawn_request_id": "spawn_01J0000000000000000000000",
+  "request_digest": "sha256:24b8944a13d69a33e75d8499bffd56ab3397f7b44f6ae886e83d05966833bb5d",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "workflow_run_id": "wfr_01J00000000000000000000000",
+  "root_agent_run_id": "agr_01J00000000000000000000000",
+  "parent_agent_run_id": "agr_01J00000000000000000000000",
+  "parent_runtime_run_id": "rtr_01J00000000000000000000000",
+  "parent_run_depth": 0,
+  "requested_agent_role": "researcher",
+  "required_for_work_order_completion": true,
+  "delegated_input": {
+    "input_id": "rin_child_01J00000000000000000000",
+    "source_kind": "delegated_task",
+    "child_agent_spawn_request_id": "spawn_01J0000000000000000000000",
+    "content_digest": "sha256:7a1e5e52a444640427960686ae4478b4d33c7cc035dcd16d07262869c14ef17b",
+    "content": [
+      {
+        "type": "text",
+        "text": "Research the cited sources and return verified findings."
+      }
+    ]
+  },
+  "required_capabilities": [
+    {
+      "id": "agent.general",
+      "version": "1.0",
+      "profile": "default"
+    }
+  ],
+  "workspace_mode": "isolated_revision",
+  "sandbox_mode": "dedicated",
+  "requested_at": "2026-07-16T09:02:00Z"
+}

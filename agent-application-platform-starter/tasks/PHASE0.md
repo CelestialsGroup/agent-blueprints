@@ -4,12 +4,12 @@ Phase 0 实现一条真实、可恢复的 Manus-like Conversation 链路。目�
 
 ```text
 0A 最小契约闭合
- -> 0B 持久化脊柱与 Native Runtime Probe
+ -> 0B 持久化脊柱与 Native Runtime Core
  -> 0C Business 到 Conversation
  -> 0D 主 Runtime 与 Sandbox
  -> 0E Workbench 与 Recording
  -> 0F nexu Experience
- -> 0G 第二 Runtime
+ -> 0G Reference Runtime Probe
  -> 0H 故障、安全与恢复证据
 ```
 
@@ -17,7 +17,8 @@ Phase 0 实现一条真实、可恢复的 Manus-like Conversation 链路。目�
 
 开始产品实现前，收敛 Phase 0 实际需要的公共模型：
 
-- 固化 Tenant-qualified `WorkOrder 1 -> 1 WorkflowRun -> 1 Root AgentRun + N Sub-agent AgentRun`，且一个 AgentRun 只绑定一个 RunManifest/AgentRuntimeRun；RunManifest Runtime 只引用一个 ProviderResolution；
+- 固化可失败的 Tenant-qualified 拓扑：WorkOrder 在 Orchestration Start 成功后唯一绑定 WorkflowRun，WorkflowRun 在 Root Admission 成功后通过单次赋值 RootBinding 绑定 Root AgentRun；启动/准入失败不得伪造下游对象。每个 AgentRun 只绑定一个 RunManifest/AgentRuntimeRun；RunManifest Runtime 只引用一个 ProviderResolution；
+- 固化平台治理的 ChildAgentRunSpawnRequest/AdmissionDecision：委派输入、Parent/Root/Depth、required completion、ProviderResolution、Workspace/Sandbox、共享 WorkOrder Budget Ledger、AgentRun Allocation、最大深度/数量/并发、幂等拒绝、子树 Pause/Cancel、终态汇总和孤儿对账全部闭合；
 - 固化 ExecutionGrant `request_contract_id + digest_profile + request_digest`，分别闭合 WorkOrderRequest 与 ConversationTurnRequest；
 - 将 ConversationTurnRequest（新 Turn/WorkOrder）与 WorkOrderControlRequest（现有 Runtime 控制）分开；Interrupt-and-enqueue 建立明确后继，Runtime Command 只引用已授权 Control Input；
 - 增加 sender-constrained、幂等的 Business CommercialAuthorizationRevocation 入口和唯一 Platform Safety Controller；在商业授权到期/撤销、Deadline/预算触发或紧急停机时，仅追加 SystemSafetyControl 并只允许对精确 Tenant/WorkOrder/RuntimeRun 发出 Pause/Cancel；与用户 ControlRequest 授权互斥，禁止 Resume、Append、Interrupt、Approval、Checkpoint 和新副作用；
@@ -51,14 +52,14 @@ Phase 0 实现一条真实、可恢复的 Manus-like Conversation 链路。目�
 2. Semantic Closure：`semantic-constraints-v1.json` 覆盖关键约束，并将每条约束映射到当前 Validator 及待实现 DDL/Conformance 责任。
 3. Local Gate：在 `.tool-versions` 固定的 CPython 3.14.6、Node 24.18.0 Active LTS/pnpm 11.15.1、Go 1.26.5 上运行 `./scripts/bootstrap_contracts.sh && make validate-architecture`，八份 OpenAPI 0 Error/0 Warning、Manifest Python/Node 一致、`git diff --check` 全部通过；CPython 3.13 兼容通道另行验证。
 4. Implementation Entry Review：只允许把 0A.1 标记为“架构/契约验证通过”；产品实现、集成链路和生产可靠性仍为未完成。
-5. 进入 0B 后先实现 Migration/RLS/Repository/Outbox/Inbox 与空库升级回滚证据，再实现 Native Runtime Probe；不得用框架行为替代领域 Constraint。
+5. 进入 0B 后先实现 Migration/RLS/Repository/Outbox/Inbox 与空库升级回滚证据，再实现 Native Runtime Core；不得用 Runtime 或框架行为替代领域 Constraint。
 6. 0B 组件、语言与升级通道遵循 `docs/51_PHASE0_TECHNOLOGY_SELECTION.md`；其中标记为 Phase 0 候选或 Phase 1 延后的项目不得被误写为已冻结生产选择。
 
-## 0B：持久化脊柱与 Native Runtime Probe
+## 0B：持久化脊柱与 Native Runtime Core
 
-先实现能支撑首条纵向链的 PostgreSQL Migration、事务 Repository、Outbox/Inbox、Temporal Worker、对象存储引用和 Redis 非权威通知路径。首批只包含 Access/Tenant、Conversation、Message、Branch、WorkspaceRevision、WorkOrder、GrantConsumption、WorkflowRun/AgentRun、ProviderResolution、RunManifest、AgentRuntimeCommand/SystemSafetyControl Ledger 和 CanonicalEvent；Artifact Ledger、TechnicalUsage、Delivery 与 Recording Metadata 随 0D/0E 引入，不在 0B 一次铺满。
+先实现能支撑首条纵向链的 PostgreSQL Migration、事务 Repository、Outbox/Inbox、Temporal Worker、对象存储引用和 Redis 非权威通知路径。首批只包含 Access/Tenant、Conversation、Message、Branch、WorkspaceRevision、WorkOrder、GrantConsumption、WorkflowRun/RootBinding/AgentRun、Child Spawn/Admission、共享 Budget Ledger/AgentRun Allocation、ProviderResolution、RunManifest、AgentRuntimeCommand/SystemSafetyControl/Fanout Ledger 和 CanonicalEvent；Artifact Ledger、TechnicalUsage、Delivery 与 Recording Metadata 随 0D/0E 引入，不在 0B 一次铺满。
 
-同时实现一个独立进程的 Native Minimal AgentRuntimeProvider Contract Probe，覆盖 Start、Status、Cursor Event、用户 Cancel、授权到期/Deadline 触发的 Platform Safety Controller + fenced SystemSafetyControl Cancel、最小 Checkpoint/Restart 和无 Sandbox 模式，并完整通过 `runtime-core-v1`。它是反框架泄漏探针，不是生产主 Runtime；公共 Schema、Adapter SDK 和 Workbench Projection 不得先按 DeerFlow 定制。
+同时实现自研 Native Runtime 的 Core Profile，覆盖 Start、Status、Cursor Event、用户 Cancel、授权到期/Deadline 触发的 Platform Safety Controller + fenced SystemSafetyControl Cancel、最小 Checkpoint/Restart 和无 Sandbox 模式，并完整通过 `runtime-core-v1`。这是产品主 Runtime 的第一阶段；公共 Schema、Provider SDK 和 Workbench Projection 不得按其内部 Agent Loop 定制。
 
 验收证据：
 
@@ -68,7 +69,7 @@ Phase 0 实现一条真实、可恢复的 Manus-like Conversation 链路。目�
 - SystemSafetyControl、Platform Event、Command/Control Outbox 同事务，旧 Fencing 或系统 Resume/Append/Approval 被拒绝；
 - Redis 清空不影响授权、状态、账本和游标正确性；
 - Temporal Workflow 可以 Replay；
-- Native Probe 可以在 `sandboxes=[]` 下完成一个可恢复 Run，并产生共享 Runtime Event。
+- Native Runtime Core 可以在 `sandboxes=[]` 下完成一个可恢复 Run，并产生共享 Runtime Event；WorkflowRun 在 Root Admission 前失败时不产生伪造 RootBinding。
 
 ## 0C：Business 到 Conversation
 
@@ -93,9 +94,9 @@ PostgreSQL / Outbox
  -> Artifact Finalize / Delivery / Business Settlement
 ```
 
-主 Runtime 可以使用 DeerFlow Adapter，主 Sandbox 可以包装 DeerFlow Built-in Sandbox，但公共 API、数据库和 Event 不得出现 DeerFlow 私有 Thread、Checkpoint、Sandbox 或 Endpoint 字段。
+主 Runtime 是自研 Native Runtime，主 Sandbox 是平台 SandboxProvider。DeerFlow、Dify、OpenHands 等项目只提供架构、功能和 UX 参考；公共 API、数据库和 Event 不得出现任何参考项目的私有 Thread、Checkpoint、Sandbox 或 Endpoint 字段。
 
-主链路必须支持 Append-input、Interrupt、Pause/Resume、Approval、Background Task/Sub-agent Projection 和 Cancel；所有 Command 仅追加，绑定请求摘要并使用 Fencing。Model、Tool、Artifact 和 Egress 必须经过受治理 Gateway。
+主链路必须支持 Append-input、Interrupt、Pause/Resume、Approval、Background Task、平台治理的 Child Spawn/Admission 和 Cancel；所有 Command 仅追加，绑定请求摘要并使用 Fencing。Model、Tool、Artifact 和 Egress 必须经过受治理 Gateway。多 Agent 验收必须证明共享预算不会因并行 Child 被重复消费，Root 成功不遗留活动 Child，WorkOrder Cancel 覆盖全部 RuntimeRun，失联 Child 可被对账器发现。
 
 执行顺序固定为：解析 Runtime/Sandbox Provider 并记录 Resolution Evidence；按 Capability 可选创建 Sandbox；固化含 WorkspaceRevision 和实际 Sandbox ID 的 RunManifest；最后 Start Runtime。RunManifest 不得引用尚未创建的 Sandbox，也不得让 Sandbox 复制 ProviderRevision Snapshot。
 
@@ -119,11 +120,11 @@ Browser/Desktop 可以提供受控实时查看，但在 Capture、Consent、Reda
 
 验收证据：隐藏、撤销、未准入或缺少 Entitlement 的 Revision 无法选择；相同输入固定 Provider/Experience Revision 后可重现相同执行配置和 Artifact 来源链。
 
-## 0G：Agent Runtime 可替换性
+## 0G：Agent Runtime Port 可替换性
 
-将 0B 的 Native Minimal Probe 提升为可重复部署的第二 AgentRuntimeProvider Adapter，或替换为 OpenAI Agents SDK Adapter；选择不构成平台依赖。由于协议探针已在主 Runtime 前运行，本阶段验证的是完整部署、恢复和 Workbench 消费，而不是第一次发现框架泄漏。
+实现一个与 Native Runtime 代码路径独立的最小 Reference AgentRuntimeProvider，只承担 Contract/Recovery 验证，不适配任何完整第三方 Agent 项目。它不能复用 Native Runtime 的私有 Checkpoint、事件模型或状态存储。
 
-两个 Adapter 必须通过 `runtime-core-v1`；主 Runtime 还必须通过 `runtime-general-v1 + governed-v1`。两者使用相同 Start、Command、Status、Cursor Event、Artifact Staging 和 Usage 契约，并可被同一 Workbench、Timeline 和 RuntimeRecording 消费。
+Native Runtime 与 Reference Provider 必须通过 `runtime-core-v1`；Native Runtime 还必须通过 `runtime-general-v1 + governed-v1`。两者使用相同 Start、Command、Status、Cursor Event、Artifact Staging 和 Usage 契约，并可被同一 Workbench、Timeline 和 RuntimeRecording 消费。
 
 验收证据：ProviderResolution 只为新 Run 选择不同 Revision；运行中不自动切换 Provider；不支持的 Capability 明确拒绝；任何稳定 Schema、数据库和 API 都不包含框架私有字段。
 

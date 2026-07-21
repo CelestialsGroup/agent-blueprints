@@ -5,8 +5,9 @@ info:
   version: 1.0.0
   description: |
     Stable anti-corruption contract for stateful Agent Runtime providers. The platform
-    does not require one Agent framework; DeerFlow may be the first reference adapter,
-    while other frameworks or a native runtime can implement the same protocol. Native
+    is implemented first by the product's self-developed Native Runtime. Third-party Agent
+    projects are architecture and feature references, not required adapters. Any future Provider
+    implements the same protocol. Native
     agent, thread and run IDs, checkpoint payload formats and upstream events remain
     provider-private. The platform sees versioned runs, commands, cursors and
     ProviderRevision-bound checkpoint manifests. Every mutation is mediated by the

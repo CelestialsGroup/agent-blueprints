@@ -7,7 +7,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/runStarted",
-        "digest": "sha256:8178e537ab0f3d45b8f41420062d7680276c00d57ef9ba827ac5019f24e08410",
+        "digest": "sha256:bf0f9268b86e2a8cdaffe357a4406663ac42e781f784733a27b8239a88e73c44",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -24,7 +24,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/messageDelta",
-        "digest": "sha256:8178e537ab0f3d45b8f41420062d7680276c00d57ef9ba827ac5019f24e08410",
+        "digest": "sha256:bf0f9268b86e2a8cdaffe357a4406663ac42e781f784733a27b8239a88e73c44",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -40,7 +40,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/messageCompleted",
-        "digest": "sha256:8178e537ab0f3d45b8f41420062d7680276c00d57ef9ba827ac5019f24e08410",
+        "digest": "sha256:bf0f9268b86e2a8cdaffe357a4406663ac42e781f784733a27b8239a88e73c44",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -57,7 +57,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/planUpdated",
-        "digest": "sha256:8178e537ab0f3d45b8f41420062d7680276c00d57ef9ba827ac5019f24e08410",
+        "digest": "sha256:bf0f9268b86e2a8cdaffe357a4406663ac42e781f784733a27b8239a88e73c44",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -74,7 +74,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/toolRequested",
-        "digest": "sha256:8178e537ab0f3d45b8f41420062d7680276c00d57ef9ba827ac5019f24e08410",
+        "digest": "sha256:bf0f9268b86e2a8cdaffe357a4406663ac42e781f784733a27b8239a88e73c44",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -91,7 +91,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/approvalRequested",
-        "digest": "sha256:8178e537ab0f3d45b8f41420062d7680276c00d57ef9ba827ac5019f24e08410",
+        "digest": "sha256:bf0f9268b86e2a8cdaffe357a4406663ac42e781f784733a27b8239a88e73c44",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -108,7 +108,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/artifactStaged",
-        "digest": "sha256:8178e537ab0f3d45b8f41420062d7680276c00d57ef9ba827ac5019f24e08410",
+        "digest": "sha256:bf0f9268b86e2a8cdaffe357a4406663ac42e781f784733a27b8239a88e73c44",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -125,7 +125,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/checkpointCreated",
-        "digest": "sha256:8178e537ab0f3d45b8f41420062d7680276c00d57ef9ba827ac5019f24e08410",
+        "digest": "sha256:bf0f9268b86e2a8cdaffe357a4406663ac42e781f784733a27b8239a88e73c44",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -141,7 +141,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/waitingInput",
-        "digest": "sha256:8178e537ab0f3d45b8f41420062d7680276c00d57ef9ba827ac5019f24e08410",
+        "digest": "sha256:bf0f9268b86e2a8cdaffe357a4406663ac42e781f784733a27b8239a88e73c44",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -154,11 +154,29 @@
       ]
     },
     {
+      "type": "runtime.subagent.spawn.requested",
+      "data_version": 1,
+      "data_schema": {
+        "uri": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/subagentSpawnRequested",
+        "digest": "sha256:bf0f9268b86e2a8cdaffe357a4406663ac42e781f784733a27b8239a88e73c44",
+        "dialect": "https://json-schema.org/draft/2020-12/schema",
+        "digest_profile": "rfc8785-schema-closure-v1"
+      },
+      "classification": "confidential",
+      "retention_class": "audit",
+      "contains_user_content": true,
+      "projection_consumers": [
+        "agent-run-admission",
+        "task-projection",
+        "timeline-projection"
+      ]
+    },
+    {
       "type": "runtime.task.started",
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/taskStarted",
-        "digest": "sha256:8178e537ab0f3d45b8f41420062d7680276c00d57ef9ba827ac5019f24e08410",
+        "digest": "sha256:bf0f9268b86e2a8cdaffe357a4406663ac42e781f784733a27b8239a88e73c44",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -175,7 +193,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/taskUpdated",
-        "digest": "sha256:8178e537ab0f3d45b8f41420062d7680276c00d57ef9ba827ac5019f24e08410",
+        "digest": "sha256:bf0f9268b86e2a8cdaffe357a4406663ac42e781f784733a27b8239a88e73c44",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -191,7 +209,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/taskCompleted",
-        "digest": "sha256:8178e537ab0f3d45b8f41420062d7680276c00d57ef9ba827ac5019f24e08410",
+        "digest": "sha256:bf0f9268b86e2a8cdaffe357a4406663ac42e781f784733a27b8239a88e73c44",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -208,7 +226,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/usageReported",
-        "digest": "sha256:8178e537ab0f3d45b8f41420062d7680276c00d57ef9ba827ac5019f24e08410",
+        "digest": "sha256:bf0f9268b86e2a8cdaffe357a4406663ac42e781f784733a27b8239a88e73c44",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -224,7 +242,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/runCompleted",
-        "digest": "sha256:8178e537ab0f3d45b8f41420062d7680276c00d57ef9ba827ac5019f24e08410",
+        "digest": "sha256:bf0f9268b86e2a8cdaffe357a4406663ac42e781f784733a27b8239a88e73c44",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -241,7 +259,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/runFailed",
-        "digest": "sha256:8178e537ab0f3d45b8f41420062d7680276c00d57ef9ba827ac5019f24e08410",
+        "digest": "sha256:bf0f9268b86e2a8cdaffe357a4406663ac42e781f784733a27b8239a88e73c44",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -258,7 +276,7 @@
       "data_version": 1,
       "data_schema": {
         "uri": "urn:agent-platform:agent-runtime-event-data:v1#/$defs/runCancelled",
-        "digest": "sha256:8178e537ab0f3d45b8f41420062d7680276c00d57ef9ba827ac5019f24e08410",
+        "digest": "sha256:bf0f9268b86e2a8cdaffe357a4406663ac42e781f784733a27b8239a88e73c44",
         "dialect": "https://json-schema.org/draft/2020-12/schema",
         "digest_profile": "rfc8785-schema-closure-v1"
       },
@@ -271,5 +289,5 @@
       ]
     }
   ],
-  "registry_digest": "sha256:b664808d1a63374a78b5002e5fd58b1c04ea43aa866c2faf5c2027f42f692f2b"
+  "registry_digest": "sha256:eaae5ff3a467b85bbb5bb1cdbba4dd4b5546d7f5fb1cb1c17e37565bec55ae8c"
 }

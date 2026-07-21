@@ -14,13 +14,13 @@ make validate-architecture
 ## 实现顺序
 
 1. 完成 `tasks/PHASE0.md` 的 0A 最小契约闭合，不带着未定义的 Run、Event、Usage 或 Gateway 关系进入实现。
-2. 实现 PostgreSQL Migration、Constraint、Outbox/Inbox、Temporal、对象存储基础和无 Sandbox Native Minimal Runtime Probe。
+2. 实现 PostgreSQL Migration、Constraint、Outbox/Inbox、Temporal、对象存储基础和无 Sandbox Native Runtime Core；它是产品主 Runtime 的第一阶段，不是一次性 Probe。
 3. 实现 CommercialAuthorization、Grant 消费、Reservation/Settlement 和 Conversation Turn 原子链路。
-4. 实现 ProviderResolution、Revision/Admission、RunManifest、主 Runtime 和主 Sandbox Adapter。
+4. 扩展自研 Native Runtime 到 General/Governed Profile，并实现平台自己的 SandboxProvider；第三方 Agent 项目只作参考。
 5. 闭合 Invocation/Sandbox Ledger、CanonicalEvent、Artifact Staging/Finalize、TechnicalUsage 和 Delivery。
 6. 实现多轮 Workbench、Runtime Gateway、Terminal Recording 和离线历史回放。
 7. 导入 html-anything Catalog Experience，并实现一个 Converter Provider。
-8. 将 Native Probe 或另一框架提升为第二个可部署 AgentRuntimeProvider Adapter，并完成双 Provider 一致性测试。
+8. 实现与 Native Runtime 不共享内部执行包的最小 Reference Runtime Provider，并完成双 Provider Port 一致性测试；不以此引入第三方框架适配。
 9. 完成重复请求、响应丢失、旧 Fencing、Replay、隔离、容量和备份恢复证据。
 
 ## 禁止事项

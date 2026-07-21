@@ -15,6 +15,16 @@ from jsonschema import Draft202012Validator, FormatChecker
 from referencing import Registry, Resource
 
 ROOT = Path(__file__).resolve().parents[1]
+AGENT_RUN_RESOURCE_LIMIT_NAMES = {
+    "max_input_tokens",
+    "max_output_tokens",
+    "max_model_requests",
+    "max_sandbox_seconds",
+    "max_network_bytes",
+    "max_storage_bytes",
+    "max_artifact_count",
+    "max_conversion_count",
+}
 
 SANDBOX_OPERATION_CONTRACTS = {
     "create": ("urn:agent-platform:sandbox-create-request:v1", "rfc8785-request-excluding-request-digest-v1"),
@@ -75,6 +85,29 @@ KNOWN_CONTRACT_CHECKS = {
     "runtime_command.fencing",
     "runtime_command.user_control_binding",
     "runtime_command.system_safety_binding",
+    "runtime_command.child_admission_binding",
+    "workflow_run.lifecycle",
+    "workflow_root_binding.digest",
+    "workflow_root_binding.scope",
+    "workflow_root_binding.atomic_creation",
+    "agent_run.topology",
+    "agent_run.spawn_binding",
+    "agent_budget.digest",
+    "agent_budget.scope",
+    "agent_budget.shared_ledger",
+    "child_spawn.digest",
+    "child_spawn.scope",
+    "child_spawn.provider_boundary",
+    "child_spawn.idempotency",
+    "child_admission.digest",
+    "child_admission.outcome",
+    "child_admission.atomic_creation",
+    "control_fanout.digest",
+    "control_fanout.authority",
+    "control_fanout.coverage",
+    "control_fanout.fencing",
+    "control_fanout.recovery",
+    "work_order.multiagent_terminal",
     "system_safety_control.digest",
     "system_safety_control.scope",
     "system_safety_control.evidence",
@@ -157,6 +190,7 @@ KNOWN_CONTRACT_CHECKS = {
     "run_manifest.conversation_binding",
     "run_manifest.execution_inputs",
     "run_manifest.authorization_ceiling",
+    "run_manifest.workspace_binding",
     "run_manifest.gateway_binding",
     "run_manifest.commercial_event_binding",
     "run_manifest.orchestration_binding",
@@ -580,6 +614,9 @@ def validate_runtime_authorization(
 ) -> None:
     validate_self_digest(authorization, "authorization_digest")
     validate_self_digest(authorization["execution_budget"], "budget_digest")
+    validate_self_digest(
+        authorization["agent_run_budget_allocation"], "allocation_digest"
+    )
     validate_self_digest(authorization["policy_decision"], "decision_digest")
     validate_self_digest(authorization["effective_permissions"], "permissions_digest")
     if (
@@ -625,6 +662,8 @@ def validate_runtime_authorization(
     }
     if any(authorization[field] != value for field, value in expected_scope.items()):
         raise AssertionError("RuntimeAuthorization crosses its immutable Run scope")
+    if authorization["agent_run_budget_allocation"] != manifest["agent_run_budget_allocation"]:
+        raise AssertionError("RuntimeAuthorization changes its immutable AgentRun budget allocation")
     if authorization["authorization_sequence"] == 1:
         for field in ("execution_budget", "policy_decision", "effective_permissions"):
             if authorization[field] != manifest[field]:
@@ -701,10 +740,82 @@ def validate_runtime_authorization(
         "runtime_authorization.scope",
         "runtime_authorization.expiry",
         "runtime_authorization.artifact_coverage",
+        "agent_budget.digest",
+        "agent_budget.scope",
         "artifact_grant.expiry",
         "artifact_grant.digest",
         "artifact_grant.scope",
         "artifact_grant.provider_permissions",
+    )
+
+
+def limits_are_subset(candidate: dict[str, int], ceiling: dict[str, int]) -> bool:
+    return set(candidate) <= set(ceiling) and all(
+        candidate[name] <= ceiling[name] for name in candidate
+    )
+
+
+def validate_agent_run_budget_allocation(
+    allocation: dict[str, Any], budget: dict[str, Any], agent_run: dict[str, Any],
+    parent_allocation: dict[str, Any] | None = None,
+) -> None:
+    validate_self_digest(allocation, "allocation_digest")
+    if any((
+        allocation["tenant_id"] != budget["tenant_id"],
+        allocation["work_order_id"] != budget["work_order_id"],
+        allocation["agent_run_id"] != agent_run["agent_run_id"],
+        allocation["work_order_budget_id"] != budget["budget_id"],
+        allocation["work_order_budget_digest"] != budget["budget_digest"],
+        parse_datetime(allocation["issued_at"]) >= parse_datetime(allocation["expires_at"]),
+        parse_datetime(allocation["expires_at"]) > parse_datetime(budget["expires_at"]),
+    )):
+        raise AssertionError("AgentRun budget allocation crosses its shared WorkOrder budget")
+    if set(allocation["limits"]) != AGENT_RUN_RESOURCE_LIMIT_NAMES or not limits_are_subset(
+        allocation["limits"], budget["limits"]
+    ):
+        raise AssertionError("AgentRun budget allocation exceeds the WorkOrder hard ceiling")
+    if agent_run["run_kind"] == "root":
+        if parent_allocation is not None or "parent_allocation_id" in allocation:
+            raise AssertionError("Root AgentRun allocation cannot have a parent")
+        budget_resource_limits = {
+            name: budget["limits"][name] for name in AGENT_RUN_RESOURCE_LIMIT_NAMES
+        }
+        if allocation["limits"] != budget_resource_limits:
+            raise AssertionError("Root AgentRun allocation must equal WorkOrder resource limits")
+    else:
+        if parent_allocation is None:
+            raise AssertionError("Child AgentRun allocation lacks its parent allocation")
+        validate_self_digest(parent_allocation, "allocation_digest")
+        if any((
+            set(parent_allocation["limits"]) != AGENT_RUN_RESOURCE_LIMIT_NAMES,
+            parse_datetime(allocation["issued_at"]) < parse_datetime(parent_allocation["issued_at"]),
+            allocation.get("parent_allocation_id") != parent_allocation["allocation_id"],
+            allocation.get("parent_allocation_digest") != parent_allocation["allocation_digest"],
+            not limits_are_subset(allocation["limits"], parent_allocation["limits"]),
+        )):
+            raise AssertionError("Child AgentRun allocation exceeds or changes its parent allocation")
+    mark_checks("agent_budget.digest", "agent_budget.scope", "agent_budget.shared_ledger")
+
+
+def validate_workflow_root_binding(
+    binding: dict[str, Any], workflow_run: dict[str, Any], agent_run: dict[str, Any],
+    manifest: dict[str, Any],
+) -> None:
+    validate_self_digest(binding, "binding_digest")
+    if agent_run["run_kind"] != "root" or any((
+        binding["tenant_id"] != workflow_run["tenant_id"],
+        binding["work_order_id"] != workflow_run["work_order_id"],
+        binding["workflow_run_id"] != workflow_run["workflow_run_id"],
+        binding["root_agent_run_id"] != agent_run["agent_run_id"],
+        agent_run["root_agent_run_id"] != agent_run["agent_run_id"],
+        binding["run_manifest_digest"] != manifest["run_manifest_digest"],
+        parse_datetime(binding["bound_at"]) < parse_datetime(workflow_run["created_at"]),
+        parse_datetime(binding["bound_at"]) < parse_datetime(agent_run["created_at"]),
+    )):
+        raise AssertionError("WorkflowRunRootBinding crosses its admitted Root execution")
+    mark_checks(
+        "workflow_run.lifecycle", "workflow_root_binding.digest",
+        "workflow_root_binding.scope", "workflow_root_binding.atomic_creation",
     )
 
 
@@ -731,10 +842,32 @@ def validate_execution_topology(
         raise AssertionError("One AgentRun must bind exactly one AgentRuntimeRun identity")
     if agent_run["run_manifest_digest"] != manifest["run_manifest_digest"] or runtime_start["run_manifest_digest"] != manifest["run_manifest_digest"]:
         raise AssertionError("Execution topology binds different RunManifest digests")
-    if agent_run["run_kind"] == "root" and agent_run["root_agent_run_id"] != agent_run["agent_run_id"]:
-        raise AssertionError("Root AgentRun must identify itself as root")
-    if workflow_run["root_agent_run_id"] != agent_run["agent_run_id"]:
-        raise AssertionError("WorkflowRun does not bind its unique root AgentRun")
+    topology = manifest["run_topology"]
+    if runtime_start["run_topology"] != topology or any(
+        agent_run[field] != topology[field]
+        for field in (
+            "run_kind", "root_agent_run_id", "run_depth",
+            "required_for_work_order_completion",
+        )
+    ):
+        raise AssertionError("AgentRun topology differs across Manifest and Runtime Start")
+    if agent_run["run_kind"] == "root":
+        if agent_run["root_agent_run_id"] != agent_run["agent_run_id"] or agent_run["run_depth"] != 0:
+            raise AssertionError("Root AgentRun must identify itself at depth zero")
+        if runtime_start["input"]["source_kind"] != "conversation_message" or (
+            runtime_start["input_message_id"] != runtime_start["input"]["input_message_id"]
+        ):
+            raise AssertionError("Root Runtime input does not bind the admitted Conversation message")
+    else:
+        if any((
+            agent_run.get("parent_agent_run_id") != topology.get("parent_agent_run_id"),
+            agent_run.get("spawn_request_id") != topology.get("spawn_request_id"),
+            runtime_start["input"]["source_kind"] != "delegated_task",
+            runtime_start["input"].get("child_agent_spawn_request_id") != agent_run.get("spawn_request_id"),
+            agent_run["run_depth"] < 1,
+            "input_message_id" in runtime_start,
+        )):
+            raise AssertionError("Child AgentRun is not bound to its admitted SpawnRequest and parent")
     if runtime_start["workflow_run_id"] != manifest["workflow_run_id"]:
         raise AssertionError("Runtime start belongs to a different WorkflowRun")
     if agent_run["runtime_provider_resolution_id"] != manifest["agent_runtime"]["resolution_id"]:
@@ -746,17 +879,39 @@ def validate_execution_topology(
     for field in ("workspace_revision_id", "workspace_revision_digest"):
         if runtime_start[field] != manifest["conversation"][field]:
             raise AssertionError(f"Runtime start and RunManifest differ on {field}")
-    if runtime_start["input_message_id"] != runtime_start["input"]["input_message_id"]:
-        raise AssertionError("Runtime start input envelope belongs to a different input message")
-    for field in ("input", "context_package", "gateway_bindings", "admission_limits"):
+    for field in (
+        "input", "context_package", "gateway_bindings", "admission_limits",
+        "run_topology", "workspace_binding",
+    ):
         if runtime_start[field] != manifest[field]:
             raise AssertionError(f"Runtime start and RunManifest differ on executable context {field}")
+    workspace_binding = manifest["workspace_binding"]
+    if any((
+        workspace_binding["base_workspace_revision_id"]
+        != manifest["conversation"]["workspace_revision_id"],
+        workspace_binding["base_workspace_revision_digest"]
+        != manifest["conversation"]["workspace_revision_digest"],
+        runtime_start["workspace_revision_id"]
+        != workspace_binding["base_workspace_revision_id"],
+        runtime_start["workspace_revision_digest"]
+        != workspace_binding["base_workspace_revision_digest"],
+    )):
+        raise AssertionError("AgentRun Workspace binding differs from its admitted base revision")
+    if workspace_binding["workspace_mode"] == "read_only_parent_revision" and any(
+        "files_write" in slot["allowed_operations"]
+        for slot in manifest["effective_permissions"]["sandbox_slots"]
+    ):
+        raise AssertionError("Read-only AgentRun Workspace permits Sandbox file writes")
     if runtime_start["input"]["content_digest"] != canonical_digest(runtime_start["input"]["content"]):
         raise AssertionError("Runtime input content_digest does not bind the actual content")
     expanded_context_bytes = sum(item["size_bytes"] for item in runtime_start["context_package"]["items"])
     if expanded_context_bytes > runtime_start["runtime_authorization"]["execution_budget"]["limits"]["max_storage_bytes"]:
         raise AssertionError("Expanded Context Package exceeds the admitted storage budget")
     validate_runtime_authorization(runtime_start["runtime_authorization"], manifest, runtime_start)
+    validate_agent_run_budget_allocation(
+        manifest["agent_run_budget_allocation"], manifest["execution_budget"], agent_run,
+        None,
+    ) if agent_run["run_kind"] == "root" else None
     expected_sandboxes = {
         (item["sandbox_slot_key"], item["sandbox_id"])
         for item in manifest["sandboxes"]
@@ -777,9 +932,233 @@ def validate_execution_topology(
         "run_manifest.conversation_binding",
         "run_manifest.execution_inputs",
         "run_manifest.authorization_ceiling",
+        "run_manifest.workspace_binding",
         "run_manifest.gateway_binding",
         "run_manifest.orchestration_binding",
+        "agent_run.topology",
     )
+
+
+def validate_child_agent_admission(
+    spawn: dict[str, Any], decision: dict[str, Any], workflow_run: dict[str, Any],
+    parent_run: dict[str, Any], root_run: dict[str, Any], parent_manifest: dict[str, Any],
+    child_run: dict[str, Any],
+    child_manifest: dict[str, Any], child_start: dict[str, Any], work_order_budget: dict[str, Any],
+    parent_allocation: dict[str, Any], existing_agent_runs: list[dict[str, Any]],
+) -> None:
+    validate_self_digest(spawn, "request_digest")
+    validate_self_digest(decision, "decision_digest")
+    delegated_input = spawn["delegated_input"]
+    if any((
+        delegated_input["source_kind"] != "delegated_task",
+        delegated_input.get("child_agent_spawn_request_id") != spawn["spawn_request_id"],
+        delegated_input["content_digest"] != canonical_digest(delegated_input["content"]),
+        spawn["tenant_id"] != parent_run["tenant_id"],
+        spawn["work_order_id"] != parent_run["work_order_id"],
+        spawn["workflow_run_id"] != parent_run["workflow_run_id"],
+        spawn["parent_agent_run_id"] != parent_run["agent_run_id"],
+        spawn["parent_runtime_run_id"] != parent_run["runtime_run_id"],
+        spawn["root_agent_run_id"] != root_run["agent_run_id"],
+        spawn["parent_run_depth"] != parent_run["run_depth"],
+    )):
+        raise AssertionError("Child SpawnRequest crosses its immutable parent execution")
+    forbidden_provider_fields = {
+        "child_agent_run_id", "runtime_run_id", "provider_revision_id",
+        "provider_resolution_id", "sandbox_id", "budget_allocation",
+    }
+    if forbidden_provider_fields & set(spawn):
+        raise AssertionError("Child SpawnRequest assigns Platform-owned admission fields")
+    requested_capabilities = {
+        (item["id"], item["version"], item.get("profile"))
+        for item in spawn["required_capabilities"]
+    }
+    admitted_capabilities = {
+        (
+            item["capability"]["id"], item["capability"]["version"],
+            item["capability"].get("profile"),
+        )
+        for item in child_manifest["capability_resolutions"]
+    }
+    if not requested_capabilities <= admitted_capabilities:
+        raise AssertionError("Child Admission omits a requested Capability resolution")
+    if any((
+        child_manifest["effective_permissions"]["permissions_id"]
+        == parent_manifest["effective_permissions"]["permissions_id"]
+        and child_manifest["effective_permissions"]["permissions_digest"]
+        != parent_manifest["effective_permissions"]["permissions_digest"],
+        child_manifest["policy_decision"]["decision_id"]
+        == parent_manifest["policy_decision"]["decision_id"]
+        and child_manifest["policy_decision"]["decision_digest"]
+        != parent_manifest["policy_decision"]["decision_digest"],
+    )):
+        raise AssertionError("Child Admission reuses an immutable authorization ID with new content")
+    limits = work_order_budget["limits"]
+    if any((
+        parent_run["run_depth"] + 1 > limits["max_agent_depth"],
+        len(existing_agent_runs) + 1 > limits["max_agent_runs"],
+        sum(item.get("status", "running") not in {"succeeded", "failed", "cancelled"} for item in existing_agent_runs) + 1
+        > limits["max_parallel_agent_runs"],
+    )):
+        raise AssertionError("Child SpawnRequest exceeds shared WorkOrder topology limits")
+    if decision["outcome"] != "accepted" or decision["reason_codes"] != ["admitted"] or any((
+        decision["spawn_request_id"] != spawn["spawn_request_id"],
+        decision["spawn_request_digest"] != spawn["request_digest"],
+        decision["tenant_id"] != spawn["tenant_id"],
+        decision["work_order_id"] != spawn["work_order_id"],
+        decision["workflow_run_id"] != spawn["workflow_run_id"],
+        decision["parent_agent_run_id"] != parent_run["agent_run_id"],
+        decision["child_agent_run_id"] != child_run["agent_run_id"],
+        decision["runtime_run_id"] != child_run["runtime_run_id"],
+        decision["runtime_provider_resolution_id"]
+        != child_run["runtime_provider_resolution_id"],
+        decision["runtime_provider_resolution_id"]
+        != child_manifest["agent_runtime"]["resolution_id"],
+        decision["run_manifest_digest"] != child_manifest["run_manifest_digest"],
+        decision["budget_allocation"] != child_manifest["agent_run_budget_allocation"],
+        decision["workspace_binding"] != child_manifest["workspace_binding"],
+        decision["workspace_binding"]["workspace_mode"] != spawn["workspace_mode"],
+        decision["workspace_binding"]["base_workspace_revision_id"]
+        != parent_manifest["conversation"]["workspace_revision_id"],
+        decision["workspace_binding"]["base_workspace_revision_digest"]
+        != parent_manifest["conversation"]["workspace_revision_digest"],
+        (spawn["sandbox_mode"] == "none") != (len(child_manifest["sandboxes"]) == 0),
+        child_run["spawn_request_id"] != spawn["spawn_request_id"],
+        child_run["parent_agent_run_id"] != parent_run["agent_run_id"],
+        child_run["root_agent_run_id"] != root_run["agent_run_id"],
+        child_run["run_depth"] != parent_run["run_depth"] + 1,
+        child_run["required_for_work_order_completion"]
+        != spawn["required_for_work_order_completion"],
+        child_manifest["input"] != delegated_input,
+        parse_datetime(spawn["requested_at"]) < parse_datetime(parent_run["created_at"]),
+        parse_datetime(decision["budget_allocation"]["issued_at"])
+        < parse_datetime(spawn["requested_at"]),
+        parse_datetime(decision["budget_allocation"]["issued_at"])
+        > parse_datetime(decision["decided_at"]),
+        parse_datetime(decision["decided_at"]) < parse_datetime(spawn["requested_at"]),
+        parse_datetime(child_run["created_at"]) < parse_datetime(decision["decided_at"]),
+        parse_datetime(decision["decided_at"]) > parse_datetime(work_order_budget["expires_at"]),
+    )):
+        raise AssertionError("Child AdmissionDecision does not atomically bind the admitted child")
+    validate_agent_run_budget_allocation(
+        decision["budget_allocation"], work_order_budget, child_run, parent_allocation
+    )
+    validate_execution_topology(child_manifest, workflow_run, child_run, child_start)
+    mark_checks(
+        "child_spawn.digest", "child_spawn.scope", "child_spawn.provider_boundary",
+        "child_spawn.idempotency", "child_admission.digest", "child_admission.outcome",
+        "child_admission.atomic_creation", "agent_run.spawn_binding",
+    )
+
+
+def validate_agent_run_control_fanout(
+    fanout: dict[str, Any], active_runs: list[dict[str, Any]],
+    current_fencing: dict[str, int], authority_fact: dict[str, Any],
+    previous_fanout: dict[str, Any] | None = None,
+) -> None:
+    validate_self_digest(fanout, "fanout_digest")
+    if previous_fanout is None:
+        if any((
+            fanout["fanout_version"] != 1,
+            fanout["previous_fanout_digest"] is not None,
+            fanout["created_at"] != fanout["updated_at"],
+            any(target["control_state"] != "pending" for target in fanout["targets"]),
+        )):
+            raise AssertionError("Initial AgentRun fanout is not a pending version-one snapshot")
+    else:
+        validate_self_digest(previous_fanout, "fanout_digest")
+        immutable_fields = {
+            "fanout_id", "tenant_id", "work_order_id", "action", "authority_kind",
+            "authority_id", "authority_digest", "created_at",
+        }
+        if any((
+            fanout["fanout_version"] != previous_fanout["fanout_version"] + 1,
+            fanout["previous_fanout_digest"] != previous_fanout["fanout_digest"],
+            parse_datetime(fanout["updated_at"]) <= parse_datetime(previous_fanout["updated_at"]),
+            any(fanout[field] != previous_fanout[field] for field in immutable_fields),
+        )):
+            raise AssertionError("AgentRun fanout progress breaks its append-only predecessor chain")
+        previous_targets = {
+            (target["agent_run_id"], target["runtime_run_id"]): target
+            for target in previous_fanout["targets"]
+        }
+        allowed_progress = {
+            "pending": {"pending", "dispatched", "confirmed", "terminal_before_control", "outcome_unknown"},
+            "dispatched": {"dispatched", "confirmed", "terminal_before_control", "outcome_unknown"},
+            "outcome_unknown": {"outcome_unknown", "dispatched", "confirmed", "terminal_before_control"},
+            "confirmed": {"confirmed"},
+            "terminal_before_control": {"terminal_before_control"},
+        }
+        for target in fanout["targets"]:
+            target_key = (target["agent_run_id"], target["runtime_run_id"])
+            previous_target = previous_targets.get(target_key)
+            if previous_target is None or any(
+                target.get(field) != previous_target.get(field)
+                for field in (
+                    "target_fencing_token", "system_safety_control_id",
+                    "system_safety_control_digest",
+                )
+            ) or target["control_state"] not in allowed_progress[previous_target["control_state"]]:
+                raise AssertionError("AgentRun fanout target identity or progress regressed")
+    user_control_action = authority_fact.get("action")
+    expected_fanout_action = (
+        "cancel" if user_control_action == "interrupt_and_enqueue" else user_control_action
+    )
+    if fanout["authority_kind"] == "work_order_control_request" and any((
+        fanout["authority_id"] != authority_fact["control_request_id"],
+        fanout["authority_digest"] != canonical_digest({
+            key: value for key, value in authority_fact.items() if key != "execution_grant"
+        }),
+        expected_fanout_action not in {"pause", "cancel"},
+        fanout["action"] != expected_fanout_action,
+        fanout["work_order_id"] != authority_fact["work_order_id"],
+    )):
+        raise AssertionError("AgentRun fanout binds a different WorkOrderControlRequest")
+    expected = {(item["agent_run_id"], item["runtime_run_id"]) for item in active_runs}
+    actual = {(item["agent_run_id"], item["runtime_run_id"]) for item in fanout["targets"]}
+    if len(actual) != len(fanout["targets"]) or actual != expected:
+        raise AssertionError("AgentRun control fanout does not cover every active Run exactly once")
+    if any(
+        item["tenant_id"] != fanout["tenant_id"]
+        or item["work_order_id"] != fanout["work_order_id"]
+        for item in active_runs
+    ):
+        raise AssertionError("AgentRun control fanout crosses Tenant or WorkOrder scope")
+    for target in fanout["targets"]:
+        if target["target_fencing_token"] <= current_fencing[target["runtime_run_id"]]:
+            raise AssertionError("AgentRun control fanout does not advance per-Run fencing")
+        if fanout["authority_kind"] == "system_safety_trigger" and not {
+            "system_safety_control_id", "system_safety_control_digest"
+        } <= set(target):
+            raise AssertionError("System AgentRun fanout lacks a per-Run SystemSafetyControl")
+        if fanout["authority_kind"] == "work_order_control_request" and {
+            "system_safety_control_id", "system_safety_control_digest"
+        } & set(target):
+            raise AssertionError("User AgentRun fanout mixes SystemSafetyControl authority")
+    mark_checks(
+        "control_fanout.digest", "control_fanout.authority", "control_fanout.coverage",
+        "control_fanout.fencing", "control_fanout.recovery",
+    )
+
+
+def validate_multiagent_terminal(
+    root_state: str, children: list[tuple[bool, str]], work_order_state: str,
+) -> None:
+    active_states = {"accepted", "running", "waiting_input", "waiting_approval", "paused", "cancel_requested", "outcome_unknown"}
+    if work_order_state in {"completed", "partial", "failed", "cancelled"} and any(
+        state in active_states for _, state in children
+    ):
+        raise AssertionError("Terminal WorkOrder leaves an active Child AgentRun")
+    if work_order_state == "completed" and (
+        root_state != "succeeded"
+        or any(required and state != "succeeded" for required, state in children)
+    ):
+        raise AssertionError("Completed WorkOrder lacks successful Root and required Child Runs")
+    if work_order_state == "cancelled" and (
+        root_state not in {"cancelled", "failed"}
+        or any(state not in {"cancelled", "failed"} for _, state in children)
+    ):
+        raise AssertionError("Cancelled WorkOrder lacks terminal evidence for every AgentRun")
+    mark_checks("work_order.multiagent_terminal")
 
 
 def validate_runtime_token(
@@ -942,13 +1321,27 @@ def validate_sandbox_token(
 def validate_sandbox_spec(
     spec: dict[str, Any], manifest: dict[str, Any], capabilities: dict[str, Any],
 ) -> None:
+    workspace_binding = manifest["workspace_binding"]
+    expected_commit_mode = (
+        "read_only"
+        if workspace_binding["commit_mode"] == "none"
+        else "cas_new_revision"
+    )
     if (
         spec["tenant_id"] != manifest["tenant_id"]
         or spec["work_order_id"] != manifest["work_order_id"]
-        or spec["workspace"]["base_revision_id"] != manifest["conversation"]["workspace_revision_id"]
-        or spec["workspace"]["base_revision_digest"] != manifest["conversation"]["workspace_revision_digest"]
+        or spec["workspace"]["base_revision_id"]
+        != workspace_binding["base_workspace_revision_id"]
+        or spec["workspace"]["base_revision_digest"]
+        != workspace_binding["base_workspace_revision_digest"]
+        or spec["workspace"]["commit_mode"] != expected_commit_mode
+        or (
+            expected_commit_mode == "cas_new_revision"
+            and spec["workspace"]["base_workspace_head_version"]
+            != workspace_binding["expected_workspace_head_version"]
+        )
     ):
-        raise AssertionError("SandboxSpec crosses its admitted WorkOrder or WorkspaceRevision")
+        raise AssertionError("SandboxSpec crosses its admitted WorkOrder or Workspace binding")
     lease_expiry = parse_datetime(spec["lease"]["expires_at"])
     execution_ceiling = min(
         parse_datetime(manifest["commercial_authorization"]["expires_at"]),
@@ -1712,6 +2105,9 @@ def validate_event_registry(registry: dict[str, Any]) -> None:
         dependencies = sorted(
             [
                 load("contracts/schemas/capability-error.schema.json"),
+                load("contracts/schemas/child-agent-run-spawn-request.schema.json"),
+                load("contracts/schemas/runtime-input-envelope.schema.json"),
+                load("contracts/schemas/runtime-input-content.schema.json"),
                 load("contracts/schemas/usage-observation.schema.json"),
             ],
             key=lambda schema: schema["$id"],
@@ -2137,9 +2533,14 @@ def validate_state_machine(machine: dict[str, Any], allowed_states: set[str]) ->
 
 def validate_work_order_failure_paths(machine: dict[str, Any]) -> None:
     transitions = {(item["from"], item["event"], item["to"]) for item in machine["transitions"]}
-    required = {(state, "fail", "failed") for state in ("queued", "waiting", "paused")}
+    required = {
+        (state, "fail", "failed")
+        for state in ("accepted", "queued", "waiting", "paused")
+    }
     if not required <= transitions:
-        raise AssertionError("WorkOrder lacks a truthful failure path from queued, waiting or paused")
+        raise AssertionError(
+            "WorkOrder lacks a truthful failure path from accepted, queued, waiting or paused"
+        )
     mark_checks("work_order.failure_paths")
 
 
@@ -2214,11 +2615,26 @@ plugin_event_descriptor = load("examples/contracts/plugin-event-read-operation-d
 plugin_event_token = load("examples/contracts/plugin-events-token-claims.json")
 no_sandbox_manifest = load("examples/contracts/run-manifest-no-sandbox.json")
 workflow_run = load("examples/contracts/workflow-run.json")
+workflow_root_binding = load("examples/contracts/workflow-run-root-binding.json")
 agent_run = load("examples/contracts/agent-run.json")
+root_budget_allocation = load("examples/contracts/agent-run-budget-allocation.json")
 runtime_start = load("examples/contracts/agent-runtime-start-request.json")
+child_spawn_request = load("examples/contracts/child-agent-run-spawn-request.json")
+child_admission_decision = load("examples/contracts/child-agent-run-admission-decision.json")
+child_agent_run = load("examples/contracts/child-agent-run.json")
+child_manifest = load("examples/contracts/child-run-manifest-v2.json")
+child_runtime_start = load("examples/contracts/child-agent-runtime-start-request.json")
+control_fanout = load("examples/contracts/agent-run-control-fanout.json")
+progressed_control_fanout = load(
+    "examples/contracts/agent-run-control-fanout-progressed.json"
+)
+cancel_control_request = load("examples/contracts/work-order-cancel-request.json")
 renewed_runtime_authorization = load("examples/contracts/runtime-authorization-renewed.json")
 runtime_token = load("examples/contracts/agent-runtime-invocation-token-claims.json")
 runtime_command = load("examples/contracts/agent-runtime-command.json")
+spawn_decision_command = load(
+    "examples/contracts/agent-runtime-subagent-spawn-decision-command.json"
+)
 runtime_command_token = load("examples/contracts/agent-runtime-command-token-claims.json")
 system_safety_control = load("examples/contracts/system-safety-control.json")
 system_safety_command = load("examples/contracts/agent-runtime-system-safety-command.json")
@@ -2230,6 +2646,7 @@ commercial_revocation_accepted = load(
     "examples/contracts/commercial-authorization-revocation-accepted.json"
 )
 control_request = load("examples/contracts/work-order-control-request.json")
+cancel_control_grant = load("examples/contracts/execution-grant-cancel-claims.json")
 control_runtime_input = load("examples/contracts/work-order-control-runtime-input.json")
 runtime_status_descriptor = load("examples/contracts/agent-runtime-status-operation-descriptor.json")
 runtime_status_token = load("examples/contracts/agent-runtime-status-token-claims.json")
@@ -2251,6 +2668,7 @@ sandbox_exec_result_descriptor = load("examples/contracts/sandbox-exec-result-op
 sandbox_snapshot_manifest_descriptor = load("examples/contracts/sandbox-snapshot-manifest-operation-descriptor.json")
 sandbox_event_read_descriptor = load("examples/contracts/sandbox-event-read-operation-descriptor.json")
 sandbox_spec = load("examples/contracts/sandbox-spec.json")
+child_sandbox_spec = load("examples/contracts/child-sandbox-spec.json")
 sandbox_capabilities = load("examples/contracts/sandbox-capabilities.json")
 capability_request = load("examples/contracts/capability-invocation-request.json")
 capability_token = load("examples/contracts/capability-invocation-token-claims.json")
@@ -2300,6 +2718,30 @@ conformance_suites = [
 ]
 validate_provider_architecture(context, conformance_suites)
 validate_execution_topology(manifest, workflow_run, agent_run, runtime_start)
+validate_workflow_root_binding(
+    workflow_root_binding, workflow_run, agent_run, manifest
+)
+validate_agent_run_budget_allocation(
+    root_budget_allocation, execution_budget, agent_run
+)
+validate_child_agent_admission(
+    child_spawn_request, child_admission_decision, workflow_run, agent_run, agent_run, manifest,
+    child_agent_run, child_manifest, child_runtime_start, execution_budget,
+    root_budget_allocation, [agent_run],
+)
+validate_agent_run_control_fanout(
+    control_fanout, [agent_run, child_agent_run],
+    {agent_run["runtime_run_id"]: 2, child_agent_run["runtime_run_id"]: 1},
+    cancel_control_request,
+)
+validate_agent_run_control_fanout(
+    progressed_control_fanout, [agent_run, child_agent_run],
+    {agent_run["runtime_run_id"]: 2, child_agent_run["runtime_run_id"]: 1},
+    cancel_control_request, control_fanout,
+)
+validate_multiagent_terminal(
+    "succeeded", [(True, "succeeded")], "completed"
+)
 renewed_runtime_start = copy.deepcopy(runtime_start)
 renewed_runtime_start["invocation_attempt_id"] = renewed_runtime_authorization[
     "artifact_grants"
@@ -2316,6 +2758,7 @@ validate_runtime_token(runtime_command_token, manifest, agent_run, runtime_start
 validate_runtime_token(runtime_status_token, manifest, agent_run, runtime_start, runtime_status_descriptor)
 validate_runtime_token(runtime_event_token, manifest, agent_run, runtime_start, runtime_event_descriptor)
 validate_sandbox_spec(sandbox_spec, manifest, sandbox_capabilities)
+validate_sandbox_spec(child_sandbox_spec, child_manifest, sandbox_capabilities)
 sandbox_resolution = next(
     item for item in manifest["capability_resolutions"]
     if item["resolution_id"] == sandbox_spec["provider_resolution_id"]
@@ -2436,6 +2879,7 @@ for conformance_suite in conformance_suites:
     validate_conformance_suite(conformance_suite)
 validate_run_admission(manifest, context)
 validate_run_admission(no_sandbox_manifest, context)
+validate_run_admission(child_manifest, context)
 grant = execution_grant
 work_order_grant = load("examples/contracts/execution-grant-work-order-claims.json")
 conversation_turn_request = load("examples/contracts/conversation-turn-request.json")
@@ -2458,7 +2902,13 @@ validate_execution_grant_request(
     control_request,
     authenticated_conversation_id=control_request["conversation_id"],
 )
+validate_execution_grant_request(
+    cancel_control_grant,
+    cancel_control_request,
+    authenticated_conversation_id=cancel_control_request["conversation_id"],
+)
 validate_work_order_control_contract(control_request)
+validate_work_order_control_contract(cancel_control_request)
 bound_runtime_command = load("examples/contracts/agent-runtime-command.json")
 control_runtime_input = load("examples/contracts/work-order-control-runtime-input.json")
 if bound_runtime_command["authorized_control_request_id"] != control_request["control_request_id"]:
@@ -2566,9 +3016,14 @@ for case in architecture_negative["cases"]:
             candidate_start["request_digest"] = canonical_digest({key: item for key, item in candidate_start.items() if key != "request_digest"})
             validate_execution_topology(manifest, workflow_run, agent_run, candidate_start)
         elif mutation == "workflow_root_mismatch":
-            candidate_workflow = copy.deepcopy(workflow_run)
-            candidate_workflow["root_agent_run_id"] = "agr_other"
-            validate_execution_topology(manifest, candidate_workflow, agent_run, runtime_start)
+            candidate_binding = copy.deepcopy(workflow_root_binding)
+            candidate_binding["root_agent_run_id"] = "agr_other"
+            candidate_binding["binding_digest"] = canonical_digest({
+                key: value for key, value in candidate_binding.items() if key != "binding_digest"
+            })
+            validate_workflow_root_binding(
+                candidate_binding, workflow_run, agent_run, manifest
+            )
         elif mutation == "provider_suite_digest_mismatch":
             candidate = copy.deepcopy(context)
             candidate["provider_revisions"][0]["conformance"][0]["suite_digest"] = "sha256:" + "f" * 64
@@ -3105,6 +3560,7 @@ def validate_agent_runtime_command(
     *, control_request: dict[str, Any] | None = None,
     persisted_input: dict[str, Any] | None = None,
     system_safety_control: dict[str, Any] | None = None,
+    child_admission_decision: dict[str, Any] | None = None,
 ) -> None:
     validate_self_digest(command, "command_digest")
     if command["runtime_run_id"] != runtime_start["runtime_run_id"]:
@@ -3146,6 +3602,19 @@ def validate_agent_runtime_command(
         )):
             raise AssertionError("Agent Runtime command differs from SystemSafetyControl")
         mark_checks("runtime_command.system_safety_binding")
+    elif command["type"] == "subagent_spawn_decision":
+        if child_admission_decision is None:
+            raise AssertionError("Spawn decision command lacks its Platform admission decision")
+        if any((
+            command["spawn_request_id"] != child_admission_decision["spawn_request_id"],
+            command["child_agent_run_admission_decision_id"] != child_admission_decision["decision_id"],
+            command["child_agent_run_admission_decision_digest"] != child_admission_decision["decision_digest"],
+            command["spawn_outcome"] != child_admission_decision["outcome"],
+            command["spawn_reason_codes"] != child_admission_decision["reason_codes"],
+            command.get("child_agent_run_id") != child_admission_decision.get("child_agent_run_id"),
+        )):
+            raise AssertionError("Spawn decision command differs from its Platform admission decision")
+        mark_checks("runtime_command.child_admission_binding")
     elif command["type"] != "checkpoint":
         raise AssertionError("Agent Runtime command lacks an authorized control source")
     mark_checks("runtime_command.digest")
@@ -3219,6 +3688,102 @@ validate_agent_runtime_command(
     runtime_start,
     system_safety_control=system_safety_control,
 )
+validate_agent_runtime_command(
+    spawn_decision_command,
+    manifest,
+    runtime_start,
+    child_admission_decision=child_admission_decision,
+)
+
+for path, validator in (
+    (
+        "contracts/tests/semantic-invalid/child-spawn-input-mismatch.json",
+        lambda value: validate_child_agent_admission(
+            value, child_admission_decision, workflow_run, agent_run, agent_run, manifest, child_agent_run,
+            child_manifest, child_runtime_start, execution_budget,
+            root_budget_allocation, [agent_run],
+        ),
+    ),
+    (
+        "contracts/tests/semantic-invalid/child-budget-allocation-wider.json",
+        lambda value: validate_agent_run_budget_allocation(
+            value, execution_budget, child_agent_run, root_budget_allocation
+        ),
+    ),
+    (
+        "contracts/tests/semantic-invalid/child-agent-run-parent-mismatch.json",
+        lambda value: validate_child_agent_admission(
+            child_spawn_request, child_admission_decision, workflow_run, agent_run, agent_run, manifest, value,
+            child_manifest, child_runtime_start, execution_budget,
+            root_budget_allocation, [agent_run],
+        ),
+    ),
+    (
+        "contracts/tests/semantic-invalid/child-admission-provider-mismatch.json",
+        lambda value: validate_child_agent_admission(
+            child_spawn_request, value, workflow_run, agent_run, agent_run, manifest, child_agent_run,
+            child_manifest, child_runtime_start, execution_budget,
+            root_budget_allocation, [agent_run],
+        ),
+    ),
+    (
+        "contracts/tests/semantic-invalid/child-admission-workspace-mismatch.json",
+        lambda value: validate_child_agent_admission(
+            child_spawn_request, value, workflow_run, agent_run, agent_run, manifest, child_agent_run,
+            child_manifest, child_runtime_start, execution_budget,
+            root_budget_allocation, [agent_run],
+        ),
+    ),
+):
+    try:
+        validator(load(path))
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError(f"Expected multi-agent semantic fixture to fail: {path}")
+
+try:
+    validate_agent_run_control_fanout(
+        load("contracts/tests/semantic-invalid/agent-run-control-fanout-authority-mismatch.json"),
+        [agent_run, child_agent_run],
+        {agent_run["runtime_run_id"]: 2, child_agent_run["runtime_run_id"]: 1},
+        cancel_control_request,
+    )
+except AssertionError:
+    pass
+else:
+    raise AssertionError("Expected mismatched fanout authority to fail")
+
+try:
+    validate_agent_run_control_fanout(
+        load("contracts/tests/semantic-invalid/agent-run-control-fanout-state-regression.json"),
+        [agent_run, child_agent_run],
+        {agent_run["runtime_run_id"]: 2, child_agent_run["runtime_run_id"]: 1},
+        cancel_control_request,
+        progressed_control_fanout,
+    )
+except AssertionError:
+    pass
+else:
+    raise AssertionError("Expected fanout progress regression to fail")
+
+try:
+    validate_agent_run_control_fanout(
+        control_fanout, [agent_run, child_agent_run],
+        {agent_run["runtime_run_id"]: 3, child_agent_run["runtime_run_id"]: 1},
+        cancel_control_request,
+    )
+except AssertionError:
+    pass
+else:
+    raise AssertionError("Expected stale fanout fencing to fail")
+
+try:
+    validate_multiagent_terminal("succeeded", [(True, "running")], "completed")
+except AssertionError:
+    pass
+else:
+    raise AssertionError("Expected active Child to block WorkOrder completion")
 validate_runtime_token(
     system_safety_token,
     manifest,
@@ -4184,10 +4749,10 @@ for case in phase0_closure_negative["cases"]:
         raise AssertionError(f"Expected Phase 0 closure fixture to fail: {case['id']}")
 
 
-negative_fixture_count = sum(
-    len(json.loads(path.read_text(encoding="utf-8")).get("cases", []))
-    for path in (ROOT / "contracts/tests/semantic-invalid").glob("*.json")
-)
+negative_fixture_count = 0
+for path in (ROOT / "contracts/tests/semantic-invalid").glob("*.json"):
+    negative_fixture = json.loads(path.read_text(encoding="utf-8"))
+    negative_fixture_count += len(negative_fixture["cases"]) if "cases" in negative_fixture else 1
 enforcements = [
     enforcement
     for constraint in semantic_traceability["constraints"]

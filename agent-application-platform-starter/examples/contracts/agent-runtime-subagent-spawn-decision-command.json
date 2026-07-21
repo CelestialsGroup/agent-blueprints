@@ -1,0 +1,20 @@
+{
+  "command_id": "cmd_spawn_decision_01J00000000000000",
+  "command_digest": "sha256:eb77383c9219f3d154d90e0cf103c25c2881216ea81dbbcf6894c87080667f81",
+  "runtime_run_id": "rtr_01J00000000000000000000000",
+  "command_sequence": 2,
+  "type": "subagent_spawn_decision",
+  "spawn_request_id": "spawn_01J0000000000000000000000",
+  "child_agent_run_admission_decision_id": "cadm_01J0000000000000000000000",
+  "child_agent_run_admission_decision_digest": "sha256:c429c88b807ca571955d76e872c35d9df98524c6a1920a881f7567a5d89071a5",
+  "spawn_outcome": "accepted",
+  "spawn_reason_codes": [
+    "admitted"
+  ],
+  "child_agent_run_id": "agr_child_01J0000000000000000000",
+  "invocation_id": "inv_spawn_decision_01J000000000000",
+  "invocation_attempt_id": "iat_spawn_decision_01J0000000000",
+  "fencing_token": 2,
+  "idempotency_key": "spawn-decision-command-key-0001",
+  "deadline_at": "2026-07-16T09:04:00Z"
+}

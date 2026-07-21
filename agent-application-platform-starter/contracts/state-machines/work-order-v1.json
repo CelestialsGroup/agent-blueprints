@@ -5,6 +5,7 @@
   "terminal_states": ["completed", "partial", "failed", "cancelled"],
   "transitions": [
     { "from": "accepted", "event": "enqueue", "to": "queued" },
+    { "from": "accepted", "event": "fail", "to": "failed" },
     { "from": "accepted", "event": "cancel_requested", "to": "cancel_requested" },
     { "from": "queued", "event": "start", "to": "running" },
     { "from": "queued", "event": "fail", "to": "failed" },
@@ -23,6 +24,8 @@
     { "from": "paused", "event": "cancel_requested", "to": "cancel_requested" },
     { "from": "cancel_requested", "event": "cancellation_started", "to": "cancelling" },
     { "from": "cancel_requested", "event": "completed_before_cancel", "to": "completed" },
+    { "from": "cancel_requested", "event": "partial_before_cancel", "to": "partial" },
+    { "from": "cancel_requested", "event": "failed_before_cancel", "to": "failed" },
     { "from": "cancelling", "event": "cancel_confirmed", "to": "cancelled" },
     { "from": "cancelling", "event": "completed_before_cancel", "to": "completed" },
     { "from": "cancelling", "event": "partial_before_cancel", "to": "partial" },

@@ -11,6 +11,16 @@ import rfc8785
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
+AGENT_RUN_RESOURCE_LIMIT_NAMES = (
+    "max_input_tokens",
+    "max_output_tokens",
+    "max_model_requests",
+    "max_sandbox_seconds",
+    "max_network_bytes",
+    "max_storage_bytes",
+    "max_artifact_count",
+    "max_conversion_count",
+)
 
 
 def read(relative: str) -> dict[str, Any]:
@@ -348,6 +358,11 @@ grant["request_contract_id"] = "urn:agent-platform:conversation-turn-request:v1"
 grant["request_digest_profile"] = "rfc8785-request-excluding-execution-grant-v1"
 grant["principal_context"] = copy.deepcopy(principal_context)
 grant["principal_context_digest"] = principal_context["principal_context_digest"]
+grant["limits"].update({
+    "max_agent_runs": 8,
+    "max_agent_depth": 4,
+    "max_parallel_agent_runs": 3,
+})
 commercial_path = "examples/contracts/commercial-authorization-snapshot.json"
 commercial = read(commercial_path)
 commercial["commercial_authorization_id"] = commercial.pop(
@@ -459,6 +474,25 @@ budget["work_order_id"] = "wrk_01J00000000000000000000000"
 budget["limits"] = copy.deepcopy(commercial["authorized_limits"])
 budget["budget_digest"] = digest_without(budget, "budget_digest")
 write(budget_path, budget)
+
+root_budget_allocation = {
+    "allocation_id": "abal_root_01J000000000000000000000",
+    "allocation_digest": "sha256:" + "0" * 64,
+    "tenant_id": budget["tenant_id"],
+    "work_order_id": budget["work_order_id"],
+    "agent_run_id": "agr_01J00000000000000000000000",
+    "work_order_budget_id": budget["budget_id"],
+    "work_order_budget_digest": budget["budget_digest"],
+    "limits": {
+        name: budget["limits"][name] for name in AGENT_RUN_RESOURCE_LIMIT_NAMES
+    },
+    "issued_at": "2026-07-16T09:01:00Z",
+    "expires_at": budget["expires_at"],
+}
+root_budget_allocation["allocation_digest"] = digest_without(
+    root_budget_allocation, "allocation_digest"
+)
+write("examples/contracts/agent-run-budget-allocation.json", root_budget_allocation)
 
 permissions_path = "examples/contracts/effective-permissions.json"
 permissions = read(permissions_path)
@@ -654,8 +688,44 @@ write("contracts/tests/invalid/plugin-safety-token-authorizes-invoke.json", plug
 
 runtime_input_path = "examples/contracts/runtime-input-envelope.json"
 runtime_input = read(runtime_input_path)
+runtime_input["source_kind"] = "conversation_message"
+runtime_input.pop("child_agent_spawn_request_id", None)
 runtime_input["content_digest"] = digest(runtime_input["content"])
 write(runtime_input_path, runtime_input)
+
+child_spawn_request = {
+    "spawn_request_id": "spawn_01J0000000000000000000000",
+    "request_digest": "sha256:" + "0" * 64,
+    "tenant_id": budget["tenant_id"],
+    "work_order_id": budget["work_order_id"],
+    "workflow_run_id": "wfr_01J00000000000000000000000",
+    "root_agent_run_id": "agr_01J00000000000000000000000",
+    "parent_agent_run_id": "agr_01J00000000000000000000000",
+    "parent_runtime_run_id": "rtr_01J00000000000000000000000",
+    "parent_run_depth": 0,
+    "requested_agent_role": "researcher",
+    "required_for_work_order_completion": True,
+    "delegated_input": {
+        "input_id": "rin_child_01J00000000000000000000",
+        "source_kind": "delegated_task",
+        "child_agent_spawn_request_id": "spawn_01J0000000000000000000000",
+        "content_digest": "sha256:" + "0" * 64,
+        "content": [{"type": "text", "text": "Research the cited sources and return verified findings."}],
+    },
+    "required_capabilities": [
+        {"id": "agent.general", "version": "1.0", "profile": "default"}
+    ],
+    "workspace_mode": "isolated_revision",
+    "sandbox_mode": "dedicated",
+    "requested_at": "2026-07-16T09:02:00Z",
+}
+child_spawn_request["delegated_input"]["content_digest"] = digest(
+    child_spawn_request["delegated_input"]["content"]
+)
+child_spawn_request["request_digest"] = digest_without(
+    child_spawn_request, "request_digest"
+)
+write("examples/contracts/child-agent-run-spawn-request.json", child_spawn_request)
 
 context_package_path = "examples/contracts/context-package.json"
 context_package = read(context_package_path)
@@ -820,6 +890,9 @@ event_registry = read(event_registry_path)
 event_dependencies = sorted(
     [
         read("contracts/schemas/capability-error.schema.json"),
+        read("contracts/schemas/child-agent-run-spawn-request.schema.json"),
+        read("contracts/schemas/runtime-input-envelope.schema.json"),
+        read("contracts/schemas/runtime-input-content.schema.json"),
         read("contracts/schemas/usage-observation.schema.json"),
     ],
     key=lambda schema: schema["$id"],
@@ -872,6 +945,12 @@ manifest = read(manifest_path)
 manifest["agent_run_id"] = manifest.pop("run_id", "agr_01J00000000000000000000000")
 manifest["workflow_run_id"] = "wfr_01J00000000000000000000000"
 manifest["tenant_id"] = "ten_01J00000000000000000000000"
+manifest["run_topology"] = {
+    "run_kind": "root",
+    "root_agent_run_id": manifest["agent_run_id"],
+    "run_depth": 0,
+    "required_for_work_order_completion": True,
+}
 legacy_temporal = manifest.pop("temporal", None)
 if "orchestration_binding" not in manifest:
     temporal_reference = legacy_temporal or {
@@ -949,6 +1028,7 @@ manifest["context_package"] = copy.deepcopy(context_package)
 manifest.pop("artifact_grants", None)
 manifest["artifact_access_requirements"] = [copy.deepcopy(artifact_requirement)]
 manifest["execution_budget"] = copy.deepcopy(budget)
+manifest["agent_run_budget_allocation"] = copy.deepcopy(root_budget_allocation)
 manifest["policy_decision"] = copy.deepcopy(policy)
 manifest["effective_permissions"] = copy.deepcopy(permissions)
 manifest["gateway_bindings"] = copy.deepcopy(gateway_bindings)
@@ -968,6 +1048,14 @@ manifest["event_registry"] = {
 }
 manifest["conversation"]["workspace_revision_id"] = workspace_revision["workspace_revision_id"]
 manifest["conversation"]["workspace_revision_digest"] = workspace_revision["revision_digest"]
+manifest["workspace_binding"] = {
+    "workspace_mode": "shared_branch_cas",
+    "base_workspace_revision_id": workspace_revision["workspace_revision_id"],
+    "base_workspace_revision_digest": workspace_revision["revision_digest"],
+    "mount_access": "copy_on_write",
+    "commit_mode": "shared_branch_cas",
+    "expected_workspace_head_version": conversation_branch["workspace_head_version"],
+}
 manifest["location"] = {
     "placement_mode": "platform_managed",
     "region_id": "ap-southeast-1",
@@ -1168,6 +1256,24 @@ for field in (
 control_grant["request_digest"] = digest_without(control_request, "execution_grant")
 write("examples/contracts/execution-grant-control-claims.json", control_grant)
 
+cancel_control_request = copy.deepcopy(control_request)
+cancel_control_request.update({
+    "control_request_id": "ctl_cancel_01J0000000000000000000",
+    "action": "cancel",
+    "reason": "User requested cancellation of the active WorkOrder.",
+})
+for field in ("content", "expected_message_head_version"):
+    cancel_control_request.pop(field, None)
+write("examples/contracts/work-order-cancel-request.json", cancel_control_request)
+cancel_control_grant = copy.deepcopy(control_grant)
+cancel_control_grant.update({
+    "jti": "grant_cancel_01J000000000000000000",
+    "nonce": "nonce-work-cancel-0123456789",
+    "control_request_id": cancel_control_request["control_request_id"],
+    "request_digest": digest_without(cancel_control_request, "execution_grant"),
+})
+write("examples/contracts/execution-grant-cancel-claims.json", cancel_control_grant)
+
 commercial_revocation_path = "examples/contracts/commercial-authorization-revocation.json"
 commercial_revocation = read(commercial_revocation_path)
 commercial_revocation.update({
@@ -1250,12 +1356,24 @@ def make_runtime_authorization(
         "run_manifest_digest": manifest_value["run_manifest_digest"],
         "commercial_authorization": copy.deepcopy(manifest_value["commercial_authorization"]),
         "execution_budget": copy.deepcopy(manifest_value["execution_budget"]),
+        "agent_run_budget_allocation": copy.deepcopy(
+            manifest_value["agent_run_budget_allocation"]
+        ),
         "policy_decision": copy.deepcopy(manifest_value["policy_decision"]),
         "effective_permissions": copy.deepcopy(manifest_value["effective_permissions"]),
         "artifact_grants": [copy.deepcopy(artifact_grant)],
         "issued_at": "2026-07-16T09:01:00Z",
         "expires_at": "2026-07-16T09:15:00Z",
     })
+    value["artifact_grants"][0]["grant_id"] = f"artg_{authorization_id}"
+    value["artifact_grants"][0]["execution_scope"].update({
+        "runtime_run_id": start_value["runtime_run_id"],
+        "invocation_id": start_value["invocation_id"],
+        "invocation_attempt_id": start_value["invocation_attempt_id"],
+    })
+    value["artifact_grants"][0]["grant_digest"] = digest_without(
+        value["artifact_grants"][0], "grant_digest"
+    )
     value["authorization_digest"] = digest_without(value, "authorization_digest")
     return value
 
@@ -1287,7 +1405,8 @@ write("examples/contracts/runtime-authorization-renewed.json", renewed_authoriza
 for legacy_field in ("artifact_grants", "execution_budget", "policy_decision", "effective_permissions"):
     runtime_start.pop(legacy_field, None)
 for field in (
-    "input", "context_package", "gateway_bindings", "admission_limits",
+    "input", "context_package", "gateway_bindings", "admission_limits", "run_topology",
+    "workspace_binding",
 ):
     runtime_start[field] = copy.deepcopy(manifest[field])
 runtime_start["runtime_authorization"] = copy.deepcopy(runtime_authorization)
@@ -1298,7 +1417,8 @@ no_sandbox_runtime_start = copy.deepcopy(runtime_start)
 no_sandbox_runtime_start["run_manifest_digest"] = no_sandbox_manifest["run_manifest_digest"]
 no_sandbox_runtime_start["sandbox_bindings"] = []
 for field in (
-    "input", "context_package", "gateway_bindings", "admission_limits",
+    "input", "context_package", "gateway_bindings", "admission_limits", "run_topology",
+    "workspace_binding",
 ):
     no_sandbox_runtime_start[field] = copy.deepcopy(no_sandbox_manifest[field])
 no_sandbox_runtime_start["runtime_authorization"] = make_runtime_authorization(
@@ -1308,6 +1428,172 @@ no_sandbox_runtime_start["runtime_authorization"] = make_runtime_authorization(
 )
 no_sandbox_runtime_start["request_digest"] = digest_without(no_sandbox_runtime_start, "request_digest")
 write("examples/contracts/agent-runtime-start-no-sandbox.json", no_sandbox_runtime_start)
+
+child_budget_limits = {
+    name: budget["limits"][name] for name in AGENT_RUN_RESOURCE_LIMIT_NAMES
+}
+child_budget_limits.update({
+    "max_input_tokens": 20000,
+    "max_output_tokens": 5000,
+    "max_model_requests": 40,
+    "max_sandbox_seconds": 600,
+    "max_network_bytes": 20971520,
+    "max_storage_bytes": 20971520,
+    "max_artifact_count": 5,
+    "max_conversion_count": 1,
+})
+child_budget_allocation = {
+    "allocation_id": "abal_child_01J00000000000000000000",
+    "allocation_digest": "sha256:" + "0" * 64,
+    "tenant_id": budget["tenant_id"],
+    "work_order_id": budget["work_order_id"],
+    "agent_run_id": "agr_child_01J0000000000000000000",
+    "parent_allocation_id": root_budget_allocation["allocation_id"],
+    "parent_allocation_digest": root_budget_allocation["allocation_digest"],
+    "work_order_budget_id": budget["budget_id"],
+    "work_order_budget_digest": budget["budget_digest"],
+    "limits": child_budget_limits,
+    "issued_at": "2026-07-16T09:02:01Z",
+    "expires_at": budget["expires_at"],
+}
+child_budget_allocation["allocation_digest"] = digest_without(
+    child_budget_allocation, "allocation_digest"
+)
+write("examples/contracts/child-agent-run-budget-allocation.json", child_budget_allocation)
+
+child_manifest = copy.deepcopy(manifest)
+child_manifest["agent_run_id"] = child_budget_allocation["agent_run_id"]
+child_manifest["run_topology"] = {
+    "run_kind": "subagent",
+    "root_agent_run_id": manifest["agent_run_id"],
+    "parent_agent_run_id": manifest["agent_run_id"],
+    "spawn_request_id": child_spawn_request["spawn_request_id"],
+    "run_depth": 1,
+    "required_for_work_order_completion": True,
+}
+child_manifest["input"] = copy.deepcopy(child_spawn_request["delegated_input"])
+child_manifest["workspace_binding"] = {
+    "workspace_mode": child_spawn_request["workspace_mode"],
+    "base_workspace_revision_id": manifest["conversation"]["workspace_revision_id"],
+    "base_workspace_revision_digest": manifest["conversation"]["workspace_revision_digest"],
+    "mount_access": "copy_on_write",
+    "commit_mode": "isolated_revision_merge_cas",
+    "expected_workspace_head_version": manifest["workspace_binding"][
+        "expected_workspace_head_version"
+    ],
+}
+child_sandbox_spec = copy.deepcopy(sandbox_spec)
+child_sandbox_spec.update({
+    "sandbox_id": "sbx_child_01J0000000000000000000",
+    "sandbox_slot_key": "subagent/researcher",
+})
+child_sandbox_spec["workspace"].update({
+    "base_revision_id": child_manifest["workspace_binding"]["base_workspace_revision_id"],
+    "base_revision_digest": child_manifest["workspace_binding"][
+        "base_workspace_revision_digest"
+    ],
+    "base_workspace_head_version": child_manifest["workspace_binding"][
+        "expected_workspace_head_version"
+    ],
+    "commit_mode": "cas_new_revision",
+})
+write("examples/contracts/child-sandbox-spec.json", child_sandbox_spec)
+child_manifest["agent_run_budget_allocation"] = copy.deepcopy(child_budget_allocation)
+child_manifest["sandboxes"][0]["sandbox_slot_key"] = "subagent/researcher"
+child_manifest["sandboxes"][0]["sandbox_id"] = "sbx_child_01J0000000000000000000"
+child_manifest["sandboxes"][0]["sandbox_spec_digest"] = digest(child_sandbox_spec)
+child_manifest["primary_sandbox_slot_key"] = "subagent/researcher"
+child_manifest["effective_permissions"]["permissions_id"] = (
+    "perm_child_01J0000000000000000000"
+)
+child_manifest["effective_permissions"]["sandbox_slots"][0]["sandbox_slot_key"] = (
+    "subagent/researcher"
+)
+child_manifest["effective_permissions"]["permissions_digest"] = digest_without(
+    child_manifest["effective_permissions"], "permissions_digest"
+)
+child_manifest["policy_decision"]["effective_permissions_digest"] = child_manifest[
+    "effective_permissions"
+]["permissions_digest"]
+child_manifest["policy_decision"]["decision_id"] = "pol_child_01J00000000000000000000"
+child_manifest["policy_decision"]["decision_digest"] = digest_without(
+    child_manifest["policy_decision"], "decision_digest"
+)
+child_manifest["run_manifest_digest"] = digest_without(
+    child_manifest, "run_manifest_digest"
+)
+write("examples/contracts/child-run-manifest-v2.json", child_manifest)
+
+child_runtime_start = copy.deepcopy(runtime_start)
+child_runtime_start.update({
+    "runtime_run_id": "rtr_child_01J0000000000000000000",
+    "agent_run_id": child_manifest["agent_run_id"],
+    "invocation_id": "inv_runtime_child_01J0000000000000",
+    "invocation_attempt_id": "iat_runtime_child_01J00000000000",
+    "idempotency_key": "runtime-child-start-key-0001",
+    "run_manifest_digest": child_manifest["run_manifest_digest"],
+    "run_topology": copy.deepcopy(child_manifest["run_topology"]),
+    "workspace_binding": copy.deepcopy(child_manifest["workspace_binding"]),
+    "input": copy.deepcopy(child_manifest["input"]),
+    "sandbox_bindings": [{
+        "sandbox_slot_key": "subagent/researcher",
+        "sandbox_id": "sbx_child_01J0000000000000000000",
+    }],
+})
+child_runtime_start.pop("input_message_id", None)
+child_runtime_start["runtime_authorization"] = make_runtime_authorization(
+    child_manifest, child_runtime_start, "rauth_child_01J000000000000000000"
+)
+child_runtime_start["request_digest"] = digest_without(
+    child_runtime_start, "request_digest"
+)
+write("examples/contracts/child-agent-runtime-start-request.json", child_runtime_start)
+
+child_agent_run = {
+    "agent_run_id": child_manifest["agent_run_id"],
+    "tenant_id": child_manifest["tenant_id"],
+    "runtime_run_id": child_runtime_start["runtime_run_id"],
+    "workflow_run_id": child_manifest["workflow_run_id"],
+    "work_order_id": child_manifest["work_order_id"],
+    "root_agent_run_id": manifest["agent_run_id"],
+    "parent_agent_run_id": manifest["agent_run_id"],
+    "spawn_request_id": child_spawn_request["spawn_request_id"],
+    "run_kind": "subagent",
+    "run_depth": 1,
+    "required_for_work_order_completion": True,
+    "agent_role": child_spawn_request["requested_agent_role"],
+    "runtime_provider_resolution_id": child_manifest["agent_runtime"]["resolution_id"],
+    "run_manifest_digest": child_manifest["run_manifest_digest"],
+    "created_at": "2026-07-16T09:02:01Z",
+}
+write("examples/contracts/child-agent-run.json", child_agent_run)
+
+child_admission_decision = {
+    "decision_id": "cadm_01J0000000000000000000000",
+    "decision_digest": "sha256:" + "0" * 64,
+    "spawn_request_id": child_spawn_request["spawn_request_id"],
+    "spawn_request_digest": child_spawn_request["request_digest"],
+    "tenant_id": child_manifest["tenant_id"],
+    "work_order_id": child_manifest["work_order_id"],
+    "workflow_run_id": child_manifest["workflow_run_id"],
+    "parent_agent_run_id": manifest["agent_run_id"],
+    "outcome": "accepted",
+    "reason_codes": ["admitted"],
+    "child_agent_run_id": child_manifest["agent_run_id"],
+    "runtime_run_id": child_runtime_start["runtime_run_id"],
+    "runtime_provider_resolution_id": child_manifest["agent_runtime"]["resolution_id"],
+    "run_manifest_digest": child_manifest["run_manifest_digest"],
+    "budget_allocation": copy.deepcopy(child_budget_allocation),
+    "workspace_binding": copy.deepcopy(child_manifest["workspace_binding"]),
+    "decided_at": "2026-07-16T09:02:01Z",
+}
+child_admission_decision["decision_digest"] = digest_without(
+    child_admission_decision, "decision_digest"
+)
+write(
+    "examples/contracts/child-agent-run-admission-decision.json",
+    child_admission_decision,
+)
 
 runtime_status = read("examples/contracts/agent-runtime-run-status.json")
 runtime_status["tenant_id"] = manifest["tenant_id"]
@@ -1327,6 +1613,40 @@ runtime_command["input_id"] = control_runtime_input["input_id"]
 runtime_command["input_content_digest"] = control_runtime_input["content_digest"]
 runtime_command["command_digest"] = digest_without(runtime_command, "command_digest")
 write("examples/contracts/agent-runtime-command.json", runtime_command)
+
+spawn_decision_command = {
+    "command_id": "cmd_spawn_decision_01J00000000000000",
+    "command_digest": "sha256:" + "0" * 64,
+    "runtime_run_id": runtime_start["runtime_run_id"],
+    "command_sequence": 2,
+    "type": "subagent_spawn_decision",
+    "spawn_request_id": child_spawn_request["spawn_request_id"],
+    "child_agent_run_admission_decision_id": child_admission_decision["decision_id"],
+    "child_agent_run_admission_decision_digest": child_admission_decision["decision_digest"],
+    "spawn_outcome": "accepted",
+    "spawn_reason_codes": copy.deepcopy(child_admission_decision["reason_codes"]),
+    "child_agent_run_id": child_agent_run["agent_run_id"],
+    "invocation_id": "inv_spawn_decision_01J000000000000",
+    "invocation_attempt_id": "iat_spawn_decision_01J0000000000",
+    "fencing_token": 2,
+    "idempotency_key": "spawn-decision-command-key-0001",
+    "deadline_at": "2026-07-16T09:04:00Z",
+}
+spawn_decision_command["command_digest"] = digest_without(
+    spawn_decision_command, "command_digest"
+)
+write("examples/contracts/agent-runtime-subagent-spawn-decision-command.json", spawn_decision_command)
+
+runtime_task_started = {
+    "task_id": "task_subagent_01J0000000000000000",
+    "task_kind": "subagent",
+    "status": "running",
+    "title": "Research cited sources",
+    "updated_at": "2026-07-16T09:02:02Z",
+    "child_agent_run_id": child_agent_run["agent_run_id"],
+    "spawn_request_id": child_spawn_request["spawn_request_id"],
+}
+write("examples/contracts/agent-runtime-task-started-event-data.json", runtime_task_started)
 
 system_safety_control_path = "examples/contracts/system-safety-control.json"
 system_safety_control = read(system_safety_control_path)
@@ -2300,12 +2620,24 @@ workflow_run = {
     "workflow_run_id": manifest["workflow_run_id"],
     "tenant_id": manifest["tenant_id"],
     "work_order_id": manifest["work_order_id"],
-    "root_agent_run_id": manifest["agent_run_id"],
     "workflow": manifest["workflow"],
     "orchestration_binding": manifest["orchestration_binding"],
     "created_at": "2026-07-16T09:01:00Z",
 }
 write("examples/contracts/workflow-run.json", workflow_run)
+
+root_binding = {
+    "binding_id": "wrb_01J00000000000000000000000",
+    "tenant_id": manifest["tenant_id"],
+    "work_order_id": manifest["work_order_id"],
+    "workflow_run_id": manifest["workflow_run_id"],
+    "root_agent_run_id": manifest["agent_run_id"],
+    "run_manifest_digest": manifest["run_manifest_digest"],
+    "bound_at": "2026-07-16T09:01:00Z",
+    "binding_digest": "sha256:" + "0" * 64,
+}
+root_binding["binding_digest"] = digest_without(root_binding, "binding_digest")
+write("examples/contracts/workflow-run-root-binding.json", root_binding)
 
 agent_run = {
     "agent_run_id": manifest["agent_run_id"],
@@ -2315,12 +2647,194 @@ agent_run = {
     "work_order_id": manifest["work_order_id"],
     "root_agent_run_id": manifest["agent_run_id"],
     "run_kind": "root",
+    "run_depth": 0,
+    "required_for_work_order_completion": True,
     "agent_role": "general",
     "runtime_provider_resolution_id": manifest["agent_runtime"]["resolution_id"],
     "run_manifest_digest": manifest["run_manifest_digest"],
     "created_at": "2026-07-16T09:01:00Z",
 }
 write("examples/contracts/agent-run.json", agent_run)
+
+control_fanout = {
+    "fanout_id": "fan_01J00000000000000000000000",
+    "fanout_version": 1,
+    "previous_fanout_digest": None,
+    "fanout_digest": "sha256:" + "0" * 64,
+    "tenant_id": manifest["tenant_id"],
+    "work_order_id": manifest["work_order_id"],
+    "action": "cancel",
+    "authority_kind": "work_order_control_request",
+    "authority_id": cancel_control_request["control_request_id"],
+    "authority_digest": cancel_control_grant["request_digest"],
+    "targets": [
+        {
+            "agent_run_id": agent_run["agent_run_id"],
+            "runtime_run_id": agent_run["runtime_run_id"],
+            "target_fencing_token": 3,
+            "control_state": "pending",
+        },
+        {
+            "agent_run_id": child_agent_run["agent_run_id"],
+            "runtime_run_id": child_agent_run["runtime_run_id"],
+            "target_fencing_token": 2,
+            "control_state": "pending",
+        },
+    ],
+    "created_at": "2026-07-16T09:03:00Z",
+    "updated_at": "2026-07-16T09:03:00Z",
+}
+control_fanout["fanout_digest"] = digest_without(control_fanout, "fanout_digest")
+write("examples/contracts/agent-run-control-fanout.json", control_fanout)
+
+progressed_control_fanout = copy.deepcopy(control_fanout)
+progressed_control_fanout.update({
+    "fanout_version": 2,
+    "previous_fanout_digest": control_fanout["fanout_digest"],
+    "updated_at": "2026-07-16T09:03:02Z",
+})
+progressed_control_fanout["targets"][0]["control_state"] = "confirmed"
+progressed_control_fanout["targets"][1]["control_state"] = "outcome_unknown"
+progressed_control_fanout["fanout_digest"] = digest_without(
+    progressed_control_fanout, "fanout_digest"
+)
+write(
+    "examples/contracts/agent-run-control-fanout-progressed.json",
+    progressed_control_fanout,
+)
+
+invalid_child_input = copy.deepcopy(child_spawn_request)
+invalid_child_input["delegated_input"]["child_agent_spawn_request_id"] = "spawn_other"
+invalid_child_input["request_digest"] = digest_without(invalid_child_input, "request_digest")
+write("contracts/tests/semantic-invalid/child-spawn-input-mismatch.json", invalid_child_input)
+
+invalid_child_allocation = copy.deepcopy(child_budget_allocation)
+invalid_child_allocation["limits"]["max_model_requests"] = budget["limits"]["max_model_requests"] + 1
+invalid_child_allocation["allocation_digest"] = digest_without(
+    invalid_child_allocation, "allocation_digest"
+)
+write("contracts/tests/semantic-invalid/child-budget-allocation-wider.json", invalid_child_allocation)
+
+invalid_child_parent = copy.deepcopy(child_agent_run)
+invalid_child_parent["parent_agent_run_id"] = "agr_other"
+write("contracts/tests/semantic-invalid/child-agent-run-parent-mismatch.json", invalid_child_parent)
+
+invalid_rejected_decision = copy.deepcopy(child_admission_decision)
+invalid_rejected_decision["outcome"] = "rejected"
+invalid_rejected_decision["reason_codes"] = ["policy_denied"]
+invalid_rejected_decision["decision_digest"] = digest_without(
+    invalid_rejected_decision, "decision_digest"
+)
+write(
+    "contracts/tests/invalid/child-agent-run-rejected-with-resources.json",
+    invalid_rejected_decision,
+)
+
+invalid_accepted_reasons = copy.deepcopy(child_admission_decision)
+invalid_accepted_reasons["reason_codes"] = ["admitted", "policy_denied"]
+invalid_accepted_reasons["decision_digest"] = digest_without(
+    invalid_accepted_reasons, "decision_digest"
+)
+write(
+    "contracts/tests/invalid/child-agent-run-accepted-with-rejection-reason.json",
+    invalid_accepted_reasons,
+)
+
+invalid_rejected_admitted = copy.deepcopy(child_admission_decision)
+invalid_rejected_admitted["outcome"] = "rejected"
+invalid_rejected_admitted["reason_codes"] = ["admitted"]
+for field in (
+    "child_agent_run_id", "runtime_run_id", "runtime_provider_resolution_id",
+    "run_manifest_digest", "budget_allocation", "workspace_binding",
+):
+    invalid_rejected_admitted.pop(field, None)
+invalid_rejected_admitted["decision_digest"] = digest_without(
+    invalid_rejected_admitted, "decision_digest"
+)
+write(
+    "contracts/tests/invalid/child-agent-run-rejected-as-admitted.json",
+    invalid_rejected_admitted,
+)
+
+invalid_child_start_message = copy.deepcopy(child_runtime_start)
+invalid_child_start_message["input_message_id"] = manifest["conversation"]["input_message_id"]
+invalid_child_start_message["request_digest"] = digest_without(
+    invalid_child_start_message, "request_digest"
+)
+write(
+    "contracts/tests/invalid/child-runtime-start-with-input-message.json",
+    invalid_child_start_message,
+)
+
+invalid_child_start_topology = copy.deepcopy(child_runtime_start)
+invalid_child_start_topology["run_topology"].pop("spawn_request_id")
+invalid_child_start_topology["request_digest"] = digest_without(
+    invalid_child_start_topology, "request_digest"
+)
+write(
+    "contracts/tests/invalid/child-runtime-start-missing-spawn-binding.json",
+    invalid_child_start_topology,
+)
+
+invalid_child_admission_provider = copy.deepcopy(child_admission_decision)
+invalid_child_admission_provider["runtime_provider_resolution_id"] = "res_other"
+invalid_child_admission_provider["decision_digest"] = digest_without(
+    invalid_child_admission_provider, "decision_digest"
+)
+write(
+    "contracts/tests/semantic-invalid/child-admission-provider-mismatch.json",
+    invalid_child_admission_provider,
+)
+
+invalid_child_admission_workspace = copy.deepcopy(child_admission_decision)
+invalid_child_admission_workspace["workspace_binding"] = copy.deepcopy(
+    manifest["workspace_binding"]
+)
+invalid_child_admission_workspace["decision_digest"] = digest_without(
+    invalid_child_admission_workspace, "decision_digest"
+)
+write(
+    "contracts/tests/semantic-invalid/child-admission-workspace-mismatch.json",
+    invalid_child_admission_workspace,
+)
+
+invalid_control_fanout = copy.deepcopy(control_fanout)
+invalid_control_fanout["targets"][0].update({
+    "system_safety_control_id": "ssc_mixed_authority",
+    "system_safety_control_digest": "sha256:" + "f" * 64,
+})
+invalid_control_fanout["fanout_digest"] = digest_without(
+    invalid_control_fanout, "fanout_digest"
+)
+write(
+    "contracts/tests/invalid/agent-run-control-fanout-mixed-authority.json",
+    invalid_control_fanout,
+)
+
+invalid_control_fanout_authority = copy.deepcopy(control_fanout)
+invalid_control_fanout_authority["authority_digest"] = control_grant["request_digest"]
+invalid_control_fanout_authority["fanout_digest"] = digest_without(
+    invalid_control_fanout_authority, "fanout_digest"
+)
+write(
+    "contracts/tests/semantic-invalid/agent-run-control-fanout-authority-mismatch.json",
+    invalid_control_fanout_authority,
+)
+
+invalid_control_fanout_regression = copy.deepcopy(progressed_control_fanout)
+invalid_control_fanout_regression.update({
+    "fanout_version": 3,
+    "previous_fanout_digest": progressed_control_fanout["fanout_digest"],
+    "updated_at": "2026-07-16T09:03:03Z",
+})
+invalid_control_fanout_regression["targets"][0]["control_state"] = "pending"
+invalid_control_fanout_regression["fanout_digest"] = digest_without(
+    invalid_control_fanout_regression, "fanout_digest"
+)
+write(
+    "contracts/tests/semantic-invalid/agent-run-control-fanout-state-regression.json",
+    invalid_control_fanout_regression,
+)
 
 ui_extension_path = "examples/contracts/ui-extension-manifest.json"
 ui_extension = read(ui_extension_path)
@@ -2405,10 +2919,100 @@ traceability_profiles = {
         contract_check("runtime_start.execution_topology"),
         contract_check("run_manifest.execution_inputs"),
         contract_check("run_manifest.authorization_ceiling"),
+        contract_check("run_manifest.workspace_binding"),
         contract_check("run_manifest.gateway_binding"),
         contract_check("run_manifest.commercial_event_binding"),
         contract_check("run_manifest.orchestration_binding"),
         contract_check("run_manifest.admission"),
+    ],
+    "workflow-run.schema.json": [
+        contract_check("workflow_run.lifecycle") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "workflow_run_optional_unique_binding",
+        ),
+        contract_check("workflow_run.lifecycle"),
+    ],
+    "workflow-run-root-binding.schema.json": [
+        contract_check("workflow_root_binding.digest"),
+        contract_check("workflow_root_binding.scope") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "workflow_root_binding_unique_fk",
+        ),
+        contract_check("workflow_root_binding.atomic_creation") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "workflow_root_binding_deferred_atomic_insert",
+        ),
+    ],
+    "agent-run.schema.json": [
+        contract_check("agent_run.topology"),
+        contract_check("agent_run.topology") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "agent_run_parent_root_depth_fk",
+        ),
+        contract_check("agent_run.spawn_binding") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "agent_run_spawn_admission_unique_fk",
+        ),
+        contract_check("runtime_start.execution_topology"),
+    ],
+    "agent-run-budget-allocation.schema.json": [
+        contract_check("agent_budget.digest"),
+        contract_check("agent_budget.scope"),
+        contract_check("agent_budget.shared_ledger") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "work_order_shared_budget_ledger",
+        ),
+        contract_check("agent_budget.shared_ledger") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "child_admission_topology_limits",
+        ),
+    ],
+    "child-agent-run-spawn-request.schema.json": [
+        contract_check("child_spawn.digest"),
+        contract_check("child_spawn.scope"),
+        contract_check("child_spawn.scope"),
+        contract_check("child_spawn.provider_boundary"),
+        contract_check("child_spawn.idempotency") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "child_spawn_idempotency_unique",
+        ),
+    ],
+    "child-agent-run-admission-decision.schema.json": [
+        contract_check("child_admission.digest"),
+        contract_check("child_admission.outcome") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "child_admission_single_decision",
+        ),
+        contract_check("child_admission.atomic_creation") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "child_admission_atomic_insert",
+        ),
+        contract_check("child_admission.outcome"),
+        contract_check("child_admission.atomic_creation") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "child_admission_active_authorization_guard",
+        ),
+    ],
+    "agent-run-control-fanout.schema.json": [
+        contract_check("control_fanout.digest"),
+        contract_check("control_fanout.authority") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "agent_run_control_fanout_authority_fk",
+        ),
+        contract_check("control_fanout.coverage") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "agent_run_control_fanout_target_snapshot",
+        ),
+        contract_check("control_fanout.fencing"),
+        contract_check("control_fanout.recovery") + implementation_check(
+            "conformance_test", "contracts/conformance/runtime/v1/suite.json",
+            "multi-agent-control-and-terminal",
+        ),
+    ],
+    "runtime-input-envelope.schema.json": [
+        contract_check("runtime_start.input_binding"),
+        contract_check("runtime_start.input_binding"),
+        contract_check("agent_run.spawn_binding"),
     ],
     "agent-runtime-start-request.schema.json": [
         contract_check("runtime_start.execution_topology"),
@@ -2446,6 +3050,10 @@ traceability_profiles = {
         contract_check("runtime_command.system_safety_binding") + implementation_check(
             "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
             "runtime_command_system_safety_fk",
+        ),
+        contract_check("runtime_command.child_admission_binding") + implementation_check(
+            "ddl_responsibility", "docs/26_DATA_MODEL_INVARIANTS.md",
+            "runtime_command_child_admission_fk",
         ),
         contract_check("runtime_token.binding"),
     ],

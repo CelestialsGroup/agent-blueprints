@@ -12,7 +12,7 @@ Phase 0 的组件矩阵、备选/不选、许可证、语言边界、版本升�
 |---|---:|---|
 | Go 平台内核、API、Worker、Gateway、Controller | Go 1.26.5 | 最新 Go 正式稳定版 |
 | Agent Workbench、Business Reference、契约工具 | Node.js 24.18.0 Active LTS（Krypton）+ pnpm 11.15.1 | 生产采用最新 Active LTS，不采用短生命周期 Current；包管理统一使用 pnpm |
-| DeerFlow/Python Runtime Adapter、评测与契约工具 | CPython 3.14.6 | 最新 CPython 正式稳定版；3.13 仅作 CI 回滚兼容通道 |
+| Native Python Runtime、评测与契约工具 | CPython 3.14.6 | 最新 CPython 正式稳定版；3.13 仅作 CI 回滚兼容通道 |
 
 精确开发版本记录在 `.tool-versions`，`package.json`/`pnpm-lock.yaml` 和 `go.mod`/`toolchain` 分别约束 Node/pnpm 与 Go，Python 依赖继续使用带摘要的锁文件。生产镜像在实现阶段进一步固定 OCI Digest，并将编译器/解释器版本、依赖锁摘要、SBOM 和镜像摘要写入 BuildProvenance。
 
@@ -39,9 +39,9 @@ Phase 0 的组件矩阵、备选/不选、许可证、语言边界、版本升�
 ### Runtime 与治理组件
 
 - 一个或多个独立 Agent Runtime Provider 服务
-- Native Minimal Runtime Contract Probe（主 Runtime 前验证公共 Port）
-- DeerFlow Runtime 服务（可选参考 Adapter）
-- Native Probe 的可部署版本或第二个 Runtime 服务（冻结前可替换性验证）
+- Native Runtime Core（产品主 Runtime，并先以 Core Profile 落地）
+- 独立 Reference Runtime Contract Probe（冻结前验证公共 Port 可替换性）
+- 独立 Reference Runtime Contract Probe（冻结前可替换性验证，不复用 Native Runtime 内部包）
 - Model Gateway
 - Tool/MCP Gateway
 - Sandbox 出站 Gateway
@@ -62,10 +62,8 @@ egress-gateway Deployment
 
 agent-worker Deployment（Phase 0 可承载多个逻辑 Task Queue）
 
-agent-runtime-provider-* Deployment
-agent-runtime-native-probe Deployment（Phase 0 早期）
-deerflow-runtime Deployment（可选参考实现）
-agent-runtime-secondary Deployment（冻结前一致性验证）
+agent-runtime-native Deployment
+agent-runtime-reference-probe Deployment（冻结前 Port 可替换性验证）
 html-anything Deployment
 html-to-pptx Job
 sandbox Pod / Job

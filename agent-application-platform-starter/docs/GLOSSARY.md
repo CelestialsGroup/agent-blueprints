@@ -25,7 +25,9 @@
 - **BuildProvenance**：Provider Implementation 的 Source Revision、Source Tree、Build Artifact、SBOM 与 Provenance Statement 摘要。
 - **MeterDefinition**：不含价格的不可变技术计量语义和基础单位。
 - **ExecutionBudget / PolicyDecision**：Platform 从商业限制和全部策略作用域导出的不可变执行预算与 `deny > ask > allow` 决策。
-- **AgentRuntimeProvider**：启动/Command/Status/Event/Checkpoint 的稳定 Agent Runtime Port；平台不依赖单一框架，DeerFlow 只是首个参考 Adapter。
+- **AgentRuntimeProvider**：启动/Command/Status/Event/Checkpoint 的稳定 Agent Runtime Port；自研 Native Runtime 是主实现，第三方 Agent 项目只作参考或未来可选 Provider。
+- **ChildAgentRunSpawnRequest**：Parent Runtime 发出的类型化委派需求；不能自行选择 Provider、预算、Sandbox 或 Child AgentRun 身份。
+- **WorkflowRunRootBinding**：Root Admission 成功后单次赋值的 WorkflowRun 到 Root AgentRun/RunManifest 绑定；准入前失败时不存在。
 - **RuntimeAuthorization**：绑定一个 Runtime InvocationAttempt 的短期仅追加授权 Revision；可在同一 RunManifest 下等价或缩权续期，并携带 fresh ArtifactGrant。
 - **AgentRuntimeInvocation Token**：绑定 Tenant、ProviderRevision、RunManifest、RuntimeAuthorization、Attempt、Fencing、Policy、Budget、Permissions 和请求摘要的短期调用授权；`execution` 受执行期限限制，`safety_control` 只允许到期后读取或 Cancel/Pause。
 - **SystemSafetyControl**：Platform-owned、不可变且仅用于减权的控制事实；在新的 Business Grant 不可用或不应成为前提时，以 Tenant/WorkOrder/RuntimeRun、Pause/Cancel action、触发证据和摘要授权停止动作，不能恢复执行或产生新副作用。

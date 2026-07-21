@@ -3,9 +3,9 @@ info:
   title: Sandbox Provider API
   version: 1.0.0
   description: >-
-    Stable provider contract with no required backend. A DeerFlow Built-in Sandbox
-    Adapter may be used as the first reference implementation; sandbox-runtime or
-    another conformant provider can implement the same protocol. The Agent Platform
+    Stable provider contract with no required backend. Phase 0 uses the platform's Native
+    Sandbox Controller and an isolated execution backend; another conformant provider
+    can implement the same protocol. The Agent Platform
     owns SandboxRegistry, leases, authorization, WorkOrder mapping and RuntimeSession
     exposure. Providers own backend provisioning and observation.
   license:

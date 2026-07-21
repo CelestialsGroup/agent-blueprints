@@ -3,7 +3,7 @@
   "runtime_run_id": "rtr_01J00000000000000000000000",
   "action": "cancel",
   "reason": "commercial_authorization_expired",
-  "trigger_evidence_digest": "sha256:e1afe2a4ca37353c6978dfa6dd3cc13a2b1a0015c87bd7dbbedb15eccae237ec",
-  "control_digest": "sha256:ef6231cea517c67ef5efdb59080e46b7357867e6f18a1934279022abb163ea0a",
+  "trigger_evidence_digest": "sha256:2f81a8bebec72997796228cc659d03766a961065183f97d577634463ea031495",
+  "control_digest": "sha256:026f0ee0af8342a43db2c7466f3f09d66f40133c7a1a3bf29c747bf9fb9941ab",
   "issued_at": "2026-07-16T09:16:00Z"
 }
