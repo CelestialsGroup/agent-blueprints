@@ -4,7 +4,7 @@
 >
 > 状态：契约验证已通过，产品尚未实现，生产可靠性尚未证明
 >
-> 更新日期：2026-07-18
+> 更新日期：2026-07-21
 
 ## 项目目标
 
@@ -14,6 +14,7 @@ Agent Application Platform 的目标是构建一个类似 Manus 的通用、多�
 
 - 研究、编码、浏览器操作、文件处理和内容生成等通用任务
 - 多轮 Conversation、分支隔离的 WorkspaceRevision 和长任务恢复
+- 平台治理的 Root/Sub-agent 执行树、共享预算、隔离 Workspace 和可恢复控制
 - Chat、Plan、Timeline、Terminal、Browser、Desktop、Files 和 Artifact Workbench
 - 实时 Sandbox 查看、Runtime Recording 和历史回放
 - 可替换的 Agent Runtime、Sandbox、Model、Tool、Template、Renderer、Editor 和 Converter Provider
@@ -21,7 +22,7 @@ Agent Application Platform 的目标是构建一个类似 Manus 的通用、多�
 - Business 自有的 User、Organization、Membership、Product、Order、Payment、Entitlement 和 Quota 系统
 - 多租户安全、可观测性、可靠恢复、容量治理和长期升级能力
 
-平台可以借鉴 DeerFlow、OpenHands、Magentic-UI、Open Deep Research、OpenManus、AutoGPT、Grok Build、browser-use、E2B、Daytona、Quicksand、Letta Code 和 LLM Space，但任何参考项目都不能成为平台唯一 Runtime 或稳定事实源。
+平台可以借鉴 DeerFlow、Dify、OpenHands、Magentic-UI、Open Deep Research、OpenManus、AutoGPT、Grok Build、browser-use、E2B、Daytona、Quicksand、Letta Code 和 LLM Space，但这些项目只用于研究架构、能力和 UX，不在当前适配计划内，也不能成为平台依赖或稳定事实源。
 
 LLM Space 只用于 Agent Engineering Workbench、Trace 调试、Run 对比和 Evaluation UX 参考，不作为生产 Runtime、最终用户 Workbench 或权威数据源。
 
@@ -30,9 +31,9 @@ LLM Space 只用于 Agent Engineering Workbench、Trace 调试、Run 对比和 E
 | 层级 | 状态 | 说明 |
 |---|---|---|
 | 产品边界 | 候选完成 | Business/Platform 所有权、Conversation、Provider、Sandbox、Artifact、Recording 等边界已有设计 |
-| 可执行契约 | 本地通过 | 316 JSON、22 YAML、5 OpenAPI、46 Markdown、158 Schema、100 有效夹具、23 无效夹具和 80 语义负例 |
+| 可执行契约 | 本地通过 | 静态审计 550 JSON/26 YAML/8 OpenAPI/47 Markdown；223 Schema、211 有效夹具、73 Schema 负例、188 语义负例和 248 项受治理资源 |
 | 产品实现 | 未完成 | 当前仓库主要是文档、Schema、OpenAPI、状态机、示例和验证脚本 |
-| Phase 0 | 未完成 | Business 纵向链路、Temporal、Runtime/Sandbox Adapter、Gateway、Recording 和 nexu Provider 尚待实现 |
+| Phase 0 | 未完成 | Business 纵向链路、Temporal、Native Runtime/SandboxProvider、Gateway、Recording、Reference Probe 和 nexu Provider 尚待实现 |
 | 生产可靠性 | 未证明 | 故障注入、隔离、容量、SLO、备份恢复和生产运行证据尚未完成 |
 
 “契约验证通过”只表示候选契约内部可接纳，不等于实现完成，也不等于生产就绪。
@@ -73,8 +74,8 @@ LLM Space 只用于 Agent Engineering Workbench、Trace 调试、Run 对比和 E
 └──────────────┬─────────────────────┬───────────────────┬────────────┘
                │                     │                   │
                ▼                     ▼                   ▼
-       DeerFlow/OpenAI SDK    DeerFlow Sandbox     nexu Template/
-       Native/Future Runtime  sandbox-runtime      Editor/Converter
+       Native Runtime         Native Sandbox       nexu Catalog/
+       Reference Probe        Isolation Backends   Editor/Converter
 ```
 
 Redis 只用于 Cache、Presence 和持久化后的 Event Wakeup，不保存授权、账本、游标或运行终态。
@@ -97,7 +98,7 @@ Business 与 Agent Platform 使用独立数据库，只通过版本化契约交�
 
 - ClientApplication、ServicePrincipal、Tenant 和 Principal 映射
 - AgentConversation、ConversationMessage、ConversationBranch、Workspace 和不可变 WorkspaceRevision
-- WorkOrder、ExecutionGrant 消费、WorkflowRun、AgentRun、ExecutionBudget、Policy 和 Approval
+- WorkOrder、ExecutionGrant 消费、WorkflowRunRootBinding、Root/Child AgentRun、Child Spawn/Admission、共享 ExecutionBudget、AgentRun Resource Allocation、WorkspaceBinding、ControlFanout、Policy 和 Approval
 - Invocation/SandboxOperation Ledger、Attempt、Fencing 和 Reconciliation
 - CanonicalEvent、ArtifactVersion、TechnicalUsage 和 Delivery
 - CapabilityDefinition、ProviderRevision、ProviderAdmissionDecision、带 Resolver/Input/Candidate/Evidence 的 ProviderResolution、Event Registry 和 Conformance Suite
@@ -116,7 +117,7 @@ Scenario
  -> Runtime / Sandbox / Model / Tool / Skill / Template / Converter Provider
 ```
 
-每次 Run 在准入时锁定精确的 Tenant、Branch WorkspaceRevision、ProviderResolution、ProviderRevision、AdmissionDecision、Scenario、Event Registry、Experience Revision、按需 Sandbox Slot、授权/预算/策略摘要和 RunManifest。Runtime 与 Sandbox Slot 只引用统一 ProviderResolution，不复制第二份 Revision/Conformance 快照。运行中的 Run 不允许因成本、健康状态或偏好变化静默切换 Provider。
+每次 Run 在准入时锁定精确的 Tenant、Branch WorkspaceRevision、AgentRunWorkspaceBinding、ProviderResolution、ProviderRevision、AdmissionDecision、Scenario、Event Registry、Experience Revision、按需 Sandbox Slot、共享 WorkOrder Budget、单 Run Resource Allocation、授权/策略摘要和 RunManifest。Runtime 与 Sandbox Slot 只引用统一 ProviderResolution，不复制第二份 Revision/Conformance 快照。运行中的 Run 不允许因成本、健康状态或偏好变化静默切换 Provider。
 
 Provider 原生 Checkpoint 默认只在同一 Revision 或明确声明并通过测试的兼容范围内恢复，不承诺跨框架可移植。
 
@@ -130,17 +131,19 @@ Business 评估 Entitlement 并预留 Quota
  -> 创建或恢复 Conversation / Workspace
  -> 原子追加 Message、消费 Grant、创建 WorkOrder 和 Outbox
  -> Temporal 启动 WorkOrder Workflow
+ -> 创建不含 Root 指针的 WorkflowRun
  -> ProviderResolution + Resolution Evidence
  -> 按 Capability 可选创建 SandboxProvider/Sandbox
- -> 固化 RunManifest
- -> AgentRuntimeProvider
+ -> Root Admission 原子创建 RootBinding + AgentRun + RunManifest
+ -> Native Runtime 经 AgentRuntimeProvider Port 启动
  -> Model/Tool/Artifact/Egress Gateway
+ -> 按需 Child SpawnRequest -> Platform Admission -> Child AgentRun
  -> CanonicalEvent + Artifact Staging + TechnicalUsage
  -> Artifact Finalize + RuntimeRecording + Delivery
  -> Business Settlement / Release / Reconciliation
 ```
 
-后续输入、Interrupt、Pause/Resume、Approval 和 Cancel 都是新的、仅追加且带摘要的 Runtime Command。每次 Runtime 调用使用短期 Token 绑定 Tenant、ProviderRevision、Run、InvocationAttempt、Fencing、Policy、Budget 和 Permissions。取消请求只表示意图，不等于 Provider 已停止执行。
+新 Turn 总是创建新的 WorkOrder；Append、Interrupt、Pause/Resume、Approval 和 Cancel 使用新的 ExecutionGrant 控制现有 WorkOrder，`interrupt_and_enqueue` 则明确记录取消意图并创建后继 WorkOrder。Parent Runtime 只能提出 ChildAgentRunSpawnRequest，Child 身份、Provider、预算、Workspace/Sandbox 和准入结论由 Platform 决定。每次 Runtime 调用使用短期 Token 绑定 Tenant、ProviderRevision、Run、InvocationAttempt、Fencing、Policy、Budget 和 Permissions。取消请求只表示意图，不等于 Provider 已停止执行。
 
 Grok Build 的 Session Core/Presentation Adapter、Prompt Queue/Interjection、Background Task、Workspace Adapter、权限分层和 Telemetry Redaction 可用于 Runtime Harness。ACP、本地 JSONL/SQLite、宿主机 Bash、Hook 和私有 Checkpoint 仍是边缘或 Provider 私有实现，不进入平台事实源。
 
@@ -202,13 +205,13 @@ Terminal、Browser、Desktop 和文件增量的大块字节只有在 Emit-time S
 ## Phase 0 路线
 
 ```text
-0A 最小契约闭合
- -> 0B 持久化脊柱与 Native Runtime Probe
+0A.2 架构与契约收口
+ -> 0B 持久化脊柱与 Native Runtime Core
  -> 0C Business 到 Conversation
- -> 0D 主 Runtime 与 Sandbox
+ -> 0D Native Runtime General/Governed 与 Native SandboxProvider
  -> 0E Workbench 与 Recording
  -> 0F nexu Experience
- -> 0G 第二 Runtime
+ -> 0G 独立 Reference Runtime Contract Probe
  -> 0H 故障、安全与恢复证据
 ```
 
@@ -216,10 +219,11 @@ Phase 0 的关键验收包括：
 
 - Business 授权到 Conversation Turn 的真实纵向链路
 - PostgreSQL Migration、Temporal Replay 和 Outbox/Inbox
-- 主 Runtime 前完成无 Sandbox 的 Native Minimal Runtime Probe，并通过 `runtime-core-v1`
-- 主 AgentRuntimeProvider 和 SandboxProvider Adapter
-- 将 Native Probe 或另一框架提升为第二个可部署 Runtime Adapter
-- 同一 Workbench 消费两个 Runtime 的标准 Event、Artifact 和 Usage
+- Native Runtime Core 先通过 `runtime-core-v1`，再扩展到 `runtime-general-v1 + governed-v1`
+- 平台自有 Native AgentRuntimeProvider、SandboxProvider 与强制 Gateway 链路
+- RootBinding、Child Spawn/Admission、共享预算、Workspace 隔离、子树控制、终态汇总和孤儿对账
+- 独立 Reference Runtime Probe 不复用 Native Runtime 内部执行包，并通过 `runtime-core-v1` 证明 Port 可替换
+- 同一 Workbench 消费 Native Runtime 与 Reference Probe 的标准 Event、Artifact 和 Usage
 - html-anything Template 和至少一个 Converter Provider
 - 完整 TechnicalUsage -> UsageReport -> 签名 Business Settlement Callback 链路，价格与余额仍只在 Business
 - Terminal RuntimeSession、两个不可变 Recording Chunk 和离线回放
@@ -234,7 +238,7 @@ Phase 0 的关键验收包括：
 - 任意远程 JavaScript 或未隔离 UI Extension
 - 完整 Office 编辑套件
 - 持久 Evaluation/Rubric 生产领域模型
-- 自研 sandbox-runtime 和跨 Provider Process/Checkpoint 恢复
+- 独立高密度 sandbox-runtime 后端和跨 Provider Process/Checkpoint 恢复
 - 智能成本路由、多区域双活和大规模 Provider 管理界面
 
 ## 权威文档
