@@ -7,7 +7,7 @@
 进入 Phase 0 实现前必须满足：
 
 - Contract 工具链可在支持的 Python/Node/Go 版本完成 Bootstrap；
-- Contract 的 `make validate-contract` 通过，9 个 OpenAPI 为 0 错误/0 警告，Bundle 可重复；
+- Contract Scripts 对锁定 Contract Revision 的 `make validate-contract` 通过，9 个 OpenAPI 为 0 错误/0 警告，Bundle 可重复；
 - ExecutionGrant 精确绑定 WorkOrderRequest/ConversationTurnRequest/WorkOrderControlRequest Contract ID、Digest Profile 和请求摘要；
 - ConversationBranch Create/Fork 命令绑定来源 Message Cut、WorkspaceRevision 与 Head CAS，原子产生新 Branch/初始 Revision/核心事件；并行 Branch 不共享可变文件头；
 - Runtime 与 Sandbox Slot 只引用带 Resolver/Input/Candidate/Evidence/Decision 的 ProviderResolution；
@@ -26,7 +26,7 @@
 - Delivery/Settlement 对终态在非空 UsageReport 与 NoUsageAttestation 间显式选择；CompatibilityDecision/Evidence 与 SecretGrant/Credential Gateway 均有 fail-closed 正反例；ArtifactIngest Create 拒绝调用方 Policy/Budget/Permissions，Session 分配后由 Platform 派生，Status/Confirm/Scan/Finalize 由 Platform 最终事务闭合；
 - WorkspaceContentManifest、Sandbox Slot 选择、Event 来源 Inbox 去重、闭合且有界的 Event/Conversation/Work Metadata、诊断/审批 Details 和所有 JSON 写接口的 HTTP encoded-body 上限均有可执行契约；
 - Platform 与标准 Runtime CanonicalEvent 分别绑定所有权匹配的 Platform/Runtime Core Registry Revision，并按 `(type,data_version)` 验证 Payload；Provider 私有 Registry 不能进入核心流；
-- Contract 的 `contracts/semantic-constraints-v1.json` 覆盖全部关键语义；每个 Contract Gate Check ID 在当前运行中真实执行，并与待实现 DDL/Conformance 责任明确分离；
+- Contract 的 `semantic-constraints-v1.json` 覆盖全部关键语义；每个 Contract Gate Check ID 在当前运行中真实执行，并与待实现 DDL/Conformance 责任明确分离；
 - RunManifest 支持 Capability 驱动的零或多个 Sandbox，主 Slot 条件闭合；
 - RuntimeSessionRoute 只包含 Gateway 与不透明 Provider Route Reference，不包含原始 Endpoint、Cluster、Region 或 Cell；
 - RunManifest Location 只保存 Placement Mode、可空逻辑 Region、Policy Reference 和 Decision Digest；ProviderHealth、SandboxStatus 与 SandboxSpec 不暴露 Cluster/Cell/Node/Runtime 身份，远程 Provider 不被强制伪造本地拓扑；

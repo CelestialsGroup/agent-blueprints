@@ -48,11 +48,12 @@ Blueprint 决定架构意图和禁止项，Contract 决定精确 Wire 行为，A
 ## 本地验证
 
 ```bash
-cd <contract-root>
+cd <script-root>
+export AGENT_PLATFORM_CONTRACT_ROOT=<contract-root>
 make validate-contract
 ```
 
-当前精确基线为 CPython 3.14.6、Node 24.18.0 Active LTS + pnpm 11.15.1、Go 1.26.5；CPython 3.13 只保留为 CI 回滚兼容通道。禁止使用浮动 `latest`，生产镜像还必须固定 OCI Digest。`make validate-all` 的仓库供应链与 CI 准入留到正式冻结准备阶段；实际结果与计数只见锁定 Contract Revision 的 `CONTRACT_VALIDATION_REPORT.md`。
+当前精确基线为 CPython 3.14.6、Node 24.18.0 Active LTS + pnpm 11.15.1、Go 1.26.5；CPython 3.13 只保留为 CI 回滚兼容通道。禁止使用浮动 `latest`，生产镜像还必须固定 OCI Digest。`make validate-all` 的工具供应链与 CI 准入留到正式冻结准备阶段；实际结果与计数只见 Contract Scripts 对锁定 Contract Revision 生成的 `evidence/CONTRACT_VALIDATION_REPORT.md`。
 
 ## 与实现仓库的关系
 

@@ -4,7 +4,7 @@ ExecutionGrant request_digest、SchemaReference、ProviderRevision、ProviderRes
 
 进入安全摘要前必须从原始字节严格拒绝：重复键、NaN/Infinity、单独 Surrogate、非 UTF-8，以及数学值为整数且超出 ±(2^53-1) 的任何 Number Token。词法检查使用十进制系数/Scale 的精确运算，因此 `9007199254740992.0`、`9007199254740992e0`、`1000000000000000000000` 和 `1e21` 都必须拒绝。更大整数和 Decimal 使用字符串/领域定点类型；不执行 Unicode 规范化。
 
-共享向量：Contract 资源 `contracts/testdata/jcs-v1/vectors.json`。
+共享向量：Contract 资源 `testdata/jcs-v1/vectors.json`。
 
 - Python：`rfc8785==0.1.4` + 重复键/安全整数原始 Parser；
 - Node：`strict_parse.mjs` 在 `JSON.parse` 前检查 Token；

@@ -34,4 +34,4 @@ Application 的 Migration、Constraint、代码和运行证据用于证明是否
 - `09_DEERFLOW_INTEGRATION.md` 中的第三方项目只用于研究，不构成平台依赖、适配计划或准入结论。
 - `13_ARCHITECTURE_ACCEPTANCE.md` 将契约通过、0B、0C-0G、0H、正式冻结和生产批准拆成独立结论，验收时不得混用。
 - Blueprint 只定义上游边界。机器契约由 Contract 拥有；源码、Migration、依赖锁、部署物和运行证据由 Application 拥有。
-- Contract 的 `CONTRACT_VALIDATION_REPORT.md` 和 `VALIDATION.json` 由同一次成功 Gate 生成，是某次验证结果，不是可替代契约的事实源。
+- Contract Scripts 的 `evidence/CONTRACT_VALIDATION_REPORT.md` 和 `evidence/VALIDATION.json` 由同一次成功 Gate 生成，是绑定锁定 Contract Revision 的验证结果，不是可替代契约的事实源。

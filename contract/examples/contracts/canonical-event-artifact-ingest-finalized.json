@@ -36,7 +36,7 @@
   "event_registry": {
     "registry_id": "platform-core",
     "registry_version": 1,
-    "registry_digest": "sha256:a9e717df6ee3d524e9805b1d1d78b39957618985d7d3ff9ad0e984362d1ddde6"
+    "registry_digest": "sha256:28427711d938bf2b5282956fec72d4b5db93fa47f56c56426c6a9b3ec7133858"
   },
   "producer_kind": "platform",
   "execution_scope": {

@@ -1,6 +1,6 @@
 # 核心领域
 
-本文件只定义稳定所有权和聚合边界。Wire 字段以锁定 Contract Revision 的 `contracts/` 为准；Provider 私有对象、前端 Projection 和实现组件不提升为领域聚合。
+本文件只定义稳定所有权和聚合边界。Wire 字段以锁定 Contract Revision 的 `schemas/`、`openapi/` 等声明目录为准；Provider 私有对象、前端 Projection 和实现组件不提升为领域聚合。
 
 ## Phase 0 聚合
 

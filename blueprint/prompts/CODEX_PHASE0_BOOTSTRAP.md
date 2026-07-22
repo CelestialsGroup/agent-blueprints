@@ -5,11 +5,13 @@
 ## 准入优先
 
 ```bash
-cd <contract-root>
+cd <script-root>
+export AGENT_PLATFORM_CONTRACT_ROOT=<contract-root>
+export AGENT_PLATFORM_BLUEPRINT_ROOT=<blueprint-root>
 make validate-contract
 ```
 
-以上命令在 Contract 根运行，并通过 `AGENT_PLATFORM_BLUEPRINT_ROOT` 指向锁定的 Blueprint Checkout。开始实现前修复所有 Contract Gate 失败，并在 Application 记录精确 Blueprint/Contract Version、Git Commit、Contract Manifest Digest 和所需 Suite Digest。`make validate-all` 的 GitHub CI、仓库供应链和冻结基线准入留到正式冻结准备阶段，不阻止 Phase 0 候选实现。在每个 Phase 0 验收项都取得运行证据前，不得开始 Phase 1。
+以上命令在 Script 根运行，并通过显式环境变量指向锁定的 Blueprint 与 Contract Checkout。开始实现前修复所有 Contract Gate 失败，并在 Application 记录精确 Blueprint/Contract Revision、Git Commit、Contract Manifest Digest、Suite Digest 和 Script Revision。`make validate-all` 的 GitHub CI、脚本供应链和冻结基线准入留到正式冻结准备阶段，不阻止 Phase 0 候选实现。在每个 Phase 0 验收项都取得运行证据前，不得开始 Phase 1。
 
 ## 实现顺序
 

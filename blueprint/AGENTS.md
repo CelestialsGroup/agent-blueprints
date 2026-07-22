@@ -128,8 +128,8 @@ Runtime Gateway 使用 `runtime-gateway/v1` 类型化帧、Connection Generation
 
 - JSON：Draft 2020-12、绝对 `$id`、Registry 解析、Strict I-JSON、RFC 8785 JCS。
 - 复用：SandboxSpec、ProviderRevisionSnapshot 等必须通过 `$ref` 复用，禁止复制展开。
-- 语义约束：由 Contract 的 `scripts/validate_semantics.py` 与反向 Fixture 执行。
-- 关键 `x-semantic-constraints` 必须进入 Contract 的 `contracts/semantic-constraints-v1.json`。每个 `contract_gate` Check ID 必须由当前 Validator 注册并在本次 Gate 真实执行；无法在契约阶段证明的 DDL/Conformance 责任必须明确标为 `phase0_implementation_required`，不得伪装成通过。
+- 语义约束：Contract 使用稳定的 `urn:agent-platform:contract-validation:semantic-validator` 标识校验责任，由外部 Contract Scripts 与反向 Fixture 执行；不得绑定工具文件路径。
+- 关键 `x-semantic-constraints` 必须进入 Contract 的 `semantic-constraints-v1.json`。每个 `contract_gate` Check ID 必须由当前 Validator 注册并在本次 Gate 真实执行；无法在契约阶段证明的 DDL/Conformance 责任必须明确标为 `phase0_implementation_required`，不得伪装成通过。
 - 空 `limits: {}` 没有合法语义；EffectiveExecutionLimits 全字段必填且缺失即拒绝。HTTP 操作必须声明并执行 encoded-body 上限，超限在解析前返回 413。
 - OpenAPI：原始契约保留绝对 URN；Redocly 只对 Registry 投影生成的 `build/openapi-src` 执行 Lint/Bundle，结果必须为 0 个错误、0 个警告。
 - 兼容性：CI 只与受保护变量指定的冻结基线比较且缺失时 fail-closed；首个冻结基线前必须由受保护变量显式允许 N/A，不得写成 pass。
@@ -137,10 +137,12 @@ Runtime Gateway 使用 `runtime-gateway/v1` 类型化帧、Connection Generation
 
 ## 准入与生产声明
 
-架构设计完成后，必须在锁定的 Contract 根运行：
+架构设计完成后，必须在锁定的 Contract Scripts 中对锁定的 Contract 根运行：
 
 ```bash
+cd <script-root>
+export AGENT_PLATFORM_CONTRACT_ROOT=<contract-root>
 make validate-contract
 ```
 
-Contract 的 `make validate-all` 额外包含供应链与仓库/CI 准入，在正式冻结准备阶段启用。Application 可以在本地 Contract Gate 通过后锁定精确 Blueprint/Contract Revision 与 Digest 并进入 Phase 0；公共 CI 与冻结基线只阻止正式冻结和 Phase 1，不阻止候选架构的 Phase 0 实现。任何 Contract Gate 全绿都不证明产品实现或生产可靠性。
+Contract Scripts 的 `make validate-all` 额外包含工具供应链与仓库/CI 准入，在正式冻结准备阶段启用。Application 可以在本地 Contract Gate 通过后锁定精确 Blueprint/Contract Revision 与 Digest 并进入 Phase 0；公共 CI 与冻结基线只阻止正式冻结和 Phase 1，不阻止候选架构的 Phase 0 实现。任何 Contract Gate 全绿都不证明产品实现或生产可靠性。

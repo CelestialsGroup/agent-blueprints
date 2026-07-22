@@ -122,7 +122,7 @@
 
 ## Phase 0 DDL 责任索引
 
-以下 ID 是 Contract 的 `contracts/semantic-constraints-v1.json` 通过稳定 Blueprint URN 引用的目标。0B Migration、Constraint 与集成证据必须使用这些精确 ID；本文件存在该 ID 只表示责任已分配，不表示实现已完成或通过。
+以下 ID 是 Contract 的 `semantic-constraints-v1.json` 通过稳定 Blueprint URN 引用的目标。0B Migration、Constraint 与集成证据必须使用这些精确 ID；本文件存在该 ID 只表示责任已分配，不表示实现已完成或通过。
 
 | Check ID | 必须由实现证明的责任 |
 |---|---|

@@ -50,7 +50,7 @@ WorkOrder 流排序只使用 `work_sequence`。Conversation 创建、归档/删�
 
 核心 Projection 不消费未注册 Plugin 私有事件。
 
-AgentRuntimeProvider 的核心事件使用 Contract 资源 `contracts/event-types/agent-runtime-core-v1.json`。Registry 自带内容摘要，RunManifest 固化 ID/Version/Digest。Chat、Plan、Tool/Approval、Artifact、Background Task、Usage 和 Runtime 终态均绑定 `agent-runtime-event-data-v1` 的闭合 Payload；平台接受后以同一 Runtime Registry Revision 和 Provider 来源身份写入 CanonicalEvent。Platform 自身领域变化只绑定 `platform-core-v1`，其中 `work_order.safety_control.issued` 记录系统 Pause/Cancel 权限及触发证据摘要。两类 CanonicalEvent 都必须验证精确 Registry Digest、`type + data_version` 和 Payload Schema；Provider 私有 Registry 不允许进入核心流。新增核心类型必须发布新的 Registry Revision，不能向任意 `data` 偷渡字段。
+AgentRuntimeProvider 的核心事件使用 Contract 资源 `event-types/agent-runtime-core-v1.json`。Registry 自带内容摘要，RunManifest 固化 ID/Version/Digest。Chat、Plan、Tool/Approval、Artifact、Background Task、Usage 和 Runtime 终态均绑定 `agent-runtime-event-data-v1` 的闭合 Payload；平台接受后以同一 Runtime Registry Revision 和 Provider 来源身份写入 CanonicalEvent。Platform 自身领域变化只绑定 `platform-core-v1`，其中 `work_order.safety_control.issued` 记录系统 Pause/Cancel 权限及触发证据摘要。两类 CanonicalEvent 都必须验证精确 Registry Digest、`type + data_version` 和 Payload Schema；Provider 私有 Registry 不允许进入核心流。新增核心类型必须发布新的 Registry Revision，不能向任意 `data` 偷渡字段。
 
 ## 写入事务
 

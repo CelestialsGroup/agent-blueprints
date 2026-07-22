@@ -9,7 +9,7 @@
 - `prompts/` 提供遵守同一架构边界的开发指引；
 - 根目录 Markdown 提供阅读顺序和贡献规则。
 
-Schema、OpenAPI、状态机、Event Registry、Semantic Constraints、Fixture、Conformance Suite 和验证工具属于独立 Contract；产品源码、Migration、部署制品、组件测试、集成测试和生产证据属于独立 Application。当前三个目录可以并置开发，未来可以拆成独立仓库；完整规则见 `docs/52_BLUEPRINT_CONTRACT_APPLICATION_BOUNDARY.md`。
+Schema、OpenAPI、状态机、Event Registry、Semantic Constraints、Fixture 和 Conformance Suite 属于独立 Contract；校验器、生成器、依赖锁和 Gate 报告属于非权威 Contract Scripts；产品源码、Migration、部署制品、组件测试、集成测试和生产证据属于独立 Application。当前目录可以并置开发，未来可以拆成独立仓库；完整规则见 `docs/52_BLUEPRINT_CONTRACT_APPLICATION_BOUNDARY.md`。
 
 Business 拥有 User/Membership/Product/Order/Payment/Entitlement/Commercial Quota；Agent Platform 拥有 Conversation/Message/Branch WorkspaceRevision/WorkOrder/Workflow/Invocation/Event/Artifact/Technical Usage/Delivery/Provider/Sandbox/RuntimeRecording/Experience Catalog。双方通过版本化契约解耦。
 
@@ -28,11 +28,12 @@ Phase 0 使用平台自己的 Native SandboxProvider 与隔离执行后端；后
 
 一个 WorkOrder 最多拥有一个 WorkflowRun；Root Admission 成功后才以单次 RootBinding 原子绑定 Root AgentRun/RunManifest。Sub-agent 必须经过 ChildAgentRunSpawnRequest/AdmissionDecision，所有 AgentRun 共享 WorkOrder Budget Ledger，并使用独立 Resource Allocation、WorkspaceBinding、Sandbox Slot、Fencing 和仅追加 ControlFanout 版本链。Root 成功不能掩盖活动或失败的 required Child。
 
-Blueprint 自身是文档评审对象，不运行 Contract Gate。机器契约应在锁定的 Contract Checkout 中校验：
+Blueprint 自身是文档评审对象，不运行 Contract Gate。机器契约应由锁定的 Contract Scripts 对锁定的 Contract Checkout 校验：
 
 ```bash
-cd <contract-root>
+cd <script-root>
+export AGENT_PLATFORM_CONTRACT_ROOT=<contract-root>
 make validate-contract
 ```
 
-架构设计已完成 0A 候选收口；对应机器契约曾通过本地 Gate，但目录拆分后的精确结果只以 Contract 自身最新 `VALIDATION.json` 和验证报告为准。Contract Gate 不对 Application 的组件完成度、集成链路、可靠性或生产批准作出结论。详情从 `START_HERE.md` 开始。
+架构设计已完成 0A 候选收口；对应机器契约曾通过本地 Gate，但目录拆分后的精确结果只以 Contract Scripts 对锁定 Contract Revision 生成的 `evidence/VALIDATION.json` 和验证报告为准。Contract Gate 不对 Application 的组件完成度、集成链路、可靠性或生产批准作出结论。详情从 `START_HERE.md` 开始。

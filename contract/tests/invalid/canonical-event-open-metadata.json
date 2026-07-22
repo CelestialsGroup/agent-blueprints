@@ -1,0 +1,53 @@
+{
+  "event_id": "evt_01J00000000000000000000000",
+  "schema_version": 2,
+  "tenant_id": "ten_01J00000000000000000000000",
+  "producer_id": "artifact-service",
+  "provider_revision_id": null,
+  "source_stream_id": "artifact/art_01J00000000000000000000000",
+  "source_event_id": "artifact-version-created/ver_01J00000000000000000000000",
+  "source_cursor": "4",
+  "dedupe_key": "sha256:b8fc682610fdb746035d18be3014f0a4574be49bf1991cb9481d3f1e7087f995",
+  "conversation_id": "conv_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "turn_id": "turn_01J00000000000000000000000",
+  "branch_id": "main",
+  "input_message_id": "msg_01J00000000000000000000000",
+  "workspace_id": "wsp_01J00000000000000000000000",
+  "work_sequence": 152,
+  "aggregate": {
+    "type": "artifact",
+    "id": "art_01J00000000000000000000000",
+    "sequence": 4
+  },
+  "references": {
+    "workflow_run_id": "wfr_01J00000000000000000000000",
+    "artifact_id": "art_01J00000000000000000000000"
+  },
+  "type": "artifact.version.created",
+  "occurred_at": "2026-07-15T10:00:00Z",
+  "actor": {
+    "type": "system",
+    "id": "artifact-service"
+  },
+  "data": {
+    "artifact_id": "art_01J00000000000000000000000",
+    "version_id": "ver_01J00000000000000000000000",
+    "media_type": "text/html",
+    "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+  },
+  "metadata": {
+    "trace_id": "trace-001",
+    "correlation_id": "wrk_01J00000000000000000000000",
+    "causation_id": "inv_01J00000000000000000000000",
+    "provider_private": "forbidden"
+  },
+  "data_version": 1,
+  "recorded_at": "2026-07-15T10:00:00.100Z",
+  "event_registry": {
+    "registry_id": "platform-core",
+    "registry_version": 1,
+    "registry_digest": "sha256:28427711d938bf2b5282956fec72d4b5db93fa47f56c56426c6a9b3ec7133858"
+  },
+  "producer_kind": "platform"
+}

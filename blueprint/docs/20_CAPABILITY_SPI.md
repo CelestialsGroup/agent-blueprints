@@ -69,7 +69,7 @@ Plugin 只是 Tool、Skill、Template 等实现的一种打包方式，PluginMan
 
 ## 通用 Capability Provider Port
 
-权威传输契约是 Contract 资源 `contracts/openapi/capability-provider-v1.yaml`，覆盖 Invoke、Status、Cancel 和 attempt-local Event。Model、Tool、MCP、Skill、Template、Renderer、Editor、Converter 与 Catalog-backed Provider 均实现或适配该 Port；`plugin-invocation-v1` 只保留为旧 Plugin 的兼容协议，不能作为新 Provider 的公共前提。
+权威传输契约是 Contract 资源 `openapi/capability-provider-v1.yaml`，覆盖 Invoke、Status、Cancel 和 attempt-local Event。Model、Tool、MCP、Skill、Template、Renderer、Editor、Converter 与 Catalog-backed Provider 均实现或适配该 Port；`plugin-invocation-v1` 只保留为旧 Plugin 的兼容协议，不能作为新 Provider 的公共前提。
 
 CapabilityInvocationRequest 必须携带完整 ExecutionBudget、PolicyDecision、EffectivePermissions 与 CommercialAuthorizationBinding，并绑定 Tenant、ClientApplication、PrincipalContextSnapshot Digest、WorkOrder 或 ArtifactOperation ExecutionScope、ProviderResolution、ProviderInstance、ProviderRevision、admitted audience、Capability Schema Digest、InvocationAttempt、Fencing、Owner Request Digest、Invocation Request Digest、ArtifactGrant 与 ArtifactStagingGrant。需要 Secret 时，请求还必须成组携带 Secret Reference、SecretGrant ID/Digest；Grant 绑定排除自身引用与 `request_digest` 的 pre-grant Capability Intent Digest，Provider 只能以当前 sender-constrained Workload Identity 使用单操作 Credential Token 获取材料。ArtifactIngest 不走该 Port。Provider 不得依赖未定义的摘要反查接口获取真实执行值。
 
@@ -150,4 +150,4 @@ Agent Runtime 使用同一 Revision/Admission/Conformance 治理，但不能按�
 
 冻结 AgentRuntimeProvider v1 前，自研 Native Runtime 与独立 Reference Contract Probe 必须通过 `runtime-core-v1`，Native Runtime 还必须通过 `runtime-general-v1 + governed-v1`。这用于证明 CapabilityDefinition、ProviderResolution、RunManifest、Workbench Event 和 Artifact/Usage 契约没有按主实现内部模型定制，不要求适配 DeerFlow 或其他参考项目。
 
-Profile 与 Test ID 以锁定 Contract Revision 的 `contracts/conformance/` 机器可读 Suite 为准。Suite 自带内容摘要；测试结果必须绑定 Suite ID/Version/Digest/Profile、ProviderRevision、环境和不可变 Evidence。Runtime、Sandbox、Runtime Gateway、通用 Capability Provider 和 Artifact/Egress Execution Gateway 使用各自 Suite；README 中的测试名称或人工声明不能构成认证。
+Profile 与 Test ID 以锁定 Contract Revision 的 `conformance/` 机器可读 Suite 为准。Suite 自带内容摘要；测试结果必须绑定 Suite ID/Version/Digest/Profile、ProviderRevision、环境和不可变 Evidence。Runtime、Sandbox、Runtime Gateway、通用 Capability Provider 和 Artifact/Egress Execution Gateway 使用各自 Suite；README 中的测试名称或人工声明不能构成认证。

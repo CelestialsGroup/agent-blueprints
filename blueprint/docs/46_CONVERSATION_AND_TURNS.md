@@ -16,7 +16,7 @@ Business 用户
 
 一次性 Scenario 调用在同一个准入事务中创建隐式 Conversation，因此批处理客户端不需要另一套交互模型。
 
-Conversation 生命周期由 Contract 资源 `contracts/state-machines/conversation-v1.json` 治理：归档可恢复，删除是经过确认且不可逆的 Tombstone，生命周期时间戳必须可审计。
+Conversation 生命周期由 Contract 资源 `state-machines/conversation-v1.json` 治理：归档可恢复，删除是经过确认且不可逆的 Tombstone，生命周期时间戳必须可审计。
 
 ## Turn 事务
 
