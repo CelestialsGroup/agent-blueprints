@@ -1,0 +1,62 @@
+# Agent Application Platform
+
+This directory contains the independently versioned Agent Application Platform implementation. Architecture and development rules remain in the Blueprint; schemas, OpenAPI definitions, state machines, event registries, semantic constraints, fixtures, and Conformance Suites remain in the Contract. Current sibling checkouts default to `../blueprint` and `../contract`; external checkouts are selected with `AGENT_PLATFORM_BLUEPRINT_ROOT` and `AGENT_PLATFORM_CONTRACT_ROOT`.
+
+The implementation consumes both upstreams read-only. It must not copy or redefine Contract resources as a second source of truth, and build/Conformance evidence must record exact Blueprint/Contract revisions and manifest/suite digests.
+
+The Go module identity is `github.com/shell-echo/agent-application-platform`.
+The Business Reference subsystem remains in this repository for Phase 0C, but
+its API, Web, database, signing keys, and dependency graph are independent from
+the Agent Platform kernel.
+
+The current B01 slice provides:
+
+- the Go Agent Access process and lifecycle health endpoints;
+- the Python Native Runtime package bound to `runtime-core-v1`;
+- reproducible build, dependency, SBOM, and provenance evidence.
+
+## Repository map
+
+| Path | Responsibility | First phase |
+|---|---|---|
+| `app/` | Agent Workbench and the independent Business Reference system | 0C / 0E |
+| `cmd/` | Deployable Go process composition roots | 0B |
+| `db/` | SQL-first goose migrations and sqlc query sources | 0B |
+| `doc/` | Implementation decisions and operational runbooks | 0B+ |
+| `internal/` | Go domain kernel and infrastructure adapters | 0B |
+| `runtime/` | Primary Python Native Runtime | 0B |
+| `provider/` | Platform Capability and Sandbox Provider implementations | 0D |
+| `package/` | Generated or genuinely shared TypeScript workspace packages | 0C+ |
+| `test/` | Conformance, integration, Replay, fault, and end-to-end tests | 0B+ |
+| `deploy/` | Local and Kubernetes environment assembly | 0B+ |
+| `toolchain/` | Toolchain, dependency, SBOM, and provenance inputs | B01 |
+| `script/` | Deterministic build and validation automation | B01 |
+
+`dependency-lock.json` binds every build and evidence result to exact Blueprint
+and Contract source snapshots, the Contract Manifest, and consumed Conformance
+Suites. The lock is verified before compilation.
+
+Each architecture directory has a README defining what belongs there and what
+must not become a fact source. Language-standard directories such as Python
+`src/` and package-local test folders follow their ecosystem conventions and do
+not create additional architecture layers.
+
+The scaffold is a responsibility map, not implementation evidence. Current
+work proceeds through 0B persistence and Native Runtime Core before later
+Business, Sandbox, Workbench, Gateway, or Reference Probe components are built.
+
+Run the implementation Gate from this directory:
+
+```bash
+make validate-implementation
+```
+
+Local sibling paths are only defaults:
+
+```bash
+AGENT_PLATFORM_BLUEPRINT_ROOT=/path/to/blueprint \
+AGENT_PLATFORM_CONTRACT_ROOT=/path/to/contract \
+make validate-implementation
+```
+
+PostgreSQL persistence, Temporal orchestration, Runtime HTTP operations, and product execution remain future Phase 0B slices.

@@ -55,8 +55,8 @@
 
 ```text
 Implementation repository: pnpm Workspace + Make
-  apps/agent-workbench       TypeScript / Next.js
-  apps/business-reference    TypeScript / Next.js UI
+  app/agent-workbench        TypeScript / Next.js
+  app/business-reference     TypeScript / Next.js UI
 
 Go 1.26.5
   agent-access + domain kernel + pgx/sqlc + goose

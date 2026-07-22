@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "components": [
+    {
+      "name": "github.com/go-chi/chi/v5",
+      "version": "5.3.1",
+      "kind": "go_module",
+      "license": "MIT",
+      "source": "https://github.com/go-chi/chi/tree/v5.3.1",
+      "usage": "Agent Access HTTP routing",
+      "purl": "pkg:golang/github.com/go-chi/chi/v5@v5.3.1",
+      "components": ["agent-access"]
+    },
+    {
+      "name": "hatchling",
+      "version": "1.31.0",
+      "kind": "python_build_backend",
+      "license": "MIT",
+      "source": "https://pypi.org/project/hatchling/1.31.0/",
+      "usage": "Native Runtime wheel build backend",
+      "purl": "pkg:pypi/hatchling@1.31.0",
+      "components": ["native-runtime"]
+    },
+    {
+      "name": "packaging",
+      "version": "26.2",
+      "kind": "python_build_dependency",
+      "license": "Apache-2.0 OR BSD-2-Clause",
+      "source": "https://pypi.org/project/packaging/26.2/",
+      "usage": "Hatchling build dependency",
+      "purl": "pkg:pypi/packaging@26.2",
+      "components": ["native-runtime"]
+    },
+    {
+      "name": "pathspec",
+      "version": "1.1.1",
+      "kind": "python_build_dependency",
+      "license": "MPL-2.0",
+      "source": "https://pypi.org/project/pathspec/1.1.1/",
+      "usage": "Hatchling build dependency",
+      "purl": "pkg:pypi/pathspec@1.1.1",
+      "components": ["native-runtime"]
+    },
+    {
+      "name": "pluggy",
+      "version": "1.6.0",
+      "kind": "python_build_dependency",
+      "license": "MIT",
+      "source": "https://pypi.org/project/pluggy/1.6.0/",
+      "usage": "Hatchling build dependency",
+      "purl": "pkg:pypi/pluggy@1.6.0",
+      "components": ["native-runtime"]
+    },
+    {
+      "name": "trove-classifiers",
+      "version": "2026.6.1.19",
+      "kind": "python_build_dependency",
+      "license": "Apache-2.0",
+      "source": "https://pypi.org/project/trove-classifiers/2026.6.1.19/",
+      "usage": "Hatchling build dependency",
+      "purl": "pkg:pypi/trove-classifiers@2026.6.1.19",
+      "components": ["native-runtime"]
+    },
+    {
+      "name": "uv",
+      "version": "0.11.30",
+      "kind": "python_lock_tool",
+      "license": "Apache-2.0 OR MIT",
+      "source": "https://github.com/astral-sh/uv/tree/0.11.30",
+      "usage": "Native Runtime dependency locking and wheel build orchestration",
+      "purl": "pkg:github/astral-sh/uv@0.11.30",
+      "components": ["native-runtime"]
+    }
+  ]
+}

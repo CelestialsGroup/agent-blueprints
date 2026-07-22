@@ -1,0 +1,28 @@
+{
+  "blueprint": {
+    "governed_file_count": 44,
+    "revision_kind": "governed_source_snapshot_sha256",
+    "source_revision": "088d43f8f1167f46305f02cceaf8cb1bbff464873d701419c3edb8d713073d2c",
+    "source_tree_digest": "sha256:088d43f8f1167f46305f02cceaf8cb1bbff464873d701419c3edb8d713073d2c"
+  },
+  "contract": {
+    "governed_file_count": 682,
+    "manifest_digest": "sha256:bee87081bdcb6784e0ea8522b29d6f241fb93f386e6ed14179512ba3c961d080",
+    "resource_count": 269,
+    "revision_kind": "governed_source_snapshot_sha256",
+    "source_revision": "ca339377783602d543d9d57d345cdd3743d9568b1320ea571e157ff4ed65283b",
+    "source_tree_digest": "sha256:ca339377783602d543d9d57d345cdd3743d9568b1320ea571e157ff4ed65283b",
+    "suites": [
+      {
+        "path": "conformance/runtime/v1/suite.json",
+        "profiles": [
+          "runtime-core-v1"
+        ],
+        "suite_digest": "sha256:9ef6d50df9f1032476ea2ada2c16d70c15d88368acf59794062df7dfce0bb356",
+        "suite_id": "agent-runtime-provider",
+        "suite_version": "1.0.0"
+      }
+    ]
+  },
+  "schema_version": 1
+}
