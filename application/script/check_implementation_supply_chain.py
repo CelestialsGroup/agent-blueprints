@@ -68,7 +68,7 @@ if toolchain["PYTHON_TOOLCHAIN_IMAGE"] not in uv_dockerfile:
     raise AssertionError("uv toolchain must run on the pinned Python image")
 
 go_mod = (ROOT / "go.mod").read_text(encoding="utf-8")
-if not go_mod.startswith("module github.com/shell-echo/agent-application-platform\n"):
+if not go_mod.startswith("module github.com/shell-echo/agent\n"):
     raise AssertionError("go.mod must use the governed shell-echo repository identity")
 if "toolchain go1.26.5" not in go_mod:
     raise AssertionError("go.mod must pin toolchain go1.26.5")

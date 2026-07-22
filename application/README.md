@@ -4,7 +4,7 @@ This directory contains the independently versioned Agent Application Platform i
 
 The implementation consumes both upstreams read-only. It must not copy or redefine Contract resources as a second source of truth, and build/Conformance evidence must record exact Blueprint/Contract revisions and manifest/suite digests.
 
-The Go module identity is `github.com/shell-echo/agent-application-platform`.
+The Go module identity is `github.com/shell-echo/agent`.
 The Business Reference subsystem remains in this repository for Phase 0C, but
 its API, Web, database, signing keys, and dependency graph are independent from
 the Agent Platform kernel.

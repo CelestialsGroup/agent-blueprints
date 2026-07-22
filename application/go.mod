@@ -1,4 +1,4 @@
-module github.com/shell-echo/agent-application-platform
+module github.com/shell-echo/agent
 
 go 1.26.0
 

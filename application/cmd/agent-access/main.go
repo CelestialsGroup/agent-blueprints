@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/shell-echo/agent-application-platform/internal/agentaccess"
+	"github.com/shell-echo/agent/internal/agentaccess"
 )
 
 func main() {
