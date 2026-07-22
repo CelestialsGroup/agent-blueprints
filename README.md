@@ -241,13 +241,13 @@ Phase 0 的关键验收包括：
 - 独立高密度 sandbox-runtime 后端和跨 Provider Process/Checkpoint 恢复
 - 智能成本路由、多区域双活和大规模 Provider 管理界面
 
-## 权威文档
+## 权威文档与实现
 
-- [实施入口](agent-application-platform-starter/START_HERE.md)
-- [架构基线](agent-application-platform-starter/docs/00_ARCHITECTURE_BASELINE.md)
-- [架构决策](agent-application-platform-starter/docs/DECISIONS.md)
-- [详细文档索引](agent-application-platform-starter/docs/README.md)
-- [Phase 0 实施与验收](agent-application-platform-starter/tasks/PHASE0.md)
-- [可执行契约](agent-application-platform-starter/contracts/)
+- [Blueprint 入口](blueprint/START_HERE.md)
+- [架构基线](blueprint/docs/00_ARCHITECTURE_BASELINE.md)
+- [架构决策](blueprint/docs/DECISIONS.md)
+- [详细文档索引](blueprint/docs/README.md)
+- [Phase 0 实施与验收](blueprint/tasks/PHASE0.md)
+- [可执行契约](blueprint/contracts/)
 
 发生冲突时，以 Schema、OpenAPI、状态机、数据库约束和验证 Gate 为准。本文件是项目总览，不替代内部权威规范。

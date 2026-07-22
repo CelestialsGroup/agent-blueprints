@@ -2,7 +2,7 @@
 
 状态：**本地 Architecture Contract Gate 已通过；组件实现、集成链路、生产可靠性与正式冻结均未完成**
 
-验证日期：2026-07-21
+验证日期：2026-07-22
 
 本报告由 `scripts/generate_validation_evidence.py` 从本次成功 Gate 的 `build/validation/*.json` 生成；`VALIDATION.json` 是同源机器结果，不手工维护计数。
 
