@@ -9,6 +9,10 @@ The Business Reference subsystem remains in this repository for Phase 0C, but
 its API, Web, database, signing keys, and dependency graph are independent from
 the Agent Platform kernel.
 
+Coding, database, language, test, review, and Definition of Done rules are
+defined by the locked Blueprint's
+`docs/53_APPLICATION_DEVELOPMENT_STANDARDS.md`.
+
 The current B01 slice provides:
 
 - the Go Agent Access process and lifecycle health endpoints;

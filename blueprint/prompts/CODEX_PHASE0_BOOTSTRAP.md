@@ -1,6 +1,6 @@
 # Codex Phase 0 启动指引
 
-先分别定位并只读挂载锁定的 Blueprint 与 Contract。按顺序阅读 Blueprint 的 `AGENTS.md`、`START_HERE.md`、`docs/00_ARCHITECTURE_BASELINE.md`、`docs/DECISIONS.md`、`docs/README.md`、`docs/52_BLUEPRINT_CONTRACT_APPLICATION_BOUNDARY.md` 和 `tasks/PHASE0.md`，再阅读 Contract 的 `AGENTS.md` 与 `README.md`。
+先分别定位并只读挂载锁定的 Blueprint 与 Contract。按顺序阅读 Blueprint 的 `AGENTS.md`、`START_HERE.md`、`docs/00_ARCHITECTURE_BASELINE.md`、`docs/DECISIONS.md`、`docs/README.md`、`docs/52_BLUEPRINT_CONTRACT_APPLICATION_BOUNDARY.md`、`docs/53_APPLICATION_DEVELOPMENT_STANDARDS.md` 和 `tasks/PHASE0.md`，再阅读 Contract 的 `AGENTS.md` 与 `README.md`。
 
 ## 准入优先
 

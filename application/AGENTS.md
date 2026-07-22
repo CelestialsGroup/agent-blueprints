@@ -4,6 +4,10 @@
 
 The independently versioned Blueprint owns architecture intent and development rules. The independently versioned Contract owns Schema, OpenAPI, state machines, event registries, semantic constraints, fixtures, and Conformance Suites. In the current sibling layout they default to `../blueprint` and `../contract`; `AGENT_PLATFORM_BLUEPRINT_ROOT` and `AGENT_PLATFORM_CONTRACT_ROOT` must support external read-only checkouts when repositories split. Do not create copied contract truth inside this directory.
 
+Before implementation, read the locked Blueprint's
+`docs/53_APPLICATION_DEVELOPMENT_STANDARDS.md`. Application-local README and
+tool configuration may strengthen those rules but must not weaken them.
+
 Every CI, build, and Conformance result must bind exact Blueprint and Contract versions, full source revisions, Contract Manifest Digest, and consumed Suite Digests. A branch name, relative path, or mutable tag is not a dependency lock.
 
 `dependency-lock.json` is the Application-owned immutable input lock. Refresh it

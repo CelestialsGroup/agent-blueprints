@@ -2,7 +2,7 @@
 
 ## 权威来源
 
-`START_HERE.md`、本文件、`docs/00_ARCHITECTURE_BASELINE.md` 与 `docs/DECISIONS.md` 是架构意图和开发规范的事实源；独立 Contract 的 Schema、OpenAPI、状态机、Event Registry 和 Semantic Constraints 是精确 Wire 行为的事实源。两者冲突时必须停止并完成协调变更，Application 的 DDL 或代码不能反向覆盖任一上游。
+`START_HERE.md`、本文件、`docs/00_ARCHITECTURE_BASELINE.md`、`docs/DECISIONS.md` 与 `docs/53_APPLICATION_DEVELOPMENT_STANDARDS.md` 是架构意图和开发规范的事实源；独立 Contract 的 Schema、OpenAPI、状态机、Event Registry 和 Semantic Constraints 是精确 Wire 行为的事实源。两者冲突时必须停止并完成协调变更，Application 的 DDL 或代码不能反向覆盖任一上游。
 
 本目录只拥有纯 Markdown 架构设计、开发规范和验收标准，不拥有机器契约、验证工具、产品源码、Migration、发布制品或实现进度。Contract 和 Application 分别消费锁定的 Blueprint Revision；Application 另行锁定 Contract Revision/Manifest/Suite Digest。当前兄弟目录布局不是稳定接口，跨仓规则见 `docs/52_BLUEPRINT_CONTRACT_APPLICATION_BOUNDARY.md`。
 

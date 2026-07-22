@@ -21,8 +21,9 @@ Agent Application Platform Blueprint 是当前产品边界候选设计。它以�
 3. `docs/DECISIONS.md`：当前有效的关键决策。
 4. `docs/README.md`：详细规范索引和事实源层级。
 5. `docs/52_BLUEPRINT_CONTRACT_APPLICATION_BOUNDARY.md`：Blueprint、Contract 与 Application 的依赖、Revision 和证据边界。
-6. `tasks/PHASE0.md`：唯一 Phase 0 实现与验收路线。
-7. `prompts/CODEX_PHASE0_BOOTSTRAP.md`：实现代理入口。
+6. `docs/53_APPLICATION_DEVELOPMENT_STANDARDS.md`：Application 编码、测试、评审与 Definition of Done。
+7. `tasks/PHASE0.md`：唯一 Phase 0 实现与验收路线。
+8. `prompts/CODEX_PHASE0_BOOTSTRAP.md`：实现代理入口。
 
 Blueprint 决定架构意图和禁止项，Contract 决定精确 Wire 行为，Application 的 DDL/代码决定实现事实；三者冲突时必须停止并按变更流修复，不能让实现便利静默覆盖上游规则。当前 0A 架构与契约闭合具备进入实现的候选条件；GitHub CI、仓库准入和冻结基线在后续阶段独立处理。
 

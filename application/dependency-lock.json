@@ -1,9 +1,9 @@
 {
   "blueprint": {
-    "governed_file_count": 44,
+    "governed_file_count": 45,
     "revision_kind": "governed_source_snapshot_sha256",
-    "source_revision": "088d43f8f1167f46305f02cceaf8cb1bbff464873d701419c3edb8d713073d2c",
-    "source_tree_digest": "sha256:088d43f8f1167f46305f02cceaf8cb1bbff464873d701419c3edb8d713073d2c"
+    "source_revision": "9167ec99d46312b92e6b9e82a9fe4cc0fee8966be403a506bdfb0ec8cefc3aa1",
+    "source_tree_digest": "sha256:9167ec99d46312b92e6b9e82a9fe4cc0fee8966be403a506bdfb0ec8cefc3aa1"
   },
   "contract": {
     "governed_file_count": 682,
