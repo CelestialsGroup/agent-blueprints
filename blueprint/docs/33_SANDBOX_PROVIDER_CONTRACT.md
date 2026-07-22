@@ -56,7 +56,7 @@ Provider 不拥有业务授权和 Artifact 元数据。
 
 ## Provider Port
 
-权威传输契约是 [`sandbox-provider-v1.yaml`](../contracts/openapi/sandbox-provider-v1.yaml)，Provider Adapter 必须实现其中的操作族：
+权威传输契约是 Contract 资源 `contracts/openapi/sandbox-provider-v1.yaml`，Provider Adapter 必须实现其中的操作族：
 
 - Capability 发现
 - 创建/查询/期望状态/Lease/终止
@@ -281,7 +281,7 @@ RunManifest 使用 `sandboxes[]` 锁定多个 Sandbox Slot。每个 Slot 只引�
 
 Provider 单次传输 Attempt 返回 `SandboxOperationStatus`：`accepted`/`running`/`succeeded`/`failed`/`cancelled`/`outcome_unknown`。平台不得把 `outcome_unknown` 作为持久化终点；它必须原子转换为 SandboxOperation `reconciling`。
 
-平台逻辑聚合使用 `sandbox-operation-record:v2` 和 `contracts/state-machines/sandbox-operation-v2.json`，支持重试、对账 Deadline、人工复核、安全取消确认和 `abandoned`。每个 Attempt 拥有新 `attempt_id` 与更高 `fencing_token`，旧响应必须被拒绝。
+平台逻辑聚合使用 `sandbox-operation-record:v2` 和 Contract 资源 `contracts/state-machines/sandbox-operation-v2.json`，支持重试、对账 Deadline、人工复核、安全取消确认和 `abandoned`。每个 Attempt 拥有新 `attempt_id` 与更高 `fencing_token`，旧响应必须被拒绝。
 
 SandboxRegistry 保存期望状态、租约、Slot 与代数；Provider Adapter 保存实际 Pod/VM/Container/Endpoint。Lease 过期由 Temporal 定时器驱动终止/对账，不能依赖 Redis TTL 作为事实。
 

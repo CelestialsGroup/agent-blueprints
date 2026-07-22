@@ -100,7 +100,7 @@ Limits 使用全字段 EffectiveExecutionLimits；空对象、字段缺失或未
 - 不允许重复 Object Key
 - 不允许 NaN/Infinity
 - 超出安全整数范围的业务整数使用字符串
-- 多语言实现使用 `contracts/testdata/jcs-v1/vectors.json`
+- 多语言实现使用 Contract 资源 `contracts/testdata/jcs-v1/vectors.json`
 - Python、Node 和 Go 必须产生完全相同的 canonical bytes
 - 详细规则见 `37_JCS_AND_IJSON_PROFILE.md`
 

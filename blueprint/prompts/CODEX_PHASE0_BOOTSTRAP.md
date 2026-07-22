@@ -1,19 +1,19 @@
-# Codex Phase 0 启动指引 — v0.9.0
+# Codex Phase 0 启动指引
 
-先定位并只读挂载锁定的 Blueprint。按顺序阅读 `AGENTS.md`、`START_HERE.md`、`docs/00_ARCHITECTURE_BASELINE.md`、`docs/DECISIONS.md`、`docs/README.md`、`docs/52_BLUEPRINT_IMPLEMENTATION_BOUNDARY.md` 和 `tasks/PHASE0.md`。
+先分别定位并只读挂载锁定的 Blueprint 与 Contract。按顺序阅读 Blueprint 的 `AGENTS.md`、`START_HERE.md`、`docs/00_ARCHITECTURE_BASELINE.md`、`docs/DECISIONS.md`、`docs/README.md`、`docs/52_BLUEPRINT_CONTRACT_APPLICATION_BOUNDARY.md` 和 `tasks/PHASE0.md`，再阅读 Contract 的 `AGENTS.md` 与 `README.md`。
 
 ## 准入优先
 
 ```bash
-./scripts/bootstrap_contracts.sh
-make validate-architecture
+cd <contract-root>
+make validate-contract
 ```
 
-以上命令在 Blueprint 根运行。开始实现前修复所有本地架构契约失败，并在实现仓库记录精确 Blueprint Version、Git Commit、Contract Manifest Digest 和所需 Suite Digest。`make validate-all` 的 GitHub CI、仓库供应链和冻结基线准入留到正式冻结准备阶段，不阻止 Phase 0 候选实现。在每个 Phase 0 验收项都取得运行证据前，不得开始 Phase 1。
+以上命令在 Contract 根运行，并通过 `AGENT_PLATFORM_BLUEPRINT_ROOT` 指向锁定的 Blueprint Checkout。开始实现前修复所有 Contract Gate 失败，并在 Application 记录精确 Blueprint/Contract Version、Git Commit、Contract Manifest Digest 和所需 Suite Digest。`make validate-all` 的 GitHub CI、仓库供应链和冻结基线准入留到正式冻结准备阶段，不阻止 Phase 0 候选实现。在每个 Phase 0 验收项都取得运行证据前，不得开始 Phase 1。
 
 ## 实现顺序
 
-以下代码、Migration、部署物和测试全部写入独立实现仓库。不得在 Blueprint 中创建产品实现，也不得复制 `contracts/` 成为实现仓库的第二事实源。
+以下代码、Migration、部署物和测试全部写入 Application。不得在 Blueprint 或 Contract 中创建产品实现，也不得复制 Contract 资源成为 Application 的第二事实源。
 
 1. 完成 `tasks/PHASE0.md` 的 0A 最小契约闭合，不带着未定义的 Run、Event、Usage 或 Gateway 关系进入实现。
 2. 实现 PostgreSQL Migration、Constraint、Outbox/Inbox、Temporal、对象存储基础和无 Sandbox Native Runtime Core；它是产品主 Runtime 的第一阶段，不是一次性 Probe。
@@ -36,4 +36,4 @@ make validate-architecture
 - 不得加载任意远程 JavaScript，也不得授予 UI Extension 宿主 Cookie、Token 或 DOM 访问权限。
 - 不得宣称 Exactly-once 或生产就绪。
 
-Blueprint 与实现分别提交和版本化。每个 Commit 都必须说明边界影响、文档/契约/实现/证据分类、新增的强制措施、已运行的测试和尚未证明的属性；跨仓变更必须记录两边的精确 Revision/Digest，不依赖提交顺序或共同 Git History。
+Blueprint、Contract 与 Application 分别提交和版本化。每个 Commit 都必须说明边界影响、文档/契约/实现/证据分类、新增的强制措施、已运行的测试和尚未证明的属性；跨仓变更必须记录相关仓库的精确 Revision/Digest，不依赖提交顺序或共同 Git History。

@@ -10,7 +10,7 @@
 
 | 组件 | 首选 | 备选 | 不选 | 结论与成熟度/生态/运维/性能/安全/许可证/升级风险 |
 |---|---|---|---|---|
-| 实现仓库布局与 Node 包管理 | 实现仓库内使用 pnpm Workspace；实现根 Makefile 统一跨语言 Gate | 后续按证据增加 Turborepo；Nx | Blueprint 与实现共享可变依赖树；npm/yarn 混用；Phase 0 引入 Bazel | Blueprint 独立版本化，不参与产品 Workspace。pnpm 生态成熟、MIT、磁盘效率高；Make 透明且运维低。Bazel 在当前规模增加人才和规则维护成本。pnpm 精确锁定，实现包独立发布。 |
+| 仓库布局与 Node 包管理 | Blueprint、Contract、Application 独立版本化；Contract 与 Application 各自拥有依赖锁和 Gate；Application 内使用 pnpm Workspace | 后续按证据增加 Turborepo；Nx | 三者共享可变依赖树；npm/yarn 混用；Phase 0 引入 Bazel | Blueprint 为纯 Markdown，不参与产品 Workspace；Contract 与 Application 通过精确 Revision/Digest 连接。pnpm 生态成熟、MIT、磁盘效率高；Make 透明且运维低。 |
 | Go 构建 | Go modules；需要多 module 时使用 `go.work` | 单一 Go module | 自建构建器 | 官方工具链、低运维、强可复现；Go 为 BSD-3-Clause。模块和工具链精确锁定，升级先跑 Replay/Conformance。 |
 | Python 构建 | 每个 Adapter 独立 `pyproject.toml` + uv 锁；生产 wheel/OCI | pip-tools 摘要锁 | Poetry 作为跨仓统一控制面；共享可变虚拟环境 | uv 只管理 Python Adapter 依赖，不成为平台事实源；若 CPython 3.14 兼容性不足，ProviderRevision 可暂留 3.13。uv/依赖许可证在锁定时进入 SBOM。 |
 | Agent Access API | Go `net/http` + chi v5；OpenAPI-first | Connect/gRPC 仅内部实验；Gin | 重型全栈框架；GraphQL 作为主写 API | `net/http`/chi 小而稳定、人才多、性能和取消语义清晰；chi MIT。公共协议继续是 HTTP/OpenAPI，避免框架模型渗入领域。 |
@@ -122,7 +122,7 @@ Python 只负责确实依赖 Python Agent/ML 生态的 Runtime/Capability Adapte
 
 ## 0A.1 到 0B
 
-1. 完成本地 Architecture Gate、双次 Bundle 确定性、Python 3.14/3.13、Node/pnpm、Go JCS 和 `git diff --check`。
+1. 完成 Contract Gate、双次 Bundle 确定性、Python 3.14/3.13、Node/pnpm、Go JCS 和 `git diff --check`。
 2. 记录“架构/契约验证通过”，不记录“组件已实现”。
 3. 0B-1 建仓库骨架、锁定首次依赖与镜像，将许可证/SBOM/Provenance 写入构建证据。
 4. 0B-2 实现 PostgreSQL Migration/RLS/Repository/Outbox/Inbox、AgentRuntimeCommand/SystemSafetyControl Ledger，并提供空库升级、兼容回滚和 Redis 清空测试。

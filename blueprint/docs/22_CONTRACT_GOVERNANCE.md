@@ -1,10 +1,10 @@
-# 契约治理 — v0.9.0
+# 契约治理
 
 ## 受治理范围
 
-JSON Schema、OpenAPI、状态机、JCS/I-JSON 向量、数据不变量和契约清单都是受治理契约。叙述性“必须”只有在 Schema、语义 Validator、数据库约束、状态机或 CI 中有对应执行点时才算完成。
+JSON Schema、OpenAPI、状态机、JCS/I-JSON 向量和契约清单由独立 Contract 治理。Blueprint 保存架构意图与责任 ID；叙述性“必须”只有在 Contract、Application 数据库约束、Conformance 或 CI 中有对应执行点时才算完成。
 
-`VALIDATION.json` 与 `CONTRACT_VALIDATION_REPORT.md` 不手工维护。Architecture Gate 的各步骤先把成功证据写入 `build/validation/`，全部步骤和连续两次 Bundle 确定性验证通过后，`generate_validation_evidence.py` 才从同一机器结果原子生成两份报告；任一步失败都不得刷新“passed”状态。
+Contract 的 `VALIDATION.json` 与 `CONTRACT_VALIDATION_REPORT.md` 不手工维护。Contract Gate 的各步骤先把成功证据写入 `build/validation/`，全部步骤和连续两次 Bundle 确定性验证通过后，生成器才从同一机器结果原子生成两份报告；任一步失败都不得刷新“passed”状态。
 
 ## 准入 Gate
 
@@ -14,9 +14,9 @@ JSON Schema、OpenAPI、状态机、JCS/I-JSON 向量、数据不变量和契约
 | Schema | Draft 2020-12 元验证、绝对 `$id`、Registry `$ref`、正反向 Fixture |
 | 语义 | 每条 contract_gate 约束映射注册 Check ID，且 Check 必须在当前运行真实执行；Conversation/Runtime/Recording 序列、可续期授权、Provider/Decision 摘要、Slot、Snapshot、Fencing、状态可达性均有反向夹具 |
 | OpenAPI | Registry 投影后 Redocly Lint 为 0 个错误、0 个警告，8 个确定性 Bundle |
-| 完整性 | v0.9.0 契约清单自摘要和全资源摘要 |
+| 完整性 | 当前契约清单自摘要和全资源摘要 |
 | 兼容性 | 与受保护变量指定的冻结基线比较删除/收窄；CI 缺基线时默认失败 |
-| 供应链 | 摘要锁、pnpm lock 完整性校验、Action SHA、公开 Registry、Git 跟踪文件无 Bytecode/`.DS_Store`、Git 根 Workflow 已激活 |
+| 供应链 | 摘要锁、pnpm lock 完整性校验、公开 Registry、Git 跟踪文件无 Bytecode/`.DS_Store` |
 
 ## URN 与 OpenAPI
 
@@ -28,7 +28,7 @@ JSON Schema、OpenAPI、状态机、JCS/I-JSON 向量、数据不变量和契约
 - Node 24.18.0 Active LTS（Krypton）与 pnpm 11.15.1，使用 `packageManager`、package engine、frozen lockfile 和完整性校验；
 - Go 1.26.5，`go.mod` 固定语言版本并由 `toolchain` 固定补丁版本；
 - Redocly CLI 2.39.0；
-- 第三方 CI Action 使用完整 Commit SHA。
+- 外部 CI 使用的第三方组件必须绑定不可变 Revision。
 
 验证报告必须记录真实工具版本、命令、计数和未运行项。`.tool-versions` 的精确版本是当前候选基线，但生产仍须固定 OCI Digest 并在 BuildProvenance 记录工具链、依赖锁、SBOM 和镜像摘要；不得使用浮动 `latest`。DDL 唯一性、HTTP 解析前 413、跨进程恢复等无法由静态契约证明的责任必须标记 `phase0_implementation_required`，不得借文件存在或函数名写成通过。公共准入前不能写“已冻结”；契约 Gate 也不能证明生产就绪。
 
@@ -42,11 +42,11 @@ CI 的唯一基线权威是受保护仓库变量 `AGENT_PLATFORM_FROZEN_CONTRACT
 
 ## 仓库布局
 
-Blueprint 与产品实现独立版本化，完整依赖和证据规则见 `52_BLUEPRINT_IMPLEMENTATION_BOUNDARY.md`。同一 Git 根下的兄弟目录只是当前开发布局，不构成实现对相对路径或共同 Commit History 的稳定依赖。
+Blueprint、Contract 与 Application 独立版本化，完整依赖和证据规则见 `52_BLUEPRINT_CONTRACT_APPLICATION_BOUNDARY.md`。同一 Git 根下的兄弟目录只是当前开发布局，不构成相对路径或共同 Commit History 的稳定依赖。
 
-GitHub 只读取 Git 根目录 `.github/workflows`。Blueprint 独立成库时直接使用当前 Workflow；嵌入其他 Git 仓库时运行 `scripts/install_github_workflow.sh`，提交 Git 根 Workflow 与 `.gitignore`，并设置 `AGENT_PLATFORM_CONTRACT_ROOT`。供应链 Gate 在受 Git 跟踪的嵌套 Blueprint 中检查根 Workflow 一致性、根 `.gitignore` 和被跟踪的 `.DS_Store`。Workflow 中的全部第三方 Action 使用完整 Commit SHA。
+CI 配置由各部署仓库独立拥有，不进入 Blueprint 或 Contract。无论采用哪种 CI，均必须显式设置 Contract/Blueprint 根、锁定完整 Revision，并通过受保护变量注入冻结基线；本地目录关系和可由变更分支改写的配置不能成为基线权威。
 
-实现仓库的 CI 必须先解析并只读挂载一个精确 Blueprint Revision，验证其 Contract Manifest Digest，再生成绑定代码和运行 Conformance。相对路径可以作为本地默认值，但分支名、目录名或未锁定的 Checkout 不能构成发布证据。
+Application CI 必须分别解析并只读挂载精确 Blueprint Revision 与 Contract Revision，验证 Contract Manifest Digest，再生成绑定代码和运行 Conformance。相对路径可以作为本地默认值，但分支名、目录名或未锁定的 Checkout 不能构成发布证据。
 
 ## 冻结规则
 

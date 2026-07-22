@@ -1,4 +1,4 @@
-# v0.9.0 架构基线候选版本
+# 架构基线候选设计
 
 Agent Application Platform 为多个 Business Application 提供受治理的 Conversation、长任务执行、Sandbox、Artifact、Runtime Recording 和 Delivery 能力。Business 与 Agent Platform 使用独立事实源，只通过版本化契约交换授权和技术用量。
 
@@ -76,4 +76,4 @@ Sub-agent 由 Parent Runtime 的类型化 SpawnRequest 触发，但其身份、P
 
 ## 当前状态
 
-v0.9.0 Blueprint 已通过本地契约 Gate，但尚未冻结。Blueprint 不包含或追踪真实 Agent Platform 产品实现；Phase 0 的 Adapter、Migration、Runtime Gateway、故障注入、容量和备份恢复结论必须由锁定该 Blueprint 的实现仓库与运行环境分别提供。
+当前 Blueprint 已通过本地契约 Gate，但尚未冻结。Blueprint 不包含或追踪真实 Agent Platform 产品实现；Phase 0 的 Adapter、Migration、Runtime Gateway、故障注入、容量和备份恢复结论必须由锁定该 Blueprint Revision 的实现仓库与运行环境分别提供。

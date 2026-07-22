@@ -1,8 +1,6 @@
 # Agent Application Platform 项目总览
 
-> 版本：v0.9.0 产品边界候选版本
->
-> 状态：Blueprint 契约验证已通过；实现、集成、可靠性和生产批准独立判定
+> 状态：Contract Gate 已通过；实现、集成、可靠性、正式冻结和生产批准独立判定
 >
 > 更新日期：2026-07-22
 
@@ -28,20 +26,21 @@ LLM Space 只用于 Agent Engineering Workbench、Trace 调试、Run 对比和 E
 
 ## 工作区布局
 
-| 目录 | 职责 | 版本边界 |
+| 目录 | 职责 | 治理边界 |
 |---|---|---|
-| `blueprint/` | 架构设计、公共契约、开发规范、Conformance 和验收标准 | 独立版本化；不包含产品源码或实现进度 |
-| `agent-application-platform/` | 产品源码、Migration、部署物、组件/集成测试和运行证据 | 单向锁定 Blueprint Revision 与 Digest；未来可独立成库 |
+| `blueprint/` | 纯 Markdown 架构设计、领域边界、开发规范和验收标准 | 独立演进；不包含机器契约、产品源码或运行证据 |
+| `contract/` | Schema、OpenAPI、状态机、Event Registry、Fixture、Conformance Suite 和验证工具 | 独立演进；发布不可变 Contract Revision、Manifest Digest 和 Suite Digest |
+| `application/` | 产品源码、Migration、部署物、组件/集成测试和运行证据 | 分别锁定 Blueprint Revision 与 Contract Revision/Digest；未来可独立成库 |
 
-当前同一 Git 根下的兄弟目录只用于开发便利。两者不得依赖共同目录名或共同 Git History；完整规则见 `blueprint/docs/52_BLUEPRINT_IMPLEMENTATION_BOUNDARY.md`。
+当前同一 Git 根下的兄弟目录只用于开发便利。三者不得依赖共同目录名或共同 Git History；Contract 与 Application 必须支持显式外部路径。完整规则见 `blueprint/docs/52_BLUEPRINT_CONTRACT_APPLICATION_BOUNDARY.md`。
 
 ## 当前状态
 
 | 层级 | 状态 | 说明 |
 |---|---|---|
 | 产品边界 | 候选完成 | Business/Platform 所有权、Conversation、Provider、Sandbox、Artifact、Recording 等边界已有设计 |
-| 可执行契约 | 本地通过 | 242 Schema、293 有效夹具、80 Schema 负例、236 语义负例、9 OpenAPI 和 271 项受治理资源；精确结果见 Blueprint 验证报告 |
-| 产品实现 | 独立判定 | 实现代码与证据位于 `agent-application-platform/`，不能由 Blueprint Gate 推导完成度 |
+| 可执行契约 | 本地通过 | 242 Schema、293 有效夹具、80 Schema 负例、236 语义负例、9 OpenAPI 和 269 项 Contract 自有治理资源；Manifest Digest 为 `sha256:7b3b0aebaf322b33cdcd451c000572325ba0c17994a7ed3e5cc3840c104b4a63` |
+| 产品实现 | B01 Gate 通过 | 实现代码与证据位于 `application/`；只证明当前骨架构建与身份绑定，不代表 0B 完成 |
 | Phase 0 | 未完成 | 当前只有实现骨架；持久化/Temporal/Runtime 操作与 0C-0H 纵向链和证据仍未完成 |
 | 生产可靠性 | 未证明 | 故障注入、隔离、容量、SLO、备份恢复和生产运行证据尚未完成 |
 
@@ -257,6 +256,8 @@ Phase 0 的关键验收包括：
 - [架构决策](blueprint/docs/DECISIONS.md)
 - [详细文档索引](blueprint/docs/README.md)
 - [Phase 0 实施与验收](blueprint/tasks/PHASE0.md)
-- [可执行契约](blueprint/contracts/)
+- [三方仓库边界](blueprint/docs/52_BLUEPRINT_CONTRACT_APPLICATION_BOUNDARY.md)
+- [可执行契约](contract/README.md)
+- [产品实现](application/README.md)
 
 发生冲突时，以 Schema、OpenAPI、状态机、数据库约束和验证 Gate 为准。本文件是项目总览，不替代内部权威规范。

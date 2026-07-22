@@ -1,4 +1,4 @@
-# v0.9.0 交付路线图
+# 交付路线图
 
 `tasks/PHASE0.md` 是唯一 Phase 0 验收计划。Phase 1 只在真实纵向链路、独立 Reference Runtime Probe、故障测试和最小恢复证据完成后开始。
 

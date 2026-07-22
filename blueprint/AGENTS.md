@@ -1,10 +1,10 @@
-# Agent Application Platform Blueprint v0.9.0 — 架构与开发规范
+# Agent Application Platform Blueprint — 架构与开发规范
 
 ## 权威来源
 
-`START_HERE.md`、本文件、`docs/00_ARCHITECTURE_BASELINE.md`、`docs/DECISIONS.md` 与可执行契约是当前事实源。发生冲突时，Schema、状态机、数据库不变量、语义约束和 Blueprint Gate 优先于叙述性文档。实现仓库的 DDL 或代码不能反向覆盖 Blueprint。不得恢复 v0.8.6 或更早设计。
+`START_HERE.md`、本文件、`docs/00_ARCHITECTURE_BASELINE.md` 与 `docs/DECISIONS.md` 是架构意图和开发规范的事实源；独立 Contract 的 Schema、OpenAPI、状态机、Event Registry 和 Semantic Constraints 是精确 Wire 行为的事实源。两者冲突时必须停止并完成协调变更，Application 的 DDL 或代码不能反向覆盖任一上游。
 
-本目录只拥有架构设计、公共契约、开发规范和验收标准，不拥有产品源码、Migration、发布制品或实现进度。实现仓库只能单向消费锁定的 Blueprint Revision/Manifest/Suite Digest，不得复制契约或让实现便利反向成为架构事实。当前兄弟目录布局不是稳定接口，跨仓规则见 `docs/52_BLUEPRINT_IMPLEMENTATION_BOUNDARY.md`。
+本目录只拥有纯 Markdown 架构设计、开发规范和验收标准，不拥有机器契约、验证工具、产品源码、Migration、发布制品或实现进度。Contract 和 Application 分别消费锁定的 Blueprint Revision；Application 另行锁定 Contract Revision/Manifest/Suite Digest。当前兄弟目录布局不是稳定接口，跨仓规则见 `docs/52_BLUEPRINT_CONTRACT_APPLICATION_BOUNDARY.md`。
 
 ## 冻结边界影响检查
 
@@ -15,9 +15,9 @@
 3. 实现变更；
 4. 生产验证变更。
 
-实现变更在实现仓库完成；只有公共行为、架构边界、开发规范或验收责任发生变化时才修改 Blueprint。实现发现契约缺口时，必须先完成 Blueprint 变更和 Gate，再升级实现依赖。
+实现变更在 Application 完成；机器契约变更在 Contract 完成；只有公共行为、架构边界、开发规范或验收责任发生变化时才修改 Blueprint。Application 发现契约缺口时，必须先完成对应 Blueprint/Contract 变更和 Contract Gate，再升级实现依赖。
 
-涉及 Business/Platform 所有权、稳定内核字段、Provider 可替换性、可靠性语义或安全边界时，视为边界变更，必须更新 `docs/DECISIONS.md`、契约、兼容性判定和验证报告。
+涉及 Business/Platform 所有权、稳定内核字段、Provider 可替换性、可靠性语义或安全边界时，视为边界变更，必须更新 `docs/DECISIONS.md`，并在独立 Contract 中同步机器契约、兼容性判定和验证报告。
 
 ## 领域所有权
 
@@ -128,20 +128,19 @@ Runtime Gateway 使用 `runtime-gateway/v1` 类型化帧、Connection Generation
 
 - JSON：Draft 2020-12、绝对 `$id`、Registry 解析、Strict I-JSON、RFC 8785 JCS。
 - 复用：SandboxSpec、ProviderRevisionSnapshot 等必须通过 `$ref` 复用，禁止复制展开。
-- 语义约束：由 `validate_semantics.py` 与反向 Fixture 执行。
-- 关键 `x-semantic-constraints` 必须进入 `contracts/semantic-constraints-v1.json`。每个 `contract_gate` Check ID 必须由当前 Validator 注册并在本次 Gate 真实执行；无法在契约阶段证明的 DDL/Conformance 责任必须明确标为 `phase0_implementation_required`，不得伪装成通过。
+- 语义约束：由 Contract 的 `scripts/validate_semantics.py` 与反向 Fixture 执行。
+- 关键 `x-semantic-constraints` 必须进入 Contract 的 `contracts/semantic-constraints-v1.json`。每个 `contract_gate` Check ID 必须由当前 Validator 注册并在本次 Gate 真实执行；无法在契约阶段证明的 DDL/Conformance 责任必须明确标为 `phase0_implementation_required`，不得伪装成通过。
 - 空 `limits: {}` 没有合法语义；EffectiveExecutionLimits 全字段必填且缺失即拒绝。HTTP 操作必须声明并执行 encoded-body 上限，超限在解析前返回 413。
 - OpenAPI：原始契约保留绝对 URN；Redocly 只对 Registry 投影生成的 `build/openapi-src` 执行 Lint/Bundle，结果必须为 0 个错误、0 个警告。
 - 兼容性：CI 只与受保护变量指定的冻结基线比较且缺失时 fail-closed；首个冻结基线前必须由受保护变量显式允许 N/A，不得写成 pass。
-- 供应链：当前候选工具链固定 CPython 3.14.6、Node 24.18.0 Active LTS、pnpm 11.15.1 和 Go 1.26.5；Python 摘要锁、pnpm lock 完整性校验、Go toolchain、生产 OCI Digest 与 Actions 完整 SHA 都不得漂移或使用 `latest`。Git 跟踪文件不得包含 Bytecode/`.DS_Store`。Blueprint 位于嵌套目录时必须提交 Git 根 Workflow；独立成库时使用自身根 Workflow。
+- 供应链：当前候选工具链固定 CPython 3.14.6、Node 24.18.0 Active LTS、pnpm 11.15.1 和 Go 1.26.5；Python 摘要锁、pnpm lock 完整性校验、Go toolchain、生产 OCI Digest 与外部 CI 依赖的不可变 Revision 都不得漂移或使用 `latest`。Git 跟踪文件不得包含 Bytecode/`.DS_Store`。CI 配置由部署仓库拥有，不属于 Blueprint 或 Contract 的版本化内容。
 
 ## 准入与生产声明
 
-架构设计阶段必须运行：
+架构设计完成后，必须在锁定的 Contract 根运行：
 
 ```bash
-./scripts/bootstrap_contracts.sh
-make validate-architecture
+make validate-contract
 ```
 
-`make validate-all` 额外包含 Blueprint 供应链与仓库/CI 准入，在正式冻结准备阶段启用。实现仓库可以在本地 Architecture Contract Gate 通过后锁定精确 Revision/Digest 并进入 Phase 0；公共 CI 与冻结基线只阻止正式冻结和 Phase 1，不阻止候选架构的 Phase 0 实现。任何 Blueprint Gate 全绿都不证明产品实现或生产可靠性。
+Contract 的 `make validate-all` 额外包含供应链与仓库/CI 准入，在正式冻结准备阶段启用。Application 可以在本地 Contract Gate 通过后锁定精确 Blueprint/Contract Revision 与 Digest 并进入 Phase 0；公共 CI 与冻结基线只阻止正式冻结和 Phase 1，不阻止候选架构的 Phase 0 实现。任何 Contract Gate 全绿都不证明产品实现或生产可靠性。

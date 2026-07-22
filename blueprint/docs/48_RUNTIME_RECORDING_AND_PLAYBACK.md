@@ -6,7 +6,7 @@ RuntimeSession 是短期实时连接。RuntimeRecording 是 Platform 拥有的�
 
 Runtime Gateway 已经中介 Terminal、Browser 和 Desktop 流量，因此由它录制已授权通道。Sandbox Provider 提供内部流端点，但不决定用户同意、保留策略或回放授权。
 
-生命周期遵循 `contracts/state-machines/runtime-recording-v1.json`；只有完整不可变 Manifest 提交后才能进入 `ready`，Finalize 失败必须明确保持失败状态。
+生命周期遵循 Contract 资源 `contracts/state-machines/runtime-recording-v1.json`；只有完整不可变 Manifest 提交后才能进入 `ready`，Finalize 失败必须明确保持失败状态。
 
 ## 数据模型
 

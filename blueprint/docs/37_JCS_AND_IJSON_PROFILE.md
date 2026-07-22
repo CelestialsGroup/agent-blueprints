@@ -1,10 +1,10 @@
-# RFC 8785 JCS 与 Strict I-JSON Profile — v0.9.0
+# RFC 8785 JCS 与 Strict I-JSON Profile
 
 ExecutionGrant request_digest、SchemaReference、ProviderRevision、ProviderResolution、AdmissionDecision、WorkspaceRevision、WorkspaceContentManifest、RunManifest、Runtime/Capability/Plugin/Sandbox/Artifact/Egress Operation 和人工 Decision 的安全摘要都使用 RFC 8785 JCS + SHA-256。ExecutionGrant 声明请求 Contract ID 与 `rfc8785-request-excluding-execution-grant-v1`；RunManifest 保存同一三元组，不得在 WorkOrderRequest、ConversationTurnRequest 与 WorkOrderControlRequest 之间复用摘要解释。所有 Provider/Gateway 操作 Token 都以 Contract ID + Digest Profile 区分原始请求、完整逻辑读描述符、排除自摘要的请求，以及 Artifact Stage 排除内联内容但绑定内容 Digest 的 Profile；Runtime Command 使用 `rfc8785-command-excluding-command-digest-v1`。同一个摘要值不得脱离 Operation、Contract 和 Profile 解释。
 
 进入安全摘要前必须从原始字节严格拒绝：重复键、NaN/Infinity、单独 Surrogate、非 UTF-8，以及数学值为整数且超出 ±(2^53-1) 的任何 Number Token。词法检查使用十进制系数/Scale 的精确运算，因此 `9007199254740992.0`、`9007199254740992e0`、`1000000000000000000000` 和 `1e21` 都必须拒绝。更大整数和 Decimal 使用字符串/领域定点类型；不执行 Unicode 规范化。
 
-共享向量：`contracts/testdata/jcs-v1/vectors.json`。
+共享向量：Contract 资源 `contracts/testdata/jcs-v1/vectors.json`。
 
 - Python：`rfc8785==0.1.4` + 重复键/安全整数原始 Parser；
 - Node：`strict_parse.mjs` 在 `JSON.parse` 前检查 Token；

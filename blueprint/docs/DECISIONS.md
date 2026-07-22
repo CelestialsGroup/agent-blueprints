@@ -4,7 +4,7 @@
 
 | 决策 | 理由 | 结果 |
 |---|---|---|
-| Blueprint 与产品实现独立版本化 | 架构/契约的兼容周期与产品源码、部署和运行证据的生命周期不同；共同目录不能成为隐式耦合 | Blueprint 只拥有架构、公共契约、开发规范和验收标准；实现仓库以精确 Blueprint Revision、Contract Manifest Digest 和 Suite Digest 单向消费。两者可并置开发，也可拆成独立仓库，Blueprint 不跟踪实现进度 |
+| Blueprint、Contract 与 Application 独立版本化 | 架构意图、机器契约和产品源码/运行证据具有不同生命周期；共同目录不能成为隐式耦合 | Blueprint 只拥有纯 Markdown 架构与开发规范；Contract 拥有机器契约与 Gate；Application 拥有实现与运行证据。Application 分别锁定 Blueprint Revision 与 Contract Revision/Manifest/Suite Digest；三者可并置开发，也可拆成独立仓库 |
 | Business 与 Agent Platform 分离事实源 | User、Membership、Payment、Entitlement 与执行状态生命周期不同 | Business 签发 CommercialAuthorization/ExecutionGrant；Platform 只拥有技术执行与 Usage |
 | 稳定内核加受控 Provider | 核心账本和授权不能被插件替换 | Conversation、WorkOrder、Ledger、Event、Artifact、Usage、Delivery 属于内核；Runtime、Sandbox、Tool、Skill、Renderer、Editor、Converter 可替换 |
 | Temporal 编排，PostgreSQL 记账 | 长任务需要恢复，外部副作用需要可对账 | Temporal 管理持久 History；Invocation/Sandbox Ledger、Outbox 和当前状态由 PostgreSQL 管理，不宣称全局 Exactly-once |
@@ -19,7 +19,7 @@
 | Capability、一致性验证和不可变 Resolution | 同名字符串不能证明 Provider 可替换，也不能解释动态路由 | Scenario 解析到精确 Capability/Profile；Resolution 固化 Resolver/Input/Candidate/Evidence/Decision，RunManifest 只引用统一解析事实 |
 | 通用 Capability Provider Port | Plugin ID 不能成为 Model、Tool、MCP、Skill、Renderer 或远程服务的稳定前提，执行期限也不能同时撤销平台的取消与对账能力 | `capability-provider-v1` 提供 Invoke/Status/Cancel/Event；请求携带完整执行授权值并绑定 Resolution/Instance/Audience，Invoke 使用 `execution`，后续前驱链 Token 使用无 Artifact/副作用权限的 `safety_control` |
 | 非 WorkOrder Artifact 执行复用 ExecutionScope | Preview/Edit/Conversion 若拥有独立 Provider Job、Usage 或 Gateway 模型会产生第二执行事实源；若客户端预先提交 Operation-scoped Policy/Gateway 又形成 Scope 分配循环与授权注入 | 客户端只提交业务授权与 Artifact/Capability 意图；Platform 分配 ArtifactOperation 后派生 Policy/Budget/Permissions/Gateway/ProviderResolution。Capability Invocation/Attempt、TechnicalUsage 与 Settlement 统一绑定该 Scope，Projection 不拥有重试或终态 |
-| ArtifactOperation 取消是持久状态而非终态捷径 | 撤销收据若只能直接把 Operation 置为 cancelled，会丢失取消派发、响应丢失和 Provider 已完成竞态 | 所有活动态先记录 `cancel_requested` 与来源收据/Intent/Outbox；已派发进入 `cancelling`，未知结果进入 `cancellation_reconciling` 且禁止重派。已派发 Operation 只投影唯一 Invocation 已提交/对账的 cancelled 事实；成功仅接受取消 CAS 前已提交的 Platform Finalization 证明。该收紧发生在 v0.9.0 未冻结期，不保留旧的直接取消协议 |
+| ArtifactOperation 取消是持久状态而非终态捷径 | 撤销收据若只能直接把 Operation 置为 cancelled，会丢失取消派发、响应丢失和 Provider 已完成竞态 | 所有活动态先记录 `cancel_requested` 与来源收据/Intent/Outbox；已派发进入 `cancelling`，未知结果进入 `cancellation_reconciling` 且禁止重派。已派发 Operation 只投影唯一 Invocation 已提交/对账的 cancelled 事实；成功仅接受取消 CAS 前已提交的 Platform Finalization 证明。该收紧发生在正式冻结前，不保留旧的直接取消协议 |
 | 终态零用量必须有肯定证据 | 启动前失败/取消无法生成非空 UsageReport，缺失又不能解释为零 | Delivery 与 Settlement 在非空 Final/Correction UsageReport 和不可变 NoUsageAttestation 间二选一；未知、Partial 或 Estimated 保持待对账 |
 | Checkpoint/Snapshot 兼容由 Platform 判定 | Provider 自报 portable 无法证明目标 Revision 可恢复 | Source/Target ProviderRevision、Runtime Revision、Profile、Suite Digest 与 Evidence 形成不可变 CompatibilityDecision；缺失、失败或不匹配在 Dispatch 前 fail-closed |
 | Secret 只经单操作 Credential mediation | `secret_reference_ids` 若直接解析为凭据会绕过用途、工作负载和撤销边界 | SecretGrant 绑定 Tenant/Principal/ExecutionScope/Provider/Workload/Target/Intent Digest；Credential Token 短 TTL、sender-constrained、单次消费并审计，明文与 Handle 禁止持久化或缓存 |
