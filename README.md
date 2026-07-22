@@ -2,9 +2,9 @@
 
 > 版本：v0.9.0 产品边界候选版本
 >
-> 状态：契约验证已通过，产品尚未实现，生产可靠性尚未证明
+> 状态：Blueprint 契约验证已通过；实现、集成、可靠性和生产批准独立判定
 >
-> 更新日期：2026-07-21
+> 更新日期：2026-07-22
 
 ## 项目目标
 
@@ -26,14 +26,23 @@ Agent Application Platform 的目标是构建一个类似 Manus 的通用、多�
 
 LLM Space 只用于 Agent Engineering Workbench、Trace 调试、Run 对比和 Evaluation UX 参考，不作为生产 Runtime、最终用户 Workbench 或权威数据源。
 
+## 工作区布局
+
+| 目录 | 职责 | 版本边界 |
+|---|---|---|
+| `blueprint/` | 架构设计、公共契约、开发规范、Conformance 和验收标准 | 独立版本化；不包含产品源码或实现进度 |
+| `agent-application-platform/` | 产品源码、Migration、部署物、组件/集成测试和运行证据 | 单向锁定 Blueprint Revision 与 Digest；未来可独立成库 |
+
+当前同一 Git 根下的兄弟目录只用于开发便利。两者不得依赖共同目录名或共同 Git History；完整规则见 `blueprint/docs/52_BLUEPRINT_IMPLEMENTATION_BOUNDARY.md`。
+
 ## 当前状态
 
 | 层级 | 状态 | 说明 |
 |---|---|---|
 | 产品边界 | 候选完成 | Business/Platform 所有权、Conversation、Provider、Sandbox、Artifact、Recording 等边界已有设计 |
-| 可执行契约 | 本地通过 | 静态审计 550 JSON/26 YAML/8 OpenAPI/47 Markdown；223 Schema、211 有效夹具、73 Schema 负例、188 语义负例和 248 项受治理资源 |
-| 产品实现 | 未完成 | 当前仓库主要是文档、Schema、OpenAPI、状态机、示例和验证脚本 |
-| Phase 0 | 未完成 | Business 纵向链路、Temporal、Native Runtime/SandboxProvider、Gateway、Recording、Reference Probe 和 nexu Provider 尚待实现 |
+| 可执行契约 | 本地通过 | 242 Schema、293 有效夹具、80 Schema 负例、236 语义负例、9 OpenAPI 和 271 项受治理资源；精确结果见 Blueprint 验证报告 |
+| 产品实现 | 独立判定 | 实现代码与证据位于 `agent-application-platform/`，不能由 Blueprint Gate 推导完成度 |
+| Phase 0 | 未完成 | 当前只有实现骨架；持久化/Temporal/Runtime 操作与 0C-0H 纵向链和证据仍未完成 |
 | 生产可靠性 | 未证明 | 故障注入、隔离、容量、SLO、备份恢复和生产运行证据尚未完成 |
 
 “契约验证通过”只表示候选契约内部可接纳，不等于实现完成，也不等于生产就绪。

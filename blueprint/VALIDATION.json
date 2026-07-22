@@ -6,7 +6,7 @@
     "json_documents": 671,
     "yaml_documents": 27,
     "openapi_documents": 9,
-    "markdown_documents": 47,
+    "markdown_documents": 48,
     "schemas": 242,
     "valid_fixtures": 293,
     "invalid_schema_fixtures": 80,
@@ -85,10 +85,11 @@
   ],
   "maturity": {
     "architecture_and_contract_validation": "passed_locally",
-    "component_implementation": "not_started",
-    "integrated_vertical_slice": "not_started",
-    "production_reliability": "not_proven",
-    "frozen": false
+    "phase0b_implementation": "external_not_assessed",
+    "phase0c_to_phase0g_integration": "external_not_assessed",
+    "phase0h_reliability": "external_not_assessed",
+    "frozen": false,
+    "production_approval": "external_not_assessed"
   },
   "contract_candidate_ready_for_phase0_implementation": true
 }

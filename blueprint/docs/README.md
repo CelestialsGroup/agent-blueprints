@@ -1,16 +1,15 @@
 # 文档目录
 
-本目录只描述当前 v0.9.0 候选架构。历史审查过程、临时修复记录和重复的字段说明不属于实施事实源。
+本目录只描述当前 v0.9.0 候选架构、开发规范和验收边界。历史审查过程、临时修复记录、实现进度和重复的字段说明不属于 Blueprint 事实源。
 
 ## 事实源层级
 
 1. `contracts/` 下的 Schema、OpenAPI、状态机、一致性套件和测试夹具。
-2. 数据库 Migration、Constraint 和运行时验证证据；实现后必须满足上层契约。
-3. `DECISIONS.md` 中的架构边界与决策。
-4. 本目录中的领域规范。
-5. 路线图、参考项目和验证报告。
+2. `DECISIONS.md` 中的架构边界与决策。
+3. 本目录中的领域规范、数据不变量和开发规范。
+4. 路线图、参考项目和 Blueprint 验证报告。
 
-叙述文档不复制完整字段或状态迁移；需要精确实现时直接引用对应可执行契约。
+实现仓库的 Migration、Constraint、代码和运行证据用于证明是否符合以上事实源，不属于 Blueprint 事实源，也不能覆盖 Blueprint。叙述文档不复制完整字段或状态迁移；需要精确实现时直接引用对应可执行契约。
 
 ## 入口与领域规范
 
@@ -24,6 +23,7 @@
 | Artifact 与 Delivery | `07_ARTIFACT_WORKSPACE.md`、`31_DELIVERY_AND_INGEST.md` | - |
 | Sandbox | `33_SANDBOX_PROVIDER_CONTRACT.md`、`34_SANDBOX_SECURITY_AND_ISOLATION.md` | `36_SANDBOX_CONFORMANCE_AND_MIGRATION.md` |
 | 部署与生产 | `11_DEPLOYMENT_AND_STACK.md`、`51_PHASE0_TECHNOLOGY_SELECTION.md`、`24_PRODUCTION_GOVERNANCE.md` | `13_ARCHITECTURE_ACCEPTANCE.md` |
+| Blueprint 与实现边界 | `52_BLUEPRINT_IMPLEMENTATION_BOUNDARY.md` | `22_CONTRACT_GOVERNANCE.md` |
 | 契约治理 | `22_CONTRACT_GOVERNANCE.md`、`37_JCS_AND_IJSON_PROFILE.md` | - |
 | 路线图 | `../tasks/PHASE0.md`、`12_PHASE1_SCOPE.md` | `../prompts/CODEX_PHASE0_BOOTSTRAP.md` |
 
@@ -32,5 +32,6 @@
 - 查边界先读架构入口，查字段和迁移直接读 `contracts/`。
 - 自研 Native Runtime 是产品主实现；独立 Reference Contract Probe 只验证 AgentRuntimeProvider Port 可替换性，不承担产品能力。
 - `09_DEERFLOW_INTEGRATION.md` 中的第三方项目只用于研究，不构成平台依赖、适配计划或准入结论。
-- `13_ARCHITECTURE_ACCEPTANCE.md` 将本地架构候选、Phase 0 实现、正式冻结和生产批准拆成四个独立层级，验收时不得混用。
+- `13_ARCHITECTURE_ACCEPTANCE.md` 将契约通过、0B、0C-0G、0H、正式冻结和生产批准拆成独立结论，验收时不得混用。
+- Blueprint 只定义实现必须满足的边界。实现源码、Migration、依赖锁、部署物和运行证据由独立实现仓库拥有，并绑定精确 Blueprint Revision 与 Digest。
 - `CONTRACT_VALIDATION_REPORT.md` 和 `VALIDATION.json` 由同一次成功 Gate 的临时机器证据生成，是某次验证结果，不是可替代契约的事实源。

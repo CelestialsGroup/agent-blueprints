@@ -76,4 +76,4 @@ Sub-agent 由 Parent Runtime 的类型化 SpawnRequest 触发，但其身份、P
 
 ## 当前状态
 
-v0.9.0 已通过本地契约 Gate，但尚未冻结。当前没有真实 Agent Platform 产品实现；Phase 0 的 Adapter、Migration、Runtime Gateway、故障注入、容量和备份恢复证据仍待完成。
+v0.9.0 Blueprint 已通过本地契约 Gate，但尚未冻结。Blueprint 不包含或追踪真实 Agent Platform 产品实现；Phase 0 的 Adapter、Migration、Runtime Gateway、故障注入、容量和备份恢复结论必须由锁定该 Blueprint 的实现仓库与运行环境分别提供。

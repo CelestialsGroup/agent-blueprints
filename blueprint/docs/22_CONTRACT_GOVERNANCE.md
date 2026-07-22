@@ -42,7 +42,11 @@ CI 的唯一基线权威是受保护仓库变量 `AGENT_PLATFORM_FROZEN_CONTRACT
 
 ## 仓库布局
 
-GitHub 只读取 Git 根目录 `.github/workflows`。包独立成库时直接使用当前 Workflow；嵌入 Monorepo 时运行 `scripts/install_github_workflow.sh`，提交 Git 根 Workflow 与 `.gitignore`，并设置 `AGENT_PLATFORM_CONTRACT_ROOT`。供应链 Gate 在受 Git 跟踪的嵌套包中检查根 Workflow 一致性、根 `.gitignore` 和被跟踪的 `.DS_Store`。Workflow 中的全部第三方 Action 使用完整 Commit SHA。
+Blueprint 与产品实现独立版本化，完整依赖和证据规则见 `52_BLUEPRINT_IMPLEMENTATION_BOUNDARY.md`。同一 Git 根下的兄弟目录只是当前开发布局，不构成实现对相对路径或共同 Commit History 的稳定依赖。
+
+GitHub 只读取 Git 根目录 `.github/workflows`。Blueprint 独立成库时直接使用当前 Workflow；嵌入其他 Git 仓库时运行 `scripts/install_github_workflow.sh`，提交 Git 根 Workflow 与 `.gitignore`，并设置 `AGENT_PLATFORM_CONTRACT_ROOT`。供应链 Gate 在受 Git 跟踪的嵌套 Blueprint 中检查根 Workflow 一致性、根 `.gitignore` 和被跟踪的 `.DS_Store`。Workflow 中的全部第三方 Action 使用完整 Commit SHA。
+
+实现仓库的 CI 必须先解析并只读挂载一个精确 Blueprint Revision，验证其 Contract Manifest Digest，再生成绑定代码和运行 Conformance。相对路径可以作为本地默认值，但分支名、目录名或未锁定的 Checkout 不能构成发布证据。
 
 ## 冻结规则
 

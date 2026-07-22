@@ -1,6 +1,6 @@
 # 从这里开始
 
-Agent Application Platform v0.9.0 是产品边界候选版本。它定义 Manus-like Agent 平台的领域边界、公共契约和实施约束，但尚未冻结，也不代表产品已经实现或具备生产可靠性。
+Agent Application Platform Blueprint v0.9.0 是产品边界候选版本。它独立定义 Manus-like Agent 平台的领域边界、公共契约、开发规范和验收标准，但不包含产品实现，也不记录实现仓库的实时进度。
 
 ## 当前成熟度
 
@@ -8,19 +8,21 @@ Agent Application Platform v0.9.0 是产品边界候选版本。它定义 Manus-
 |---|---|---|
 | 架构设计 | 候选完成 | 核心所有权、Provider 模型、Conversation、Sandbox、Recording 和 Business 交接已有设计 |
 | 契约验证 | 本地通过 | Schema、OpenAPI、状态机、正反向夹具、跨语言 JCS 和语义 Gate 已通过本地验证 |
-| 产品实现 | 未完成 | 当前仓库主要包含文档、契约和验证工具，没有真实 Agent Platform 纵向链路 |
-| 生产证明 | 未开始 | 故障注入、容量、安全隔离、Temporal Replay 和备份恢复仍缺运行证据 |
+| 开发规范 | 候选完成 | Phase 0 技术选型、语言边界、数据不变量和阶段验收已有明确规则 |
+| 产品实现 | Blueprint 不判定 | 源码、Migration、部署物、组件与集成证据属于独立实现仓库 |
+| 生产证明 | Blueprint 不判定 | 故障、容量、安全隔离、Replay 和恢复证据必须由实现与运行环境独立提供 |
 
-“契约验证通过”只表示候选契约内部可接纳，不等于实现完成，更不等于生产就绪。
+“契约验证通过”只表示候选契约内部可接纳，不等于实现完成，更不等于生产就绪。Blueprint 与实现的版本、证据和发布结论始终分开。
 
 ## 阅读顺序
 
-1. `AGENTS.md`：实施规则、所有权和禁止项。
+1. `AGENTS.md`：架构与契约治理规则、所有权和禁止项。
 2. `docs/00_ARCHITECTURE_BASELINE.md`：系统分层和当前架构摘要。
 3. `docs/DECISIONS.md`：当前有效的关键决策。
 4. `docs/README.md`：详细规范索引和事实源层级。
-5. `tasks/PHASE0.md`：唯一 Phase 0 实现与验收路线。
-6. `prompts/CODEX_PHASE0_BOOTSTRAP.md`：实现代理入口。
+5. `docs/52_BLUEPRINT_IMPLEMENTATION_BOUNDARY.md`：Blueprint 与实现仓库的依赖、版本和证据边界。
+6. `tasks/PHASE0.md`：唯一 Phase 0 实现与验收路线。
+7. `prompts/CODEX_PHASE0_BOOTSTRAP.md`：实现代理入口。
 
 Schema、OpenAPI、状态机、数据库不变量和验证 Gate 高于叙述性文档。发生冲突时，应先修复低层事实源，再同步说明文档。当前 0A 契约闭合具备进入实现的候选条件；GitHub CI、仓库准入和冻结基线在后续阶段独立处理。
 
@@ -52,6 +54,10 @@ make validate-architecture
 
 当前精确基线为 CPython 3.14.6、Node 24.18.0 Active LTS + pnpm 11.15.1、Go 1.26.5；CPython 3.13 只保留为 CI 回滚兼容通道。禁止使用浮动 `latest`，生产镜像还必须固定 OCI Digest。`make validate-all` 的仓库供应链与 CI 准入留到正式冻结准备阶段；实际结果与计数见 `CONTRACT_VALIDATION_REPORT.md`。
 
+## 与实现仓库的关系
+
+实现仓库单向消费 Blueprint。当前同一 Git 根下的兄弟目录和 `../blueprint` 只是一种本地布局；未来拆仓时必须通过显式路径、只读 Checkout 或内容寻址制品消费。每次实现构建与 Conformance Evidence 都必须绑定精确 Blueprint Version、Git Commit、Contract Manifest Digest 和 Suite Digest，不能只绑定分支名或相对路径。
+
 ## 下一里程碑
 
-0A.2 契约收口完成并通过本地 Gate 后，按 `tasks/PHASE0.md` 实现持久化脊柱和 Native Runtime Core，再进入 Business 纵向链、Native Runtime General/Sandbox、Runtime Gateway/Recording、nexu Provider、独立 Reference Contract Probe、故障注入和最小恢复证据。第三方 Agent 项目只作参考；GitHub CI 只在正式冻结前补齐。
+Blueprint 在 0A.2 契约收口后进入受控演进：实现仓库按 `tasks/PHASE0.md` 推进 0B-0H；实现中发现的契约缺口先回到 Blueprint 独立评审并产生新的不可变 Revision/Digest，再由实现升级依赖。第三方 Agent 项目只作参考；Blueprint 的公共 CI、兼容性基线和正式冻结仍独立处理。

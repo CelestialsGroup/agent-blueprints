@@ -100,10 +100,11 @@ result = {
     ],
     "maturity": {
         "architecture_and_contract_validation": "passed_locally",
-        "component_implementation": "not_started",
-        "integrated_vertical_slice": "not_started",
-        "production_reliability": "not_proven",
+        "phase0b_implementation": "external_not_assessed",
+        "phase0c_to_phase0g_integration": "external_not_assessed",
+        "phase0h_reliability": "external_not_assessed",
         "frozen": False,
+        "production_approval": "external_not_assessed",
     },
     "contract_candidate_ready_for_phase0_implementation": True,
 }
@@ -118,7 +119,7 @@ python_lanes = ", ".join(item["runtime"] for item in python_jcs)
 closure_text = "；".join(architecture_closure)
 report = f"""# 契约验证报告 - v0.9.0
 
-状态：**本地 Architecture Contract Gate 已通过；组件实现、集成链路、生产可靠性与正式冻结均未完成**
+状态：**本地 Architecture Contract Gate 已通过；不对外部实现、集成、可靠性或生产批准作结论；Blueprint 尚未正式冻结**
 
 验证日期：{result['validated_at']}
 
@@ -140,7 +141,7 @@ report = f"""# 契约验证报告 - v0.9.0
 
 本次 Gate 的机器可读 `architecture_closure` 包含：{closure_text}。
 
-该结论仅为“架构/契约验证通过”。仓库仍没有真实 Agent Platform 组件，因此不能声称组件实现完成；Business -> Conversation -> Temporal -> Runtime/Sandbox -> Event/Artifact/Usage/Recording 的纵向链尚未完成；多租户隔离、故障注入、容量、SLO、Temporal Replay、备份恢复和密钥轮换也尚未提供生产证据。
+该结论仅为“架构/契约验证通过”。Blueprint 不包含或认证 Agent Platform 产品组件，因而不能据此声称 0B 实现完成、0C-0G 集成完成、0H 可靠性成立或获得生产批准；这些结论必须由锁定本次 Blueprint Revision/Digest 的实现仓库与运行环境分别提供证据。
 
 GitHub CI、仓库供应链准入和受保护冻结基线按当前阶段明确延后。首次正式冻结前，兼容性基线缺失可以显式 N/A；冻结后必须 fail-closed。
 """

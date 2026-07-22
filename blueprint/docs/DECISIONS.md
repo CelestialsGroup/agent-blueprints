@@ -4,6 +4,7 @@
 
 | 决策 | 理由 | 结果 |
 |---|---|---|
+| Blueprint 与产品实现独立版本化 | 架构/契约的兼容周期与产品源码、部署和运行证据的生命周期不同；共同目录不能成为隐式耦合 | Blueprint 只拥有架构、公共契约、开发规范和验收标准；实现仓库以精确 Blueprint Revision、Contract Manifest Digest 和 Suite Digest 单向消费。两者可并置开发，也可拆成独立仓库，Blueprint 不跟踪实现进度 |
 | Business 与 Agent Platform 分离事实源 | User、Membership、Payment、Entitlement 与执行状态生命周期不同 | Business 签发 CommercialAuthorization/ExecutionGrant；Platform 只拥有技术执行与 Usage |
 | 稳定内核加受控 Provider | 核心账本和授权不能被插件替换 | Conversation、WorkOrder、Ledger、Event、Artifact、Usage、Delivery 属于内核；Runtime、Sandbox、Tool、Skill、Renderer、Editor、Converter 可替换 |
 | Temporal 编排，PostgreSQL 记账 | 长任务需要恢复，外部副作用需要可对账 | Temporal 管理持久 History；Invocation/Sandbox Ledger、Outbox 和当前状态由 PostgreSQL 管理，不宣称全局 Exactly-once |

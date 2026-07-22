@@ -2,6 +2,8 @@
 
 Phase 0 实现一条真实、可恢复的 Manus-like Conversation 链路。目录骨架、生成代码、Schema 通过或单次 Happy Path 都不算完成。所有阶段按依赖顺序推进；未完成前置阶段时，不并行扩展产品范围。
 
+本文由 Blueprint 定义实现顺序和验收责任，不记录实现仓库的实时进度。产品源码、Migration、部署物和阶段证据必须在实现仓库中交付，并绑定精确 Blueprint Revision、Contract Manifest Digest 和所执行的 Conformance Suite Digest。
+
 ```text
 0A 最小契约闭合
  -> 0B 持久化脊柱与 Native Runtime Core
@@ -58,8 +60,8 @@ Phase 0 实现一条真实、可恢复的 Manus-like Conversation 链路。目�
 1. Wire Closure：Schema/OpenAPI/状态机、正反例和 JCS 摘要同时更新；缺少真实执行值、所有权或上限即停止。
 2. Semantic Closure：`semantic-constraints-v1.json` 覆盖关键约束，并将每条约束映射到当前 Validator 及待实现 DDL/Conformance 责任。
 3. Local Gate：在 `.tool-versions` 固定的 CPython 3.14.6、Node 24.18.0 Active LTS/pnpm 11.15.1、Go 1.26.5 上运行 `./scripts/bootstrap_contracts.sh && make validate-architecture`，九份 OpenAPI 0 Error/0 Warning、Manifest Python/Node 一致、`git diff --check` 全部通过；CPython 3.13 兼容通道另行验证。
-4. Implementation Entry Review：只允许把 0A.1 标记为“架构/契约验证通过”；产品实现、集成链路和生产可靠性仍为未完成。
-5. 进入 0B 后先实现 Migration/RLS/Repository/Outbox/Inbox 与空库升级回滚证据，再实现 Native Runtime Core；不得用 Runtime 或框架行为替代领域 Constraint。
+4. Implementation Entry Review：Blueprint 只允许把 0A.1 标记为“架构/契约验证通过”；产品实现、集成链路和生产可靠性必须由实现仓库分别给出证据。
+5. 实现仓库锁定通过 Gate 的 Blueprint Revision/Digest 后进入 0B，先实现 Migration/RLS/Repository/Outbox/Inbox 与空库升级回滚证据，再实现 Native Runtime Core；不得用 Runtime 或框架行为替代领域 Constraint。
 6. 0B 组件、语言与升级通道遵循 `docs/51_PHASE0_TECHNOLOGY_SELECTION.md`；其中标记为 Phase 0 候选或 Phase 1 延后的项目不得被误写为已冻结生产选择。
 
 ### 0A.2 实施与 Conformance 责任索引
@@ -186,8 +188,9 @@ Native Runtime 与 Reference Provider 必须通过 `runtime-core-v1`；Native Ru
 | 结论 | Phase 0 要求 |
 |---|---|
 | 本地架构契约通过 | `make validate-architecture` 的 Schema、语义、状态机、JCS、OpenAPI 和候选兼容性检查通过；不包含 GitHub CI/仓库准入 |
-| 实现完成 | 0B-0G 的真实组件和纵向链路可以重复部署与运行 |
-| 最小可靠性证据 | 0H 的故障、安全和恢复测试有可复现报告 |
+| 0B 实现完成 | 持久化脊柱、Native Runtime Core、数据库事务、Replay 与 `runtime-core-v1` 有真实证据 |
+| 0C-0G 集成完成 | Business 纵向链、主 Runtime/Sandbox、Workbench/Recording、Experience 与 Reference Probe 可以重复部署与运行 |
+| 0H 最小可靠性证据 | 故障、安全、隔离、容量和恢复测试有可复现报告 |
 | 正式冻结 | 独立完成消费者兼容性、仓库供应链、公共 CI、冻结基线和人工批准 |
 | 生产就绪 | 不由 Phase 0 自动授予，仍需独立容量、SLO、安全和生产恢复批准 |
 

@@ -1,6 +1,6 @@
 # v0.9.0 架构与实施验收层级
 
-本文件定义验收条件，不记录某次运行状态。实际结果只看 `CONTRACT_VALIDATION_REPORT.md`、实现测试和生产证据，四个层级不得互相替代。
+本文件定义验收条件，不记录某次运行状态。契约通过、0B 实现、0C-0G 集成、0H 可靠性、正式冻结和生产批准是六种独立结论，不得互相替代。实际状态分别查看 Blueprint 验证报告、实现仓库证据和生产治理记录。
 
 ## 1. 本地架构候选 Gate
 
@@ -36,19 +36,37 @@
 
 该 Gate 不包含 GitHub CI、仓库供应链准入或冻结基线；通过只表示候选架构可以进入实施。
 
-## 2. Phase 0 实现验收
+## 2. 0B 实现验收
 
 - WorkOrder、Tenant-qualified WorkflowRun、单次赋值 RootBinding、Root/Sub-agent AgentRun、RunManifest 和 AgentRuntimeRun 引用闭合；Orchestration 或 Root Admission 前失败不需要伪造下游对象；
-- 自研 Native Runtime 先通过 `runtime-core-v1`，再通过 `runtime-general-v1 + governed-v1`；独立 Reference Probe 在冻结前通过 `runtime-core-v1`，不要求第三方项目适配；
+- 自研 Native Runtime 通过 `runtime-core-v1`，支持 Start、Status、Cursor Event、Cancel、最小 Checkpoint/Restart 和无 Sandbox 模式；
 - Child Spawn/Admission 覆盖委派输入、Parent/Root/Depth、ProviderResolution、不可降级的 Workspace Mount/Commit/CAS 模式、Sandbox、共享 WorkOrder Budget Ledger、AgentRun Resource Allocation、幂等、拒绝、子树 Pause/Cancel、终态汇总和孤儿对账；
 - PostgreSQL Constraint 实现 Tenant、Branch WorkspaceRevision、Outbox/Inbox、Sequence、Ledger、Fencing 和 CAS 不变量；
-- Business → ExecutionGrant → ConversationTurn → Temporal → Runtime/Sandbox → Event/Artifact/Usage 可重复运行和恢复；
+- WorkOrder/Workflow Start、SystemSafetyControl/Event/Outbox 的事务边界有数据库集成证据；
+- Redis 清空不影响授权、状态、Ledger 或 Cursor，Temporal Workflow 可以 Replay，旧 Fencing 被拒绝。
+
+该层只证明持久化脊柱与 Native Runtime Core，不证明 Business 纵向链、Sandbox、Workbench 或生产可靠性。
+
+## 3. 0C-0G 集成验收
+
+- Business → ExecutionGrant → ConversationTurn → Temporal → Runtime/Sandbox → Event/Artifact/Usage 可以重复运行和恢复；
+- 自研 Native Runtime 通过 `runtime-general-v1 + governed-v1`，主 SandboxProvider 与强制 Gateway 链路成立；
+- Workbench、Runtime Gateway、Artifact、Recording、Experience 和 Delivery 使用同一标准事实流；
+- 独立 Reference Probe 通过 `runtime-core-v1`，不复用 Native Runtime 私有执行包，也不要求第三方项目适配；
+- 0C-0G 各阶段的 Conformance 与纵向验收均绑定同一精确 Blueprint Revision/Digest。
+
+该层证明 Phase 0 产品链路已经集成，不等于故障、安全或恢复证据成立。
+
+## 4. 0H 可靠性证据
+
+- Worker/Adapter 重启、Provider 响应丢失、重复响应和旧 Fencing Token 有可执行测试；
 - RuntimeRecording 只持久化经过 Emit-time Scrub/Schema Gate 的 Chunk，并绑定 Redaction Evidence；
-- Redis 清空、Worker/Adapter 重启、Provider 响应丢失和旧 Fencing Token 有可执行测试。
+- 多租户隔离、NetworkPolicy、RBAC、Pod Security、容量与背压有可复现证据；
+- PostgreSQL、Temporal 与 Object Storage 完成最小备份恢复演练。
 
-该层证明真实组件和纵向链存在，不等于生产可靠性。
+0H 只形成 Phase 0 最小可靠性证据，仍不自动授予正式冻结或生产批准。
 
-## 3. 正式冻结 Gate
+## 5. 正式冻结 Gate
 
 冻结 `v0.9.0` 前另行完成：
 
@@ -59,7 +77,7 @@
 
 冻结只承诺公共契约兼容边界，不授予生产批准。
 
-## 4. 生产批准
+## 6. 生产批准
 
 - Temporal Replay、故障注入、多租户隔离、容量/SLO 和备份恢复有可复现运行证据；
 - API/Worker 多副本不依赖粘性 Session 或 Pod 本地权威状态；

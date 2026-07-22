@@ -10,7 +10,7 @@
 
 | 组件 | 首选 | 备选 | 不选 | 结论与成熟度/生态/运维/性能/安全/许可证/升级风险 |
 |---|---|---|---|---|
-| Monorepo 与 Node 包管理 | pnpm Workspace；根 Makefile 统一跨语言 Gate | 后续按证据增加 Turborepo；Nx | npm/yarn 混用；Phase 0 引入 Bazel | pnpm 生态成熟、MIT、磁盘效率高；Make 透明且运维低。Bazel 在当前规模增加人才和规则维护成本。pnpm 精确锁定，Workspace 包独立发布。 |
+| 实现仓库布局与 Node 包管理 | 实现仓库内使用 pnpm Workspace；实现根 Makefile 统一跨语言 Gate | 后续按证据增加 Turborepo；Nx | Blueprint 与实现共享可变依赖树；npm/yarn 混用；Phase 0 引入 Bazel | Blueprint 独立版本化，不参与产品 Workspace。pnpm 生态成熟、MIT、磁盘效率高；Make 透明且运维低。Bazel 在当前规模增加人才和规则维护成本。pnpm 精确锁定，实现包独立发布。 |
 | Go 构建 | Go modules；需要多 module 时使用 `go.work` | 单一 Go module | 自建构建器 | 官方工具链、低运维、强可复现；Go 为 BSD-3-Clause。模块和工具链精确锁定，升级先跑 Replay/Conformance。 |
 | Python 构建 | 每个 Adapter 独立 `pyproject.toml` + uv 锁；生产 wheel/OCI | pip-tools 摘要锁 | Poetry 作为跨仓统一控制面；共享可变虚拟环境 | uv 只管理 Python Adapter 依赖，不成为平台事实源；若 CPython 3.14 兼容性不足，ProviderRevision 可暂留 3.13。uv/依赖许可证在锁定时进入 SBOM。 |
 | Agent Access API | Go `net/http` + chi v5；OpenAPI-first | Connect/gRPC 仅内部实验；Gin | 重型全栈框架；GraphQL 作为主写 API | `net/http`/chi 小而稳定、人才多、性能和取消语义清晰；chi MIT。公共协议继续是 HTTP/OpenAPI，避免框架模型渗入领域。 |
@@ -48,13 +48,13 @@
 
 - 稳定代码轨：每次实施检查点只审阅当期最新正式稳定 Tag，记录完整 Commit、发布日期、镜像 Digest、许可证与安全公告；不追随 `main`、RC、Beta 或浮动镜像。当前调研快照为 `1.16.0@5c6372d2f76d240265b92fd27c16bc772ffcb107`。稳定 Release 中仍标为 Beta 的子功能继续按 Beta 治理；Dify Agent 不能继承 `1.16.0` 整体的稳定性标签。
 - Feature Radar 轨：Dify 2 Beta 的 Knowledge Pipeline、Graph 模块、Agent/Workflow Builder 只用于识别产品和模块候选。当前 `2.0.0-beta.2@2a84832998b4a005373859a82919a62a1bbbec42` 早于稳定快照且已分叉，不能直接回移代码或据此宣称成熟。
-- 实现轨：被采纳的行为重新落到本仓库的 Scenario、ProviderRevision、Temporal Workflow、CanonicalEvent、Artifact、Usage 和 Workbench 契约；Dify 原生 Tenant、WorkflowRun、Thread、Snapshot、Redis Event、SQLite/tmux 或 Endpoint 不进入稳定事实源。
+- 实现轨：被采纳的行为在产品实现仓库中按 Blueprint 的 Scenario、ProviderRevision、Temporal Workflow、CanonicalEvent、Artifact、Usage 和 Workbench 契约重新实现；Dify 原生 Tenant、WorkflowRun、Thread、Snapshot、Redis Event、SQLite/tmux 或 Endpoint 不进入稳定事实源。
 - 非连接边界：当前不规划 Dify Workflow、Agent、MCP 或 Sandbox Provider；通用 Provider Port 继续为平台自有实现和未来独立需求服务，不能反向推导出第三方适配承诺。
 
 ## 推荐总体栈
 
 ```text
-pnpm Workspace + Make
+Implementation repository: pnpm Workspace + Make
   apps/agent-workbench       TypeScript / Next.js
   apps/business-reference    TypeScript / Next.js UI
 
