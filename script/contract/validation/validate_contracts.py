@@ -453,6 +453,8 @@ valid_cases = [
     ("semantic-constraint-traceability.schema.json", "semantic-constraints-v1.json"),
 ]
 invalid_cases = [
+    ("authenticated-client-context.schema.json", "tests/invalid/authenticated-client-context-empty-client-app-id.json"),
+    ("authenticated-client-context.schema.json", "tests/invalid/authenticated-client-context-oversized-client-app-id.json"),
     ("bounded-details.schema.json", "tests/invalid/bounded-details-with-nested-payload.json"),
     ("plugin-manifest-v2.schema.json", "tests/invalid/plugin-self-declared-trust.json"),
     ("canonical-event-v2.schema.json", "tests/invalid/event-missing-work-sequence.json"),

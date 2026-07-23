@@ -12,7 +12,9 @@ test -f "$CONTRACT_ROOT/schemas/build-provenance.schema.json"
 
 UV_TOOLCHAIN_TAG="agent-uv-toolchain:${UV_VERSION}-python${PYTHON_VERSION}"
 EVIDENCE_DIR="$ROOT/build/evidence/b01"
-CACHE_DIR="$ROOT/build/cache"
+B02_EVIDENCE_DIR="$ROOT/build/evidence/b02.1"
+CACHE_DIR="$ROOT/.cache/implementation"
+SQLC_CHECK_DIR="$CACHE_DIR/sqlc-check"
 NATIVE_WHEEL="agent_native_runtime-0.1.0-py3-none-any.whl"
 
 docker run --rm \
@@ -31,7 +33,35 @@ mkdir -p \
   "$CACHE_DIR/uv" \
   "$EVIDENCE_DIR/artifacts/native" \
   "$EVIDENCE_DIR/evidence" \
-  "$EVIDENCE_DIR/rebuild/native"
+  "$EVIDENCE_DIR/rebuild/native" \
+  "$B02_EVIDENCE_DIR"
+
+docker run --rm \
+  -e HOME=/tmp \
+  -v "$CACHE_DIR:/cache" \
+  -v "$ROOT:/workspace:ro" \
+  -w /workspace \
+  "$GO_TOOLCHAIN_IMAGE" \
+  ./script/prepare_go_tools.sh /cache/tools
+
+docker run --rm \
+  -v "$ROOT:/src:ro" \
+  -w /src \
+  "$SQLC_IMAGE" \
+  vet
+
+rm -rf "$SQLC_CHECK_DIR"
+mkdir -p "$SQLC_CHECK_DIR/internal/generated"
+cp "$ROOT/sqlc.yaml" "$SQLC_CHECK_DIR/sqlc.yaml"
+cp -R "$ROOT/db" "$SQLC_CHECK_DIR/db"
+docker run --rm \
+  -v "$SQLC_CHECK_DIR:/src" \
+  -w /src \
+  "$SQLC_IMAGE" \
+  generate
+diff -ru \
+  "$ROOT/internal/generated/agentdb" \
+  "$SQLC_CHECK_DIR/internal/generated/agentdb"
 
 docker build --quiet \
   --file "$ROOT/toolchain/uv-toolchain.Dockerfile" \
@@ -55,8 +85,19 @@ docker run --rm \
       fi
       attempt=$((attempt + 1))
     done
+    unformatted="$(find . \( -path ./build -o -path ./.cache \) -prune -o -name "*.go" -type f -print0 | xargs -0 gofmt -l)"
+    if [ -n "$unformatted" ]; then
+      echo "gofmt required for:" >&2
+      echo "$unformatted" >&2
+      exit 1
+    fi
+    go vet ./...
+    /cache/tools/staticcheck ./...
     go test ./...
+    go test -race ./...
   '
+
+"$ROOT/script/test_postgres_integration.sh" "$CACHE_DIR" "$B02_EVIDENCE_DIR"
 
 docker run --rm \
   -e GOCACHE=/cache/go-build \
@@ -203,4 +244,4 @@ docker run --rm \
     --traceability-report /out/evidence/phase0-implementation-traceability.json \
     --output-dir /out/evidence
 
-echo "B01 implementation validation passed."
+echo "B02.1 implementation validation passed; B01 reproducible artifact evidence preserved."

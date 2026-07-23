@@ -18,15 +18,22 @@ the locked Blueprint and Contract source snapshots, Contract Manifest, and each
 consumed Conformance Suite/Profile. Changing an upstream checkout without an
 explicit lock refresh fails before Application compilation.
 
-Database persistence, Temporal orchestration, Runtime HTTP operations, and product execution remain unimplemented until their later Phase 0 slices.
+The B02.1 slice adds pgx v5 persistence plus release-digest-pinned goose and
+Staticcheck tools, a digest-pinned sqlc OCI image, and a PostgreSQL 18.4 test
+image. Only Tenant/ClientApplication bootstrap persistence is implemented;
+Temporal, Runtime HTTP, and product execution remain later slices.
 
 Run `make validate-implementation` from the repository root. The command uses
 the exact container images in `toolchain/toolchain.env` when host toolchains do
-not match the governed versions. Generated artifacts and evidence are written
-under `build/evidence/b01/`; they are reproducible build outputs and are not
-committed.
+not match the governed versions. Reproducible B01 build artifacts are written
+under `build/evidence/b01/`. PostgreSQL test logs and their source/tool/lock-bound
+manifest are written under `build/evidence/b02.1/`. Both are generated outputs
+and are not committed.
 
-Verified Go and Python dependency downloads are cached under ignored `build/cache/` paths. A cold cache requires network access; subsequent runs reuse content still checked by `go.sum` and the hashed Python build constraints.
+Verified tool, Go, and Python dependency downloads are cached under ignored
+`.cache/implementation/` paths. A cold cache requires network access; subsequent
+runs reuse content still checked by release SHA-256, `go.sum`, OCI digests, and
+the hashed Python build constraints.
 
 The B01 Go artifact target is explicitly pinned to `linux/arm64`, matching the governed toolchain image used by the current Phase 0 Gate. Multi-architecture production OCI builds are a later release concern and are not implied by this slice.
 

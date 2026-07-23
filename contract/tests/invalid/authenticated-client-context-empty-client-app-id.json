@@ -1,0 +1,6 @@
+{
+  "client_app_id": "",
+  "service_principal_id": "service-principal-1",
+  "scopes": ["agent:invoke"],
+  "authenticated_at": "2026-07-23T00:00:00Z"
+}

@@ -3,7 +3,7 @@
   "status": "candidate-not-frozen",
   "digest_profile": "RFC8785-JCS+SHA-256; Strict-I-JSON-v2.0",
   "resource_count": 269,
-  "resources_digest": "sha256:2dd9fc30d7a8f5da539fcab4d7fce59604c7b756e8289ec040784eab096eeced",
+  "resources_digest": "sha256:08c30919ec468f3b21762835499af49943c8103b7064c2a6ea38b02e06e9a6ee",
   "resources": [
     {
       "path": "conformance/agent-access/v1/suite.json",
@@ -441,7 +441,7 @@
       "path": "schemas/authenticated-client-context.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:authenticated-client-context:v1",
-      "digest": "sha256:f21e1790e2c9b79aba2f97e5df60e0d752aa724eada431e3465851061417c20d"
+      "digest": "sha256:c0685af2436c44c8e1043f627a3afcb84871a75ce1519fba33bdb22855d9e8ec"
     },
     {
       "path": "schemas/authorization-renewal-policy.schema.json",
@@ -1620,5 +1620,5 @@
       "digest": "sha256:8a1b114c8c37cc1bcbcc841d7d5519846b2fabe0d3c0120924e3d7bb436219cd"
     }
   ],
-  "manifest_digest": "sha256:383117f3ce72afa03eb932968d534d3f39fa174b90e4149675cb631db3cee152"
+  "manifest_digest": "sha256:fac0299efcf04471f58f1f0668818a5148526371bd413deb5993c5aacb2762ce"
 }

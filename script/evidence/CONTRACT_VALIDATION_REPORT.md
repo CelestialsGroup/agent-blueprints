@@ -8,8 +8,8 @@
 
 | 检查项 | 本地结果 |
 |---|---|
-| 纯源码静态审计 | 通过：664 个 JSON、15 个 YAML、9 个 OpenAPI、3 个 Markdown 文件 |
-| JSON Schema 与夹具 | 通过：242 个 Schema、293 个有效夹具、80 个 Schema 负例 |
+| 纯源码静态审计 | 通过：666 个 JSON、15 个 YAML、9 个 OpenAPI、3 个 Markdown 文件 |
+| JSON Schema 与夹具 | 通过：242 个 Schema、293 个有效夹具、82 个 Schema 负例 |
 | 语义不变量 | 通过：8 个状态机、236 个语义负例 |
 | 语义追踪 | 通过：135 个关键 Schema、496 条约束、294 个 Contract Gate 映射、166 个本次执行 Check ID、286 个 Phase 0 DDL/Conformance 责任 |
 | Core Event Registry | 通过：Platform 30 类、Agent Runtime 17 类闭合 Event Type；CanonicalEvent 按 Producer 所有权绑定对应 Registry |

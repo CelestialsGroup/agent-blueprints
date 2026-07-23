@@ -13,11 +13,15 @@ Coding, database, language, test, review, and Definition of Done rules are
 defined by the locked Blueprint's
 `docs/53_APPLICATION_DEVELOPMENT_STANDARDS.md`.
 
-The current B01 slice provides:
+The current implementation provides:
 
 - the Go Agent Access process and lifecycle health endpoints;
 - the Python Native Runtime package bound to `runtime-core-v1`;
 - reproducible build, dependency, SBOM, and provenance evidence.
+- the B02.1 PostgreSQL bootstrap with separate Migrator/Application roles,
+  Tenant/ClientApplication RLS, pgx transactions, and a sqlc-backed repository;
+- a disposable PostgreSQL 18.4 harness proving migration and tenant isolation
+  against a real database.
 
 ## Repository map
 
@@ -63,4 +67,6 @@ AGENT_CONTRACT_ROOT=/path/to/contract \
 make validate-implementation
 ```
 
-PostgreSQL persistence, Temporal orchestration, Runtime HTTP operations, and product execution remain future Phase 0B slices.
+Only the Tenant/ClientApplication persistence slice is implemented. Outbox/Inbox,
+the remaining 0B tables, Temporal orchestration, Runtime HTTP operations, and
+product execution remain future Phase 0B slices.

@@ -6,12 +6,12 @@
     "source_tree_digest": "sha256:6e408d3d973e1b59ba88e7a8500adb9caca98aa26838fab5878b256080bf8d6a"
   },
   "contract": {
-    "governed_file_count": 682,
-    "manifest_digest": "sha256:383117f3ce72afa03eb932968d534d3f39fa174b90e4149675cb631db3cee152",
+    "governed_file_count": 684,
+    "manifest_digest": "sha256:fac0299efcf04471f58f1f0668818a5148526371bd413deb5993c5aacb2762ce",
     "resource_count": 269,
     "revision_kind": "governed_source_snapshot_sha256",
-    "source_revision": "e0e18a98e09c77bd4294132140e54c5166a20d8a26d4c05054d52fe8837e8f1a",
-    "source_tree_digest": "sha256:e0e18a98e09c77bd4294132140e54c5166a20d8a26d4c05054d52fe8837e8f1a",
+    "source_revision": "c7548d4a7e181895ca6c7c0ccfb585ccc2352433da8856c57d1d09ca3cb9a7e7",
+    "source_tree_digest": "sha256:c7548d4a7e181895ca6c7c0ccfb585ccc2352433da8856c57d1d09ca3cb9a7e7",
     "suites": [
       {
         "path": "conformance/runtime/v1/suite.json",
