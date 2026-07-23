@@ -1,8 +1,8 @@
-# Agent Application Platform Implementation Rules
+# Agent Implementation Rules
 
 ## Authority
 
-The independently versioned Blueprint owns architecture intent and development rules. The independently versioned Contract owns Schema, OpenAPI, state machines, event registries, semantic constraints, fixtures, and Conformance Suites. In the current sibling layout they default to `../blueprint` and `../contract`; `AGENT_PLATFORM_BLUEPRINT_ROOT` and `AGENT_PLATFORM_CONTRACT_ROOT` must support external read-only checkouts when repositories split. Do not create copied contract truth inside this directory.
+The independently versioned Blueprint owns architecture intent and development rules. The independently versioned Contract owns Schema, OpenAPI, state machines, event registries, semantic constraints, fixtures, and Conformance Suites. In the current sibling layout they default to `../blueprint` and `../contract`; `AGENT_BLUEPRINT_ROOT` and `AGENT_CONTRACT_ROOT` must support external read-only checkouts when repositories split. Do not create copied contract truth inside this directory.
 
 Before implementation, read the locked Blueprint's
 `docs/53_APPLICATION_DEVELOPMENT_STANDARDS.md`. Application-local README and

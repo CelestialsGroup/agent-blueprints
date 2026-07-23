@@ -3,11 +3,11 @@ requires = ["hatchling==1.31.0"]
 build-backend = "hatchling.build"
 
 [project]
-name = "agent-platform-native-runtime"
+name = "agent-native-runtime"
 version = "0.1.0"
-description = "Native Agent Runtime Provider for Agent Application Platform"
+description = "Native Agent Runtime Provider for the Agent project"
 requires-python = ">=3.13,<3.15"
 dependencies = []
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/agent_platform_native_runtime"]
+packages = ["src/agent_native_runtime"]

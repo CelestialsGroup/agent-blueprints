@@ -1,4 +1,4 @@
-# Agent Application Platform 项目总览
+# Agent 项目总览
 
 > 状态：Contract Gate 已通过；实现、集成、可靠性、正式冻结和生产批准独立判定
 >
@@ -6,7 +6,7 @@
 
 ## 项目目标
 
-Agent Application Platform 的目标是构建一个类似 Manus 的通用、多租户 Agent 平台，为多个 Business Application 提供可治理、可恢复、可扩展的长任务执行能力。
+Agent 项目的目标是构建一个类似 Manus 的通用、多租户 Agent 平台，为多个 Business Application 提供可治理、可恢复、可扩展的长任务执行能力。
 
 平台需要支持：
 
@@ -33,7 +33,7 @@ LLM Space 只用于 Agent Engineering Workbench、Trace 调试、Run 对比和 E
 | `script/` | Contract 校验器、生成器、依赖锁、临时构建物和 Gate 报告 | 非权威辅助工具；通过显式 Contract/Blueprint 根工作，不属于 Contract 内容 |
 | `application/` | 产品源码、Migration、部署物、组件/集成测试和运行证据 | 分别锁定 Blueprint Revision 与 Contract Revision/Digest；未来可独立成库 |
 
-当前同一 Git 根下的兄弟目录只用于开发便利。Blueprint、Contract 与 Application 三类产品不得依赖共同目录名或共同 Git History；Contract Scripts 通过 `AGENT_PLATFORM_CONTRACT_ROOT` 和 `AGENT_PLATFORM_BLUEPRINT_ROOT` 选择输入。完整规则见 `blueprint/docs/52_BLUEPRINT_CONTRACT_APPLICATION_BOUNDARY.md`。
+当前同一 Git 根下的兄弟目录只用于开发便利。Blueprint、Contract 与 Application 三类产品不得依赖共同目录名或共同 Git History；Contract Scripts 通过 `AGENT_CONTRACT_ROOT` 和 `AGENT_BLUEPRINT_ROOT` 选择输入。完整规则见 `blueprint/docs/52_BLUEPRINT_CONTRACT_APPLICATION_BOUNDARY.md`。
 
 ## 当前状态
 

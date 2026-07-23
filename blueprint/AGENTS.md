@@ -1,4 +1,4 @@
-# Agent Application Platform Blueprint — 架构与开发规范
+# Agent Blueprint — 架构与开发规范
 
 ## 权威来源
 
@@ -141,7 +141,7 @@ Runtime Gateway 使用 `runtime-gateway/v1` 类型化帧、Connection Generation
 
 ```bash
 cd <script-root>
-export AGENT_PLATFORM_CONTRACT_ROOT=<contract-root>
+export AGENT_CONTRACT_ROOT=<contract-root>
 make validate-contract
 ```
 

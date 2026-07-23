@@ -11,7 +11,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_ROOT = Path(
-    os.environ.get("AGENT_PLATFORM_CONTRACT_ROOT", ROOT.parent / "contract")
+    os.environ.get("AGENT_CONTRACT_ROOT", ROOT.parent / "contract")
 ).resolve()
 LOCK_PATH = ROOT / "dependency-lock.json"
 SEMANTIC_CONSTRAINTS_PATH = CONTRACT_ROOT / "semantic-constraints-v1.json"

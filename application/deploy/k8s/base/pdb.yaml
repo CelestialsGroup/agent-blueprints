@@ -2,7 +2,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: agent-access
-  namespace: agent-platform
+  namespace: agent
 spec:
   minAvailable: 2
   selector:

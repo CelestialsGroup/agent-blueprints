@@ -1,10 +1,10 @@
-# Agent Application Platform Script Rules
+# Agent Script Rules
 
 ## Purpose
 
 This directory contains non-authoritative automation for independently versioned inputs. Contract validation and maintenance scripts live under `contract/`; they do not own Contract meaning, Blueprint architecture, or Application implementation.
 
-Resolve Contract resources through `AGENT_PLATFORM_CONTRACT_ROOT`; `../contract` is only a local fallback. Resolve Blueprint responsibility URNs through `AGENT_PLATFORM_BLUEPRINT_ROOT`; `../blueprint` is only a local fallback. Do not require a shared Git repository, shared commit history, or fixed sibling directory in release workflows.
+Resolve Contract resources through `AGENT_CONTRACT_ROOT`; `../contract` is only a local fallback. Resolve Blueprint responsibility URNs through `AGENT_BLUEPRINT_ROOT`; `../blueprint` is only a local fallback. Do not require a shared Git repository, shared commit history, or fixed sibling directory in release workflows.
 
 ## Change Discipline
 

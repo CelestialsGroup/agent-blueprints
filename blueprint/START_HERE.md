@@ -1,6 +1,6 @@
 # 从这里开始
 
-Agent Application Platform Blueprint 是当前产品边界候选设计。它以纯 Markdown 独立定义 Manus-like Agent 平台的领域边界、开发规范和验收标准，但不包含机器契约、产品实现，也不记录 Application 的实时进度。
+Agent Blueprint 是当前产品边界候选设计。它以纯 Markdown 独立定义 Manus-like Agent 平台的领域边界、开发规范和验收标准，但不包含机器契约、产品实现，也不记录 Application 的实时进度。
 
 ## 当前成熟度
 
@@ -50,7 +50,7 @@ Blueprint 决定架构意图和禁止项，Contract 决定精确 Wire 行为，A
 
 ```bash
 cd <script-root>
-export AGENT_PLATFORM_CONTRACT_ROOT=<contract-root>
+export AGENT_CONTRACT_ROOT=<contract-root>
 make validate-contract
 ```
 

@@ -1,5 +1,5 @@
 {
-  "contract_line": "agent-application-platform",
+  "contract_line": "agent",
   "status": "candidate-not-frozen",
   "digest_profile": "RFC8785-JCS+SHA-256; Strict-I-JSON-v2.0",
   "resource_count": 269,
@@ -1620,5 +1620,5 @@
       "digest": "sha256:8a1b114c8c37cc1bcbcc841d7d5519846b2fabe0d3c0120924e3d7bb436219cd"
     }
   ],
-  "manifest_digest": "sha256:bee87081bdcb6784e0ea8522b29d6f241fb93f386e6ed14179512ba3c961d080"
+  "manifest_digest": "sha256:383117f3ce72afa03eb932968d534d3f39fa174b90e4149675cb631db3cee152"
 }

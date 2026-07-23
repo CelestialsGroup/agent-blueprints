@@ -28,7 +28,7 @@ COMPONENTS = {
         "source_directories": ["cmd/agent-access", "internal/agentaccess"],
     },
     "native-runtime": {
-        "artifact_name": "agent-platform-native-runtime-wheel",
+        "artifact_name": "agent-native-runtime-wheel",
         "build_system": "uv0.11.30+hatchling1.31.0+python3.14.6",
         "toolchain_keys": ["PYTHON_TOOLCHAIN_IMAGE", "UV_BINARY_IMAGE"],
         "source_files": [
@@ -146,10 +146,10 @@ def create_sbom(component_name: str, source_digest: str, inventory: list[dict[st
         "dataLicense": "CC0-1.0",
         "SPDXID": "SPDXRef-DOCUMENT",
         "name": f"{component_name}-b01",
-        "documentNamespace": f"https://agent-platform.invalid/spdx/{component_name}/{source_digest}",
+        "documentNamespace": f"https://github.com/shell-echo/agent/spdx/{component_name}/{source_digest}",
         "creationInfo": {
             "created": "2000-01-01T00:00:00Z",
-            "creators": ["Tool: agent-platform-b01-evidence-generator"],
+            "creators": ["Tool: agent-b01-evidence-generator"],
         },
         "packages": packages,
         "relationships": relationships,
@@ -166,19 +166,19 @@ def image_material(image: str) -> dict[str, Any]:
 def governed_materials(lock: dict[str, Any], lock_digest: str) -> list[dict[str, Any]]:
     materials = [
         {
-            "uri": "urn:agent-platform:application-dependency-lock:v1",
+            "uri": "urn:agent:application-dependency-lock:v1",
             "digest": {"sha256": lock_digest},
         },
         {
-            "uri": "urn:agent-platform:blueprint:governed-source-snapshot",
+            "uri": "urn:agent:blueprint:governed-source-snapshot",
             "digest": {"sha256": lock["blueprint"]["source_revision"]},
         },
         {
-            "uri": "urn:agent-platform:contract:governed-source-snapshot",
+            "uri": "urn:agent:contract:governed-source-snapshot",
             "digest": {"sha256": lock["contract"]["source_revision"]},
         },
         {
-            "uri": "urn:agent-platform:contract:manifest",
+            "uri": "urn:agent:contract:manifest",
             "digest": {"sha256": lock["contract"]["manifest_digest"].removeprefix("sha256:")},
         },
     ]
@@ -187,7 +187,7 @@ def governed_materials(lock: dict[str, Any], lock_digest: str) -> list[dict[str,
         materials.append(
             {
                 "uri": (
-                    "urn:agent-platform:contract:conformance-suite:"
+                    "urn:agent:contract:conformance-suite:"
                     f"{suite['suite_id']}:{suite['suite_version']}?profiles={profiles}"
                 ),
                 "digest": {"sha256": suite["suite_digest"].removeprefix("sha256:")},
@@ -209,7 +209,7 @@ def create_provenance(
 ) -> dict[str, Any]:
     materials = [
         {
-            "uri": f"urn:agent-platform:source-snapshot:{source_digest}",
+            "uri": f"urn:agent:source-snapshot:{source_digest}",
             "digest": {"sha256": source_digest},
         }
     ]
@@ -222,7 +222,7 @@ def create_provenance(
         "predicateType": "https://slsa.dev/provenance/v1",
         "predicate": {
             "buildDefinition": {
-                "buildType": "https://agent-platform.invalid/build-types/phase0-b01/v1",
+                "buildType": "https://github.com/shell-echo/agent/build-types/phase0-b01/v1",
                 "externalParameters": {
                     "component": component_name,
                     "buildSystem": build_system,
@@ -234,7 +234,7 @@ def create_provenance(
                 "resolvedDependencies": materials,
             },
             "runDetails": {
-                "builder": {"id": "urn:agent-platform:builder:phase0-b01"},
+                "builder": {"id": "urn:agent:builder:phase0-b01"},
                 "metadata": {"invocationId": source_digest},
             },
         },

@@ -7,7 +7,7 @@ import { strictParse } from "./strict_parse.mjs";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const scriptRoot = path.resolve(here, "../..");
 const contractRoot = path.resolve(
-  process.env.AGENT_PLATFORM_CONTRACT_ROOT ?? path.join(scriptRoot, "../contract"),
+  process.env.AGENT_CONTRACT_ROOT ?? path.join(scriptRoot, "../contract"),
 );
 const vectors = JSON.parse(fs.readFileSync(path.join(contractRoot, "testdata/jcs-v1/vectors.json"), "utf8"));
 

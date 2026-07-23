@@ -6,8 +6,8 @@
 
 ```bash
 cd <script-root>
-export AGENT_PLATFORM_CONTRACT_ROOT=<contract-root>
-export AGENT_PLATFORM_BLUEPRINT_ROOT=<blueprint-root>
+export AGENT_CONTRACT_ROOT=<contract-root>
+export AGENT_BLUEPRINT_ROOT=<blueprint-root>
 make validate-contract
 ```
 

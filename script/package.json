@@ -1,5 +1,5 @@
 {
-  "name": "agent-application-platform-contract-scripts",
+  "name": "agent-contract-scripts",
   "private": true,
   "packageManager": "pnpm@11.15.1",
   "engines": {

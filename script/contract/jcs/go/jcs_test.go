@@ -28,7 +28,7 @@ type vectorFile struct {
 func loadVectors(t *testing.T) vectorFile {
 	t.Helper()
 	_, current, _, _ := runtime.Caller(0)
-	contractRoot := os.Getenv("AGENT_PLATFORM_CONTRACT_ROOT")
+	contractRoot := os.Getenv("AGENT_CONTRACT_ROOT")
 	if contractRoot == "" {
 		contractRoot = filepath.Join(filepath.Dir(current), "..", "..", "..", "..", "contract")
 	}

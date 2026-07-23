@@ -1,4 +1,4 @@
-# Agent Application Platform Blueprint
+# Agent Blueprint
 
 本目录是面向多个 Business Application 的 Manus-like Agent Platform Blueprint。它以纯 Markdown 独立定义架构、开发规范和验收标准，不包含机器可执行契约、Agent Platform 产品实现，也不跟踪实现仓库的实时开发进度。
 
@@ -32,7 +32,7 @@ Blueprint 自身是文档评审对象，不运行 Contract Gate。机器契约�
 
 ```bash
 cd <script-root>
-export AGENT_PLATFORM_CONTRACT_ROOT=<contract-root>
+export AGENT_CONTRACT_ROOT=<contract-root>
 make validate-contract
 ```
 

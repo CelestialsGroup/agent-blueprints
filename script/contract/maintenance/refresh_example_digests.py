@@ -13,7 +13,7 @@ import yaml
 
 SCRIPT_ROOT = Path(__file__).resolve().parents[2]
 CONTRACT_ROOT = Path(
-    os.environ.get("AGENT_PLATFORM_CONTRACT_ROOT", SCRIPT_ROOT.parent / "contract")
+    os.environ.get("AGENT_CONTRACT_ROOT", SCRIPT_ROOT.parent / "contract")
 ).resolve()
 AGENT_RUN_RESOURCE_LIMIT_NAMES = (
     "max_input_tokens",

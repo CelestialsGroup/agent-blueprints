@@ -2,22 +2,22 @@
 set -euo pipefail
 
 ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
-BLUEPRINT_ROOT="${AGENT_PLATFORM_BLUEPRINT_ROOT:-$ROOT/../blueprint}"
-CONTRACT_ROOT="${AGENT_PLATFORM_CONTRACT_ROOT:-$ROOT/../contract}"
+BLUEPRINT_ROOT="${AGENT_BLUEPRINT_ROOT:-$ROOT/../blueprint}"
+CONTRACT_ROOT="${AGENT_CONTRACT_ROOT:-$ROOT/../contract}"
 source "$ROOT/toolchain/toolchain.env"
 
 test -f "$BLUEPRINT_ROOT/START_HERE.md"
 test -f "$CONTRACT_ROOT/conformance/runtime/v1/suite.json"
 test -f "$CONTRACT_ROOT/schemas/build-provenance.schema.json"
 
-UV_TOOLCHAIN_TAG="agent-platform-uv-toolchain:${UV_VERSION}-python${PYTHON_VERSION}"
+UV_TOOLCHAIN_TAG="agent-uv-toolchain:${UV_VERSION}-python${PYTHON_VERSION}"
 EVIDENCE_DIR="$ROOT/build/evidence/b01"
 CACHE_DIR="$ROOT/build/cache"
-NATIVE_WHEEL="agent_platform_native_runtime-0.1.0-py3-none-any.whl"
+NATIVE_WHEEL="agent_native_runtime-0.1.0-py3-none-any.whl"
 
 docker run --rm \
-  -e AGENT_PLATFORM_BLUEPRINT_ROOT=/blueprint \
-  -e AGENT_PLATFORM_CONTRACT_ROOT=/contract \
+  -e AGENT_BLUEPRINT_ROOT=/blueprint \
+  -e AGENT_CONTRACT_ROOT=/contract \
   -v "$BLUEPRINT_ROOT:/blueprint:ro" \
   -v "$CONTRACT_ROOT:/contract:ro" \
   -v "$ROOT:/workspace:ro" \
@@ -107,7 +107,7 @@ for attempt in range(50):
   '
 
 docker run --rm \
-  -e AGENT_PLATFORM_CONTRACT_ROOT=/contract \
+  -e AGENT_CONTRACT_ROOT=/contract \
   -e PYTHONDONTWRITEBYTECODE=1 \
   -e PYTHONPATH=/workspace/runtime/native/src \
   -v "$CONTRACT_ROOT:/contract:ro" \
@@ -163,15 +163,15 @@ docker run --rm \
       --target /tmp/native-runtime \
       "/out/artifacts/native/$NATIVE_WHEEL" >/dev/null
     PYTHONPATH=/tmp/native-runtime python -c '\''
-from agent_platform_native_runtime import BUILD_IDENTITY
+from agent_native_runtime import BUILD_IDENTITY
 
 assert BUILD_IDENTITY.target_profile == "runtime-core-v1"
 '\''
   '
 
 docker run --rm \
-  -e AGENT_PLATFORM_BLUEPRINT_ROOT=/blueprint \
-  -e AGENT_PLATFORM_CONTRACT_ROOT=/contract \
+  -e AGENT_BLUEPRINT_ROOT=/blueprint \
+  -e AGENT_CONTRACT_ROOT=/contract \
   -v "$BLUEPRINT_ROOT:/blueprint:ro" \
   -v "$CONTRACT_ROOT:/contract:ro" \
   -v "$ROOT:/workspace:ro" \
@@ -180,7 +180,7 @@ docker run --rm \
   python script/check_implementation_supply_chain.py
 
 docker run --rm \
-  -e AGENT_PLATFORM_CONTRACT_ROOT=/contract \
+  -e AGENT_CONTRACT_ROOT=/contract \
   -v "$CONTRACT_ROOT:/contract:ro" \
   -v "$ROOT:/workspace:ro" \
   -v "$EVIDENCE_DIR:/out" \

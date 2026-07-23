@@ -1,4 +1,4 @@
-module agent-platform-jcs-conformance
+module github.com/shell-echo/agent/script/contract/jcs
 
 go 1.26.0
 

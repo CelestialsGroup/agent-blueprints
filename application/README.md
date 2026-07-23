@@ -1,6 +1,6 @@
-# Agent Application Platform
+# Agent
 
-This directory contains the independently versioned Agent Application Platform implementation. Architecture and development rules remain in the Blueprint; schemas, OpenAPI definitions, state machines, event registries, semantic constraints, fixtures, and Conformance Suites remain in the Contract. Current sibling checkouts default to `../blueprint` and `../contract`; external checkouts are selected with `AGENT_PLATFORM_BLUEPRINT_ROOT` and `AGENT_PLATFORM_CONTRACT_ROOT`.
+This directory contains the independently versioned Agent implementation. Architecture and development rules remain in the Blueprint; schemas, OpenAPI definitions, state machines, event registries, semantic constraints, fixtures, and Conformance Suites remain in the Contract. Current sibling checkouts default to `../blueprint` and `../contract`; external checkouts are selected with `AGENT_BLUEPRINT_ROOT` and `AGENT_CONTRACT_ROOT`.
 
 The implementation consumes both upstreams read-only. It must not copy or redefine Contract resources as a second source of truth, and build/Conformance evidence must record exact Blueprint/Contract revisions and manifest/suite digests.
 
@@ -58,8 +58,8 @@ make validate-implementation
 Local sibling paths are only defaults:
 
 ```bash
-AGENT_PLATFORM_BLUEPRINT_ROOT=/path/to/blueprint \
-AGENT_PLATFORM_CONTRACT_ROOT=/path/to/contract \
+AGENT_BLUEPRINT_ROOT=/path/to/blueprint \
+AGENT_CONTRACT_ROOT=/path/to/contract \
 make validate-implementation
 ```
 

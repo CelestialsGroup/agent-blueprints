@@ -1,6 +1,6 @@
-# Agent Application Platform Contract
+# Agent Contract
 
-This directory contains the independently versioned, declarative agreements for the Agent Application Platform. It defines machine-readable behavior and compatibility metadata; it contains no executable tooling or product implementation.
+This directory contains the independently versioned, declarative agreements for the Agent. It defines machine-readable behavior and compatibility metadata; it contains no executable tooling or product implementation.
 
 ## Contents
 

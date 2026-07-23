@@ -10,10 +10,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 BLUEPRINT_ROOT = Path(
-    os.environ.get("AGENT_PLATFORM_BLUEPRINT_ROOT", ROOT.parent / "blueprint")
+    os.environ.get("AGENT_BLUEPRINT_ROOT", ROOT.parent / "blueprint")
 ).resolve()
 CONTRACT_ROOT = Path(
-    os.environ.get("AGENT_PLATFORM_CONTRACT_ROOT", ROOT.parent / "contract")
+    os.environ.get("AGENT_CONTRACT_ROOT", ROOT.parent / "contract")
 ).resolve()
 SHA256_IMAGE = re.compile(r"^[a-z0-9./:-]+@sha256:[0-9a-f]{64}$")
 EXACT_VERSION = re.compile(r"^\d+\.\d+\.\d+$")

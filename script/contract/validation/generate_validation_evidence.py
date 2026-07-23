@@ -10,7 +10,7 @@ from typing import Any
 
 SCRIPT_ROOT = Path(__file__).resolve().parents[2]
 CONTRACT_ROOT = Path(
-    os.environ.get("AGENT_PLATFORM_CONTRACT_ROOT", SCRIPT_ROOT.parent / "contract")
+    os.environ.get("AGENT_CONTRACT_ROOT", SCRIPT_ROOT.parent / "contract")
 ).resolve()
 EVIDENCE = SCRIPT_ROOT / "build/validation"
 
@@ -75,7 +75,7 @@ contract_closure = [
 ]
 
 result = {
-    "contract_line": "agent-application-platform",
+    "contract_line": "agent",
     "status": "local_candidate_contract_gate_passed",
     "validated_at": datetime.now(timezone.utc).date().isoformat(),
     "local_validation": {

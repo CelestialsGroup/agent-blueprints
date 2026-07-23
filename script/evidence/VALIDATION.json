@@ -1,7 +1,7 @@
 {
-  "contract_line": "agent-application-platform",
+  "contract_line": "agent",
   "status": "local_candidate_contract_gate_passed",
-  "validated_at": "2026-07-22",
+  "validated_at": "2026-07-23",
   "local_validation": {
     "json_documents": 664,
     "yaml_documents": 15,
@@ -35,7 +35,7 @@
         "canonicalization_vectors": 5,
         "strict_valid_vectors": 3,
         "strict_invalid_vectors": 10,
-        "contract_manifest_digest": "sha256:bee87081bdcb6784e0ea8522b29d6f241fb93f386e6ed14179512ba3c961d080",
+        "contract_manifest_digest": "sha256:383117f3ce72afa03eb932968d534d3f39fa174b90e4149675cb631db3cee152",
         "status": "passed"
       }
     ],
@@ -44,7 +44,7 @@
       "canonicalization_vectors": 5,
       "strict_valid_vectors": 3,
       "strict_invalid_vectors": 10,
-      "contract_manifest_digest": "sha256:bee87081bdcb6784e0ea8522b29d6f241fb93f386e6ed14179512ba3c961d080",
+      "contract_manifest_digest": "sha256:383117f3ce72afa03eb932968d534d3f39fa174b90e4149675cb631db3cee152",
       "status": "passed"
     },
     "go_jcs_and_gofmt": "passed",

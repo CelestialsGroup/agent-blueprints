@@ -12,7 +12,7 @@ import yaml
 
 SCRIPT_ROOT = Path(__file__).resolve().parents[2]
 CONTRACT_ROOT = Path(
-    os.environ.get("AGENT_PLATFORM_CONTRACT_ROOT", SCRIPT_ROOT.parent / "contract")
+    os.environ.get("AGENT_CONTRACT_ROOT", SCRIPT_ROOT.parent / "contract")
 ).resolve()
 HTTP_METHODS = {"get", "put", "post", "delete", "options", "head", "patch", "trace"}
 MINIMUM_KEYWORDS = ("minLength", "minItems", "minProperties", "minimum", "exclusiveMinimum", "minContains")
@@ -302,7 +302,7 @@ if not ref:
     in_ci = os.environ.get("CI", "").lower() == "true"
     first_baseline_allowed = os.environ.get("CONTRACT_ALLOW_NO_FROZEN_BASELINE", "").lower() == "true"
     if in_ci and not first_baseline_allowed:
-        raise SystemExit("Contract compatibility is fail-closed in CI: configure protected AGENT_PLATFORM_FROZEN_CONTRACT_REF, or explicitly set protected AGENT_PLATFORM_ALLOW_NO_FROZEN_BASELINE=true before the first frozen baseline exists.")
+        raise SystemExit("Contract compatibility is fail-closed in CI: configure protected AGENT_FROZEN_CONTRACT_REF, or explicitly set protected AGENT_ALLOW_NO_FROZEN_BASELINE=true before the first frozen baseline exists.")
     reason = "protected first-baseline exception is active" if in_ci else "local run has no explicit CONTRACT_FROZEN_BASE_REF"
     print(f"Contract compatibility: N/A — {reason}; comparator self-tests passed.")
     raise SystemExit(0)

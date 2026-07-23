@@ -3,12 +3,12 @@ import os
 import unittest
 from pathlib import Path
 
-from agent_platform_native_runtime import BUILD_IDENTITY
+from agent_native_runtime import BUILD_IDENTITY
 
 
 ROOT = Path(__file__).resolve().parents[3]
 CONTRACT_ROOT = Path(
-    os.environ.get("AGENT_PLATFORM_CONTRACT_ROOT", ROOT.parent / "contract")
+    os.environ.get("AGENT_CONTRACT_ROOT", ROOT.parent / "contract")
 ).resolve()
 
 

@@ -2,7 +2,7 @@
 
 状态：Phase 0 候选开发规范。
 
-本文规定 Agent Application Platform 产品实现的代码结构、编码、测试和评审规则。它不复制 Contract 字段，不记录 Application 实时进度，也不把工具运行成功写成组件完成或生产批准。
+本文规定 Agent 产品实现的代码结构、编码、测试和评审规则。它不复制 Contract 字段，不记录 Application 实时进度，也不把工具运行成功写成组件完成或生产批准。
 
 ## 1. 规范层级
 
@@ -148,7 +148,7 @@ persistence / gateway / orchestration / provider adapters
 
 ### 7.3 TenantContext 与 RLS
 
-- 每个 Repository 事务先通过参数化 `set_config(..., true)` 设置事务局部 `agent_platform.tenant_id`，再执行任何对象查询或写入；禁止拼接 Tenant 值或使用 Session 级 `SET`。
+- 每个 Repository 事务先通过参数化 `set_config(..., true)` 设置事务局部 `agent.tenant_id`，再执行任何对象查询或写入；禁止拼接 Tenant 值或使用 Session 级 `SET`。
 - RLS Policy 对缺失或非法 TenantContext fail-closed。Application Role 不得拥有绕过 RLS 的权限；租户表使用 `ENABLE ROW LEVEL SECURITY` 与 `FORCE ROW LEVEL SECURITY`。
 - Repository 查询仍显式携带 `tenant_id`/Owner Scope；RLS 是纵深防御，不替代授权和查询条件。
 - 事务 Commit/Rollback 后连接池复用测试必须证明 TenantContext 不泄漏。禁止在事务外执行租户 Repository 方法。

@@ -10,4 +10,4 @@ This directory contains scripts that validate and maintain the independent decla
 - `jcs/`: Python, Node, and Go RFC 8785 / Strict I-JSON checks.
 - `maintenance/`: explicit regeneration utilities for governed Contract resources.
 
-Run supported entry points from the parent `script/` directory through `make`. Scripts resolve Contract resources through `AGENT_PLATFORM_CONTRACT_ROOT`, with `../contract` only as a local fallback. Generated environments, build output, and Gate evidence stay under `script/`.
+Run supported entry points from the parent `script/` directory through `make`. Scripts resolve Contract resources through `AGENT_CONTRACT_ROOT`, with `../contract` only as a local fallback. Generated environments, build output, and Gate evidence stay under `script/`.

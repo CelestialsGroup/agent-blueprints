@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: agent-platform
+  name: agent
   labels:
-    kubernetes.io/metadata.name: agent-platform
-    agent-platform.io/trust-zone: control-plane
+    kubernetes.io/metadata.name: agent
+    agent.shell-echo.github.io/trust-zone: control-plane
     pod-security.kubernetes.io/enforce: restricted
     pod-security.kubernetes.io/audit: restricted
     pod-security.kubernetes.io/warn: restricted

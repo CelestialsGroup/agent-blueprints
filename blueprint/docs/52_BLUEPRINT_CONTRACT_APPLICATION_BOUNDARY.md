@@ -33,11 +33,11 @@ Application 是产品实现，负责：
 - 依赖锁、生成代码、容器、Kubernetes 配置和发布流水线；
 - DDL、组件、Conformance、集成、Replay、故障与恢复证据。
 
-Application 通过 `AGENT_PLATFORM_BLUEPRINT_ROOT` 读取人类规范，通过 `AGENT_PLATFORM_CONTRACT_ROOT` 读取机器契约。不得复制并修改 Contract 形成第二套 Wire Contract。
+Application 通过 `AGENT_BLUEPRINT_ROOT` 读取人类规范，通过 `AGENT_CONTRACT_ROOT` 读取机器契约。不得复制并修改 Contract 形成第二套 Wire Contract。
 
 ### Contract Scripts
 
-Contract Scripts 是辅助工具包，不是第四个权威产品。它负责校验器、生成器、兼容性比较器、依赖锁、临时构建物和 Contract Gate 报告。它通过 `AGENT_PLATFORM_CONTRACT_ROOT` 与 `AGENT_PLATFORM_BLUEPRINT_ROOT` 读取显式 Checkout；`../contract` 和 `../blueprint` 只允许作为本地默认值。
+Contract Scripts 是辅助工具包，不是第四个权威产品。它负责校验器、生成器、兼容性比较器、依赖锁、临时构建物和 Contract Gate 报告。它通过 `AGENT_CONTRACT_ROOT` 与 `AGENT_BLUEPRINT_ROOT` 读取显式 Checkout；`../contract` 和 `../blueprint` 只允许作为本地默认值。
 
 Contract Scripts 可以被替换或独立升级，但替换后必须对同一锁定 Contract Revision 产生等价 Gate 结论。Contract 中的语义责任以稳定 Validation URN 表示，不能写入脚本文件路径。Script 的版本、代码和报告都不是 Contract 资源，不能改变 Contract 的含义。
 

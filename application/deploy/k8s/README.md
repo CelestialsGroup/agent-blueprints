@@ -4,8 +4,8 @@
 
 它有意要求环境 Overlay 提供：
 
-- 标记为 `agent-platform.io/public-gateway=true` 的公共 Gateway Namespace；
-- 标记为 `agent-platform.io/control-plane-dependency=true` 的依赖 Namespace；
+- 标记为 `agent.shell-echo.github.io/public-gateway=true` 的公共 Gateway Namespace；
+- 标记为 `agent.shell-echo.github.io/control-plane-dependency=true` 的依赖 Namespace；
 - 具体的 PostgreSQL、Redis、Temporal 和 Object Storage Endpoint；
 - TLS、Secret、StorageClass、RuntimeClass 和镜像摘要；
 - 能强制执行 NetworkPolicy 的 CNI 实现；
@@ -13,7 +13,7 @@
 
 Base 中的安全边界：
 
-- `agent-platform` Namespace 的 Ingress 和 Egress 默认拒绝；
+- `agent` Namespace 的 Ingress 和 Egress 默认拒绝；
 - 显式 DNS 规则；
 - 通过 Namespace Label 限制公共 Ingress；
 - Agent Access 使用兼容 Restricted Profile 的 SecurityContext。

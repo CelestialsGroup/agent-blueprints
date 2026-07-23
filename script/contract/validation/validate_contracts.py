@@ -18,7 +18,7 @@ from referencing import Registry, Resource
 
 SCRIPT_ROOT = Path(__file__).resolve().parents[2]
 CONTRACT_ROOT = Path(
-    os.environ.get("AGENT_PLATFORM_CONTRACT_ROOT", SCRIPT_ROOT.parent / "contract")
+    os.environ.get("AGENT_CONTRACT_ROOT", SCRIPT_ROOT.parent / "contract")
 ).resolve()
 SCHEMA_DIRS = [CONTRACT_ROOT / "schemas", CONTRACT_ROOT / "examples/schemas"]
 SAFE_INTEGER_MAX = 9_007_199_254_740_991

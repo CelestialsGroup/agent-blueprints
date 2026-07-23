@@ -3,14 +3,14 @@
 	validate-bundle-determinism validate-all clean-contracts
 
 SCRIPT_ROOT := $(abspath $(CURDIR))
-AGENT_PLATFORM_CONTRACT_ROOT ?= $(abspath $(SCRIPT_ROOT)/../contract)
-AGENT_PLATFORM_BLUEPRINT_ROOT ?= $(abspath $(SCRIPT_ROOT)/../blueprint)
+AGENT_CONTRACT_ROOT ?= $(abspath $(SCRIPT_ROOT)/../contract)
+AGENT_BLUEPRINT_ROOT ?= $(abspath $(SCRIPT_ROOT)/../blueprint)
 PYTHON ?= .venv/bin/python
 PNPM ?= corepack pnpm
 COREPACK_HOME ?= $(CURDIR)/.venv/corepack-cache
 export COREPACK_HOME
-export AGENT_PLATFORM_CONTRACT_ROOT
-export AGENT_PLATFORM_BLUEPRINT_ROOT
+export AGENT_CONTRACT_ROOT
+export AGENT_BLUEPRINT_ROOT
 
 bootstrap-contracts:
 	./contract/bootstrap.sh

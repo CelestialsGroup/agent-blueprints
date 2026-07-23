@@ -13,7 +13,7 @@ import rfc8785
 
 SCRIPT_ROOT = Path(__file__).resolve().parents[2]
 CONTRACT_ROOT = Path(
-    os.environ.get("AGENT_PLATFORM_CONTRACT_ROOT", SCRIPT_ROOT.parent / "contract")
+    os.environ.get("AGENT_CONTRACT_ROOT", SCRIPT_ROOT.parent / "contract")
 ).resolve()
 MANIFEST = CONTRACT_ROOT / "compatibility/contract-manifest.json"
 
@@ -56,7 +56,7 @@ if "--print-values" in sys.argv:
     raise SystemExit(0)
 if "--refresh" in sys.argv:
     manifest = {
-        "contract_line": "agent-application-platform",
+        "contract_line": "agent",
         "status": "candidate-not-frozen",
         "digest_profile": "RFC8785-JCS+SHA-256; Strict-I-JSON-v2.0",
         "resource_count": len(resources),

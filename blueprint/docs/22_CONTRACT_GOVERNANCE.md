@@ -24,7 +24,7 @@ Contract Scripts 的 Gate 步骤先把成功证据写入 `script/build/validatio
 
 原始 JSON Schema 只使用绝对 URN `$ref`，这是可移植事实源。Redocly 不支持外部 Registry 注入，因此 Contract Scripts 的 `prepare_openapi.py` 生成一次性本地文件投影；生成物不得反向成为契约源。
 
-Semantic Constraints 的 Contract Gate 执行器使用 `urn:agent-platform:contract-validation:semantic-validator`。Blueprint 责任继续使用 `urn:agent-platform:blueprint:<path>`。前者由选定 Contract Scripts 解析，后者由 `AGENT_PLATFORM_BLUEPRINT_ROOT` 解析；Contract 不保存二者的文件系统位置。
+Semantic Constraints 的 Contract Gate 执行器使用 `urn:agent-platform:contract-validation:semantic-validator`。Blueprint 责任继续使用 `urn:agent-platform:blueprint:<path>`。前者由选定 Contract Scripts 解析，后者由 `AGENT_BLUEPRINT_ROOT` 解析；Contract 不保存二者的文件系统位置。
 
 ## 可复现工具链
 
@@ -44,7 +44,7 @@ DDL 唯一性、HTTP 解析前 413、跨进程恢复等无法由静态契约证�
 
 比较器不构成通用兼容性证明。冻结审批还必须包含人工兼容性审查、`DECISIONS.md` 变更、版本迁移策略，并在实现存在后执行消费者契约、历史载荷回放和双版本互操作测试；不得用“比较器通过”替代这些证据。
 
-CI 的唯一基线权威是受保护仓库变量 `AGENT_PLATFORM_FROZEN_CONTRACT_REF`，且值必须是已 Fetch 的完整小写 Commit SHA。CI 缺基线时默认失败；只有第一个冻结基线产生前，受保护变量 `AGENT_PLATFORM_ALLOW_NO_FROZEN_BASELINE=true` 才允许输出 `N/A`，不得宣称通过。
+CI 的唯一基线权威是受保护仓库变量 `AGENT_FROZEN_CONTRACT_REF`，且值必须是已 Fetch 的完整小写 Commit SHA。CI 缺基线时默认失败；只有第一个冻结基线产生前，受保护变量 `AGENT_ALLOW_NO_FROZEN_BASELINE=true` 才允许输出 `N/A`，不得宣称通过。
 
 ## 仓库布局
 

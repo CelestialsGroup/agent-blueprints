@@ -1,4 +1,4 @@
-# Agent Application Platform Scripts
+# Agent Scripts
 
 This directory contains development and validation scripts kept outside Blueprint, Contract, and Application. Contract-specific automation is grouped under `contract/`; generated environments and evidence remain at this Script root.
 
@@ -14,8 +14,8 @@ This directory contains development and validation scripts kept outside Blueprin
 Set the input checkouts explicitly in CI and release workflows:
 
 ```bash
-export AGENT_PLATFORM_CONTRACT_ROOT=/absolute/path/to/contract
-export AGENT_PLATFORM_BLUEPRINT_ROOT=/absolute/path/to/blueprint
+export AGENT_CONTRACT_ROOT=/absolute/path/to/contract
+export AGENT_BLUEPRINT_ROOT=/absolute/path/to/blueprint
 ```
 
 For local development only, the defaults are `../contract` and `../blueprint`.

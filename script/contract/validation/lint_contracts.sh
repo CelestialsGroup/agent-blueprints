@@ -3,8 +3,8 @@ set -eu
 
 SCRIPT_ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
 cd "$SCRIPT_ROOT"
-export AGENT_PLATFORM_CONTRACT_ROOT="${AGENT_PLATFORM_CONTRACT_ROOT:-$SCRIPT_ROOT/../contract}"
-export AGENT_PLATFORM_BLUEPRINT_ROOT="${AGENT_PLATFORM_BLUEPRINT_ROOT:-$SCRIPT_ROOT/../blueprint}"
+export AGENT_CONTRACT_ROOT="${AGENT_CONTRACT_ROOT:-$SCRIPT_ROOT/../contract}"
+export AGENT_BLUEPRINT_ROOT="${AGENT_BLUEPRINT_ROOT:-$SCRIPT_ROOT/../blueprint}"
 PYTHON="${PYTHON:-.venv/bin/python}"
 
 "$PYTHON" contract/validation/validate_contracts.py

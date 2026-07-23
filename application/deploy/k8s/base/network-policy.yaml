@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: default-deny-control-plane
-  namespace: agent-platform
+  namespace: agent
 spec:
   podSelector: {}
   policyTypes: [Ingress, Egress]
@@ -11,7 +11,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-control-plane-dns
-  namespace: agent-platform
+  namespace: agent
 spec:
   podSelector: {}
   policyTypes: [Egress]
@@ -31,7 +31,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-public-gateway-to-agent-access
-  namespace: agent-platform
+  namespace: agent
 spec:
   podSelector:
     matchLabels:
@@ -41,7 +41,7 @@ spec:
     - from:
         - namespaceSelector:
             matchLabels:
-              agent-platform.io/public-gateway: "true"
+              agent.shell-echo.github.io/public-gateway: "true"
       ports:
         - {protocol: TCP, port: 8080}
 ---
@@ -49,7 +49,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-control-plane-dependencies
-  namespace: agent-platform
+  namespace: agent
 spec:
   podSelector:
     matchExpressions:
@@ -61,7 +61,7 @@ spec:
     - to:
         - namespaceSelector:
             matchLabels:
-              agent-platform.io/control-plane-dependency: "true"
+              agent.shell-echo.github.io/control-plane-dependency: "true"
       ports:
         - {protocol: TCP, port: 5432}
         - {protocol: TCP, port: 6379}

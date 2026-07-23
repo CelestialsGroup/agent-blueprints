@@ -6,7 +6,7 @@ import { canonicalize } from "../jcs/canonicalize.mjs";
 
 const scriptRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const contractRoot = path.resolve(
-  process.env.AGENT_PLATFORM_CONTRACT_ROOT ?? path.join(scriptRoot, "../contract"),
+  process.env.AGENT_CONTRACT_ROOT ?? path.join(scriptRoot, "../contract"),
 );
 const manifestPath = path.join(contractRoot, "compatibility/contract-manifest.json");
 const sha = (bytes) => `sha256:${crypto.createHash("sha256").update(bytes).digest("hex")}`;

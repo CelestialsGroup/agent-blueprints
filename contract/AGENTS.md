@@ -1,4 +1,4 @@
-# Agent Application Platform Contract Rules
+# Agent Contract Rules
 
 ## Authority
 
@@ -16,4 +16,4 @@ Only Markdown, JSON, YAML, and directory metadata belong here. Do not add script
 
 ## Validation
 
-Use the external scripts under `script/contract/` and set `AGENT_PLATFORM_CONTRACT_ROOT` to this directory. Validation reports belong to the Script package or release governance, never to this Contract package. Keep Contract Gate, 0B implementation, 0C-0G integration, 0H reliability, formal freeze, and production approval as separate conclusions.
+Use the external scripts under `script/contract/` and set `AGENT_CONTRACT_ROOT` to this directory. Validation reports belong to the Script package or release governance, never to this Contract package. Keep Contract Gate, 0B implementation, 0C-0G integration, 0H reliability, formal freeze, and production approval as separate conclusions.

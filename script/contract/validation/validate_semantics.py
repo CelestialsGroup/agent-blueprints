@@ -18,10 +18,10 @@ from referencing import Registry, Resource
 
 SCRIPT_ROOT = Path(__file__).resolve().parents[2]
 CONTRACT_ROOT = Path(
-    os.environ.get("AGENT_PLATFORM_CONTRACT_ROOT", SCRIPT_ROOT.parent / "contract")
+    os.environ.get("AGENT_CONTRACT_ROOT", SCRIPT_ROOT.parent / "contract")
 ).resolve()
 BLUEPRINT_ROOT = Path(
-    os.environ.get("AGENT_PLATFORM_BLUEPRINT_ROOT", SCRIPT_ROOT.parent / "blueprint")
+    os.environ.get("AGENT_BLUEPRINT_ROOT", SCRIPT_ROOT.parent / "blueprint")
 ).resolve()
 BLUEPRINT_ARTIFACT_URN_PREFIX = "urn:agent-platform:blueprint:"
 SEMANTIC_VALIDATOR_URN = "urn:agent-platform:contract-validation:semantic-validator"

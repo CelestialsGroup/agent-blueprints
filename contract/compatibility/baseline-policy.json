@@ -1,8 +1,8 @@
 {
-  "contract_line": "agent-application-platform",
+  "contract_line": "agent",
   "status": "unfrozen",
   "frozen_git_ref": null,
-  "authority": "Protected CI variable AGENT_PLATFORM_FROZEN_CONTRACT_REF, mapped to CONTRACT_FROZEN_BASE_REF by the deployment pipeline",
-  "first_baseline_exception": "Protected CI variable AGENT_PLATFORM_ALLOW_NO_FROZEN_BASELINE must explicitly be true; otherwise CI fails closed",
+  "authority": "Protected CI variable AGENT_FROZEN_CONTRACT_REF, mapped to CONTRACT_FROZEN_BASE_REF by the deployment pipeline",
+  "first_baseline_exception": "Protected CI variable AGENT_ALLOW_NO_FROZEN_BASELINE must explicitly be true; otherwise CI fails closed",
   "policy": "This committed file is documentation only and cannot select or disable the CI baseline."
 }
