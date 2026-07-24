@@ -5,11 +5,11 @@ ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 source "$ROOT/toolchain/toolchain.env"
 
 CACHE_DIR="${1:-$ROOT/.cache/implementation}"
-EVIDENCE_DIR="${2:-$ROOT/build/evidence/b02.1}"
-CONTAINER_NAME="agent-b021-postgres-$$"
-NETWORK_NAME="agent-b021-$$"
+EVIDENCE_DIR="${2:-$ROOT/build/evidence/b02.2}"
+CONTAINER_NAME="agent-b022-postgres-$$"
+NETWORK_NAME="agent-b022-$$"
 POSTGRES_PASSWORD="b021-integration-admin"
-TEST_COMMAND="go test -race -tags=integration -count=1 ./test/integration/..."
+TEST_COMMAND="go test -race -tags=integration -count=3 ./test/integration/..."
 
 mkdir -p "$CACHE_DIR" "$EVIDENCE_DIR"
 CACHE_DIR="$(CDPATH= cd -- "$CACHE_DIR" && pwd)"
@@ -58,7 +58,7 @@ docker run --rm \
   "$GO_TOOLCHAIN_IMAGE" \
   sh -euc '
     test "$(go env GOVERSION)" = "go1.26.5"
-    go test -race -tags=integration -count=1 ./test/integration/...
+    go test -race -tags=integration -count=3 ./test/integration/...
   ' 2>&1 | tee "$TEST_LOG"
 test_status="${PIPESTATUS[0]}"
 set -e

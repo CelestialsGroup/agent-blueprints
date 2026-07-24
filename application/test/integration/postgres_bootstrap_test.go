@@ -38,6 +38,9 @@ func TestBootstrapMigrationRejectsDestructiveDownAndRemainsUp(t *testing.T) {
 
 	databaseDSN := replaceDatabase(t, adminDSN, agentDatabase, "postgres", "b021-integration-admin")
 	runGoose(t, databaseDSN, "up", true)
+	assertMigrationVersion(t, databaseDSN, 2)
+
+	runGoose(t, databaseDSN, "down", true)
 	assertMigrationVersion(t, databaseDSN, 1)
 
 	downOutput := runGoose(t, databaseDSN, "down", false)
@@ -48,7 +51,7 @@ func TestBootstrapMigrationRejectsDestructiveDownAndRemainsUp(t *testing.T) {
 	assertBootstrapTables(t, databaseDSN)
 
 	runGoose(t, databaseDSN, "up", true)
-	assertMigrationVersion(t, databaseDSN, 1)
+	assertMigrationVersion(t, databaseDSN, 2)
 
 	createDatabase(t, ctx, adminPool, forbiddenDatabase)
 	t.Cleanup(func() { dropDatabase(t, adminPool, forbiddenDatabase) })
@@ -469,7 +472,12 @@ func assertTableSecurity(t *testing.T, ctx context.Context, pool *pgxpool.Pool) 
 		JOIN pg_namespace AS namespace ON namespace.oid = c.relnamespace
 		JOIN pg_roles AS owner ON owner.oid = c.relowner
 		WHERE namespace.nspname = 'agent'
-		  AND c.relname IN ('tenants', 'client_applications')
+		  AND c.relname IN (
+		      'tenants',
+		      'client_applications',
+		      'outbox_messages',
+		      'transport_inbox_messages'
+		  )
 		ORDER BY c.relname
 	`)
 	if err != nil {
@@ -491,14 +499,20 @@ func assertTableSecurity(t *testing.T, ctx context.Context, pool *pgxpool.Pool) 
 	if err := rows.Err(); err != nil {
 		t.Fatalf("iterate table security: %v", err)
 	}
-	if count != 2 {
-		t.Fatalf("secured table count = %d, want 2", count)
+	if count != 4 {
+		t.Fatalf("secured table count = %d, want 4", count)
 	}
 }
 
 func assertExactApplicationPrivileges(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
 	t.Helper()
-	for _, table := range []string{"agent.tenants", "agent.client_applications"} {
+	tablePrivileges := map[string]map[string]bool{
+		"agent.tenants":                  {"SELECT": true, "INSERT": true},
+		"agent.client_applications":      {"SELECT": true, "INSERT": true},
+		"agent.outbox_messages":          {"SELECT": true},
+		"agent.transport_inbox_messages": {"SELECT": true},
+	}
+	for table, expectedPrivileges := range tablePrivileges {
 		for _, privilege := range []string{"SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE", "REFERENCES", "TRIGGER"} {
 			var granted bool
 			if err := pool.QueryRow(
@@ -509,12 +523,33 @@ func assertExactApplicationPrivileges(t *testing.T, ctx context.Context, pool *p
 			).Scan(&granted); err != nil {
 				t.Fatalf("read %s %s privilege: %v", table, privilege, err)
 			}
-			want := privilege == "SELECT" || privilege == "INSERT"
+			want := expectedPrivileges[privilege]
 			if granted != want {
 				t.Fatalf("agent_app %s on %s = %t, want %t", privilege, table, granted, want)
 			}
 		}
 	}
+
+	assertExactColumnPrivileges(t, ctx, pool, "agent.outbox_messages", map[string]map[string]bool{
+		"INSERT": {
+			"tenant_id": true, "message_id": true, "destination": true,
+			"payload": true, "payload_digest": true, "next_attempt_at": true,
+			"created_at": true, "updated_at": true,
+		},
+		"UPDATE": {
+			"state": true, "attempt_count": true, "lease_fencing_token": true,
+			"lease_worker_id": true, "lease_expires_at": true, "next_attempt_at": true,
+			"last_error_kind": true, "last_error_at": true, "updated_at": true,
+			"succeeded_at": true, "terminal_failed_at": true,
+		},
+	})
+	assertExactColumnPrivileges(t, ctx, pool, "agent.transport_inbox_messages", map[string]map[string]bool{
+		"INSERT": {
+			"tenant_id": true, "consumer": true, "message_id": true,
+			"payload_digest": true, "state": true, "received_at": true,
+		},
+		"UPDATE": {"state": true, "completed_at": true},
+	})
 
 	checks := []struct {
 		query string
@@ -537,13 +572,72 @@ func assertExactApplicationPrivileges(t *testing.T, ctx context.Context, pool *p
 	}
 }
 
+func assertExactColumnPrivileges(
+	t *testing.T,
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	table string,
+	expected map[string]map[string]bool,
+) {
+	t.Helper()
+	parts := strings.Split(table, ".")
+	if len(parts) != 2 {
+		t.Fatalf("invalid qualified table name %q", table)
+	}
+	rows, err := pool.Query(ctx, `
+		SELECT column_name
+		FROM information_schema.columns
+		WHERE table_schema = $1
+		  AND table_name = $2
+		ORDER BY ordinal_position
+	`, parts[0], parts[1])
+	if err != nil {
+		t.Fatalf("read columns for %s: %v", table, err)
+	}
+	defer rows.Close()
+	var columns []string
+	for rows.Next() {
+		var column string
+		if err := rows.Scan(&column); err != nil {
+			t.Fatalf("scan column for %s: %v", table, err)
+		}
+		columns = append(columns, column)
+	}
+	if err := rows.Err(); err != nil {
+		t.Fatalf("iterate columns for %s: %v", table, err)
+	}
+	if len(columns) == 0 {
+		t.Fatalf("no columns found for %s", table)
+	}
+
+	for _, privilege := range []string{"INSERT", "UPDATE"} {
+		for _, column := range columns {
+			var granted bool
+			if err := pool.QueryRow(
+				ctx,
+				"SELECT has_column_privilege('agent_app', $1, $2, $3)",
+				table,
+				column,
+				privilege,
+			).Scan(&granted); err != nil {
+				t.Fatalf("read agent_app %s(%s) on %s: %v", privilege, column, table, err)
+			}
+			want := expected[privilege][column]
+			if granted != want {
+				t.Fatalf("agent_app %s(%s) on %s = %t, want %t", privilege, column, table, granted, want)
+			}
+		}
+	}
+}
+
 func createApplicationLogin(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
 	t.Helper()
 	_, err := pool.Exec(ctx, fmt.Sprintf(`
+		DROP ROLE IF EXISTS %s;
 		CREATE ROLE %s LOGIN NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE
 		    NOREPLICATION NOBYPASSRLS PASSWORD '%s';
 		GRANT agent_app TO %s;
-	`, applicationLogin, applicationPass, applicationLogin))
+	`, applicationLogin, applicationLogin, applicationPass, applicationLogin))
 	if err != nil {
 		t.Fatalf("create application test login: %v", err)
 	}
@@ -552,10 +646,11 @@ func createApplicationLogin(t *testing.T, ctx context.Context, pool *pgxpool.Poo
 func createMigratorLogin(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
 	t.Helper()
 	_, err := pool.Exec(ctx, fmt.Sprintf(`
+		DROP ROLE IF EXISTS %s;
 		CREATE ROLE %s LOGIN NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE
 		    NOREPLICATION NOBYPASSRLS PASSWORD '%s';
 		GRANT agent_migrator TO %s;
-	`, migratorLogin, migratorPass, migratorLogin))
+	`, migratorLogin, migratorLogin, migratorPass, migratorLogin))
 	if err != nil {
 		t.Fatalf("create migrator test login: %v", err)
 	}
@@ -574,7 +669,7 @@ func assertMigratorGoosePath(
 	}
 	migratorDSN := replaceDatabase(t, clusterAdminDSN, agentDatabase, migratorLogin, migratorPass)
 	runGooseInDirectory(t, migratorDSN, migrationDirectory, "up", true, true)
-	assertMigrationVersion(t, databaseAdminDSN, 2)
+	assertMigrationVersion(t, databaseAdminDSN, 3)
 
 	var owner string
 	if err := adminPool.QueryRow(context.Background(), `
@@ -592,7 +687,7 @@ func assertMigratorGoosePath(
 	}
 
 	runGooseInDirectory(t, migratorDSN, migrationDirectory, "down", true, true)
-	assertMigrationVersion(t, databaseAdminDSN, 1)
+	assertMigrationVersion(t, databaseAdminDSN, 2)
 	var exists bool
 	if err := adminPool.QueryRow(context.Background(), `
 		SELECT to_regclass('agent.migrator_role_probe') IS NOT NULL

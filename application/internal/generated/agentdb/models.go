@@ -15,8 +15,38 @@ type AgentClientApplication struct {
 	CreatedAt   pgtype.Timestamptz
 }
 
+type AgentOutboxMessage struct {
+	TenantID          string
+	MessageID         string
+	Destination       string
+	Payload           []byte
+	PayloadDigest     string
+	State             string
+	AttemptCount      int64
+	LeaseFencingToken int64
+	LeaseWorkerID     *string
+	LeaseExpiresAt    pgtype.Timestamptz
+	NextAttemptAt     pgtype.Timestamptz
+	LastErrorKind     *string
+	LastErrorAt       pgtype.Timestamptz
+	CreatedAt         pgtype.Timestamptz
+	UpdatedAt         pgtype.Timestamptz
+	SucceededAt       pgtype.Timestamptz
+	TerminalFailedAt  pgtype.Timestamptz
+}
+
 type AgentTenant struct {
 	TenantID    string
 	DisplayName string
 	CreatedAt   pgtype.Timestamptz
+}
+
+type AgentTransportInboxMessage struct {
+	TenantID      string
+	Consumer      string
+	MessageID     string
+	PayloadDigest string
+	State         string
+	ReceivedAt    pgtype.Timestamptz
+	CompletedAt   pgtype.Timestamptz
 }

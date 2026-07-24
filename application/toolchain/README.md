@@ -20,14 +20,16 @@ explicit lock refresh fails before Application compilation.
 
 The B02.1 slice adds pgx v5 persistence plus release-digest-pinned goose and
 Staticcheck tools, a digest-pinned sqlc OCI image, and a PostgreSQL 18.4 test
-image. Only Tenant/ClientApplication bootstrap persistence is implemented;
-Temporal, Runtime HTTP, and product execution remain later slices.
+image. B02.2 reuses those exact pins for transactional Outbox/Inbox, lease
+fencing, and real-database concurrency evidence without adding a Broker or Redis
+dependency. The remaining Phase 0B domain model, Temporal, Runtime HTTP, and
+product execution remain later slices.
 
 Run `make validate-implementation` from the repository root. The command uses
 the exact container images in `toolchain/toolchain.env` when host toolchains do
 not match the governed versions. Reproducible B01 build artifacts are written
 under `build/evidence/b01/`. PostgreSQL test logs and their source/tool/lock-bound
-manifest are written under `build/evidence/b02.1/`. Both are generated outputs
+manifest are written under `build/evidence/b02.2/`. Both are generated outputs
 and are not committed.
 
 Verified tool, Go, and Python dependency downloads are cached under ignored

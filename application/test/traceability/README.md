@@ -4,10 +4,12 @@
 every Contract enforcement whose status is `phase0_implementation_required`.
 It references implementation and test files; it does not copy Contract rules.
 
-The B01 scaffold intentionally contains no implementation claims. The
-traceability Gate therefore reports every required mapping as `unimplemented`
-while still proving that none is missing from the report. This is expected and
-must not be described as Phase 0B completion.
+B01 intentionally contained no implementation claims. B02.2 also makes no
+Phase 0 implementation claim: its only candidate, Canonical source Inbox
+uniqueness, is blocked because the locked Contract accepts escaped NUL in source
+identifiers while PostgreSQL text cannot represent it. Transport Outbox/Inbox
+component evidence remains valid, but all mapped Phase 0 responsibilities stay
+explicitly unimplemented.
 
 A future `implemented` claim must:
 

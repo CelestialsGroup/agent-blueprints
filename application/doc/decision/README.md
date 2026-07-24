@@ -7,3 +7,10 @@ rollback path, and the governing Blueprint/Contract revisions.
 
 If a decision changes ownership, wire behavior, an invariant, or a maturity
 claim, stop and change the upstream Blueprint or Contract first.
+
+Current records:
+
+- `0001-postgresql-bootstrap.md`: PostgreSQL roles, toolchain, topology, and
+  B02.1 migration boundary.
+- `0002-postgresql-durable-messaging.md`: B02.2 Outbox/Inbox state, lease/fencing,
+  encoded storage guard, and rollback boundary.

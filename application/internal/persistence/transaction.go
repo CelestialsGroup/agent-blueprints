@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/shell-echo/agent/internal/domain/tenancy"
 	"github.com/shell-echo/agent/internal/generated/agentdb"
+	"github.com/shell-echo/agent/internal/messaging"
 )
 
 var (
@@ -35,6 +36,10 @@ type TenantRepository interface {
 		ctx context.Context,
 		clientApplicationID tenancy.ClientApplicationID,
 	) (tenancy.ClientApplication, error)
+	EnqueueOutboxMessage(
+		ctx context.Context,
+		message messaging.OutboundMessage,
+	) (messaging.EnqueueOutcome, error)
 }
 
 type TenantOperation func(context.Context, TenantRepository) error
@@ -55,14 +60,24 @@ func (runner *TransactionRunner) Run(
 	tenantID tenancy.TenantID,
 	operation TenantOperation,
 ) error {
+	if operation == nil {
+		return errors.New("tenant operation is required")
+	}
+	return runner.run(ctx, tenantID, func(ctx context.Context, repository *tenantRepository) error {
+		return operation(ctx, repository)
+	})
+}
+
+func (runner *TransactionRunner) run(
+	ctx context.Context,
+	tenantID tenancy.TenantID,
+	operation func(context.Context, *tenantRepository) error,
+) error {
 	if ctx.Value(transactionContextKey{}) != nil {
 		return ErrNestedTransaction
 	}
 	if err := tenantID.Validate(); err != nil {
 		return err
-	}
-	if operation == nil {
-		return errors.New("tenant operation is required")
 	}
 
 	tx, err := runner.pool.BeginTx(ctx, pgx.TxOptions{

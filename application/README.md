@@ -22,6 +22,10 @@ The current implementation provides:
   Tenant/ClientApplication RLS, pgx transactions, and a sqlc-backed repository;
 - a disposable PostgreSQL 18.4 harness proving migration and tenant isolation
   against a real database.
+- the B02.2 PostgreSQL transactional Outbox/Inbox, leased and fenced dispatcher
+  store, globally unique Transport Message IDs, and atomic consumer dedupe;
+- repeated real-PostgreSQL race evidence for concurrent claims, lease recovery,
+  Inbox idempotency, and cross-tenant denial.
 
 ## Repository map
 
@@ -67,6 +71,9 @@ AGENT_CONTRACT_ROOT=/path/to/contract \
 make validate-implementation
 ```
 
-Only the Tenant/ClientApplication persistence slice is implemented. Outbox/Inbox,
-the remaining 0B tables, Temporal orchestration, Runtime HTTP operations, and
-product execution remain future Phase 0B slices.
+Only the Tenant/ClientApplication bootstrap and B02.2 durable messaging component
+are implemented. The remaining 0B domain tables and ledgers, complete
+Canonical source Inbox identity, CanonicalEvent admission/Projection, Temporal
+orchestration, Runtime HTTP operations, and product execution remain future
+slices. Canonical source Inbox is specifically blocked until the locked Contract
+defines a PostgreSQL-representable identifier profile or stable encoding.

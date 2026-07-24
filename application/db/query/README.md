@@ -16,3 +16,11 @@ is followed by a fresh scoped read so the Repository can enforce immutable
 Tenant metadata before attempting the ClientApplication insert.
 Regenerate with the pinned sqlc image through `make validate-implementation`;
 the Gate compares a clean regeneration with `internal/generated/agentdb`.
+
+`durable_messaging.sql` keeps global Transport enqueue identity checks, bounded ordered
+`FOR UPDATE SKIP LOCKED` claims, live-lease fencing predicates, retry scheduling,
+and Transport Inbox identity lookup visible. Lease mutations lock the exact
+Worker/token row before materializing one PostgreSQL `clock_timestamp()`, so lock
+wait cannot preserve an already-expired owner. They accept bounded
+whole-microsecond duration inputs. A claim transaction never contains transport
+I/O; fenced result writes are separate transactions.

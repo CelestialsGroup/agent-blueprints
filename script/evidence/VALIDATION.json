@@ -1,7 +1,7 @@
 {
   "contract_line": "agent",
   "status": "local_candidate_contract_gate_passed",
-  "validated_at": "2026-07-23",
+  "validated_at": "2026-07-24",
   "local_validation": {
     "json_documents": 666,
     "yaml_documents": 15,

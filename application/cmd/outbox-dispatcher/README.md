@@ -8,3 +8,7 @@ progress without hiding unknown outcomes.
 
 Consumers still require Inbox deduplication. Redis may wake the dispatcher but
 cannot replace the durable outbox or become delivery truth.
+
+B02.2 implements the PostgreSQL store and transport-independent dispatcher
+service under `internal/`; this directory does not yet contain a deployable
+composition root, external transport adapter, polling loop, or Redis wakeup.

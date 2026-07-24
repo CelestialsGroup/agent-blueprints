@@ -70,8 +70,8 @@ if len(go_sum_lines) != 2:
 
 evidence: dict[str, Any] = {
     "schema_version": 1,
-    "evidence_id": "agent-b02.1-postgresql-integration",
-    "scope": "PostgreSQL bootstrap, Migrator/Application roles, TenantContext, RLS, and repository isolation",
+    "evidence_id": "agent-b02.2-postgresql-durable-messaging-integration",
+    "scope": "PostgreSQL bootstrap, Tenant/RLS isolation, transactional Transport Outbox/Inbox, global message identity, lease fencing, and crash recovery",
     "result": "passed",
     "command": args.test_command,
     "exit_code": 0,
@@ -117,6 +117,7 @@ evidence: dict[str, Any] = {
         "queries_and_repository": source_manifest(
             list((ROOT / "db/query").glob("*.sql"))
             + list((ROOT / "internal/domain/tenancy").glob("*.go"))
+            + list((ROOT / "internal/messaging").glob("*.go"))
             + list((ROOT / "internal/persistence").glob("*.go"))
             + list((ROOT / "internal/generated/agentdb").glob("*.go"))
         ),
@@ -131,6 +132,12 @@ evidence: dict[str, Any] = {
     },
     "claims_not_made": [
         "Phase 0B completion",
+        "complete CanonicalEvent or Event Registry admission",
+        "Canonical source Inbox identity while the locked Contract permits PostgreSQL-unrepresentable NUL strings",
+        "external Broker or production Redis integration",
+        "end-to-end product execution",
+        "formal reliability approval",
+        "production readiness",
         "production topology isolation",
         "capacity or SLO evidence",
         "backup or disaster-recovery evidence",

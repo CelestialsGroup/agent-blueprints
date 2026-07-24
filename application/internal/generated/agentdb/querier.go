@@ -9,10 +9,20 @@ import (
 )
 
 type Querier interface {
+	AcknowledgeOutboxMessage(ctx context.Context, arg AcknowledgeOutboxMessageParams) (AgentOutboxMessage, error)
+	ClaimOutboxMessages(ctx context.Context, arg ClaimOutboxMessagesParams) ([]AgentOutboxMessage, error)
+	CompleteInboxMessage(ctx context.Context, arg CompleteInboxMessageParams) (AgentTransportInboxMessage, error)
 	CreateClientApplication(ctx context.Context, arg CreateClientApplicationParams) (AgentClientApplication, error)
+	EnqueueOutboxMessage(ctx context.Context, arg EnqueueOutboxMessageParams) (AgentOutboxMessage, error)
 	EnsureTenant(ctx context.Context, arg EnsureTenantParams) (AgentTenant, error)
+	FailOutboxMessageRetryable(ctx context.Context, arg FailOutboxMessageRetryableParams) (AgentOutboxMessage, error)
+	FailOutboxMessageTerminal(ctx context.Context, arg FailOutboxMessageTerminalParams) (AgentOutboxMessage, error)
 	GetClientApplication(ctx context.Context, arg GetClientApplicationParams) (AgentClientApplication, error)
+	GetInboxMessageByTransportIdentity(ctx context.Context, arg GetInboxMessageByTransportIdentityParams) (AgentTransportInboxMessage, error)
+	GetOutboxMessage(ctx context.Context, arg GetOutboxMessageParams) (AgentOutboxMessage, error)
 	GetTenant(ctx context.Context, tenantID string) (AgentTenant, error)
+	InsertInboxMessage(ctx context.Context, arg InsertInboxMessageParams) (AgentTransportInboxMessage, error)
+	RenewOutboxLease(ctx context.Context, arg RenewOutboxLeaseParams) (AgentOutboxMessage, error)
 }
 
 var _ Querier = (*Queries)(nil)
