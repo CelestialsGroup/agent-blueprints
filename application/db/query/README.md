@@ -24,3 +24,14 @@ Worker/token row before materializing one PostgreSQL `clock_timestamp()`, so loc
 wait cannot preserve an already-expired owner. They accept bounded
 whole-microsecond duration inputs. A claim transaction never contains transport
 I/O; fenced result writes are separate transactions.
+New Outbox inserts also snapshot the initial availability time separately from
+the mutable `next_attempt_at` retry cursor, so idempotent replay remains stable
+after a retry is scheduled.
+
+`runtime_control.sql` keeps authority admission, RuntimeRun cursor allocation,
+command/control append, WorkOrder-serialized active AgentRun membership and
+locked RuntimeRun target capture, version snapshots,
+`SKIP LOCKED` claims, lease renewal, and fenced progress visible. Fanout creation
+replay reads version one plus its persisted target/command bindings, so later
+progress versions do not change the accepted creation identity. Repository code
+maps these rows to domain values and performs no network I/O in a transaction.

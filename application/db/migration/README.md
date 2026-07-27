@@ -43,3 +43,22 @@ must expire strictly after its last update.
 
 Canonical source identity columns are deliberately absent until the locked
 Contract closes its PostgreSQL string-representation gap.
+
+`00003_postgresql_runtime_control_safety_ledgers.sql` adds the narrow
+Tenant-qualified authority facts and the AgentRuntimeCommand,
+SystemSafetyControl, and AgentRunControlFanout ledgers. It adds an immutable
+`initial_available_at` Outbox field distinct from the mutable retry cursor.
+Commands and safety controls bind a unique Outbox Message ID, payload digest,
+destination, initial availability, and creation time through an initially
+deferred Tenant-qualified foreign key, so ledger insertion may precede Outbox
+insertion inside one transaction but commit cannot preserve only one side.
+RuntimeRun command cursors enforce contiguous sequence and increasing fencing;
+Fanout acceptance closes membership under the WorkOrder lock, rejects later Run
+or accepted Child Admission facts, and requires every active AgentRun to have a
+matching locked RuntimeRun target. Rejected late-spawn decisions remain
+appendable. Targets use `SKIP LOCKED` leases and fenced, monotonic progress,
+while version rows preserve immutable snapshots and predecessor digests. All B02.3
+tables enable and force RLS and expose exact column grants to the non-owner
+Application Role. Empty Down/Re-Up is supported; the compatibility Outbox
+column remains while B02.3 constraints are removed. Any authoritative B02.3
+data makes the migration forward-only.

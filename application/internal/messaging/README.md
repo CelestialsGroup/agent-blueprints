@@ -24,3 +24,12 @@ adapter or external Broker is part of this slice.
 Canonical source identity/Dedupe Key support is not part of B02.2. The locked
 Contract permits escaped NUL in source strings while PostgreSQL text cannot
 represent it; Application does not tighten that Wire contract locally.
+
+B02.3 extends this Outbox with immutable initial availability, leaving
+`next_attempt_at` mutable for retries, and adds Tenant-qualified deferred foreign
+keys from each accepted Runtime Command and System Safety Control to one fixed
+Message ID, payload digest, destination, initial availability, and creation
+time. A ledger replay cannot enqueue the same fact under a second Outbox
+identity and still succeeds after retry scheduling. This proves committed intent
+for the bounded control component, not Contract-valid Canonical Platform Event
+persistence.

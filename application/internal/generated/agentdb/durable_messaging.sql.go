@@ -37,7 +37,7 @@ CROSS JOIN operation_time
 WHERE messages.tenant_id = locked_lease.tenant_id
   AND messages.message_id = locked_lease.message_id
   AND locked_lease.lease_expires_at > operation_time.occurred_at
-RETURNING messages.tenant_id, messages.message_id, messages.destination, messages.payload, messages.payload_digest, messages.state, messages.attempt_count, messages.lease_fencing_token, messages.lease_worker_id, messages.lease_expires_at, messages.next_attempt_at, messages.last_error_kind, messages.last_error_at, messages.created_at, messages.updated_at, messages.succeeded_at, messages.terminal_failed_at
+RETURNING messages.tenant_id, messages.message_id, messages.destination, messages.payload, messages.payload_digest, messages.state, messages.attempt_count, messages.lease_fencing_token, messages.lease_worker_id, messages.lease_expires_at, messages.next_attempt_at, messages.last_error_kind, messages.last_error_at, messages.created_at, messages.updated_at, messages.succeeded_at, messages.terminal_failed_at, messages.initial_available_at
 `
 
 type AcknowledgeOutboxMessageParams struct {
@@ -73,6 +73,7 @@ func (q *Queries) AcknowledgeOutboxMessage(ctx context.Context, arg AcknowledgeO
 		&i.UpdatedAt,
 		&i.SucceededAt,
 		&i.TerminalFailedAt,
+		&i.InitialAvailableAt,
 	)
 	return i, err
 }
@@ -115,7 +116,7 @@ FROM candidates
 CROSS JOIN claim_time
 WHERE messages.tenant_id = candidates.tenant_id
   AND messages.message_id = candidates.message_id
-RETURNING messages.tenant_id, messages.message_id, messages.destination, messages.payload, messages.payload_digest, messages.state, messages.attempt_count, messages.lease_fencing_token, messages.lease_worker_id, messages.lease_expires_at, messages.next_attempt_at, messages.last_error_kind, messages.last_error_at, messages.created_at, messages.updated_at, messages.succeeded_at, messages.terminal_failed_at
+RETURNING messages.tenant_id, messages.message_id, messages.destination, messages.payload, messages.payload_digest, messages.state, messages.attempt_count, messages.lease_fencing_token, messages.lease_worker_id, messages.lease_expires_at, messages.next_attempt_at, messages.last_error_kind, messages.last_error_at, messages.created_at, messages.updated_at, messages.succeeded_at, messages.terminal_failed_at, messages.initial_available_at
 `
 
 type ClaimOutboxMessagesParams struct {
@@ -157,6 +158,7 @@ func (q *Queries) ClaimOutboxMessages(ctx context.Context, arg ClaimOutboxMessag
 			&i.UpdatedAt,
 			&i.SucceededAt,
 			&i.TerminalFailedAt,
+			&i.InitialAvailableAt,
 		); err != nil {
 			return nil, err
 		}
@@ -214,6 +216,7 @@ INSERT INTO agent.outbox_messages (
     payload,
     payload_digest,
     next_attempt_at,
+    initial_available_at,
     created_at,
     updated_at
 ) VALUES (
@@ -223,11 +226,12 @@ INSERT INTO agent.outbox_messages (
     $4,
     $5,
     $6,
+    $6,
     $7,
     $7
 )
 ON CONFLICT DO NOTHING
-RETURNING tenant_id, message_id, destination, payload, payload_digest, state, attempt_count, lease_fencing_token, lease_worker_id, lease_expires_at, next_attempt_at, last_error_kind, last_error_at, created_at, updated_at, succeeded_at, terminal_failed_at
+RETURNING tenant_id, message_id, destination, payload, payload_digest, state, attempt_count, lease_fencing_token, lease_worker_id, lease_expires_at, next_attempt_at, last_error_kind, last_error_at, created_at, updated_at, succeeded_at, terminal_failed_at, initial_available_at
 `
 
 type EnqueueOutboxMessageParams struct {
@@ -269,6 +273,7 @@ func (q *Queries) EnqueueOutboxMessage(ctx context.Context, arg EnqueueOutboxMes
 		&i.UpdatedAt,
 		&i.SucceededAt,
 		&i.TerminalFailedAt,
+		&i.InitialAvailableAt,
 	)
 	return i, err
 }
@@ -301,7 +306,7 @@ CROSS JOIN operation_time
 WHERE messages.tenant_id = locked_lease.tenant_id
   AND messages.message_id = locked_lease.message_id
   AND locked_lease.lease_expires_at > operation_time.occurred_at
-RETURNING messages.tenant_id, messages.message_id, messages.destination, messages.payload, messages.payload_digest, messages.state, messages.attempt_count, messages.lease_fencing_token, messages.lease_worker_id, messages.lease_expires_at, messages.next_attempt_at, messages.last_error_kind, messages.last_error_at, messages.created_at, messages.updated_at, messages.succeeded_at, messages.terminal_failed_at
+RETURNING messages.tenant_id, messages.message_id, messages.destination, messages.payload, messages.payload_digest, messages.state, messages.attempt_count, messages.lease_fencing_token, messages.lease_worker_id, messages.lease_expires_at, messages.next_attempt_at, messages.last_error_kind, messages.last_error_at, messages.created_at, messages.updated_at, messages.succeeded_at, messages.terminal_failed_at, messages.initial_available_at
 `
 
 type FailOutboxMessageRetryableParams struct {
@@ -341,6 +346,7 @@ func (q *Queries) FailOutboxMessageRetryable(ctx context.Context, arg FailOutbox
 		&i.UpdatedAt,
 		&i.SucceededAt,
 		&i.TerminalFailedAt,
+		&i.InitialAvailableAt,
 	)
 	return i, err
 }
@@ -373,7 +379,7 @@ CROSS JOIN operation_time
 WHERE messages.tenant_id = locked_lease.tenant_id
   AND messages.message_id = locked_lease.message_id
   AND locked_lease.lease_expires_at > operation_time.occurred_at
-RETURNING messages.tenant_id, messages.message_id, messages.destination, messages.payload, messages.payload_digest, messages.state, messages.attempt_count, messages.lease_fencing_token, messages.lease_worker_id, messages.lease_expires_at, messages.next_attempt_at, messages.last_error_kind, messages.last_error_at, messages.created_at, messages.updated_at, messages.succeeded_at, messages.terminal_failed_at
+RETURNING messages.tenant_id, messages.message_id, messages.destination, messages.payload, messages.payload_digest, messages.state, messages.attempt_count, messages.lease_fencing_token, messages.lease_worker_id, messages.lease_expires_at, messages.next_attempt_at, messages.last_error_kind, messages.last_error_at, messages.created_at, messages.updated_at, messages.succeeded_at, messages.terminal_failed_at, messages.initial_available_at
 `
 
 type FailOutboxMessageTerminalParams struct {
@@ -411,6 +417,7 @@ func (q *Queries) FailOutboxMessageTerminal(ctx context.Context, arg FailOutboxM
 		&i.UpdatedAt,
 		&i.SucceededAt,
 		&i.TerminalFailedAt,
+		&i.InitialAvailableAt,
 	)
 	return i, err
 }
@@ -445,7 +452,7 @@ func (q *Queries) GetInboxMessageByTransportIdentity(ctx context.Context, arg Ge
 }
 
 const getOutboxMessage = `-- name: GetOutboxMessage :one
-SELECT tenant_id, message_id, destination, payload, payload_digest, state, attempt_count, lease_fencing_token, lease_worker_id, lease_expires_at, next_attempt_at, last_error_kind, last_error_at, created_at, updated_at, succeeded_at, terminal_failed_at
+SELECT tenant_id, message_id, destination, payload, payload_digest, state, attempt_count, lease_fencing_token, lease_worker_id, lease_expires_at, next_attempt_at, last_error_kind, last_error_at, created_at, updated_at, succeeded_at, terminal_failed_at, initial_available_at
 FROM agent.outbox_messages
 WHERE tenant_id = $1
   AND message_id = $2
@@ -477,6 +484,7 @@ func (q *Queries) GetOutboxMessage(ctx context.Context, arg GetOutboxMessagePara
 		&i.UpdatedAt,
 		&i.SucceededAt,
 		&i.TerminalFailedAt,
+		&i.InitialAvailableAt,
 	)
 	return i, err
 }
@@ -556,7 +564,7 @@ CROSS JOIN operation_time
 WHERE messages.tenant_id = locked_lease.tenant_id
   AND messages.message_id = locked_lease.message_id
   AND locked_lease.lease_expires_at > operation_time.occurred_at
-RETURNING messages.tenant_id, messages.message_id, messages.destination, messages.payload, messages.payload_digest, messages.state, messages.attempt_count, messages.lease_fencing_token, messages.lease_worker_id, messages.lease_expires_at, messages.next_attempt_at, messages.last_error_kind, messages.last_error_at, messages.created_at, messages.updated_at, messages.succeeded_at, messages.terminal_failed_at
+RETURNING messages.tenant_id, messages.message_id, messages.destination, messages.payload, messages.payload_digest, messages.state, messages.attempt_count, messages.lease_fencing_token, messages.lease_worker_id, messages.lease_expires_at, messages.next_attempt_at, messages.last_error_kind, messages.last_error_at, messages.created_at, messages.updated_at, messages.succeeded_at, messages.terminal_failed_at, messages.initial_available_at
 `
 
 type RenewOutboxLeaseParams struct {
@@ -594,6 +602,7 @@ func (q *Queries) RenewOutboxLease(ctx context.Context, arg RenewOutboxLeasePara
 		&i.UpdatedAt,
 		&i.SucceededAt,
 		&i.TerminalFailedAt,
+		&i.InitialAvailableAt,
 	)
 	return i, err
 }

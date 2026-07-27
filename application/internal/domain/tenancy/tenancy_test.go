@@ -22,6 +22,12 @@ func TestTenantIDValidation(t *testing.T) {
 	if err := (TenantID(strings.Repeat("租", 200))).Validate(); err != nil {
 		t.Fatalf("200-character UTF-8 tenant ID: %v", err)
 	}
+	if err := (TenantID("tenant\x00a")).Validate(); !errors.Is(err, ErrInvalidTenantID) {
+		t.Fatalf("NUL tenant ID = %v, want ErrInvalidTenantID", err)
+	}
+	if err := (TenantID(string([]byte{0xff}))).Validate(); !errors.Is(err, ErrInvalidTenantID) {
+		t.Fatalf("invalid UTF-8 tenant ID = %v, want ErrInvalidTenantID", err)
+	}
 }
 
 func TestOwnershipValuesRequireCreationTime(t *testing.T) {
@@ -44,5 +50,14 @@ func TestOwnershipValuesRequireCreationTime(t *testing.T) {
 	}
 	if err := application.Validate(); err != nil {
 		t.Fatalf("client application with created_at: %v", err)
+	}
+	application.ID = "client\x00a"
+	if err := application.Validate(); !errors.Is(err, ErrInvalidClientAppID) {
+		t.Fatalf("NUL client application ID = %v, want ErrInvalidClientAppID", err)
+	}
+	application.ID = "client-a"
+	tenant.DisplayName = "Tenant\x00A"
+	if err := tenant.Validate(); !errors.Is(err, ErrInvalidDisplayName) {
+		t.Fatalf("NUL tenant display name = %v, want ErrInvalidDisplayName", err)
 	}
 }

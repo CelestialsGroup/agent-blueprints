@@ -11,3 +11,11 @@ sql:
         emit_interface: true
         emit_empty_slices: true
         emit_pointers_for_null_types: true
+        rename:
+          agent_agent_run: AgentRun
+          agent_agent_runtime_run: AgentRuntimeRun
+          agent_agent_runtime_command: AgentRuntimeCommand
+          agent_agent_run_control_fanout: AgentRunControlFanout
+          agent_agent_run_control_fanout_target: AgentRunControlFanoutTarget
+          agent_agent_run_control_fanout_version: AgentRunControlFanoutVersion
+          agent_agent_run_control_fanout_target_version: AgentRunControlFanoutTargetVersion

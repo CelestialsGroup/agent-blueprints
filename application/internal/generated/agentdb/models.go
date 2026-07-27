@@ -8,6 +8,22 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type AgentChildAgentRunAdmissionDecision struct {
+	TenantID           string
+	WorkOrderID        string
+	DecisionID         string
+	DecisionDigest     string
+	SpawnRequestID     string
+	SpawnRequestDigest string
+	ParentAgentRunID   string
+	Outcome            string
+	ReasonCodes        []string
+	ReasonCodesKey     *string
+	ChildAgentRunID    *string
+	RuntimeRunID       *string
+	DecidedAt          pgtype.Timestamptz
+}
+
 type AgentClientApplication struct {
 	TenantID    string
 	ClientAppID string
@@ -16,23 +32,216 @@ type AgentClientApplication struct {
 }
 
 type AgentOutboxMessage struct {
-	TenantID          string
-	MessageID         string
-	Destination       string
-	Payload           []byte
-	PayloadDigest     string
-	State             string
-	AttemptCount      int64
-	LeaseFencingToken int64
-	LeaseWorkerID     *string
-	LeaseExpiresAt    pgtype.Timestamptz
-	NextAttemptAt     pgtype.Timestamptz
-	LastErrorKind     *string
-	LastErrorAt       pgtype.Timestamptz
-	CreatedAt         pgtype.Timestamptz
-	UpdatedAt         pgtype.Timestamptz
-	SucceededAt       pgtype.Timestamptz
-	TerminalFailedAt  pgtype.Timestamptz
+	TenantID           string
+	MessageID          string
+	Destination        string
+	Payload            []byte
+	PayloadDigest      string
+	State              string
+	AttemptCount       int64
+	LeaseFencingToken  int64
+	LeaseWorkerID      *string
+	LeaseExpiresAt     pgtype.Timestamptz
+	NextAttemptAt      pgtype.Timestamptz
+	LastErrorKind      *string
+	LastErrorAt        pgtype.Timestamptz
+	CreatedAt          pgtype.Timestamptz
+	UpdatedAt          pgtype.Timestamptz
+	SucceededAt        pgtype.Timestamptz
+	TerminalFailedAt   pgtype.Timestamptz
+	InitialAvailableAt pgtype.Timestamptz
+}
+
+type AgentPlatformSafetyController struct {
+	TenantID        string
+	IssuerSubjectID string
+	AdmittedAt      pgtype.Timestamptz
+	AdmissionDigest string
+}
+
+type AgentRun struct {
+	TenantID                       string
+	WorkOrderID                    string
+	AgentRunID                     string
+	RunKind                        string
+	RequiredForWorkOrderCompletion bool
+	State                          string
+	CreatedAt                      pgtype.Timestamptz
+	UpdatedAt                      pgtype.Timestamptz
+}
+
+type AgentRunControlFanout struct {
+	TenantID                  string
+	WorkOrderID               string
+	FanoutID                  string
+	Action                    string
+	AuthorityKind             string
+	AuthorityID               string
+	AuthorityDigest           string
+	ExpectedActiveWorkVersion int64
+	ControlRequestID          *string
+	SafetyEvidenceContractID  *string
+	SafetyEvidenceID          *string
+	LatestVersion             int64
+	LatestDigest              string
+	CreatedAt                 pgtype.Timestamptz
+	UpdatedAt                 pgtype.Timestamptz
+}
+
+type AgentRunControlFanoutTarget struct {
+	TenantID                  string
+	WorkOrderID               string
+	FanoutID                  string
+	AuthorityKind             string
+	AgentRunID                string
+	RuntimeRunID              string
+	TargetFencingToken        int64
+	SystemSafetyControlID     *string
+	SystemSafetyControlDigest *string
+	CommandID                 string
+	ControlState              string
+	ClaimFencingToken         int64
+	ClaimWorkerID             *string
+	ClaimExpiresAt            pgtype.Timestamptz
+	UpdatedAt                 pgtype.Timestamptz
+}
+
+type AgentRunControlFanoutTargetVersion struct {
+	TenantID                  string
+	FanoutID                  string
+	FanoutVersion             int64
+	AuthorityKind             string
+	AgentRunID                string
+	RuntimeRunID              string
+	TargetFencingToken        int64
+	SystemSafetyControlID     *string
+	SystemSafetyControlDigest *string
+	ControlState              string
+}
+
+type AgentRunControlFanoutVersion struct {
+	TenantID              string
+	WorkOrderID           string
+	FanoutID              string
+	FanoutVersion         int64
+	PreviousFanoutVersion *int64
+	PreviousFanoutDigest  *string
+	FanoutDigest          string
+	Action                string
+	AuthorityKind         string
+	AuthorityID           string
+	AuthorityDigest       string
+	CreatedAt             pgtype.Timestamptz
+	UpdatedAt             pgtype.Timestamptz
+}
+
+type AgentRuntimeCommand struct {
+	TenantID                     string
+	WorkOrderID                  string
+	CommandID                    string
+	CommandDigest                string
+	RuntimeRunID                 string
+	CommandSequence              int64
+	Type                         string
+	AuthorizedControlRequestID   *string
+	SystemSafetyControlID        *string
+	SystemSafetyControlDigest    *string
+	InputID                      *string
+	InputContentDigest           *string
+	ApprovalID                   *string
+	ApprovalDecision             *string
+	ApprovalComment              string
+	SpawnRequestID               *string
+	ChildAdmissionDecisionID     *string
+	ChildAdmissionDecisionDigest *string
+	SpawnOutcome                 *string
+	SpawnReasonCodes             []string
+	SpawnReasonCodesKey          *string
+	ChildAgentRunID              *string
+	Reason                       *string
+	InvocationID                 string
+	InvocationAttemptID          string
+	FencingToken                 int64
+	IdempotencyKey               string
+	DeadlineAt                   pgtype.Timestamptz
+	CreatedAt                    pgtype.Timestamptz
+	OutboxMessageID              string
+	OutboxPayloadDigest          string
+	OutboxDestination            string
+	OutboxAvailableAt            pgtype.Timestamptz
+	OutboxCreatedAt              pgtype.Timestamptz
+}
+
+type AgentRuntimeInvocation struct {
+	TenantID            string
+	WorkOrderID         string
+	RuntimeRunID        string
+	InvocationID        string
+	RequestDigest       string
+	LastAttemptNumber   int64
+	CurrentFencingToken int64
+	CreatedAt           pgtype.Timestamptz
+	UpdatedAt           pgtype.Timestamptz
+}
+
+type AgentRuntimeInvocationAttempt struct {
+	TenantID            string
+	WorkOrderID         string
+	RuntimeRunID        string
+	InvocationID        string
+	InvocationAttemptID string
+	AttemptNumber       int64
+	FencingToken        int64
+	CreatedAt           pgtype.Timestamptz
+}
+
+type AgentRuntimeRun struct {
+	TenantID            string
+	WorkOrderID         string
+	AgentRunID          string
+	RuntimeRunID        string
+	State               string
+	LastCommandSequence int64
+	CurrentFencingToken int64
+	CreatedAt           pgtype.Timestamptz
+	UpdatedAt           pgtype.Timestamptz
+	CompletedAt         pgtype.Timestamptz
+}
+
+type AgentSafetyTriggerEvidence struct {
+	TenantID           string
+	WorkOrderID        string
+	EvidenceContractID string
+	EvidenceID         string
+	EvidenceDigest     string
+	Action             string
+	Reason             string
+	ObservedAt         pgtype.Timestamptz
+	AdmittedAt         pgtype.Timestamptz
+}
+
+type AgentSystemSafetyControl struct {
+	TenantID            string
+	WorkOrderID         string
+	RuntimeRunID        string
+	SafetyControlID     string
+	Action              string
+	Reason              string
+	EvidenceContractID  string
+	EvidenceID          string
+	EvidenceDigest      string
+	ObservedAt          pgtype.Timestamptz
+	EvidenceAdmittedAt  pgtype.Timestamptz
+	IssuedBy            string
+	IssuerSubjectID     string
+	IssuerAdmittedAt    pgtype.Timestamptz
+	IssuedAt            pgtype.Timestamptz
+	ControlDigest       string
+	OutboxMessageID     string
+	OutboxPayloadDigest string
+	OutboxDestination   string
+	OutboxAvailableAt   pgtype.Timestamptz
+	OutboxCreatedAt     pgtype.Timestamptz
 }
 
 type AgentTenant struct {
@@ -49,4 +258,40 @@ type AgentTransportInboxMessage struct {
 	State         string
 	ReceivedAt    pgtype.Timestamptz
 	CompletedAt   pgtype.Timestamptz
+}
+
+type AgentWorkOrder struct {
+	TenantID           string
+	WorkOrderID        string
+	State              string
+	ActiveWorkVersion  int64
+	ChildAdmissionOpen bool
+	WorkSequence       int64
+	CreatedAt          pgtype.Timestamptz
+	UpdatedAt          pgtype.Timestamptz
+}
+
+type AgentWorkOrderControlInput struct {
+	TenantID         string
+	WorkOrderID      string
+	ControlRequestID string
+	InputID          string
+	InputMessageID   string
+	ContentDigest    string
+	AcceptedAt       pgtype.Timestamptz
+}
+
+type AgentWorkOrderControlRequest struct {
+	TenantID                  string
+	WorkOrderID               string
+	ControlRequestID          string
+	RequestDigest             string
+	Action                    string
+	ExpectedActiveWorkVersion int64
+	InputID                   *string
+	InputContentDigest        *string
+	ApprovalID                *string
+	ApprovalDecision          *string
+	ApprovalComment           string
+	AcceptedAt                pgtype.Timestamptz
 }

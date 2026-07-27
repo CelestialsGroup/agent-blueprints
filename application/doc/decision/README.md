@@ -14,3 +14,6 @@ Current records:
   B02.1 migration boundary.
 - `0002-postgresql-durable-messaging.md`: B02.2 Outbox/Inbox state, lease/fencing,
   encoded storage guard, and rollback boundary.
+- `0003-postgresql-runtime-control-safety-ledgers.md`: B02.3 narrow authority
+  parents, command/control Outbox bindings, Fanout versions/leases, and rollback
+  boundary.

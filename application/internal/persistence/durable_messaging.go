@@ -280,10 +280,14 @@ func (repository *tenantRepository) EnqueueOutboxMessage(
 	if err != nil {
 		return "", fmt.Errorf("read conflicting outbox message: %w", err)
 	}
+	initialAvailableAt := row.NextAttemptAt
+	if row.InitialAvailableAt.Valid {
+		initialAvailableAt = row.InitialAvailableAt
+	}
 	if row.Destination != message.Destination ||
 		row.PayloadDigest != message.PayloadDigest ||
 		!bytes.Equal(row.Payload, message.Payload) ||
-		!row.NextAttemptAt.Time.Equal(databaseTime(message.AvailableAt)) ||
+		!initialAvailableAt.Time.Equal(databaseTime(message.AvailableAt)) ||
 		!row.CreatedAt.Time.Equal(databaseTime(message.CreatedAt)) {
 		return "", fmt.Errorf("%w: %q", messaging.ErrOutboxConflict, message.MessageID)
 	}

@@ -17,3 +17,6 @@ Current plans:
 - `B02.2-postgresql-durable-messaging.md`: transactional Outbox/Inbox, leased
   dispatch, Transport dedupe, Contract-gap boundary, and real-PostgreSQL recovery
   evidence.
+- `B02.3-postgresql-runtime-control-safety-ledgers.md`: bounded PostgreSQL
+  Runtime Command, System Safety Control, and AgentRun Control Fanout ledgers,
+  their narrow authority parents, recovery evidence, and unproved boundaries.

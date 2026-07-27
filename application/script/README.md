@@ -21,8 +21,9 @@ Staticcheck, normal and Race tests, sqlc vet/regeneration comparison, and the
 disposable PostgreSQL integration suite. Downloaded release tools and module
 caches live only under the ignored `.cache/` tree.
 
-Successful PostgreSQL runs emit `build/evidence/b02.2/postgres-integration-evidence.json`
+Successful PostgreSQL runs emit `build/evidence/b02.3/postgres-integration-evidence.json`
 and its bound test log. The manifest records the exact test command/result,
-source digests, immutable tool/image pins, and the current Blueprint/Contract
-dependency lock. These are generated review artifacts, not committed status or
-Phase 0 check-ID claims.
+source digests including the B02.3 safety/repository implementation, immutable
+tool/image pins, the current Blueprint/Contract dependency lock, and a validated
+Race/repeat summary. These are generated review artifacts, not committed status
+or Phase 0 check-ID claims.

@@ -2,7 +2,7 @@
 
 状态：**本地 Contract Gate 已通过；不对 Application 实现、集成、可靠性或生产批准作结论；Blueprint 与 Contract 尚未正式冻结**
 
-验证日期：2026-07-24
+验证日期：2026-07-27
 
 本报告由 `contract/validation/generate_validation_evidence.py` 从本次成功 Gate 的 `build/validation/*.json` 生成；`VALIDATION.json` 是同源机器结果，不手工维护计数。
 

@@ -54,6 +54,11 @@ args = parser.parse_args()
 test_log = args.test_log.resolve()
 if not test_log.is_file() or test_log.stat().st_size == 0:
     raise SystemExit("PostgreSQL integration test log is missing or empty")
+test_log_lines = [line for line in test_log.read_text(encoding="utf-8").splitlines() if line]
+test_log_summary = test_log_lines[-1]
+test_log_summary_fields = test_log_summary.split()
+if test_log_summary_fields[:2] != ["ok", "github.com/shell-echo/agent/test/integration"]:
+    raise AssertionError(f"Unexpected PostgreSQL integration result: {test_log_summary}")
 
 toolchain = load_env(ROOT / "toolchain/toolchain.env")
 dependency_lock_path = ROOT / "dependency-lock.json"
@@ -70,14 +75,17 @@ if len(go_sum_lines) != 2:
 
 evidence: dict[str, Any] = {
     "schema_version": 1,
-    "evidence_id": "agent-b02.2-postgresql-durable-messaging-integration",
-    "scope": "PostgreSQL bootstrap, Tenant/RLS isolation, transactional Transport Outbox/Inbox, global message identity, lease fencing, and crash recovery",
+    "evidence_id": "agent-b02.3-postgresql-runtime-control-safety-ledgers-integration",
+    "scope": "PostgreSQL bootstrap and Tenant/RLS isolation; B02.2 durable Transport messaging; B02.3 Runtime Command, System Safety Control, and AgentRun Control Fanout ledgers",
     "result": "passed",
     "command": args.test_command,
     "exit_code": 0,
     "test_log": {
         "path": "postgres-integration.log",
         "sha256": sha256_file(test_log),
+        "summary": test_log_summary,
+        "race_enabled": True,
+        "repeat_count": 3,
     },
     "environment": {
         "go_version": toolchain["GO_VERSION"],
@@ -115,9 +123,11 @@ evidence: dict[str, Any] = {
     "sources": {
         "migrations": source_manifest(list((ROOT / "db/migration").glob("*.sql"))),
         "queries_and_repository": source_manifest(
-            list((ROOT / "db/query").glob("*.sql"))
+            [ROOT / "sqlc.yaml"]
+            + list((ROOT / "db/query").glob("*.sql"))
             + list((ROOT / "internal/domain/tenancy").glob("*.go"))
             + list((ROOT / "internal/messaging").glob("*.go"))
+            + list((ROOT / "internal/safety").glob("*.go"))
             + list((ROOT / "internal/persistence").glob("*.go"))
             + list((ROOT / "internal/generated/agentdb").glob("*.go"))
         ),
@@ -133,6 +143,11 @@ evidence: dict[str, Any] = {
     "claims_not_made": [
         "Phase 0B completion",
         "complete CanonicalEvent or Event Registry admission",
+        "SystemSafetyControl plus Contract-valid Canonical Platform Event atomicity",
+        "authoritative Safety Controller or trigger-evidence admission and a production SystemSafetyAuthorityVerifier",
+        "full wire conformance for Contract-unbounded or PostgreSQL-unrepresentable identifiers",
+        "complete WorkOrder, WorkflowRun, AgentRun, RunManifest, Child Admission, Invocation, or Runtime lifecycle persistence",
+        "Runtime HTTP, token, or Provider Conformance",
         "Canonical source Inbox identity while the locked Contract permits PostgreSQL-unrepresentable NUL strings",
         "external Broker or production Redis integration",
         "end-to-end product execution",

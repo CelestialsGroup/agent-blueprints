@@ -5,9 +5,9 @@ ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 source "$ROOT/toolchain/toolchain.env"
 
 CACHE_DIR="${1:-$ROOT/.cache/implementation}"
-EVIDENCE_DIR="${2:-$ROOT/build/evidence/b02.2}"
-CONTAINER_NAME="agent-b022-postgres-$$"
-NETWORK_NAME="agent-b022-$$"
+EVIDENCE_DIR="${2:-$ROOT/build/evidence/b02.3}"
+CONTAINER_NAME="agent-b023-postgres-$$"
+NETWORK_NAME="agent-b023-$$"
 POSTGRES_PASSWORD="b021-integration-admin"
 TEST_COMMAND="go test -race -tags=integration -count=3 ./test/integration/..."
 

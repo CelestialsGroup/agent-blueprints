@@ -6,6 +6,7 @@ INSERT INTO agent.outbox_messages (
     payload,
     payload_digest,
     next_attempt_at,
+    initial_available_at,
     created_at,
     updated_at
 ) VALUES (
@@ -14,6 +15,7 @@ INSERT INTO agent.outbox_messages (
     sqlc.arg(destination),
     sqlc.arg(payload),
     sqlc.arg(payload_digest),
+    sqlc.arg(next_attempt_at),
     sqlc.arg(next_attempt_at),
     sqlc.arg(created_at),
     sqlc.arg(created_at)

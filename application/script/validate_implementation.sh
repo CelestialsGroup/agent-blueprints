@@ -12,7 +12,7 @@ test -f "$CONTRACT_ROOT/schemas/build-provenance.schema.json"
 
 UV_TOOLCHAIN_TAG="agent-uv-toolchain:${UV_VERSION}-python${PYTHON_VERSION}"
 EVIDENCE_DIR="$ROOT/build/evidence/b01"
-B02_EVIDENCE_DIR="$ROOT/build/evidence/b02.2"
+B02_EVIDENCE_DIR="$ROOT/build/evidence/b02.3"
 CACHE_DIR="$ROOT/.cache/implementation"
 SQLC_CHECK_DIR="$CACHE_DIR/sqlc-check"
 NATIVE_WHEEL="agent_native_runtime-0.1.0-py3-none-any.whl"
@@ -244,4 +244,4 @@ docker run --rm \
     --traceability-report /out/evidence/phase0-implementation-traceability.json \
     --output-dir /out/evidence
 
-echo "B02.2 implementation validation passed; B01 reproducible artifact evidence preserved."
+echo "B02.3 component validation passed; B01 reproducible artifact evidence preserved."

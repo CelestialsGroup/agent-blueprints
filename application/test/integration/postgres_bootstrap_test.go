@@ -38,6 +38,11 @@ func TestBootstrapMigrationRejectsDestructiveDownAndRemainsUp(t *testing.T) {
 
 	databaseDSN := replaceDatabase(t, adminDSN, agentDatabase, "postgres", "b021-integration-admin")
 	runGoose(t, databaseDSN, "up", true)
+	assertMigrationVersion(t, databaseDSN, 3)
+	runGoose(t, databaseDSN, "up", true)
+	assertMigrationVersion(t, databaseDSN, 3)
+
+	runGoose(t, databaseDSN, "down", true)
 	assertMigrationVersion(t, databaseDSN, 2)
 
 	runGoose(t, databaseDSN, "down", true)
@@ -51,7 +56,7 @@ func TestBootstrapMigrationRejectsDestructiveDownAndRemainsUp(t *testing.T) {
 	assertBootstrapTables(t, databaseDSN)
 
 	runGoose(t, databaseDSN, "up", true)
-	assertMigrationVersion(t, databaseDSN, 2)
+	assertMigrationVersion(t, databaseDSN, 3)
 
 	createDatabase(t, ctx, adminPool, forbiddenDatabase)
 	t.Cleanup(func() { dropDatabase(t, adminPool, forbiddenDatabase) })
@@ -466,20 +471,41 @@ func assertRoleProfiles(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
 
 func assertTableSecurity(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
 	t.Helper()
+	assertSecuredTables(t, ctx, pool, []string{
+		"tenants", "client_applications", "outbox_messages", "transport_inbox_messages",
+		"work_orders", "agent_runs", "agent_runtime_runs", "runtime_invocations",
+		"runtime_invocation_attempts", "work_order_control_requests",
+		"work_order_control_inputs", "platform_safety_controllers",
+		"safety_trigger_evidence", "child_agent_run_admission_decisions",
+		"system_safety_controls", "agent_runtime_commands", "agent_run_control_fanouts",
+		"agent_run_control_fanout_targets", "agent_run_control_fanout_versions",
+		"agent_run_control_fanout_target_versions",
+	})
+}
+
+func assertBaselineTableSecurity(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	t.Helper()
+	assertSecuredTables(t, ctx, pool, []string{
+		"tenants", "client_applications", "outbox_messages", "transport_inbox_messages",
+	})
+}
+
+func assertSecuredTables(
+	t *testing.T,
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	tableNames []string,
+) {
+	t.Helper()
 	rows, err := pool.Query(ctx, `
 		SELECT c.relname, owner.rolname, c.relrowsecurity, c.relforcerowsecurity
 		FROM pg_class AS c
 		JOIN pg_namespace AS namespace ON namespace.oid = c.relnamespace
 		JOIN pg_roles AS owner ON owner.oid = c.relowner
 		WHERE namespace.nspname = 'agent'
-		  AND c.relname IN (
-		      'tenants',
-		      'client_applications',
-		      'outbox_messages',
-		      'transport_inbox_messages'
-		  )
+		  AND c.relname = ANY($1::text[])
 		ORDER BY c.relname
-	`)
+	`, tableNames)
 	if err != nil {
 		t.Fatalf("query table security: %v", err)
 	}
@@ -499,18 +525,34 @@ func assertTableSecurity(t *testing.T, ctx context.Context, pool *pgxpool.Pool) 
 	if err := rows.Err(); err != nil {
 		t.Fatalf("iterate table security: %v", err)
 	}
-	if count != 4 {
-		t.Fatalf("secured table count = %d, want 4", count)
+	if count != len(tableNames) {
+		t.Fatalf("secured table count = %d, want %d", count, len(tableNames))
 	}
 }
 
 func assertExactApplicationPrivileges(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
 	t.Helper()
 	tablePrivileges := map[string]map[string]bool{
-		"agent.tenants":                  {"SELECT": true, "INSERT": true},
-		"agent.client_applications":      {"SELECT": true, "INSERT": true},
-		"agent.outbox_messages":          {"SELECT": true},
-		"agent.transport_inbox_messages": {"SELECT": true},
+		"agent.tenants":                                  {"SELECT": true, "INSERT": true},
+		"agent.client_applications":                      {"SELECT": true, "INSERT": true},
+		"agent.outbox_messages":                          {"SELECT": true},
+		"agent.transport_inbox_messages":                 {"SELECT": true},
+		"agent.work_orders":                              {"SELECT": true},
+		"agent.agent_runs":                               {"SELECT": true},
+		"agent.agent_runtime_runs":                       {"SELECT": true},
+		"agent.runtime_invocations":                      {"SELECT": true},
+		"agent.runtime_invocation_attempts":              {"SELECT": true},
+		"agent.work_order_control_requests":              {"SELECT": true},
+		"agent.work_order_control_inputs":                {"SELECT": true},
+		"agent.platform_safety_controllers":              {"SELECT": true},
+		"agent.safety_trigger_evidence":                  {"SELECT": true},
+		"agent.child_agent_run_admission_decisions":      {"SELECT": true},
+		"agent.system_safety_controls":                   {"SELECT": true},
+		"agent.agent_runtime_commands":                   {"SELECT": true},
+		"agent.agent_run_control_fanouts":                {"SELECT": true},
+		"agent.agent_run_control_fanout_targets":         {"SELECT": true},
+		"agent.agent_run_control_fanout_versions":        {"SELECT": true},
+		"agent.agent_run_control_fanout_target_versions": {"SELECT": true},
 	}
 	for table, expectedPrivileges := range tablePrivileges {
 		for _, privilege := range []string{"SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE", "REFERENCES", "TRIGGER"} {
@@ -534,7 +576,7 @@ func assertExactApplicationPrivileges(t *testing.T, ctx context.Context, pool *p
 		"INSERT": {
 			"tenant_id": true, "message_id": true, "destination": true,
 			"payload": true, "payload_digest": true, "next_attempt_at": true,
-			"created_at": true, "updated_at": true,
+			"initial_available_at": true, "created_at": true, "updated_at": true,
 		},
 		"UPDATE": {
 			"state": true, "attempt_count": true, "lease_fencing_token": true,
@@ -549,6 +591,109 @@ func assertExactApplicationPrivileges(t *testing.T, ctx context.Context, pool *p
 			"payload_digest": true, "state": true, "received_at": true,
 		},
 		"UPDATE": {"state": true, "completed_at": true},
+	})
+	assertExactColumnPrivileges(t, ctx, pool, "agent.work_orders", map[string]map[string]bool{
+		"INSERT": {
+			"tenant_id": true, "work_order_id": true, "state": true,
+			"active_work_version": true, "child_admission_open": true,
+			"created_at": true, "updated_at": true,
+		},
+		"UPDATE": {
+			"active_work_version": true, "child_admission_open": true, "updated_at": true,
+		},
+	})
+	assertExactColumnPrivileges(t, ctx, pool, "agent.agent_runtime_runs", map[string]map[string]bool{
+		"INSERT": {
+			"tenant_id": true, "work_order_id": true, "agent_run_id": true,
+			"runtime_run_id": true, "state": true, "created_at": true, "updated_at": true,
+		},
+		"UPDATE": {
+			"last_command_sequence": true, "current_fencing_token": true, "updated_at": true,
+		},
+	})
+	assertExactColumnPrivileges(t, ctx, pool, "agent.runtime_invocations", map[string]map[string]bool{
+		"INSERT": {
+			"tenant_id": true, "work_order_id": true, "runtime_run_id": true,
+			"invocation_id": true, "request_digest": true,
+			"created_at": true, "updated_at": true,
+		},
+		"UPDATE": {
+			"last_attempt_number": true, "current_fencing_token": true, "updated_at": true,
+		},
+	})
+	assertExactColumnPrivileges(t, ctx, pool, "agent.system_safety_controls", map[string]map[string]bool{
+		"INSERT": {
+			"tenant_id": true, "work_order_id": true, "runtime_run_id": true,
+			"safety_control_id": true, "action": true, "reason": true,
+			"evidence_contract_id": true, "evidence_id": true, "evidence_digest": true,
+			"observed_at": true, "evidence_admitted_at": true, "issued_by": true,
+			"issuer_subject_id": true, "issuer_admitted_at": true,
+			"issued_at": true, "control_digest": true,
+			"outbox_message_id": true, "outbox_payload_digest": true,
+			"outbox_destination": true, "outbox_available_at": true,
+			"outbox_created_at": true,
+		},
+	})
+	assertExactColumnPrivileges(t, ctx, pool, "agent.agent_runtime_commands", map[string]map[string]bool{
+		"INSERT": {
+			"tenant_id": true, "work_order_id": true, "command_id": true,
+			"command_digest": true, "runtime_run_id": true, "command_sequence": true,
+			"type": true, "authorized_control_request_id": true,
+			"system_safety_control_id": true, "system_safety_control_digest": true,
+			"input_id": true, "input_content_digest": true, "approval_id": true,
+			"approval_decision": true, "approval_comment": true, "spawn_request_id": true,
+			"child_admission_decision_id": true, "child_admission_decision_digest": true,
+			"spawn_outcome": true, "spawn_reason_codes": true, "child_agent_run_id": true,
+			"reason": true, "invocation_id": true, "invocation_attempt_id": true,
+			"fencing_token": true, "idempotency_key": true,
+			"deadline_at": true, "created_at": true,
+			"outbox_message_id": true, "outbox_payload_digest": true,
+			"outbox_destination": true, "outbox_available_at": true,
+			"outbox_created_at": true,
+		},
+	})
+	assertExactColumnPrivileges(t, ctx, pool, "agent.agent_run_control_fanout_targets", map[string]map[string]bool{
+		"INSERT": {
+			"tenant_id": true, "work_order_id": true, "fanout_id": true,
+			"authority_kind": true, "agent_run_id": true, "runtime_run_id": true,
+			"target_fencing_token": true, "system_safety_control_id": true,
+			"system_safety_control_digest": true, "command_id": true,
+			"control_state": true, "updated_at": true,
+		},
+		"UPDATE": {
+			"control_state": true, "claim_fencing_token": true,
+			"claim_worker_id": true, "claim_expires_at": true, "updated_at": true,
+		},
+	})
+	assertExactColumnPrivileges(t, ctx, pool, "agent.agent_run_control_fanouts", map[string]map[string]bool{
+		"INSERT": {
+			"tenant_id": true, "work_order_id": true, "fanout_id": true,
+			"action": true, "authority_kind": true, "authority_id": true,
+			"authority_digest": true, "expected_active_work_version": true,
+			"control_request_id": true, "safety_evidence_contract_id": true,
+			"safety_evidence_id": true, "latest_version": true,
+			"latest_digest": true, "created_at": true, "updated_at": true,
+		},
+		"UPDATE": {
+			"latest_version": true, "latest_digest": true, "updated_at": true,
+		},
+	})
+	assertExactColumnPrivileges(t, ctx, pool, "agent.agent_run_control_fanout_versions", map[string]map[string]bool{
+		"INSERT": {
+			"tenant_id": true, "work_order_id": true, "fanout_id": true,
+			"fanout_version": true, "previous_fanout_version": true,
+			"previous_fanout_digest": true, "fanout_digest": true,
+			"action": true, "authority_kind": true, "authority_id": true,
+			"authority_digest": true, "created_at": true, "updated_at": true,
+		},
+	})
+	assertExactColumnPrivileges(t, ctx, pool, "agent.agent_run_control_fanout_target_versions", map[string]map[string]bool{
+		"INSERT": {
+			"tenant_id": true, "fanout_id": true, "fanout_version": true,
+			"authority_kind": true, "agent_run_id": true, "runtime_run_id": true,
+			"target_fencing_token": true, "system_safety_control_id": true,
+			"system_safety_control_digest": true, "control_state": true,
+		},
 	})
 
 	checks := []struct {
@@ -669,7 +814,7 @@ func assertMigratorGoosePath(
 	}
 	migratorDSN := replaceDatabase(t, clusterAdminDSN, agentDatabase, migratorLogin, migratorPass)
 	runGooseInDirectory(t, migratorDSN, migrationDirectory, "up", true, true)
-	assertMigrationVersion(t, databaseAdminDSN, 3)
+	assertMigrationVersion(t, databaseAdminDSN, 4)
 
 	var owner string
 	if err := adminPool.QueryRow(context.Background(), `
@@ -687,7 +832,7 @@ func assertMigratorGoosePath(
 	}
 
 	runGooseInDirectory(t, migratorDSN, migrationDirectory, "down", true, true)
-	assertMigrationVersion(t, databaseAdminDSN, 2)
+	assertMigrationVersion(t, databaseAdminDSN, 3)
 	var exists bool
 	if err := adminPool.QueryRow(context.Background(), `
 		SELECT to_regclass('agent.migrator_role_probe') IS NOT NULL

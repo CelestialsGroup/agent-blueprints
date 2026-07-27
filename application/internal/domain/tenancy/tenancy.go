@@ -3,6 +3,7 @@ package tenancy
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 	"unicode/utf8"
 )
@@ -23,8 +24,13 @@ func (id TenantID) Validate() error {
 	if id == "" {
 		return ErrMissingTenantContext
 	}
-	if !utf8.ValidString(string(id)) || utf8.RuneCountInString(string(id)) > maxIdentifierLength {
-		return fmt.Errorf("%w: length exceeds %d characters", ErrInvalidTenantID, maxIdentifierLength)
+	if !utf8.ValidString(string(id)) || strings.IndexByte(string(id), 0) >= 0 ||
+		utf8.RuneCountInString(string(id)) > maxIdentifierLength {
+		return fmt.Errorf(
+			"%w: must be valid UTF-8 without NUL and no longer than %d characters",
+			ErrInvalidTenantID,
+			maxIdentifierLength,
+		)
 	}
 	return nil
 }
@@ -32,7 +38,8 @@ func (id TenantID) Validate() error {
 type ClientApplicationID string
 
 func (id ClientApplicationID) Validate() error {
-	if id == "" || !utf8.ValidString(string(id)) || utf8.RuneCountInString(string(id)) > maxIdentifierLength {
+	if id == "" || !utf8.ValidString(string(id)) || strings.IndexByte(string(id), 0) >= 0 ||
+		utf8.RuneCountInString(string(id)) > maxIdentifierLength {
 		return ErrInvalidClientAppID
 	}
 	return nil
@@ -75,7 +82,8 @@ func (application ClientApplication) Validate() error {
 }
 
 func validateDisplayName(name string) error {
-	if name == "" || !utf8.ValidString(name) || utf8.RuneCountInString(name) > maxIdentifierLength {
+	if name == "" || !utf8.ValidString(name) || strings.IndexByte(name, 0) >= 0 ||
+		utf8.RuneCountInString(name) > maxIdentifierLength {
 		return ErrInvalidDisplayName
 	}
 	return nil
