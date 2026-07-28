@@ -27,7 +27,7 @@ func TestPostgreSQLDurableMessagingAtomicityRecoveryAndIsolation(t *testing.T) {
 
 	databaseAdminDSN := replaceDatabase(t, adminDSN, agentDatabase, "postgres", "b021-integration-admin")
 	runGoose(t, databaseAdminDSN, "up", true)
-	assertMigrationVersion(t, databaseAdminDSN, 3)
+	assertMigrationVersion(t, databaseAdminDSN, 4)
 	databaseAdminPool := openPool(t, databaseAdminDSN, 4)
 	createApplicationLogin(t, ctx, databaseAdminPool)
 
@@ -641,6 +641,8 @@ func TestPostgreSQLDurableMessagingAtomicityRecoveryAndIsolation(t *testing.T) {
 
 	assertPoolTenantContextEmpty(t, ctx, applicationPool)
 	runGoose(t, databaseAdminDSN, "down", true)
+	assertMigrationVersion(t, databaseAdminDSN, 3)
+	runGoose(t, databaseAdminDSN, "down", true)
 	assertMigrationVersion(t, databaseAdminDSN, 2)
 	downOutput := runGoose(t, databaseAdminDSN, "down", false)
 	if !strings.Contains(downOutput, "contains durable data and is forward-only") {
@@ -655,7 +657,7 @@ func TestPostgreSQLDurableMessagingAtomicityRecoveryAndIsolation(t *testing.T) {
 		t.Fatalf("Tenant B Outbox status after refused Down = %#v, %v", status, err)
 	}
 	runGoose(t, databaseAdminDSN, "up", true)
-	assertMigrationVersion(t, databaseAdminDSN, 3)
+	assertMigrationVersion(t, databaseAdminDSN, 4)
 }
 
 func assertDatabaseRejectsInvalidFailureKind(

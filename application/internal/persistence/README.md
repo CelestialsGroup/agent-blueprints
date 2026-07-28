@@ -63,3 +63,11 @@ Fanout creation rejects an active AgentRun without a matching active RuntimeRun.
 Database admission guards share the WorkOrder lock, so a new Run or accepted
 Child Admission cannot race version one; a rejected late-spawn decision remains
 an appendable denial receipt.
+
+The B03.1 WorkflowRun repository records only a caller-confirmed durable
+orchestration start. It validates framework-neutral domain values, locks the
+Tenant-qualified WorkOrder, rejects terminal or time-inconsistent authority,
+and appends one immutable binding. Exact replays return the persisted fact;
+WorkflowRun ID, WorkOrder, or binding-digest reuse with different content fails
+closed. The repository never contacts Temporal and exposes no pgx, sqlc, native
+Run ID, namespace, endpoint, or History value.

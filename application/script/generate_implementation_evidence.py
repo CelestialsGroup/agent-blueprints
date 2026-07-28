@@ -27,6 +27,28 @@ COMPONENTS = {
         "source_files": ["go.mod", "go.sum", "script/validate_implementation.sh"],
         "source_directories": ["cmd/agent-access", "internal/agentaccess"],
     },
+    "agent-worker": {
+        "artifact_name": "agent-worker-linux-arm64",
+        "build_system": "go1.26.5 linux/arm64",
+        "toolchain_keys": ["GO_TOOLCHAIN_IMAGE"],
+        "inventory_tags": ["orchestration", "persistence"],
+        "source_files": [
+            "go.mod",
+            "go.sum",
+            "script/validate_implementation.sh",
+            "script/test_temporal_integration.sh",
+        ],
+        "source_directories": [
+            "cmd/agent-worker",
+            "db/migration",
+            "db/query",
+            "internal/domain/orchestration",
+            "internal/generated/agentdb",
+            "internal/orchestration/temporaladapter",
+            "internal/persistence",
+            "test/replay",
+        ],
+    },
     "native-runtime": {
         "artifact_name": "agent-native-runtime-wheel",
         "build_system": "uv0.11.30+hatchling1.31.0+python3.14.6",
@@ -145,11 +167,11 @@ def create_sbom(component_name: str, source_digest: str, inventory: list[dict[st
         "spdxVersion": "SPDX-2.3",
         "dataLicense": "CC0-1.0",
         "SPDXID": "SPDXRef-DOCUMENT",
-        "name": f"{component_name}-b01",
+        "name": f"{component_name}-implementation",
         "documentNamespace": f"https://github.com/shell-echo/agent/spdx/{component_name}/{source_digest}",
         "creationInfo": {
             "created": "2000-01-01T00:00:00Z",
-            "creators": ["Tool: agent-b01-evidence-generator"],
+            "creators": ["Tool: agent-implementation-evidence-generator"],
         },
         "packages": packages,
         "relationships": relationships,
@@ -222,7 +244,7 @@ def create_provenance(
         "predicateType": "https://slsa.dev/provenance/v1",
         "predicate": {
             "buildDefinition": {
-                "buildType": "https://github.com/shell-echo/agent/build-types/phase0-b01/v1",
+                "buildType": "https://github.com/shell-echo/agent/build-types/phase0-implementation/v1",
                 "externalParameters": {
                     "component": component_name,
                     "buildSystem": build_system,
@@ -234,7 +256,7 @@ def create_provenance(
                 "resolvedDependencies": materials,
             },
             "runDetails": {
-                "builder": {"id": "urn:agent:builder:phase0-b01"},
+                "builder": {"id": "urn:agent:builder:phase0-implementation"},
                 "metadata": {"invocationId": source_digest},
             },
         },
@@ -291,6 +313,7 @@ def verify_component_evidence(
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--agent-access-artifact", type=Path, required=True)
+    parser.add_argument("--agent-worker-artifact", type=Path, required=True)
     parser.add_argument("--dependency-lock", type=Path, required=True)
     parser.add_argument("--native-runtime-artifact", type=Path, required=True)
     parser.add_argument("--traceability-map", type=Path, required=True)
@@ -300,6 +323,7 @@ def main() -> None:
 
     artifacts = {
         "agent-access": args.agent_access_artifact,
+        "agent-worker": args.agent_worker_artifact,
         "native-runtime": args.native_runtime_artifact,
     }
     for path in artifacts.values():
@@ -331,7 +355,12 @@ def main() -> None:
     manifest_components: dict[str, dict[str, str]] = {}
 
     for component_name, component in COMPONENTS.items():
-        component_inventory = [item for item in inventory if component_name in item["components"]]
+        inventory_tags = component.get("inventory_tags", [component_name])
+        component_inventory = [
+            item
+            for item in inventory
+            if any(tag in item["components"] for tag in inventory_tags)
+        ]
         snapshot_digest = source_tree_digest(source_paths(component))
         artifact_digest = sha256_file(artifacts[component_name])
         sbom = create_sbom(component_name, snapshot_digest, component_inventory)
@@ -346,7 +375,7 @@ def main() -> None:
             [toolchain[key] for key in component["toolchain_keys"]],
             component_inventory,
             upstream_materials,
-            "linux/arm64" if component_name == "agent-access" else "py3-none-any",
+            "py3-none-any" if component_name == "native-runtime" else "linux/arm64",
         )
         statement_path = args.output_dir / f"{component_name}.provenance.json"
         write_json(statement_path, statement)
@@ -390,7 +419,7 @@ def main() -> None:
     write_json(args.output_dir / "manifest.json", manifest)
     print(
         "Generated and verified locked upstream materials, Phase 0 traceability, "
-        "SPDX 2.3, SLSA v1, and BuildProvenance evidence for 2 B01 artifacts."
+        "SPDX 2.3, SLSA v1, and BuildProvenance evidence for 3 implementation artifacts."
     )
 
 

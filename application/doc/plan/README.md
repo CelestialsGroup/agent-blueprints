@@ -20,3 +20,6 @@ Current plans:
 - `B02.3-postgresql-runtime-control-safety-ledgers.md`: bounded PostgreSQL
   Runtime Command, System Safety Control, and AgentRun Control Fanout ledgers,
   their narrow authority parents, recovery evidence, and unproved boundaries.
+- `B03.1-temporal-orchestration-replay-foundation.md`: bounded Temporal
+  dependency admission, adapter, WorkflowRun start-confirmation, worker
+  versioning, real-Temporal recovery, and deterministic Replay foundation.

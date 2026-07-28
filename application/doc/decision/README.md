@@ -17,3 +17,6 @@ Current records:
 - `0003-postgresql-runtime-control-safety-ledgers.md`: B02.3 narrow authority
   parents, command/control Outbox bindings, Fanout versions/leases, and rollback
   boundary.
+- `0004-temporal-orchestration-replay-foundation.md`: B03.1 Temporal supply-chain
+  pins, adapter-private boundaries, Worker versioning, Replay, and blocked
+  production surfaces.

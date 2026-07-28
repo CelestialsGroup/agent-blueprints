@@ -35,3 +35,8 @@ locked RuntimeRun target capture, version snapshots,
 replay reads version one plus its persisted target/command bindings, so later
 progress versions do not change the accepted creation identity. Repository code
 maps these rows to domain values and performs no network I/O in a transaction.
+
+`workflow_runs.sql` contains only immutable insert and Tenant-qualified lookup
+operations. The repository locks the referenced WorkOrder before confirmation,
+classifies an identical fact as replay, and rejects reuse of the WorkflowRun,
+WorkOrder, or orchestration-binding identity for different content.

@@ -75,8 +75,8 @@ if len(go_sum_lines) != 2:
 
 evidence: dict[str, Any] = {
     "schema_version": 1,
-    "evidence_id": "agent-b02.3-postgresql-runtime-control-safety-ledgers-integration",
-    "scope": "PostgreSQL bootstrap and Tenant/RLS isolation; B02.2 durable Transport messaging; B02.3 Runtime Command, System Safety Control, and AgentRun Control Fanout ledgers",
+    "evidence_id": "agent-b03.1-postgresql-orchestration-foundation-integration",
+    "scope": "PostgreSQL bootstrap and Tenant/RLS isolation; B02.2 durable Transport messaging; B02.3 runtime-control ledgers; B03.1 immutable WorkflowRun start-confirmation ledger",
     "result": "passed",
     "command": args.test_command,
     "exit_code": 0,
@@ -126,6 +126,7 @@ evidence: dict[str, Any] = {
             [ROOT / "sqlc.yaml"]
             + list((ROOT / "db/query").glob("*.sql"))
             + list((ROOT / "internal/domain/tenancy").glob("*.go"))
+            + list((ROOT / "internal/domain/orchestration").glob("*.go"))
             + list((ROOT / "internal/messaging").glob("*.go"))
             + list((ROOT / "internal/safety").glob("*.go"))
             + list((ROOT / "internal/persistence").glob("*.go"))
@@ -146,7 +147,7 @@ evidence: dict[str, Any] = {
         "SystemSafetyControl plus Contract-valid Canonical Platform Event atomicity",
         "authoritative Safety Controller or trigger-evidence admission and a production SystemSafetyAuthorityVerifier",
         "full wire conformance for Contract-unbounded or PostgreSQL-unrepresentable identifiers",
-        "complete WorkOrder, WorkflowRun, AgentRun, RunManifest, Child Admission, Invocation, or Runtime lifecycle persistence",
+        "complete WorkOrder, WorkflowRun RootBinding, AgentRun, RunManifest, Child Admission, Invocation, or Runtime lifecycle persistence",
         "Runtime HTTP, token, or Provider Conformance",
         "Canonical source Inbox identity while the locked Contract permits PostgreSQL-unrepresentable NUL strings",
         "external Broker or production Redis integration",

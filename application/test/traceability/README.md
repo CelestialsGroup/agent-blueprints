@@ -7,9 +7,11 @@ It references implementation and test files; it does not copy Contract rules.
 B01 intentionally contained no implementation claims. B02.2 also makes no
 Phase 0 implementation claim: its only candidate, Canonical source Inbox
 uniqueness, is blocked because the locked Contract accepts escaped NUL in source
-identifiers while PostgreSQL text cannot represent it. Transport Outbox/Inbox
-component evidence remains valid, but all mapped Phase 0 responsibilities stay
-explicitly unimplemented.
+identifiers while PostgreSQL text cannot represent it. B03.1 claims only
+`workflow_run_optional_unique_binding`, whose complete DDL responsibility is
+covered by the immutable unique WorkOrder binding and real PostgreSQL negative,
+concurrency, and rollback tests. Broader WorkflowRun, RootBinding, orchestration,
+stable semantic, and lifecycle Check IDs remain explicitly unimplemented.
 
 A future `implemented` claim must:
 

@@ -43,14 +43,26 @@ The PostgreSQL catalog check also confirms that no internal Platform Event table
 was invented. The suite runs three times under Go's race detector. It does not
 substitute mocks for database locks, constraints, RLS, transactions, or recovery.
 
+B03.1 extends the PostgreSQL harness with exact WorkflowRun Owner/RLS/ACL checks,
+empty and data-bearing rollback classification, immutable append behavior,
+Tenant-qualified reads and writes, WorkOrder/ID/binding conflicts, direct SQL
+constraint rejection, transaction rollback, concurrent unique confirmation,
+and connection-pool TenantContext cleanup. The Temporal harness uses the pinned
+disposable Temporal Server plus PostgreSQL to prove stable duplicate Start,
+lost-response Describe reconciliation, Activity retry, Worker stop/restart,
+Continue-as-New identity, decoded History payload hygiene, and deterministic
+Replay under the race detector. These tests exercise an integration-only Start
+caller and do not open the production Start path.
+
 Canonical source Inbox evidence is intentionally absent because the locked
 Contract identifier profile is not representable in PostgreSQL text. The
 AgentRuntimeCommand Contract also leaves several indexed IDs unbounded; the
 Application's 200-rune/U+0000 rejection is a tested implementation subset, not
 full wire conformance.
 
-Each successful run emits a generated B02.3 evidence manifest under
-`build/evidence/b02.3` that binds its log, source digests, tool/image pins, and
-dependency lock. It retains B02.1/B02.2 regression evidence but makes no
+Each successful full validation emits generated PostgreSQL and Temporal evidence
+under `build/evidence/b03.1`. The manifests bind commands, Race/repeat results,
+logs, History and Replay fixture digests, source sets, dependency lock, and exact
+tool/image pins. They retain B02.1-B02.3 regression evidence but make no
 Canonical Platform Event, complete lifecycle, Phase 0B, reliability, freeze, or
 production claim.

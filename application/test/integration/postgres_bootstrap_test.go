@@ -38,8 +38,11 @@ func TestBootstrapMigrationRejectsDestructiveDownAndRemainsUp(t *testing.T) {
 
 	databaseDSN := replaceDatabase(t, adminDSN, agentDatabase, "postgres", "b021-integration-admin")
 	runGoose(t, databaseDSN, "up", true)
-	assertMigrationVersion(t, databaseDSN, 3)
+	assertMigrationVersion(t, databaseDSN, 4)
 	runGoose(t, databaseDSN, "up", true)
+	assertMigrationVersion(t, databaseDSN, 4)
+
+	runGoose(t, databaseDSN, "down", true)
 	assertMigrationVersion(t, databaseDSN, 3)
 
 	runGoose(t, databaseDSN, "down", true)
@@ -56,7 +59,7 @@ func TestBootstrapMigrationRejectsDestructiveDownAndRemainsUp(t *testing.T) {
 	assertBootstrapTables(t, databaseDSN)
 
 	runGoose(t, databaseDSN, "up", true)
-	assertMigrationVersion(t, databaseDSN, 3)
+	assertMigrationVersion(t, databaseDSN, 4)
 
 	createDatabase(t, ctx, adminPool, forbiddenDatabase)
 	t.Cleanup(func() { dropDatabase(t, adminPool, forbiddenDatabase) })
@@ -479,7 +482,7 @@ func assertTableSecurity(t *testing.T, ctx context.Context, pool *pgxpool.Pool) 
 		"safety_trigger_evidence", "child_agent_run_admission_decisions",
 		"system_safety_controls", "agent_runtime_commands", "agent_run_control_fanouts",
 		"agent_run_control_fanout_targets", "agent_run_control_fanout_versions",
-		"agent_run_control_fanout_target_versions",
+		"agent_run_control_fanout_target_versions", "workflow_runs",
 	})
 }
 
@@ -553,6 +556,7 @@ func assertExactApplicationPrivileges(t *testing.T, ctx context.Context, pool *p
 		"agent.agent_run_control_fanout_targets":         {"SELECT": true},
 		"agent.agent_run_control_fanout_versions":        {"SELECT": true},
 		"agent.agent_run_control_fanout_target_versions": {"SELECT": true},
+		"agent.workflow_runs":                            {"SELECT": true},
 	}
 	for table, expectedPrivileges := range tablePrivileges {
 		for _, privilege := range []string{"SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE", "REFERENCES", "TRIGGER"} {
@@ -695,6 +699,18 @@ func assertExactApplicationPrivileges(t *testing.T, ctx context.Context, pool *p
 			"system_safety_control_digest": true, "control_state": true,
 		},
 	})
+	assertExactColumnPrivileges(t, ctx, pool, "agent.workflow_runs", map[string]map[string]bool{
+		"INSERT": {
+			"tenant_id": true, "workflow_run_id": true, "work_order_id": true,
+			"workflow_id": true, "workflow_version": true,
+			"workflow_definition_build_id": true, "workflow_definition_digest": true,
+			"orchestration_engine_id": true, "orchestration_engine_version": true,
+			"workflow_execution_id": true, "native_execution_reference_digest": true,
+			"worker_deployment": true, "worker_build_id": true,
+			"versioning_behavior": true, "orchestration_binding_digest": true,
+			"created_at": true,
+		},
+	})
 
 	checks := []struct {
 		query string
@@ -814,7 +830,7 @@ func assertMigratorGoosePath(
 	}
 	migratorDSN := replaceDatabase(t, clusterAdminDSN, agentDatabase, migratorLogin, migratorPass)
 	runGooseInDirectory(t, migratorDSN, migrationDirectory, "up", true, true)
-	assertMigrationVersion(t, databaseAdminDSN, 4)
+	assertMigrationVersion(t, databaseAdminDSN, 5)
 
 	var owner string
 	if err := adminPool.QueryRow(context.Background(), `
@@ -832,7 +848,7 @@ func assertMigratorGoosePath(
 	}
 
 	runGooseInDirectory(t, migratorDSN, migrationDirectory, "down", true, true)
-	assertMigrationVersion(t, databaseAdminDSN, 3)
+	assertMigrationVersion(t, databaseAdminDSN, 4)
 	var exists bool
 	if err := adminPool.QueryRow(context.Background(), `
 		SELECT to_regclass('agent.migrator_role_probe') IS NOT NULL

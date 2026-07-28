@@ -295,3 +295,22 @@ type AgentWorkOrderControlRequest struct {
 	ApprovalComment           string
 	AcceptedAt                pgtype.Timestamptz
 }
+
+type AgentWorkflowRun struct {
+	TenantID                       string
+	WorkflowRunID                  string
+	WorkOrderID                    string
+	WorkflowID                     string
+	WorkflowVersion                string
+	WorkflowDefinitionBuildID      string
+	WorkflowDefinitionDigest       string
+	OrchestrationEngineID          string
+	OrchestrationEngineVersion     string
+	WorkflowExecutionID            string
+	NativeExecutionReferenceDigest string
+	WorkerDeployment               string
+	WorkerBuildID                  string
+	VersioningBehavior             string
+	OrchestrationBindingDigest     string
+	CreatedAt                      pgtype.Timestamptz
+}

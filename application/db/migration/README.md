@@ -62,3 +62,11 @@ tables enable and force RLS and expose exact column grants to the non-owner
 Application Role. Empty Down/Re-Up is supported; the compatibility Outbox
 column remains while B02.3 constraints are removed. Any authoritative B02.3
 data makes the migration forward-only.
+
+`00004_temporal_orchestration_replay_foundation.sql` adds the Tenant-qualified,
+immutable WorkflowRun confirmation ledger. It binds exactly one WorkflowRun to
+one existing WorkOrder, enforces global Platform identity and binding-digest
+collisions fail closed, enables and forces RLS, and grants `agent_app` only
+`SELECT` plus reviewed column-level `INSERT`. Native Temporal namespace,
+endpoint, Run ID, and History are intentionally absent. Empty Down/Re-Up is
+supported; any WorkflowRun makes the migration forward-only.

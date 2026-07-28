@@ -1,0 +1,316 @@
+{
+  "events": [
+    {
+      "eventId": "1",
+      "eventTime": "2026-07-28T09:05:04.119468259Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_EXECUTION_STARTED",
+      "taskId": "1048708",
+      "workflowExecutionStartedEventAttributes": {
+        "workflowType": {
+          "name": "agent.work-order.v1"
+        },
+        "taskQueue": {
+          "name": "agent-b031-work-orders",
+          "kind": "TASK_QUEUE_KIND_NORMAL"
+        },
+        "input": {
+          "payloads": [
+            {
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              },
+              "data": "eyJ0ZW5hbnRfaWQiOiJ0ZW5hbnQtYSIsIndvcmtfb3JkZXJfaWQiOiJ3b3JrLW9yZGVyLXJlY292ZXJ5LTE3ODUyMjk1MDQwNzcxOTUzMDEiLCJ3b3JrZmxvd19ydW5faWQiOiJ3b3JrZmxvdy1ydW4tcmVjb3ZlcnktMTc4NTIyOTUwNDA3NzE5NTMwMSIsIndvcmtmbG93X2V4ZWN1dGlvbl9pZCI6IndvcmtmbG93LWV4ZWN1dGlvbi1yZWNvdmVyeS0xNzg1MjI5NTA0MDc3MTk1MzAxIiwid29ya2Zsb3dfaWQiOiJ3b3JrZmxvdy5hZ2VudC1leGVjdXRpb24iLCJ3b3JrZmxvd192ZXJzaW9uIjoiMS4wLjAiLCJkZWZpbml0aW9uX2J1aWxkX2lkIjoiYjAzLjEtODY3NDVkMTg0MTNjNGQwZiIsImRlZmluaXRpb25fZGlnZXN0Ijoic2hhMjU2Ojg2NzQ1ZDE4NDEzYzRkMGZjMzU0MmFkZmZmNWI2ZDA4ZjY5MDZiNzViODQzNzZkM2M4OTBjMzIyMjlkZDIxMWQiLCJlbmdpbmVfdmVyc2lvbiI6IjEuMjkuNyIsIndvcmtlcl9kZXBsb3ltZW50IjoiYWdlbnQtd29ya2VyLWIwMzEiLCJ3b3JrZXJfYnVpbGRfaWQiOiJiMDMuMS04Njc0NWQxODQxM2M0ZDBmIiwic3RhcnRfaWRlbnRpdHlfZGlnZXN0Ijoic2hhMjU2OmY0OTBmNDYyYzIyMGM5OWE4YjZjMjE5NTMzNzBmNDMxM2Q1YjlkMDlkYmMzOGU2YjBlOTYxODVlNjQ0NGQzZTEiLCJjcmVhdGVkX2F0IjoiMjAyNi0wNy0yOFQwOTowNTowNC4xMDM5MjdaIiwiYWN0aXZpdHlfc2NoZWR1bGVfdGltZW91dCI6MTIwMDAwMDAwMDAwLCJhY3Rpdml0eV9zdGFydF90aW1lb3V0IjoxNTAwMDAwMDAwMCwic3RhcnRfY29uZmlybWVkIjpmYWxzZSwiZ2VuZXJhdGlvbiI6MH0="
+            }
+          ]
+        },
+        "workflowExecutionTimeout": "86400s",
+        "workflowRunTimeout": "86400s",
+        "workflowTaskTimeout": "10s",
+        "originalExecutionRunId": "019fa7f8-6e77-7722-b482-09c5726b0587",
+        "identity": "agent-b03.1-integration-client",
+        "firstExecutionRunId": "019fa7f8-6e77-7722-b482-09c5726b0587",
+        "attempt": 1,
+        "workflowExecutionExpirationTime": "2026-07-29T09:05:04.119Z",
+        "firstWorkflowTaskBackoff": "0s",
+        "memo": {
+          "fields": {
+            "agent_start_identity_digest": {
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              },
+              "data": "InNoYTI1NjpmNDkwZjQ2MmMyMjBjOTlhOGI2YzIxOTUzMzcwZjQzMTNkNWI5ZDA5ZGJjMzhlNmIwZTk2MTg1ZTY0NDRkM2UxIg=="
+            }
+          }
+        },
+        "header": {},
+        "workflowId": "work-order/work-order-recovery-1785229504077195301"
+      }
+    },
+    {
+      "eventId": "2",
+      "eventTime": "2026-07-28T09:05:04.119548926Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+      "taskId": "1048709",
+      "workflowTaskScheduledEventAttributes": {
+        "taskQueue": {
+          "name": "agent-b031-work-orders",
+          "kind": "TASK_QUEUE_KIND_NORMAL"
+        },
+        "startToCloseTimeout": "10s",
+        "attempt": 1
+      }
+    },
+    {
+      "eventId": "3",
+      "eventTime": "2026-07-28T09:05:04.123927592Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+      "taskId": "1048715",
+      "workflowTaskStartedEventAttributes": {
+        "scheduledEventId": "2",
+        "identity": "agent-b03.1-integration-client",
+        "requestId": "61f37a93-504e-4be1-8c08-68ac03536980",
+        "historySizeBytes": "1302"
+      }
+    },
+    {
+      "eventId": "4",
+      "eventTime": "2026-07-28T09:05:04.128020842Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+      "taskId": "1048719",
+      "workflowTaskCompletedEventAttributes": {
+        "scheduledEventId": "2",
+        "startedEventId": "3",
+        "identity": "agent-b03.1-integration-client",
+        "workerVersion": {
+          "buildId": "b03.1-86745d18413c4d0f",
+          "useVersioning": true
+        },
+        "sdkMetadata": {
+          "langUsedFlags": [
+            3
+          ],
+          "sdkName": "temporal-go",
+          "sdkVersion": "1.46.0"
+        },
+        "meteringMetadata": {},
+        "versioningBehavior": "VERSIONING_BEHAVIOR_PINNED",
+        "workerDeploymentName": "agent-worker-b031",
+        "deploymentVersion": {
+          "buildId": "b03.1-86745d18413c4d0f",
+          "deploymentName": "agent-worker-b031"
+        }
+      }
+    },
+    {
+      "eventId": "5",
+      "eventTime": "2026-07-28T09:05:04.128056259Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+      "taskId": "1048720",
+      "activityTaskScheduledEventAttributes": {
+        "activityId": "5",
+        "activityType": {
+          "name": "agent.workflow-run.confirm-start.v1"
+        },
+        "taskQueue": {
+          "name": "agent-b031-work-orders",
+          "kind": "TASK_QUEUE_KIND_NORMAL"
+        },
+        "header": {},
+        "input": {
+          "payloads": [
+            {
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              },
+              "data": "eyJ0ZW5hbnRfaWQiOiJ0ZW5hbnQtYSIsIndvcmtfb3JkZXJfaWQiOiJ3b3JrLW9yZGVyLXJlY292ZXJ5LTE3ODUyMjk1MDQwNzcxOTUzMDEiLCJ3b3JrZmxvd19ydW5faWQiOiJ3b3JrZmxvdy1ydW4tcmVjb3ZlcnktMTc4NTIyOTUwNDA3NzE5NTMwMSIsIndvcmtmbG93X2V4ZWN1dGlvbl9pZCI6IndvcmtmbG93LWV4ZWN1dGlvbi1yZWNvdmVyeS0xNzg1MjI5NTA0MDc3MTk1MzAxIiwid29ya2Zsb3dfaWQiOiJ3b3JrZmxvdy5hZ2VudC1leGVjdXRpb24iLCJ3b3JrZmxvd192ZXJzaW9uIjoiMS4wLjAiLCJkZWZpbml0aW9uX2J1aWxkX2lkIjoiYjAzLjEtODY3NDVkMTg0MTNjNGQwZiIsImRlZmluaXRpb25fZGlnZXN0Ijoic2hhMjU2Ojg2NzQ1ZDE4NDEzYzRkMGZjMzU0MmFkZmZmNWI2ZDA4ZjY5MDZiNzViODQzNzZkM2M4OTBjMzIyMjlkZDIxMWQiLCJlbmdpbmVfdmVyc2lvbiI6IjEuMjkuNyIsIndvcmtlcl9kZXBsb3ltZW50IjoiYWdlbnQtd29ya2VyLWIwMzEiLCJ3b3JrZXJfYnVpbGRfaWQiOiJiMDMuMS04Njc0NWQxODQxM2M0ZDBmIiwic3RhcnRfaWRlbnRpdHlfZGlnZXN0Ijoic2hhMjU2OmY0OTBmNDYyYzIyMGM5OWE4YjZjMjE5NTMzNzBmNDMxM2Q1YjlkMDlkYmMzOGU2YjBlOTYxODVlNjQ0NGQzZTEiLCJjcmVhdGVkX2F0IjoiMjAyNi0wNy0yOFQwOTowNTowNC4xMDM5MjdaIiwiYWN0aXZpdHlfc2NoZWR1bGVfdGltZW91dCI6MTIwMDAwMDAwMDAwLCJhY3Rpdml0eV9zdGFydF90aW1lb3V0IjoxNTAwMDAwMDAwMCwic3RhcnRfY29uZmlybWVkIjpmYWxzZSwiZ2VuZXJhdGlvbiI6MH0="
+            }
+          ]
+        },
+        "scheduleToCloseTimeout": "120s",
+        "scheduleToStartTimeout": "120s",
+        "startToCloseTimeout": "15s",
+        "heartbeatTimeout": "0s",
+        "workflowTaskCompletedEventId": "4",
+        "retryPolicy": {
+          "initialInterval": "1s",
+          "backoffCoefficient": 2,
+          "maximumInterval": "30s",
+          "maximumAttempts": 10
+        },
+        "useWorkflowBuildId": true
+      }
+    },
+    {
+      "eventId": "6",
+      "eventTime": "2026-07-28T09:05:05.139741468Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+      "taskId": "1048731",
+      "activityTaskStartedEventAttributes": {
+        "scheduledEventId": "5",
+        "identity": "agent-b03.1-integration-client",
+        "requestId": "dc64994b-51c4-4b96-b86d-4d496eb5e128",
+        "attempt": 2,
+        "lastFailure": {
+          "message": "confirm WorkflowRun: injected transient PostgreSQL boundary failure",
+          "source": "GoSDK",
+          "cause": {
+            "message": "injected transient PostgreSQL boundary failure",
+            "source": "GoSDK",
+            "applicationFailureInfo": {}
+          },
+          "applicationFailureInfo": {
+            "type": "wrapError"
+          }
+        },
+        "workerVersion": {
+          "buildId": "b03.1-86745d18413c4d0f",
+          "useVersioning": true
+        }
+      }
+    },
+    {
+      "eventId": "7",
+      "eventTime": "2026-07-28T09:05:05.161202301Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_COMPLETED",
+      "taskId": "1048732",
+      "activityTaskCompletedEventAttributes": {
+        "scheduledEventId": "5",
+        "startedEventId": "6",
+        "identity": "agent-b03.1-integration-client"
+      }
+    },
+    {
+      "eventId": "8",
+      "eventTime": "2026-07-28T09:05:05.161241968Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+      "taskId": "1048733",
+      "workflowTaskScheduledEventAttributes": {
+        "taskQueue": {
+          "name": "3d2800180bbd:483414b7-95a1-41f3-8121-d9e540b579d4",
+          "kind": "TASK_QUEUE_KIND_STICKY",
+          "normalName": "agent-b031-work-orders"
+        },
+        "startToCloseTimeout": "10s",
+        "attempt": 1
+      }
+    },
+    {
+      "eventId": "9",
+      "eventTime": "2026-07-28T09:05:05.164275968Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+      "taskId": "1048737",
+      "workflowTaskStartedEventAttributes": {
+        "scheduledEventId": "8",
+        "identity": "agent-b03.1-integration-client",
+        "requestId": "2873a6bb-776d-4faf-be0e-9f411d89df45",
+        "historySizeBytes": "3005"
+      }
+    },
+    {
+      "eventId": "10",
+      "eventTime": "2026-07-28T09:05:05.176498301Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+      "taskId": "1048741",
+      "workflowTaskCompletedEventAttributes": {
+        "scheduledEventId": "8",
+        "startedEventId": "9",
+        "identity": "agent-b03.1-integration-client",
+        "workerVersion": {
+          "buildId": "b03.1-86745d18413c4d0f",
+          "useVersioning": true
+        },
+        "sdkMetadata": {},
+        "meteringMetadata": {},
+        "versioningBehavior": "VERSIONING_BEHAVIOR_PINNED",
+        "workerDeploymentName": "agent-worker-b031",
+        "deploymentVersion": {
+          "buildId": "b03.1-86745d18413c4d0f",
+          "deploymentName": "agent-worker-b031"
+        }
+      }
+    },
+    {
+      "eventId": "11",
+      "eventTime": "2026-07-28T09:05:05.207577843Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_EXECUTION_SIGNALED",
+      "taskId": "1048755",
+      "workflowExecutionSignaledEventAttributes": {
+        "signalName": "agent.work-order.control.v1",
+        "input": {
+          "payloads": [
+            {
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              },
+              "data": "ImNvbXBsZXRlIg=="
+            }
+          ]
+        },
+        "identity": "agent-b03.1-integration-client",
+        "header": {}
+      }
+    },
+    {
+      "eventId": "12",
+      "eventTime": "2026-07-28T09:05:05.207580510Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+      "taskId": "1048756",
+      "workflowTaskScheduledEventAttributes": {
+        "taskQueue": {
+          "name": "3d2800180bbd:483414b7-95a1-41f3-8121-d9e540b579d4",
+          "kind": "TASK_QUEUE_KIND_STICKY",
+          "normalName": "agent-b031-work-orders"
+        },
+        "startToCloseTimeout": "10s",
+        "attempt": 1
+      }
+    },
+    {
+      "eventId": "13",
+      "eventTime": "2026-07-28T09:05:05.208916426Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+      "taskId": "1048760",
+      "workflowTaskStartedEventAttributes": {
+        "scheduledEventId": "12",
+        "identity": "agent-b03.1-integration-client",
+        "requestId": "b72be778-931d-490d-8d53-968156373654",
+        "historySizeBytes": "3505"
+      }
+    },
+    {
+      "eventId": "14",
+      "eventTime": "2026-07-28T09:05:05.221038468Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+      "taskId": "1048764",
+      "workflowTaskCompletedEventAttributes": {
+        "scheduledEventId": "12",
+        "startedEventId": "13",
+        "identity": "agent-b03.1-integration-client",
+        "workerVersion": {
+          "buildId": "b03.1-86745d18413c4d0f",
+          "useVersioning": true
+        },
+        "sdkMetadata": {
+          "sdkName": "temporal-go",
+          "sdkVersion": "1.46.0"
+        },
+        "meteringMetadata": {},
+        "versioningBehavior": "VERSIONING_BEHAVIOR_PINNED",
+        "workerDeploymentName": "agent-worker-b031",
+        "deploymentVersion": {
+          "buildId": "b03.1-86745d18413c4d0f",
+          "deploymentName": "agent-worker-b031"
+        }
+      }
+    },
+    {
+      "eventId": "15",
+      "eventTime": "2026-07-28T09:05:05.221061343Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED",
+      "taskId": "1048765",
+      "workflowExecutionCompletedEventAttributes": {
+        "workflowTaskCompletedEventId": "14"
+      }
+    }
+  ]
+}

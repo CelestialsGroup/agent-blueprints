@@ -17,21 +17,27 @@ The current implementation provides:
 
 - the Go Agent Access process and lifecycle health endpoints;
 - the Python Native Runtime package bound to `runtime-core-v1`;
-- reproducible build, dependency, SBOM, and provenance evidence.
+- reproducible build, dependency, SBOM, and provenance evidence;
 - the B02.1 PostgreSQL bootstrap with separate Migrator/Application roles,
   Tenant/ClientApplication RLS, pgx transactions, and a sqlc-backed repository;
 - a disposable PostgreSQL 18.4 harness proving migration and tenant isolation
-  against a real database.
+  against a real database;
 - the B02.2 PostgreSQL transactional Outbox/Inbox, leased and fenced dispatcher
   store, globally unique Transport Message IDs, and atomic consumer dedupe;
 - repeated real-PostgreSQL race evidence for concurrent claims, lease recovery,
-  Inbox idempotency, and cross-tenant denial.
+  Inbox idempotency, and cross-tenant denial;
 - the bounded B02.3 PostgreSQL Runtime Command, System Safety Control, and
   AgentRun Control Fanout ledgers, with Tenant-qualified authority parents,
   full command/control Outbox delivery bindings, monotonic version snapshots,
   leased claims, fencing, recovery, and reconciliation evidence. System safety
   writes remain fail-closed until a production authority verifier and
-  authoritative controller/evidence admission slice exist.
+  authoritative controller/evidence admission slice exist;
+- the bounded B03.1 Temporal foundation: framework-neutral orchestration values,
+  an immutable PostgreSQL WorkflowRun start-confirmation ledger, stable
+  WorkOrder-derived Workflow IDs, lost-response reconciliation, deterministic
+  Workflow/Activity boundaries, a versioned Worker, sanitized History Replay,
+  and repeated real Temporal/PostgreSQL recovery evidence. No production caller
+  is wired to Workflow Start.
 
 ## Repository map
 
@@ -77,14 +83,13 @@ AGENT_CONTRACT_ROOT=/path/to/contract \
 make validate-implementation
 ```
 
-Only the Tenant/ClientApplication bootstrap, B02.2 durable messaging, and the
-bounded mechanics of the B02.3 runtime-control/safety-ledger component are
-implemented. B02.3's narrow WorkOrder, Run, Invocation, control-authority,
-evidence, and Child
-Admission parents close only the foreign-key and transaction invariants consumed
-by this slice; they are not complete lifecycle models. Safety authority
-admission/workload authentication and complete Canonical source
-Inbox identity, CanonicalEvent admission/Projection, Temporal orchestration,
-Runtime HTTP operations, and product execution remain future slices. Canonical
-source Inbox is specifically blocked until the locked Contract defines a
-PostgreSQL-representable identifier profile or stable encoding.
+Only the Tenant/ClientApplication bootstrap, B02.2 durable messaging, bounded
+B02.3 runtime-control ledgers, and bounded B03.1 orchestration foundation are
+implemented. B02.3's narrow parent facts close only the foreign-key and
+transaction invariants consumed by those slices; they are not complete
+lifecycle models. Authenticated production Start-intent ownership, WorkOrder
+Start Outbox/Event atomicity, RootBinding, RunManifest, Safety authority
+admission, CanonicalEvent admission/Projection, Runtime HTTP operations, and
+product execution remain future slices. Canonical source Inbox is specifically
+blocked until the locked Contract defines a PostgreSQL-representable identifier
+profile or stable encoding.

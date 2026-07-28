@@ -5,7 +5,7 @@ ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 source "$ROOT/toolchain/toolchain.env"
 
 CACHE_DIR="${1:-$ROOT/.cache/implementation}"
-EVIDENCE_DIR="${2:-$ROOT/build/evidence/b02.3}"
+EVIDENCE_DIR="${2:-$ROOT/build/evidence/b03.1}"
 CONTAINER_NAME="agent-b023-postgres-$$"
 NETWORK_NAME="agent-b023-$$"
 POSTGRES_PASSWORD="b021-integration-admin"

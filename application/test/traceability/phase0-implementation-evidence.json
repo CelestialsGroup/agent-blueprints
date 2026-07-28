@@ -1,4 +1,25 @@
 {
-  "claims": [],
+  "claims": [
+    {
+      "check_id": "workflow_run_optional_unique_binding",
+      "status": "implemented",
+      "evidence": [
+        {
+          "evidence_type": "migration",
+          "path": "db/migration/00004_temporal_orchestration_replay_foundation.sql",
+          "case_ids": [
+            "workflow_runs_work_order_uk"
+          ]
+        },
+        {
+          "evidence_type": "integration_test",
+          "path": "test/integration/postgres_workflow_run_test.go",
+          "case_ids": [
+            "TestPostgreSQLWorkflowRunLedger"
+          ]
+        }
+      ]
+    }
+  ],
   "schema_version": 1
 }

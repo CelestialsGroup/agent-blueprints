@@ -12,7 +12,7 @@ test -f "$CONTRACT_ROOT/schemas/build-provenance.schema.json"
 
 UV_TOOLCHAIN_TAG="agent-uv-toolchain:${UV_VERSION}-python${PYTHON_VERSION}"
 EVIDENCE_DIR="$ROOT/build/evidence/b01"
-B02_EVIDENCE_DIR="$ROOT/build/evidence/b02.3"
+B03_EVIDENCE_DIR="$ROOT/build/evidence/b03.1"
 CACHE_DIR="$ROOT/.cache/implementation"
 SQLC_CHECK_DIR="$CACHE_DIR/sqlc-check"
 NATIVE_WHEEL="agent_native_runtime-0.1.0-py3-none-any.whl"
@@ -34,7 +34,7 @@ mkdir -p \
   "$EVIDENCE_DIR/artifacts/native" \
   "$EVIDENCE_DIR/evidence" \
   "$EVIDENCE_DIR/rebuild/native" \
-  "$B02_EVIDENCE_DIR"
+  "$B03_EVIDENCE_DIR"
 
 docker run --rm \
   -e HOME=/tmp \
@@ -97,7 +97,7 @@ docker run --rm \
     go test -race ./...
   '
 
-"$ROOT/script/test_postgres_integration.sh" "$CACHE_DIR" "$B02_EVIDENCE_DIR"
+"$ROOT/script/test_postgres_integration.sh" "$CACHE_DIR" "$B03_EVIDENCE_DIR"
 
 docker run --rm \
   -e GOCACHE=/cache/go-build \
@@ -117,7 +117,12 @@ docker run --rm \
     go build -trimpath -buildvcs=false -ldflags="-buildid=" -o /out/artifacts/agent-access ./cmd/agent-access
     go build -trimpath -buildvcs=false -ldflags="-buildid=" -o /out/rebuild/agent-access ./cmd/agent-access
     cmp /out/artifacts/agent-access /out/rebuild/agent-access
+    go build -trimpath -buildvcs=false -ldflags="-buildid=" -o /out/artifacts/agent-worker ./cmd/agent-worker
+    go build -trimpath -buildvcs=false -ldflags="-buildid=" -o /out/rebuild/agent-worker ./cmd/agent-worker
+    cmp /out/artifacts/agent-worker /out/rebuild/agent-worker
   '
+
+"$ROOT/script/test_temporal_integration.sh" "$CACHE_DIR" "$B03_EVIDENCE_DIR"
 
 docker run --rm \
   -v "$EVIDENCE_DIR:/out:ro" \
@@ -238,10 +243,11 @@ docker run --rm \
   "$PYTHON_TOOLCHAIN_IMAGE" \
   python script/generate_implementation_evidence.py \
     --agent-access-artifact /out/artifacts/agent-access \
+    --agent-worker-artifact /out/artifacts/agent-worker \
     --dependency-lock /workspace/dependency-lock.json \
     --native-runtime-artifact "/out/artifacts/native/$NATIVE_WHEEL" \
     --traceability-map /workspace/test/traceability/phase0-implementation-evidence.json \
     --traceability-report /out/evidence/phase0-implementation-traceability.json \
     --output-dir /out/evidence
 
-echo "B02.3 component validation passed; B01 reproducible artifact evidence preserved."
+echo "B03.1 bounded orchestration validation passed; reproducible implementation artifact evidence preserved."

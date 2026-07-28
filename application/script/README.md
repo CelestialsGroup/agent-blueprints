@@ -17,13 +17,16 @@ explicit implemented/unimplemented report. A complete report is not itself a
 claim that Phase 0B is complete.
 
 `validate_implementation.sh` also runs gofmt detection, `go vet`, pinned
-Staticcheck, normal and Race tests, sqlc vet/regeneration comparison, and the
-disposable PostgreSQL integration suite. Downloaded release tools and module
-caches live only under the ignored `.cache/` tree.
+Staticcheck, normal and Race tests, sqlc vet/regeneration comparison, the
+disposable PostgreSQL and Temporal integration suites, deterministic History
+Replay, and reproducible `agent-access`, `agent-worker`, and Native Runtime
+builds. Downloaded release tools and module caches live only under the ignored
+`.cache/` tree.
 
-Successful PostgreSQL runs emit `build/evidence/b02.3/postgres-integration-evidence.json`
-and its bound test log. The manifest records the exact test command/result,
-source digests including the B02.3 safety/repository implementation, immutable
-tool/image pins, the current Blueprint/Contract dependency lock, and a validated
-Race/repeat summary. These are generated review artifacts, not committed status
-or Phase 0 check-ID claims.
+Successful full runs emit PostgreSQL and Temporal manifests under
+`build/evidence/b03.1` plus reproducible build, SPDX, provenance, and locked
+upstream evidence under `build/evidence/b01`. The B03.1 manifests record exact
+commands/results, source sets, History and Replay fixture digests, immutable
+tool/image pins, the current Blueprint/Contract dependency lock, and validated
+Race/repeat summaries. These are generated review artifacts, not committed
+status or Phase 0 check-ID claims.

@@ -28,7 +28,7 @@ func TestPostgreSQLRuntimeControlSafetyLedgers(t *testing.T) {
 
 	databaseAdminDSN := replaceDatabase(t, adminDSN, agentDatabase, "postgres", "b021-integration-admin")
 	runGoose(t, databaseAdminDSN, "up", true)
-	assertMigrationVersion(t, databaseAdminDSN, 3)
+	assertMigrationVersion(t, databaseAdminDSN, 4)
 	databaseAdminPool := openPool(t, databaseAdminDSN, 4)
 	assertControlOutboxBindings(t, ctx, databaseAdminPool)
 	assertCanonicalPlatformEventBoundary(t, ctx, databaseAdminPool)
@@ -260,6 +260,8 @@ func TestPostgreSQLRuntimeControlSafetyLedgers(t *testing.T) {
 	assertDatabaseRejectsInvalidControlFacts(t, ctx, databaseAdminPool)
 
 	assertPoolTenantContextEmpty(t, ctx, applicationPool)
+	runGoose(t, databaseAdminDSN, "down", true)
+	assertMigrationVersion(t, databaseAdminDSN, 3)
 	downOutput := runGoose(t, databaseAdminDSN, "down", false)
 	if !strings.Contains(downOutput, "runtime_control_safety_ledgers contains authoritative data and is forward-only") {
 		t.Fatalf("data-bearing B02.3 Down lacks classification: %s", downOutput)
