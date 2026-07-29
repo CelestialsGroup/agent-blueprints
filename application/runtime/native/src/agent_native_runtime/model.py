@@ -151,6 +151,8 @@ class MutationAdmission:
     operation_contract_id: str
     operation_digest_profile: str
     operation_request_digest: str
+    system_safety_control_id: str | None = None
+    system_safety_control_digest: str | None = None
     clock_skew_seconds: int = 0
 
     def validate(self, *, operation: str, now: datetime) -> None:
@@ -179,6 +181,22 @@ class MutationAdmission:
             ("operation_request_digest", self.operation_request_digest),
         ):
             require_digest(value, field)
+        if (self.system_safety_control_id is None) != (
+            self.system_safety_control_digest is None
+        ):
+            raise InvalidMutationError(
+                "mutation admission safety-control binding is incomplete"
+            )
+        if self.system_safety_control_id is not None:
+            require_identifier(
+                self.system_safety_control_id,
+                "system_safety_control_id",
+                maximum=500,
+            )
+            require_digest(
+                cast(str, self.system_safety_control_digest),
+                "system_safety_control_digest",
+            )
         if self.operation != operation:
             raise InvalidMutationError("mutation admission operation does not match")
         if self.operation not in RUNTIME_OPERATIONS:

@@ -65,13 +65,50 @@ class SecureAdmissionCore:
         self.tokens = RuntimeTokenVerifier(security, projection)
 
     @classmethod
-    def open(
+    def migrate(
+        cls,
+        runtime: RuntimeConfiguration,
+        security: SecurityConfiguration,
+        *,
+        clock: Clock = system_clock,
+    ) -> None:
+        cls._validate_configuration_binding(runtime, security)
+        projection = RuntimeContractProjection.load(security)
+        NativeRuntimeKernel.migrate(runtime, clock=clock)
+        store = NativeRuntimeKernel(runtime, clock=clock).store
+        store.bind_security_configuration(
+            configuration_digest=security.digest(),
+            contract_source_revision=projection.contract_source_revision,
+            contract_manifest_digest=projection.contract_manifest_digest,
+            runtime_suite_digest=projection.runtime_suite_digest,
+            schema_closure_digest=projection.schema_closure_digest,
+            now=clock(),
+        )
+
+    @classmethod
+    def open_current(
         cls,
         runtime: RuntimeConfiguration,
         security: SecurityConfiguration,
         *,
         clock: Clock = system_clock,
     ) -> SecureAdmissionCore:
+        cls._validate_configuration_binding(runtime, security)
+        projection = RuntimeContractProjection.load(security)
+        kernel = NativeRuntimeKernel.open_current(runtime, clock=clock)
+        kernel.store.check_security_configuration(
+            configuration_digest=security.digest(),
+            contract_source_revision=projection.contract_source_revision,
+            contract_manifest_digest=projection.contract_manifest_digest,
+            runtime_suite_digest=projection.runtime_suite_digest,
+            schema_closure_digest=projection.schema_closure_digest,
+        )
+        return cls(kernel, security, projection)
+
+    @staticmethod
+    def _validate_configuration_binding(
+        runtime: RuntimeConfiguration, security: SecurityConfiguration
+    ) -> None:
         if (
             runtime.provider_revision_id != security.provider_revision_id
             or runtime.runtime_revision != security.runtime_revision
@@ -80,17 +117,6 @@ class SecureAdmissionCore:
             raise AuthorizationBindingError(
                 "Runtime and security configuration bindings differ"
             )
-        projection = RuntimeContractProjection.load(security)
-        kernel = NativeRuntimeKernel.open(runtime, clock=clock)
-        kernel.store.bind_security_configuration(
-            configuration_digest=security.digest(),
-            contract_source_revision=projection.contract_source_revision,
-            contract_manifest_digest=projection.contract_manifest_digest,
-            runtime_suite_digest=projection.runtime_suite_digest,
-            schema_closure_digest=projection.schema_closure_digest,
-            now=clock(),
-        )
-        return cls(kernel, security, projection)
 
     def start(
         self,
@@ -108,9 +134,9 @@ class SecureAdmissionCore:
             compact_jws,
             authenticated_caller=authenticated_caller,
             operation="start",
-            context=context,
             now=now,
         )
+        self._validate_admission_context(admission, context)
         self._validate_execution_window(admission, binding, deadline)
         return self.kernel.start(mutation, admission, binding)
 
@@ -131,23 +157,11 @@ class SecureAdmissionCore:
             )
         self._require_self_digest(document, "command_digest", "Runtime Command")
         mutation = self._command_mutation(document)
-        binding = self.kernel.store.get_security_binding(runtime_run_id)
-        context = self._context(
-            binding,
-            invocation_id=mutation.invocation_id,
-            invocation_attempt_id=mutation.invocation_attempt_id,
-            fencing_token=mutation.fencing_token,
-            operation_request_digest=mutation.command_digest,
-            command_type=mutation.type,
-            system_safety_control_id=mutation.system_safety_control_id,
-            system_safety_control_digest=mutation.system_safety_control_digest,
-        )
         now = self.kernel.clock()
         admission = self.tokens.verify(
             compact_jws,
             authenticated_caller=authenticated_caller,
             operation="submit_command",
-            context=context,
             now=now,
         )
         if admission.expires_at > mutation.deadline_at:
@@ -163,37 +177,26 @@ class SecureAdmissionCore:
         *,
         authenticated_caller: str,
     ) -> RuntimeStatus:
-        claims = self.tokens.unverified_claims(compact_jws)
-        if claims.get("runtime_run_id") != runtime_run_id:
-            raise AuthorizationBindingError(
-                "Status path and token runtime_run_id differ"
-            )
-        binding = self.kernel.store.get_security_binding(runtime_run_id)
-        invocation_id = _string(claims, "invocation_id")
-        invocation_attempt_id = _string(claims, "invocation_attempt_id")
-        fencing_token = _integer(claims, "fencing_token")
-        descriptor = {
-            "operation": "read_status",
-            "runtime_run_id": runtime_run_id,
-            "invocation_id": invocation_id,
-            "invocation_attempt_id": invocation_attempt_id,
-            "fencing_token": fencing_token,
-        }
-        self.projection.validate(STATUS_DESCRIPTOR_SCHEMA_ID, descriptor)
-        context = self._context(
-            binding,
-            invocation_id=invocation_id,
-            invocation_attempt_id=invocation_attempt_id,
-            fencing_token=fencing_token,
-            operation_request_digest=_document_digest(descriptor),
-        )
         admission = self.tokens.verify(
             compact_jws,
             authenticated_caller=authenticated_caller,
             operation="read_status",
-            context=context,
             now=self.kernel.clock(),
         )
+        if admission.runtime_run_id != runtime_run_id:
+            raise AuthorizationBindingError(
+                "Status path and token runtime_run_id differ"
+            )
+        descriptor = {
+            "operation": "read_status",
+            "runtime_run_id": runtime_run_id,
+            "invocation_id": admission.invocation_id,
+            "invocation_attempt_id": admission.invocation_attempt_id,
+            "fencing_token": admission.fencing_token,
+        }
+        self.projection.validate(STATUS_DESCRIPTOR_SCHEMA_ID, descriptor)
+        if admission.operation_request_digest != _document_digest(descriptor):
+            raise AuthorizationBindingError("Status descriptor and token digest differ")
         return self.kernel.authorized_status(admission)
 
     def events(
@@ -205,39 +208,28 @@ class SecureAdmissionCore:
         after_event_sequence: int = 0,
         limit: int = 1000,
     ) -> EventPage:
-        claims = self.tokens.unverified_claims(compact_jws)
-        if claims.get("runtime_run_id") != runtime_run_id:
-            raise AuthorizationBindingError(
-                "Event path and token runtime_run_id differ"
-            )
-        binding = self.kernel.store.get_security_binding(runtime_run_id)
-        invocation_id = _string(claims, "invocation_id")
-        invocation_attempt_id = _string(claims, "invocation_attempt_id")
-        fencing_token = _integer(claims, "fencing_token")
-        descriptor = {
-            "operation": "read_events",
-            "runtime_run_id": runtime_run_id,
-            "invocation_id": invocation_id,
-            "invocation_attempt_id": invocation_attempt_id,
-            "fencing_token": fencing_token,
-            "after_event_sequence": after_event_sequence,
-            "limit": limit,
-        }
-        self.projection.validate(EVENT_DESCRIPTOR_SCHEMA_ID, descriptor)
-        context = self._context(
-            binding,
-            invocation_id=invocation_id,
-            invocation_attempt_id=invocation_attempt_id,
-            fencing_token=fencing_token,
-            operation_request_digest=_document_digest(descriptor),
-        )
         admission = self.tokens.verify(
             compact_jws,
             authenticated_caller=authenticated_caller,
             operation="read_events",
-            context=context,
             now=self.kernel.clock(),
         )
+        if admission.runtime_run_id != runtime_run_id:
+            raise AuthorizationBindingError(
+                "Event path and token runtime_run_id differ"
+            )
+        descriptor = {
+            "operation": "read_events",
+            "runtime_run_id": runtime_run_id,
+            "invocation_id": admission.invocation_id,
+            "invocation_attempt_id": admission.invocation_attempt_id,
+            "fencing_token": admission.fencing_token,
+            "after_event_sequence": after_event_sequence,
+            "limit": limit,
+        }
+        self.projection.validate(EVENT_DESCRIPTOR_SCHEMA_ID, descriptor)
+        if admission.operation_request_digest != _document_digest(descriptor):
+            raise AuthorizationBindingError("Event descriptor and token digest differ")
         return self.kernel.authorized_events(
             admission,
             after_event_sequence=after_event_sequence,
@@ -687,6 +679,51 @@ class SecureAdmissionCore:
         if admission.expires_at > min(upper_bounds):
             raise AuthorizationBindingError(
                 "Runtime token outlives its presented authorization facts"
+            )
+
+    @staticmethod
+    def _validate_admission_context(
+        admission: MutationAdmission, context: InvocationContext
+    ) -> None:
+        expected = (
+            context.tenant_id,
+            context.runtime_run_id,
+            context.agent_run_id,
+            context.workflow_run_id,
+            context.work_order_id,
+            context.run_manifest_digest,
+            context.runtime_authorization_digest,
+            context.invocation_id,
+            context.invocation_attempt_id,
+            context.fencing_token,
+            context.policy_decision_digest,
+            context.execution_budget_digest,
+            context.effective_permissions_digest,
+            context.operation_request_digest,
+            context.system_safety_control_id,
+            context.system_safety_control_digest,
+        )
+        actual = (
+            admission.tenant_id,
+            admission.runtime_run_id,
+            admission.agent_run_id,
+            admission.workflow_run_id,
+            admission.work_order_id,
+            admission.run_manifest_digest,
+            admission.runtime_authorization_digest,
+            admission.invocation_id,
+            admission.invocation_attempt_id,
+            admission.fencing_token,
+            admission.policy_decision_digest,
+            admission.execution_budget_digest,
+            admission.effective_permissions_digest,
+            admission.operation_request_digest,
+            admission.system_safety_control_id,
+            admission.system_safety_control_digest,
+        )
+        if actual != expected:
+            raise AuthorizationBindingError(
+                "Runtime token does not match the presented execution context"
             )
 
     @staticmethod

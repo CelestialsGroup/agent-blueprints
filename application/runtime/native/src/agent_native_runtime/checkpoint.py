@@ -2,11 +2,16 @@ from __future__ import annotations
 
 import hashlib
 import os
+import stat
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
 
-from .errors import CheckpointContentError, CheckpointTooLargeError
+from .errors import (
+    CheckpointContentError,
+    CheckpointTooLargeError,
+    ConfigurationDriftError,
+)
 from .model import CheckpointManifest, RuntimeConfiguration
 
 
@@ -23,9 +28,22 @@ class CheckpointObjectStore:
         self._configuration = configuration
         self._objects_root = configuration.state_root / "checkpoint-objects" / "sha256"
         self._temporary_root = configuration.state_root / "checkpoint-objects" / "tmp"
+
+    def prepare(self) -> None:
         for path in (self._objects_root, self._temporary_root):
             path.mkdir(mode=0o700, parents=True, exist_ok=True)
             path.chmod(0o700)
+
+    def check_current(self) -> None:
+        for path in (self._objects_root, self._temporary_root):
+            if not path.is_dir() or path.is_symlink():
+                raise ConfigurationDriftError(
+                    "checkpoint state directories are not initialized"
+                )
+            if stat.S_IMODE(path.stat().st_mode) != 0o700:
+                raise ConfigurationDriftError(
+                    "checkpoint state directory permissions have drifted"
+                )
 
     def write(self, payload: bytes) -> CheckpointObject:
         if len(payload) > self._configuration.max_checkpoint_bytes:

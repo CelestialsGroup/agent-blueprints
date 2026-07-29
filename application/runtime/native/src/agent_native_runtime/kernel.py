@@ -48,15 +48,28 @@ class NativeRuntimeKernel:
         self.checkpoints = CheckpointObjectStore(configuration)
 
     @classmethod
-    def open(
+    def migrate(
+        cls,
+        configuration: RuntimeConfiguration,
+        *,
+        clock: Clock = system_clock,
+    ) -> None:
+        kernel = cls(configuration, clock=clock)
+        kernel.store.migrate()
+        kernel.store.bind_configuration(kernel.clock())
+        kernel.checkpoints.prepare()
+
+    @classmethod
+    def open_current(
         cls,
         configuration: RuntimeConfiguration,
         *,
         clock: Clock = system_clock,
     ) -> NativeRuntimeKernel:
         kernel = cls(configuration, clock=clock)
-        kernel.store.migrate()
-        kernel.store.bind_configuration(kernel.clock())
+        kernel.store.check_schema_current()
+        kernel.store.check_configuration()
+        kernel.checkpoints.check_current()
         return kernel
 
     def start(
@@ -255,6 +268,9 @@ class NativeRuntimeKernel:
             or admission.invocation_attempt_id != mutation.invocation_attempt_id
             or admission.fencing_token != mutation.fencing_token
             or admission.operation_request_digest != mutation.command_digest
+            or admission.system_safety_control_id != mutation.system_safety_control_id
+            or admission.system_safety_control_digest
+            != mutation.system_safety_control_digest
         ):
             raise AuthorizationBindingError(
                 "Command body and Runtime invocation token differ"

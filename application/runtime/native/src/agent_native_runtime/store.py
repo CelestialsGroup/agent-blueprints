@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import sqlite3
+import stat
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -63,22 +64,31 @@ def _sha256_document(value: dict[str, Any]) -> str:
 class SQLiteRuntimeStore:
     def __init__(self, configuration: RuntimeConfiguration) -> None:
         self.configuration = configuration
-        self.configuration.state_root.mkdir(mode=0o700, parents=True, exist_ok=True)
-        self.configuration.state_root.chmod(0o700)
         self.database_path = self.configuration.state_root / "runtime.sqlite3"
 
-    def _connect(self) -> sqlite3.Connection:
-        connection = sqlite3.connect(
-            self.database_path,
-            isolation_level=None,
-            timeout=self.configuration.sqlite_busy_timeout_ms / 1000,
-        )
+    def _connect(self, *, read_only: bool = False) -> sqlite3.Connection:
+        if read_only:
+            connection = sqlite3.connect(
+                self.database_path.resolve().as_uri() + "?mode=ro",
+                isolation_level=None,
+                timeout=self.configuration.sqlite_busy_timeout_ms / 1000,
+                uri=True,
+            )
+        else:
+            connection = sqlite3.connect(
+                self.database_path,
+                isolation_level=None,
+                timeout=self.configuration.sqlite_busy_timeout_ms / 1000,
+            )
         connection.row_factory = sqlite3.Row
         connection.execute("PRAGMA foreign_keys = ON")
         connection.execute(
             f"PRAGMA busy_timeout = {self.configuration.sqlite_busy_timeout_ms}"
         )
-        connection.execute("PRAGMA synchronous = FULL")
+        if read_only:
+            connection.execute("PRAGMA query_only = ON")
+        else:
+            connection.execute("PRAGMA synchronous = FULL")
         if connection.execute("PRAGMA foreign_keys").fetchone()[0] != 1:
             connection.close()
             raise RuntimeError("SQLite foreign key enforcement is unavailable")
@@ -100,7 +110,7 @@ class SQLiteRuntimeStore:
 
     @contextmanager
     def _read_transaction(self) -> Iterator[sqlite3.Connection]:
-        connection = self._connect()
+        connection = self._connect(read_only=True)
         try:
             connection.execute("BEGIN")
             yield connection
@@ -113,6 +123,8 @@ class SQLiteRuntimeStore:
             connection.close()
 
     def migrate(self) -> None:
+        self.configuration.state_root.mkdir(mode=0o700, parents=True, exist_ok=True)
+        self.configuration.state_root.chmod(0o700)
         connection = self._connect()
         try:
             self._enable_wal(connection)
@@ -190,6 +202,57 @@ class SQLiteRuntimeStore:
         finally:
             connection.close()
 
+    def check_schema_current(self) -> None:
+        if (
+            not self.configuration.state_root.is_dir()
+            or self.configuration.state_root.is_symlink()
+            or stat.S_IMODE(self.configuration.state_root.stat().st_mode) != 0o700
+            or not self.database_path.is_file()
+            or self.database_path.is_symlink()
+        ):
+            raise ConfigurationDriftError(
+                "Runtime state root is not an initialized current store"
+            )
+        try:
+            connection = self._connect(read_only=True)
+        except sqlite3.OperationalError as error:
+            raise ConfigurationDriftError(
+                "Runtime SQLite store is unavailable"
+            ) from error
+        try:
+            try:
+                applied_rows = connection.execute(
+                    "SELECT version, name, migration_digest "
+                    "FROM schema_migrations ORDER BY version"
+                ).fetchall()
+            except sqlite3.OperationalError as error:
+                raise ConfigurationDriftError(
+                    "Runtime SQLite migration ledger is unavailable"
+                ) from error
+            if len(applied_rows) != SCHEMA_VERSION:
+                raise ConfigurationDriftError("Runtime SQLite schema is not current")
+            for row, (version, name) in zip(applied_rows, MIGRATIONS, strict=True):
+                migration = (
+                    files("agent_native_runtime.migrations")
+                    .joinpath(f"{version:04d}_{name}.up.sql")
+                    .read_text(encoding="utf-8")
+                )
+                digest = hashlib.sha256(migration.encode("utf-8")).hexdigest()
+                if (
+                    row["version"] != version
+                    or row["name"] != name
+                    or row["migration_digest"] != digest
+                ):
+                    raise ConfigurationDriftError(
+                        f"applied SQLite migration {version} has drifted"
+                    )
+            if str(connection.execute("PRAGMA journal_mode").fetchone()[0]).lower() != (
+                "wal"
+            ):
+                raise ConfigurationDriftError("SQLite WAL mode is required")
+        finally:
+            connection.close()
+
     def _enable_wal(self, connection: sqlite3.Connection) -> None:
         deadline = time.monotonic() + self.configuration.sqlite_busy_timeout_ms / 1000
         while True:
@@ -240,6 +303,30 @@ class SQLiteRuntimeStore:
                     "immutable Runtime configuration differs from the state root binding"
                 )
 
+    def check_configuration(self) -> None:
+        digest = _sha256_document(self.configuration.digest_document())
+        try:
+            with self._read_transaction() as connection:
+                row = connection.execute(
+                    "SELECT * FROM provider_metadata WHERE singleton = 1"
+                ).fetchone()
+        except sqlite3.OperationalError as error:
+            raise ConfigurationDriftError(
+                "immutable Runtime configuration metadata is unavailable"
+            ) from error
+        if row is None:
+            raise ConfigurationDriftError(
+                "immutable Runtime configuration is not bound"
+            )
+        if (
+            row["provider_revision_id"] != self.configuration.provider_revision_id
+            or row["runtime_revision"] != self.configuration.runtime_revision
+            or row["configuration_digest"] != digest
+        ):
+            raise ConfigurationDriftError(
+                "immutable Runtime configuration differs from the state root binding"
+            )
+
     def bind_security_configuration(
         self,
         *,
@@ -284,6 +371,47 @@ class SQLiteRuntimeStore:
                 raise ConfigurationDriftError(
                     "immutable security configuration differs from the state root binding"
                 )
+
+    def check_security_configuration(
+        self,
+        *,
+        configuration_digest: str,
+        contract_source_revision: str,
+        contract_manifest_digest: str,
+        runtime_suite_digest: str,
+        schema_closure_digest: str,
+    ) -> None:
+        expected = (
+            configuration_digest,
+            contract_source_revision,
+            contract_manifest_digest,
+            runtime_suite_digest,
+            schema_closure_digest,
+        )
+        try:
+            with self._read_transaction() as connection:
+                row = connection.execute(
+                    "SELECT * FROM provider_security_metadata WHERE singleton = 1"
+                ).fetchone()
+        except sqlite3.OperationalError as error:
+            raise ConfigurationDriftError(
+                "immutable security configuration metadata is unavailable"
+            ) from error
+        if row is None:
+            raise ConfigurationDriftError(
+                "immutable security configuration is not bound"
+            )
+        actual = (
+            row["security_configuration_digest"],
+            row["contract_source_revision"],
+            row["contract_manifest_digest"],
+            row["runtime_suite_digest"],
+            row["schema_closure_digest"],
+        )
+        if actual != expected:
+            raise ConfigurationDriftError(
+                "immutable security configuration differs from the state root binding"
+            )
 
     def rollback_empty(self) -> None:
         with self._transaction() as connection:

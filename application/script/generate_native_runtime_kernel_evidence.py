@@ -38,7 +38,7 @@ REQUIRED_TESTS = (
     "test_checkpoint_is_content_addressed_and_restores_same_revision",
     "test_checkpoint_object_may_be_orphaned_but_manifest_never_is",
     "test_command_sequence_fencing_replay_and_authority",
-    "test_concurrent_first_open_serializes_migration_and_configuration",
+    "test_concurrent_migrate_serializes_schema_and_configuration",
     "test_concurrent_start_serializes_to_one_run_and_one_event",
     "test_cursor_resume_and_expiry_are_explicit",
     "test_emitted_events_validate_against_locked_contract",

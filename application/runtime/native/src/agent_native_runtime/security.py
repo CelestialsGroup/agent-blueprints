@@ -393,37 +393,12 @@ class RuntimeTokenVerifier:
         self.configuration = configuration
         self.projection = projection
 
-    def unverified_claims(self, compact_jws: str) -> Mapping[str, Any]:
-        """Decode bounded claims only to synthesize the descriptor verified later."""
-
-        try:
-            encoded_token = compact_jws.encode("ascii")
-        except UnicodeEncodeError as error:
-            raise TokenValidationError(
-                "Runtime token must be ASCII compact JWS"
-            ) from error
-        if len(encoded_token) > self.configuration.max_token_bytes:
-            raise TokenValidationError("Runtime token exceeds the configured limit")
-        segments = encoded_token.split(b".")
-        if len(segments) != 3 or any(not segment for segment in segments):
-            raise TokenValidationError("Runtime token is not a compact JWS")
-        _decode_base64url(segments[0])
-        _decode_base64url(segments[2])
-        claims = self._strict_document(
-            _decode_base64url(segments[1]), "Runtime token claims"
-        )
-        self.projection.validate(
-            "urn:agent-platform:agent-runtime-invocation-token-claims:v1", claims
-        )
-        return claims
-
     def verify(
         self,
         compact_jws: str,
         *,
         authenticated_caller: str,
         operation: RuntimeOperation,
-        context: InvocationContext,
         now: datetime,
     ) -> MutationAdmission:
         if authenticated_caller not in self.configuration.trusted_callers:
@@ -476,7 +451,6 @@ class RuntimeTokenVerifier:
             claims,
             authenticated_caller=authenticated_caller,
             operation=operation,
-            context=context,
         )
         issued_at = _numeric_date(claims.get("iat"), "iat")
         not_before = _numeric_date(claims.get("nbf"), "nbf")
@@ -493,35 +467,45 @@ class RuntimeTokenVerifier:
             raise TokenValidationError("Runtime token is not yet valid")
         if expires_at.timestamp() <= now_utc.timestamp() - skew:
             raise TokenValidationError("Runtime token has expired")
-        authority_mode = _string(claims.get("authority_mode"), "authority_mode")
+        authority_mode = _claim_string(claims, "authority_mode")
         if authority_mode not in {"execution", "safety_control"}:
             raise TokenValidationError("Runtime token authority mode is invalid")
         return MutationAdmission(
-            issuer=_string(claims.get("iss"), "iss"),
-            subject=_string(claims.get("sub"), "sub"),
-            jti=_string(claims.get("jti"), "jti"),
+            issuer=_claim_string(claims, "iss"),
+            subject=_claim_string(claims, "sub"),
+            jti=_claim_string(claims, "jti"),
             operation=operation,
             authority_mode=cast(Literal["execution", "safety_control"], authority_mode),
             issued_at=issued_at,
             not_before=not_before,
             expires_at=expires_at,
-            tenant_id=context.tenant_id,
+            tenant_id=_claim_string(claims, "tenant_id"),
             provider_revision_id=self.configuration.provider_revision_id,
-            runtime_run_id=context.runtime_run_id,
-            agent_run_id=context.agent_run_id,
-            workflow_run_id=context.workflow_run_id,
-            work_order_id=context.work_order_id,
-            run_manifest_digest=context.run_manifest_digest,
-            runtime_authorization_digest=context.runtime_authorization_digest,
-            invocation_id=context.invocation_id,
-            invocation_attempt_id=context.invocation_attempt_id,
-            fencing_token=context.fencing_token,
-            policy_decision_digest=context.policy_decision_digest,
-            execution_budget_digest=context.execution_budget_digest,
-            effective_permissions_digest=context.effective_permissions_digest,
+            runtime_run_id=_claim_string(claims, "runtime_run_id"),
+            agent_run_id=_claim_string(claims, "agent_run_id"),
+            workflow_run_id=_claim_string(claims, "workflow_run_id"),
+            work_order_id=_claim_string(claims, "work_order_id"),
+            run_manifest_digest=_claim_string(claims, "run_manifest_digest"),
+            runtime_authorization_digest=_claim_string(
+                claims, "runtime_authorization_digest"
+            ),
+            invocation_id=_claim_string(claims, "invocation_id"),
+            invocation_attempt_id=_claim_string(claims, "invocation_attempt_id"),
+            fencing_token=_claim_integer(claims, "fencing_token"),
+            policy_decision_digest=_claim_string(claims, "policy_decision_digest"),
+            execution_budget_digest=_claim_string(claims, "execution_budget_digest"),
+            effective_permissions_digest=_claim_string(
+                claims, "effective_permissions_digest"
+            ),
             operation_contract_id=EXPECTED_OPERATION_BINDINGS[operation][0],
             operation_digest_profile=EXPECTED_OPERATION_BINDINGS[operation][1],
-            operation_request_digest=context.operation_request_digest,
+            operation_request_digest=_claim_string(claims, "operation_request_digest"),
+            system_safety_control_id=_optional_claim_string(
+                claims, "system_safety_control_id"
+            ),
+            system_safety_control_digest=_optional_claim_string(
+                claims, "system_safety_control_digest"
+            ),
             clock_skew_seconds=skew,
         )
 
@@ -548,31 +532,16 @@ class RuntimeTokenVerifier:
         *,
         authenticated_caller: str,
         operation: RuntimeOperation,
-        context: InvocationContext,
     ) -> None:
         expected_contract, expected_profile = EXPECTED_OPERATION_BINDINGS[operation]
         expected = {
-            "agent_run_id": context.agent_run_id,
             "aud": self.configuration.provider_audience,
-            "effective_permissions_digest": context.effective_permissions_digest,
-            "execution_budget_digest": context.execution_budget_digest,
-            "fencing_token": context.fencing_token,
-            "invocation_attempt_id": context.invocation_attempt_id,
-            "invocation_id": context.invocation_id,
             "iss": "agent-platform",
             "operation": operation,
             "operation_contract_id": expected_contract,
             "operation_digest_profile": expected_profile,
-            "operation_request_digest": context.operation_request_digest,
-            "policy_decision_digest": context.policy_decision_digest,
             "provider_revision_id": self.configuration.provider_revision_id,
-            "run_manifest_digest": context.run_manifest_digest,
-            "runtime_authorization_digest": context.runtime_authorization_digest,
-            "runtime_run_id": context.runtime_run_id,
             "sub": authenticated_caller,
-            "tenant_id": context.tenant_id,
-            "work_order_id": context.work_order_id,
-            "workflow_run_id": context.workflow_run_id,
         }
         if any(claims.get(name) != value for name, value in expected.items()):
             raise TokenValidationError(
@@ -586,30 +555,23 @@ class RuntimeTokenVerifier:
         ):
             raise TokenValidationError("Runtime reads require safety-control authority")
         if operation == "submit_command" and authority_mode == "safety_control":
-            if context.command_type not in {"pause", "cancel"}:
-                raise TokenValidationError(
-                    "safety-control token cannot authorize this Runtime command"
-                )
             if (
-                context.system_safety_control_id is None
-                or context.system_safety_control_digest is None
+                claims.get("system_safety_control_id") is None
+                or claims.get("system_safety_control_digest") is None
             ):
                 raise TokenValidationError(
                     "safety-control token lacks its command authority binding"
                 )
-        for name, value in (
-            ("system_safety_control_id", context.system_safety_control_id),
-            ("system_safety_control_digest", context.system_safety_control_digest),
+        elif any(
+            name in claims
+            for name in (
+                "system_safety_control_id",
+                "system_safety_control_digest",
+            )
         ):
-            if value is None:
-                if name in claims:
-                    raise TokenValidationError(
-                        "Runtime token adds an unpresented safety-control binding"
-                    )
-            elif claims.get(name) != value:
-                raise TokenValidationError(
-                    "Runtime token safety-control binding differs from the command"
-                )
+            raise TokenValidationError(
+                "Runtime token adds an unadmitted safety-control binding"
+            )
 
 
 def _decode_base64url(segment: bytes) -> bytes:
@@ -660,6 +622,26 @@ def _numeric_date(value: object, name: str) -> datetime:
         raise TokenValidationError(
             f"Runtime token {name} is outside datetime range"
         ) from error
+
+
+def _claim_string(claims: Mapping[str, Any], name: str) -> str:
+    value = claims.get(name)
+    if not isinstance(value, str) or not value:
+        raise TokenValidationError(f"Runtime token {name} is not a non-empty string")
+    return value
+
+
+def _optional_claim_string(claims: Mapping[str, Any], name: str) -> str | None:
+    if name not in claims:
+        return None
+    return _claim_string(claims, name)
+
+
+def _claim_integer(claims: Mapping[str, Any], name: str) -> int:
+    value = claims.get(name)
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise TokenValidationError(f"Runtime token {name} is not an integer")
+    return value
 
 
 def _mapping(value: object, name: str) -> Mapping[str, Any]:

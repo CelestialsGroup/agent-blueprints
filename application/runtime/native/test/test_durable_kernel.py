@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import sqlite3
 import stat
 import tempfile
 import unittest
@@ -116,7 +117,10 @@ class DurableKernelTest(unittest.TestCase):
             state_root=Path(self.temporary.name) / "state",
             work_lease_seconds=5,
         )
-        self.kernel = NativeRuntimeKernel.open(self.configuration, clock=self.clock)
+        NativeRuntimeKernel.migrate(self.configuration, clock=self.clock)
+        self.kernel = NativeRuntimeKernel.open_current(
+            self.configuration, clock=self.clock
+        )
         self.executor = BoundedTestExecutor()
 
     def start_mutation(self, runtime_run_id: str = "runtime-run-1") -> StartMutation:
@@ -207,6 +211,16 @@ class DurableKernelTest(unittest.TestCase):
             operation_contract_id=operation_contract_id,
             operation_digest_profile=operation_digest_profile,
             operation_request_digest=operation_request_digest,
+            system_safety_control_id=(
+                mutation.system_safety_control_id
+                if isinstance(mutation, CommandMutation)
+                else None
+            ),
+            system_safety_control_digest=(
+                mutation.system_safety_control_digest
+                if isinstance(mutation, CommandMutation)
+                else None
+            ),
         )
 
     def security_binding(self, mutation: StartMutation) -> RuntimeSecurityBinding:
@@ -290,28 +304,162 @@ class DurableKernelTest(unittest.TestCase):
         return mutation
 
     def test_configuration_is_immutable_for_state_root(self) -> None:
-        reopened = NativeRuntimeKernel.open(self.configuration, clock=self.clock)
+        reopened = NativeRuntimeKernel.open_current(
+            self.configuration, clock=self.clock
+        )
         self.assertEqual(reopened.configuration, self.configuration)
         with self.assertRaises(ConfigurationDriftError):
-            NativeRuntimeKernel.open(
+            NativeRuntimeKernel.open_current(
                 replace(self.configuration, runtime_revision="native-runtime-test-v2"),
                 clock=self.clock,
             )
 
-    def test_concurrent_first_open_serializes_migration_and_configuration(self) -> None:
+    def test_open_current_missing_store_has_no_filesystem_side_effect(self) -> None:
+        configuration = replace(
+            self.configuration,
+            state_root=Path(self.temporary.name) / "missing-store",
+        )
+
+        kernel = NativeRuntimeKernel(configuration, clock=self.clock)
+        self.assertFalse(configuration.state_root.exists())
+        with self.assertRaises(ConfigurationDriftError):
+            NativeRuntimeKernel.open_current(configuration, clock=self.clock)
+        self.assertFalse(configuration.state_root.exists())
+        self.assertFalse(kernel.store.database_path.exists())
+
+    def test_open_current_rejects_noncurrent_migration_ledger_without_write(
+        self,
+    ) -> None:
+        cases: tuple[tuple[str, tuple[tuple[str, tuple[object, ...]], ...]], ...] = (
+            ("old", (("DELETE FROM schema_migrations WHERE version = 2", ()),)),
+            (
+                "newer",
+                (
+                    (
+                        "INSERT INTO schema_migrations VALUES (?, ?, ?, ?)",
+                        (3, "future", "f" * 64, format_timestamp(self.clock())),
+                    ),
+                ),
+            ),
+            (
+                "gap",
+                (
+                    ("DELETE FROM schema_migrations WHERE version = 2", ()),
+                    (
+                        "INSERT INTO schema_migrations VALUES (?, ?, ?, ?)",
+                        (3, "future", "f" * 64, format_timestamp(self.clock())),
+                    ),
+                ),
+            ),
+            (
+                "digest",
+                (
+                    (
+                        "UPDATE schema_migrations SET migration_digest = ? "
+                        "WHERE version = 2",
+                        ("0" * 64,),
+                    ),
+                ),
+            ),
+        )
+        for name, statements in cases:
+            with self.subTest(name=name):
+                configuration = replace(
+                    self.configuration,
+                    state_root=Path(self.temporary.name) / f"ledger-{name}",
+                )
+                NativeRuntimeKernel.migrate(configuration, clock=self.clock)
+                store = SQLiteRuntimeStore(configuration)
+                connection = store._connect()
+                try:
+                    connection.execute("BEGIN IMMEDIATE")
+                    for statement, parameters in statements:
+                        connection.execute(statement, parameters)
+                    connection.execute("COMMIT")
+                finally:
+                    connection.close()
+                before = store.database_path.read_bytes()
+
+                with self.assertRaises(ConfigurationDriftError):
+                    NativeRuntimeKernel.open_current(configuration, clock=self.clock)
+
+                self.assertEqual(store.database_path.read_bytes(), before)
+
+    def test_interrupted_migration_and_binding_are_idempotently_recoverable(
+        self,
+    ) -> None:
+        before_commit = replace(
+            self.configuration,
+            state_root=Path(self.temporary.name) / "migration-before-commit",
+        )
+        interrupted_store = SQLiteRuntimeStore(before_commit)
+        execute_script = interrupted_store._execute_sql_script
+
+        def interrupt_after_ddl(connection: sqlite3.Connection, migration: str) -> None:
+            execute_script(connection, migration)
+            raise RuntimeError("simulated migration interruption")
+
+        with (
+            patch.object(
+                interrupted_store,
+                "_execute_sql_script",
+                side_effect=interrupt_after_ddl,
+            ),
+            self.assertRaisesRegex(RuntimeError, "simulated migration interruption"),
+        ):
+            interrupted_store.migrate()
+        connection = interrupted_store._connect()
+        try:
+            self.assertIsNone(
+                connection.execute(
+                    "SELECT 1 FROM sqlite_master "
+                    "WHERE type = 'table' AND name = 'schema_migrations'"
+                ).fetchone()
+            )
+        finally:
+            connection.close()
+        NativeRuntimeKernel.migrate(before_commit, clock=self.clock)
+        NativeRuntimeKernel.open_current(before_commit, clock=self.clock)
+
+        after_schema_commit = replace(
+            self.configuration,
+            state_root=Path(self.temporary.name) / "migration-after-schema",
+        )
+        schema_store = SQLiteRuntimeStore(after_schema_commit)
+        schema_store.migrate()
+        with self.assertRaises(ConfigurationDriftError):
+            NativeRuntimeKernel.open_current(after_schema_commit, clock=self.clock)
+        NativeRuntimeKernel.migrate(after_schema_commit, clock=self.clock)
+        NativeRuntimeKernel.open_current(after_schema_commit, clock=self.clock)
+
+        after_metadata_commit = replace(
+            self.configuration,
+            state_root=Path(self.temporary.name) / "migration-after-metadata",
+        )
+        metadata_store = SQLiteRuntimeStore(after_metadata_commit)
+        metadata_store.migrate()
+        metadata_store.bind_configuration(self.clock())
+        with self.assertRaises(ConfigurationDriftError):
+            NativeRuntimeKernel.open_current(after_metadata_commit, clock=self.clock)
+        NativeRuntimeKernel.migrate(after_metadata_commit, clock=self.clock)
+        NativeRuntimeKernel.open_current(after_metadata_commit, clock=self.clock)
+
+    def test_concurrent_migrate_serializes_schema_and_configuration(self) -> None:
         configuration = replace(
             self.configuration,
             state_root=Path(self.temporary.name) / "concurrent-first-open",
         )
         with ThreadPoolExecutor(max_workers=2) as pool:
-            kernels = list(
+            list(
                 pool.map(
-                    lambda _: NativeRuntimeKernel.open(configuration, clock=self.clock),
+                    lambda _: NativeRuntimeKernel.migrate(
+                        configuration, clock=self.clock
+                    ),
                     range(2),
                 )
             )
-        self.assertEqual(kernels[0].configuration, kernels[1].configuration)
-        connection = kernels[0].store._connect()
+        kernel = NativeRuntimeKernel.open_current(configuration, clock=self.clock)
+        connection = kernel.store._connect()
         try:
             migrations = connection.execute(
                 "SELECT version, migration_digest FROM schema_migrations"
@@ -353,7 +501,10 @@ class DurableKernelTest(unittest.TestCase):
         self,
     ) -> None:
         self.kernel.store.rollback_empty()
-        self.kernel = NativeRuntimeKernel.open(self.configuration, clock=self.clock)
+        NativeRuntimeKernel.migrate(self.configuration, clock=self.clock)
+        self.kernel = NativeRuntimeKernel.open_current(
+            self.configuration, clock=self.clock
+        )
         mutation = self.start_mutation()
         self.start(mutation, "start-jti-rollback-0001")
         with self.assertRaises(StateConflictError):
@@ -365,6 +516,7 @@ class DurableKernelTest(unittest.TestCase):
             state_root=Path(self.temporary.name) / "data-bearing-v1",
         )
         store = SQLiteRuntimeStore(configuration)
+        configuration.state_root.mkdir(mode=0o700)
         migration = (
             files("agent_native_runtime.migrations")
             .joinpath("0001_runtime_durable_kernel.up.sql")
@@ -656,7 +808,9 @@ class DurableKernelTest(unittest.TestCase):
         self.executor.start(abandoned.runtime_run_id, None)
 
         self.clock.advance(seconds=6)
-        restarted = NativeRuntimeKernel.open(self.configuration, clock=self.clock)
+        restarted = NativeRuntimeKernel.open_current(
+            self.configuration, clock=self.clock
+        )
         self.assertTrue(
             restarted.process_one(self.executor, owner="replacement-worker")
         )

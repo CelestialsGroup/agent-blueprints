@@ -6,6 +6,7 @@ import os
 import tempfile
 import unittest
 from copy import deepcopy
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, Literal, cast
@@ -27,7 +28,9 @@ from agent_native_runtime.errors import (
     MutationReplayError,
     StaleFencingError,
     StrictJsonError,
+    TokenValidationError,
 )
+from agent_native_runtime.kernel import NativeRuntimeKernel
 from agent_native_runtime.model import RuntimeConfiguration, format_timestamp
 from agent_native_runtime.security import (
     RuntimeContractProjection,
@@ -93,7 +96,12 @@ class SecureAdmissionTest(unittest.TestCase):
             work_lease_seconds=5,
         )
         self.security_configuration = self.security_config()
-        self.core = SecureAdmissionCore.open(
+        SecureAdmissionCore.migrate(
+            self.runtime_configuration,
+            self.security_configuration,
+            clock=self.clock,
+        )
+        self.core = SecureAdmissionCore.open_current(
             self.runtime_configuration,
             self.security_configuration,
             clock=self.clock,
@@ -453,6 +461,110 @@ class SecureAdmissionTest(unittest.TestCase):
                 limit=1000,
             )
 
+    def test_invalid_tokens_never_open_store_or_reveal_run_existence(self) -> None:
+        start, _, _ = self.admit_start()
+        existing_runtime_run_id = cast(str, start["runtime_run_id"])
+        wrong_signing_key = ed25519.Ed25519PrivateKey.generate()
+        rejection_outcomes: dict[tuple[str, str], tuple[type[BaseException], str]] = {}
+
+        def rejected_tokens(claims: dict[str, Any]) -> tuple[tuple[str, str], ...]:
+            wrong_subject = deepcopy(claims)
+            wrong_subject["sub"] = "other-caller"
+            wrong_audience = deepcopy(claims)
+            wrong_audience["aud"] = "urn:agent-platform:provider-instance:other"
+            return (
+                (
+                    "signature",
+                    self.sign(claims, private_key=wrong_signing_key),
+                ),
+                ("typ", self.sign(claims, headers={"typ": "JWT"})),
+                ("kid", self.sign(claims, kid="unknown-key")),
+                (
+                    "algorithm",
+                    self.sign(claims, algorithm="ES256", kid="eddsa-test"),
+                ),
+                ("subject", self.sign(wrong_subject)),
+                ("audience", self.sign(wrong_audience)),
+            )
+
+        for runtime_run_id in (
+            existing_runtime_run_id,
+            "runtime-run-does-not-exist",
+        ):
+            target = deepcopy(start)
+            target["runtime_run_id"] = runtime_run_id
+            command = self.cancel_document(runtime_run_id)
+            requests = (
+                ("command", self.command_claims(target, command)),
+                (
+                    "status",
+                    self.read_claims(
+                        target,
+                        operation="read_status",
+                        fencing_token=1,
+                    ),
+                ),
+                (
+                    "event",
+                    self.read_claims(
+                        target,
+                        operation="read_events",
+                        fencing_token=1,
+                    ),
+                ),
+            )
+            for operation, claims in requests:
+                for rejection, token in rejected_tokens(claims):
+                    with (
+                        self.subTest(
+                            operation=operation,
+                            rejection=rejection,
+                            runtime_run_id=runtime_run_id,
+                        ),
+                        patch.object(
+                            self.core.kernel.store,
+                            "_connect",
+                            side_effect=AssertionError(
+                                "store opened before token verification"
+                            ),
+                        ),
+                        self.assertRaises(AdmissionError) as caught,
+                    ):
+                        if operation == "command":
+                            self.core.submit_command(
+                                runtime_run_id,
+                                self.encode(command),
+                                token,
+                                authenticated_caller=CALLER,
+                            )
+                        elif operation == "status":
+                            self.core.status(
+                                runtime_run_id,
+                                token,
+                                authenticated_caller=CALLER,
+                            )
+                        else:
+                            self.core.events(
+                                runtime_run_id,
+                                token,
+                                authenticated_caller=CALLER,
+                            )
+                    outcome = (type(caught.exception), str(caught.exception))
+                    key = (operation, rejection)
+                    if runtime_run_id == existing_runtime_run_id:
+                        rejection_outcomes[key] = outcome
+                    else:
+                        self.assertEqual(outcome, rejection_outcomes[key])
+
+        for operation in ("command", "status", "event"):
+            self.assertEqual(
+                rejection_outcomes[(operation, "signature")],
+                (
+                    TokenValidationError,
+                    "Runtime token signature is invalid",
+                ),
+            )
+
     def test_command_digest_operation_and_time_fail_closed(self) -> None:
         start, _, _ = self.admit_start()
         self.assertTrue(self.core.kernel.process_one(Executor(), owner="worker-1"))
@@ -775,9 +887,58 @@ class SecureAdmissionTest(unittest.TestCase):
             clock_skew_seconds=0,
         )
         with self.assertRaises(ConfigurationDriftError):
-            SecureAdmissionCore.open(
+            SecureAdmissionCore.open_current(
                 self.runtime_configuration, drifted, clock=self.clock
             )
+
+    def test_security_binding_interruption_is_idempotently_recoverable(self) -> None:
+        runtime = replace(
+            self.runtime_configuration,
+            state_root=Path(self.temporary.name) / "security-binding-interruption",
+        )
+        NativeRuntimeKernel.migrate(runtime, clock=self.clock)
+
+        with self.assertRaises(ConfigurationDriftError):
+            SecureAdmissionCore.open_current(
+                runtime,
+                self.security_configuration,
+                clock=self.clock,
+            )
+
+        SecureAdmissionCore.migrate(
+            runtime,
+            self.security_configuration,
+            clock=self.clock,
+        )
+        SecureAdmissionCore.migrate(
+            runtime,
+            self.security_configuration,
+            clock=self.clock,
+        )
+        reopened = SecureAdmissionCore.open_current(
+            runtime,
+            self.security_configuration,
+            clock=self.clock,
+        )
+        self.assertEqual(reopened.kernel.configuration, runtime)
+
+    def test_missing_security_metadata_fails_open_current_without_write(self) -> None:
+        connection = self.core.kernel.store._connect()
+        try:
+            connection.execute("DELETE FROM provider_security_metadata")
+        finally:
+            connection.close()
+        database_path = self.core.kernel.store.database_path
+        before = database_path.read_bytes()
+
+        with self.assertRaises(ConfigurationDriftError):
+            SecureAdmissionCore.open_current(
+                self.runtime_configuration,
+                self.security_configuration,
+                clock=self.clock,
+            )
+
+        self.assertEqual(database_path.read_bytes(), before)
 
     def test_projection_loader_normalizes_non_object_lock_input(self) -> None:
         application_root = Path(self.temporary.name) / "invalid-application"
