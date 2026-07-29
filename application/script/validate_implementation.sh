@@ -13,9 +13,15 @@ test -f "$CONTRACT_ROOT/schemas/build-provenance.schema.json"
 UV_TOOLCHAIN_TAG="agent-uv-toolchain:${UV_VERSION}-python${PYTHON_VERSION}"
 EVIDENCE_DIR="$ROOT/build/evidence/b01"
 B03_EVIDENCE_DIR="$ROOT/build/evidence/b03.1"
+P0_EVIDENCE_DIR="$ROOT/build/evidence/b03.2-p0"
 CACHE_DIR="$ROOT/.cache/implementation"
 SQLC_CHECK_DIR="$CACHE_DIR/sqlc-check"
+P0_RUN_DIR="$CACHE_DIR/b03.2-p0-validation"
 NATIVE_WHEEL="agent_native_runtime-0.1.0-py3-none-any.whl"
+APPLICATION_BASE_REVISION="$(git -C "$ROOT" rev-parse HEAD)"
+
+rm -rf "$P0_RUN_DIR"
+mkdir -p "$P0_RUN_DIR"
 
 docker run --rm \
   -e AGENT_BLUEPRINT_ROOT=/blueprint \
@@ -26,6 +32,9 @@ docker run --rm \
   -w /workspace \
   "$PYTHON_TOOLCHAIN_IMAGE" \
   python script/verify_dependency_lock.py
+
+"$ROOT/script/generate_runtime_contract.sh" --check 2>&1 \
+  | tee "$P0_RUN_DIR/regeneration.log"
 
 mkdir -p \
   "$CACHE_DIR/go-build" \
@@ -69,10 +78,12 @@ docker build --quiet \
   "$ROOT" >/dev/null
 
 docker run --rm \
+  -e AGENT_CONTRACT_ROOT=/contract \
   -e GOCACHE=/cache/go-build \
   -e GOMODCACHE=/cache/go-mod \
   -e HOME=/tmp \
   -v "$CACHE_DIR:/cache" \
+  -v "$CONTRACT_ROOT:/contract:ro" \
   -v "$ROOT:/workspace:ro" \
   -w /workspace \
   "$GO_TOOLCHAIN_IMAGE" \
@@ -95,7 +106,7 @@ docker run --rm \
     /cache/tools/staticcheck ./...
     go test ./...
     go test -race ./...
-  '
+  ' 2>&1 | tee "$P0_RUN_DIR/go-validation.log"
 
 "$ROOT/script/test_postgres_integration.sh" "$CACHE_DIR" "$B03_EVIDENCE_DIR"
 
@@ -155,12 +166,17 @@ for attempt in range(50):
 docker run --rm \
   -e AGENT_CONTRACT_ROOT=/contract \
   -e PYTHONDONTWRITEBYTECODE=1 \
-  -e PYTHONPATH=/workspace/runtime/native/src \
+  -e UV_CACHE_DIR=/cache/uv \
+  -e UV_LINK_MODE=copy \
+  -e UV_PROJECT_ENVIRONMENT=/tmp/native-runtime-venv \
+  -v "$CACHE_DIR:/cache" \
   -v "$CONTRACT_ROOT:/contract:ro" \
   -v "$ROOT:/workspace:ro" \
   -w /workspace \
-  "$PYTHON_TOOLCHAIN_IMAGE" \
-  sh -c 'test "$(python -c '\''import platform; print(platform.python_version())'\'')" = "3.14.6" && python -m unittest discover -s runtime/native/test'
+  "$UV_TOOLCHAIN_TAG" \
+  run --frozen --project /workspace/runtime/native \
+    python -m unittest discover -s runtime/native/test \
+    2>&1 | tee "$P0_RUN_DIR/python-validation.log"
 
 docker run --rm \
   -v "$ROOT:/workspace:ro" \
@@ -223,7 +239,24 @@ docker run --rm \
   -v "$ROOT:/workspace:ro" \
   -w /workspace \
   "$PYTHON_TOOLCHAIN_IMAGE" \
-  python script/check_implementation_supply_chain.py
+  python script/check_implementation_supply_chain.py \
+  2>&1 | tee "$P0_RUN_DIR/supply-chain.log"
+
+mkdir -p "$P0_EVIDENCE_DIR"
+docker run --rm \
+  -v "$ROOT:/workspace:ro" \
+  -v "$P0_RUN_DIR:/validation:ro" \
+  -v "$P0_EVIDENCE_DIR:/out" \
+  -w /workspace \
+  "$PYTHON_TOOLCHAIN_IMAGE" \
+  python script/generate_runtime_contract_evidence.py \
+    --application-base-revision "$APPLICATION_BASE_REVISION" \
+    --validation-command "make validate-implementation" \
+    --regeneration-log /validation/regeneration.log \
+    --go-validation-log /validation/go-validation.log \
+    --python-validation-log /validation/python-validation.log \
+    --supply-chain-log /validation/supply-chain.log \
+    --output /out/runtime-contract-projection.json
 
 docker run --rm \
   -e AGENT_CONTRACT_ROOT=/contract \
@@ -250,4 +283,4 @@ docker run --rm \
     --traceability-report /out/evidence/phase0-implementation-traceability.json \
     --output-dir /out/evidence
 
-echo "B03.1 bounded orchestration validation passed; reproducible implementation artifact evidence preserved."
+echo "B03.2-P0 Contract projection and bounded B03.1 validation passed; reproducible evidence preserved."

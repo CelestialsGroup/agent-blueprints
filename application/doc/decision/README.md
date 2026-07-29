@@ -20,3 +20,6 @@ Current records:
 - `0004-temporal-orchestration-replay-foundation.md`: B03.1 Temporal supply-chain
   pins, adapter-private boundaries, Worker versioning, Replay, and blocked
   production surfaces.
+- `0005-runtime-contract-projection-security-dependencies.md`: bounded B03.2-P0
+  generators, transport projections, independent validators, JOSE/JCS pins,
+  fixture evidence, and rollback boundary.

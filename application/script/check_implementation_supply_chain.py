@@ -22,6 +22,10 @@ PYTHON_REQUIREMENT = re.compile(r"^([a-z0-9-]+)==([0-9][0-9.]*)")
 PURL = re.compile(r"^pkg:[a-z0-9.+-]+/.+@[^@]+$")
 
 
+def canonical_python_name(value: str) -> str:
+    return re.sub(r"[-_.]+", "-", value).lower()
+
+
 def load_env(path: Path) -> dict[str, str]:
     result: dict[str, str] = {}
     for raw_line in path.read_text(encoding="utf-8").splitlines():
@@ -62,6 +66,7 @@ for key in (
     "PYTHON_TOOLCHAIN_IMAGE",
     "NODE_TOOLCHAIN_IMAGE",
     "UV_BINARY_IMAGE",
+    "RUNTIME_PYTHON_CODEGEN_IMAGE",
     "SQLC_IMAGE",
     "POSTGRES_TEST_IMAGE",
     "TEMPORAL_SERVER_TEST_IMAGE",
@@ -91,6 +96,20 @@ if f"go.temporal.io/sdk v{toolchain['TEMPORAL_SDK_VERSION']}" not in go_mod:
     raise AssertionError("go.mod must pin the governed Temporal Go SDK version")
 if "go.temporal.io/api v1.63.0" not in go_mod:
     raise AssertionError("go.mod must pin the SDK-aligned Temporal API version")
+expected_runtime_go_dependencies = {
+    "RUNTIME_GO_CODEGEN_VERSION": "0.24.0",
+    "RUNTIME_PYTHON_CODEGEN_VERSION": "0.71.0",
+}
+for key, expected in expected_runtime_go_dependencies.items():
+    if toolchain.get(key) != expected:
+        raise AssertionError(f"{key} must equal the admitted Runtime projection version")
+for module, version in (
+    ("github.com/go-jose/go-jose/v4", "4.1.4"),
+    ("github.com/gowebpki/jcs", "1.0.1"),
+    ("github.com/santhosh-tekuri/jsonschema/v6", "6.0.2"),
+):
+    if f"{module} v{version}" not in go_mod:
+        raise AssertionError(f"go.mod must pin admitted Runtime dependency {module} v{version}")
 expected_temporal_metadata = {
     "TEMPORAL_SDK_COMMIT": "8e2c89c7c9d8d41f633bf039063422dd10c1fec5",
     "TEMPORAL_SDK_SOURCE": "https://github.com/temporalio/sdk-go/tree/v1.46.0",
@@ -127,8 +146,15 @@ for key in ("GOOSE_LINUX_ARM64_SHA256", "STATICCHECK_LINUX_ARM64_SHA256"):
 pyproject = tomllib.loads((ROOT / "runtime/native/pyproject.toml").read_text(encoding="utf-8"))
 if pyproject["build-system"]["requires"] != ["hatchling==1.31.0"]:
     raise AssertionError("Native Runtime build backend must be exact")
-if pyproject["project"]["dependencies"]:
-    raise AssertionError("B01 Native Runtime has no runtime dependencies")
+expected_python_runtime_dependencies = {
+    "cryptography==49.0.0",
+    "jsonschema==4.26.0",
+    "PyJWT==2.13.0",
+    "rfc8785==0.1.4",
+    "typing-extensions==4.15.0",
+}
+if set(pyproject["project"]["dependencies"]) != expected_python_runtime_dependencies:
+    raise AssertionError("Native Runtime dependencies differ from the admitted P0 set")
 
 uv_lock = tomllib.loads((ROOT / "runtime/native/uv.lock").read_text(encoding="utf-8"))
 if uv_lock.get("requires-python") != ">=3.13, <3.15":
@@ -179,6 +205,65 @@ required_components = {
     ("staticcheck", "2026.1"),
     ("postgres", "18.4"),
 }
+required_components.update(
+    {
+        ("github.com/go-jose/go-jose/v4", "4.1.4"),
+        ("github.com/gowebpki/jcs", "1.0.1"),
+        ("github.com/santhosh-tekuri/jsonschema/v6", "6.0.2"),
+        ("koxudaxi/datamodel-code-generator", "0.71.0"),
+        ("github.com/atombender/go-jsonschema", "0.24.0"),
+        ("dario.cat/mergo", "1.0.2"),
+        ("github.com/cpuguy83/go-md2man/v2", "2.0.6"),
+        ("github.com/goccy/go-yaml", "1.19.2"),
+        ("github.com/google/go-cmp", "0.7.0"),
+        ("github.com/inconshreveable/mousetrap", "1.1.0"),
+        ("github.com/mitchellh/go-wordwrap", "1.0.1"),
+        ("github.com/russross/blackfriday/v2", "2.1.0"),
+        ("github.com/sanity-io/litter", "1.5.8"),
+        ("github.com/sosodev/duration", "1.4.0"),
+        ("github.com/spf13/cobra", "1.10.2"),
+        ("github.com/spf13/pflag", "1.0.10"),
+        ("go.yaml.in/yaml/v3", "3.0.4"),
+        ("gopkg.in/check.v1", "0.0.0-20161208181325-20d25e280405"),
+        ("attrs", "26.1.0"),
+        ("cffi", "2.1.0"),
+        ("cryptography", "49.0.0"),
+        ("jsonschema", "4.26.0"),
+        ("jsonschema-specifications", "2025.9.1"),
+        ("pycparser", "3.0"),
+        ("PyJWT", "2.13.0"),
+        ("referencing", "0.37.0"),
+        ("rfc8785", "0.1.4"),
+        ("rpds-py", "2026.6.3"),
+        ("typing-extensions", "4.15.0"),
+        ("annotated-types", "0.8.0"),
+        ("anyio", "4.14.2"),
+        ("argcomplete", "3.7.0"),
+        ("black", "26.5.1"),
+        ("certifi", "2026.7.22"),
+        ("click", "8.4.2"),
+        ("genson", "1.4.0"),
+        ("h11", "0.16.0"),
+        ("httpcore", "1.0.9"),
+        ("httpx", "0.28.1"),
+        ("idna", "3.18"),
+        ("inflect", "7.5.0"),
+        ("isort", "8.0.1"),
+        ("jinja2", "3.1.6"),
+        ("markupsafe", "3.0.3"),
+        ("more-itertools", "11.1.0"),
+        ("mypy-extensions", "1.1.0"),
+        ("pip", "26.1.2"),
+        ("platformdirs", "4.11.0"),
+        ("pydantic", "2.13.4"),
+        ("pydantic-core", "2.46.4"),
+        ("pytokens", "0.4.1"),
+        ("pyyaml", "6.0.3"),
+        ("typeguard", "4.5.2"),
+        ("typing-extensions", "4.16.0"),
+        ("typing-inspection", "0.4.2"),
+    }
+)
 if components != required_components:
     raise AssertionError("Third-party inventory does not match governed implementation dependencies")
 for item in inventory["components"]:
@@ -194,6 +279,7 @@ for item in inventory["components"]:
         "orchestration",
         "orchestration-test",
         "implementation-gate",
+        "runtime-contract-projection",
     }:
         raise AssertionError(f"Invalid component ownership for dependency: {item['name']}")
 
@@ -251,6 +337,32 @@ for component_name in admitted_orchestration_dependencies:
     ):
         raise AssertionError(f"{component_name} must record reviewed alternatives")
 
+admitted_runtime_projection_dependencies = [
+    item
+    for item in inventory["components"]
+    if "runtime-contract-projection" in item["components"]
+]
+for item in admitted_runtime_projection_dependencies:
+    component_name = f"{item['name']}@{item['version']}"
+    if item.get("maintenance_status") not in {"active", "upstream_selected"}:
+        raise AssertionError(f"{component_name} must record reviewed maintenance status")
+    for field in (
+        "maintenance_evidence",
+        "security_review_source",
+        "security_reviewed_at",
+        "upgrade_strategy",
+        "rollback_strategy",
+    ):
+        if not isinstance(item.get(field), str) or not item[field].strip():
+            raise AssertionError(f"{component_name} is missing {field}")
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", item["security_reviewed_at"]):
+        raise AssertionError(f"{component_name} has an invalid security review date")
+    alternatives = item.get("alternatives_considered")
+    if not isinstance(alternatives, list) or not alternatives or not all(
+        isinstance(alternative, str) and alternative.strip() for alternative in alternatives
+    ):
+        raise AssertionError(f"{component_name} must record reviewed alternatives")
+
 go_mod_components = {
     (match.group(1), match.group(2).removeprefix("v"))
     for line in go_mod.splitlines()
@@ -264,6 +376,78 @@ inventory_go_modules = {
 if go_mod_components != inventory_go_modules:
     raise AssertionError("go.mod modules and reviewed Go dependency inventory differ")
 
+codegen_modules = {
+    (parts[0], parts[1].removeprefix("v"))
+    for line in (ROOT / "toolchain/runtime-codegen/modules.txt").read_text(
+        encoding="utf-8"
+    ).splitlines()
+    if line.strip() and len(parts := line.split()) == 2
+}
+inventory_all_go_modules = {
+    (item["name"], item["version"])
+    for item in inventory["components"]
+    if item["kind"] in {"go_module", "go_codegen_module"}
+}
+inventory_codegen_modules = {
+    (item["name"], item["version"])
+    for item in inventory["components"]
+    if item["kind"] == "go_codegen_module"
+}
+if not codegen_modules <= inventory_all_go_modules:
+    raise AssertionError("Go Runtime generator build list contains unreviewed modules")
+if not inventory_codegen_modules <= codegen_modules:
+    raise AssertionError("Go Runtime generator inventory contains stale modules")
+runtime_codegen_mod = (ROOT / "toolchain/runtime-codegen/go.mod").read_text(encoding="utf-8")
+if (
+    f"github.com/atombender/go-jsonschema v{toolchain['RUNTIME_GO_CODEGEN_VERSION']}"
+    not in runtime_codegen_mod
+):
+    raise AssertionError("Runtime Go generator module differs from the admitted version")
+
+python_codegen_lock = json.loads(
+    (ROOT / "toolchain/runtime-python-codegen-packages.json").read_text(encoding="utf-8")
+)
+if python_codegen_lock.get("schema_version") != 1:
+    raise AssertionError("Python Runtime generator distribution manifest version differs")
+if python_codegen_lock.get("image_reference") != toolchain["RUNTIME_PYTHON_CODEGEN_IMAGE"]:
+    raise AssertionError("Python Runtime generator manifest is bound to another image")
+if python_codegen_lock.get("generator") != {
+    "name": "datamodel-code-generator",
+    "version": toolchain["RUNTIME_PYTHON_CODEGEN_VERSION"],
+}:
+    raise AssertionError("Python Runtime generator identity differs from the admitted version")
+locked_python_codegen = {
+    (canonical_python_name(item["name"]), item["version"])
+    for item in python_codegen_lock["distributions"]
+}
+if len(locked_python_codegen) != python_codegen_lock.get("distribution_count"):
+    raise AssertionError("Python Runtime generator distribution manifest has duplicates")
+inventory_python_codegen = {
+    (
+        canonical_python_name(item.get("python_distribution_name", item["name"])),
+        item["version"],
+    )
+    for item in inventory["components"]
+    if item.get("python_codegen_distribution") is True
+}
+if locked_python_codegen != inventory_python_codegen:
+    raise AssertionError(
+        "Python Runtime generator image distributions and reviewed inventory differ"
+    )
+
+locked_python_runtime = {
+    (canonical_python_name(package["name"]), package["version"])
+    for package in uv_lock["package"]
+    if package.get("source", {}).get("registry")
+}
+inventory_python_runtime = {
+    (canonical_python_name(item["name"]), item["version"])
+    for item in inventory["components"]
+    if item["kind"] == "python_runtime_dependency"
+}
+if locked_python_runtime != inventory_python_runtime:
+    raise AssertionError("uv.lock and reviewed Python Runtime dependency inventory differ")
+
 if inventory_by_name["github.com/pressly/goose/v3"].get("artifact_sha256") != toolchain[
     "GOOSE_LINUX_ARM64_SHA256"
 ]:
@@ -276,6 +460,7 @@ for component_name, image_key in (
     ("github.com/sqlc-dev/sqlc", "SQLC_IMAGE"),
     ("postgres", "POSTGRES_TEST_IMAGE"),
     ("temporalio/auto-setup", "TEMPORAL_SERVER_TEST_IMAGE"),
+    ("koxudaxi/datamodel-code-generator", "RUNTIME_PYTHON_CODEGEN_IMAGE"),
 ):
     expected_digest = "sha256:" + toolchain[image_key].rsplit("@sha256:", 1)[1]
     if inventory_by_name[component_name].get("oci_digest") != expected_digest:

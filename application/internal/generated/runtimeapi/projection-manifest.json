@@ -1,0 +1,204 @@
+{
+  "openapi_path": "openapi/agent-runtime-provider-v1.yaml",
+  "openapi_sha256": "f75bd9484d9059435021f65147cab1a22b4cb0376ea47ce6e165fde0494f5811",
+  "schema_closure_sha256": "8135d0b684499052c3cbc6078e3d8e806628d12695125b654205e75f50e0c4ba",
+  "schema_count": 39,
+  "schema_version": 1,
+  "schemas": [
+    {
+      "id": "urn:agent-platform:agent-run-budget-allocation:v1",
+      "path": "schemas/agent-run-budget-allocation.schema.json",
+      "sha256": "18cf3d5b7a6c05c71fae404107df340bc0b32f7abfa6efabbd3405ecb64336b4"
+    },
+    {
+      "id": "urn:agent-platform:agent-run-resource-limits:v1",
+      "path": "schemas/agent-run-resource-limits.schema.json",
+      "sha256": "74e64a221fb982a8ae4fbe3791f8beecc39f5abc9b967117ee0a949daddca8b0"
+    },
+    {
+      "id": "urn:agent-platform:agent-run-topology:v1",
+      "path": "schemas/agent-run-topology.schema.json",
+      "sha256": "03b5e9d040420f53b93b9d5a899375f574a34c47cb4b7f1b8a479fea182bf6b9"
+    },
+    {
+      "id": "urn:agent-platform:agent-run-workspace-binding:v1",
+      "path": "schemas/agent-run-workspace-binding.schema.json",
+      "sha256": "12fce7238028a5d63601a180c77767879574caa0758363fec82c8d1ab6596de8"
+    },
+    {
+      "id": "urn:agent-platform:agent-runtime-capabilities:v1",
+      "path": "schemas/agent-runtime-capabilities.schema.json",
+      "sha256": "02fd8a0c2176539a0807fe88aaf11b915eca7484d56ca0eb8973467614b85872"
+    },
+    {
+      "id": "urn:agent-platform:agent-runtime-checkpoint-manifest:v1",
+      "path": "schemas/agent-runtime-checkpoint-manifest.schema.json",
+      "sha256": "5ddf6d82e6c53a2a96e209ed2c55c7fc44cacc53b6db426e89bd056e03b53423"
+    },
+    {
+      "id": "urn:agent-platform:agent-runtime-command:v1",
+      "path": "schemas/agent-runtime-command.schema.json",
+      "sha256": "0800078291c1b2544e188c6279d6febde27da7564dbb192babdfdb7f3eb1f930"
+    },
+    {
+      "id": "urn:agent-platform:agent-runtime-event-data:v1",
+      "path": "schemas/agent-runtime-event-data.schema.json",
+      "sha256": "eb53f04437d03c5aa61c63bab40770ff7d07ab3f58dc63506fa6e2ff67dc1b79"
+    },
+    {
+      "id": "urn:agent-platform:agent-runtime-event-page:v1",
+      "path": "schemas/agent-runtime-event-page.schema.json",
+      "sha256": "450346bec4ccd9dccffaf9cf3d452f6461ed6581e3c3f864076ce66dd419070c"
+    },
+    {
+      "id": "urn:agent-platform:agent-runtime-event-read-operation-descriptor:v1",
+      "path": "schemas/agent-runtime-event-read-operation-descriptor.schema.json",
+      "sha256": "db3aa4caa0465ba28af8761f1ef5d9b6202493603fd03068a288fa2168e38494"
+    },
+    {
+      "id": "urn:agent-platform:agent-runtime-event:v1",
+      "path": "schemas/agent-runtime-event.schema.json",
+      "sha256": "b1039fa799eebf2c17bd041c99608c9d0a1db224e80e4b3e41aba4bcae473efa"
+    },
+    {
+      "id": "urn:agent-platform:agent-runtime-invocation-jws-header:v1",
+      "path": "schemas/agent-runtime-invocation-jws-header.schema.json",
+      "sha256": "e805495d222c2c2d0fae6dea3a637d3eb5b9de8031b79d272035c9d2aaab4c5c"
+    },
+    {
+      "id": "urn:agent-platform:agent-runtime-invocation-token-claims:v1",
+      "path": "schemas/agent-runtime-invocation-token-claims.schema.json",
+      "sha256": "580201c8276484b136baa0c99ce88758978916f7eb938be166635c469d28a17b"
+    },
+    {
+      "id": "urn:agent-platform:agent-runtime-run-status:v1",
+      "path": "schemas/agent-runtime-run-status.schema.json",
+      "sha256": "d43ec7fcd43a7f6690b861aa0f88f2534444dc90a1f456b4e32d2a692ba6ba26"
+    },
+    {
+      "id": "urn:agent-platform:agent-runtime-start-request:v1",
+      "path": "schemas/agent-runtime-start-request.schema.json",
+      "sha256": "47d15ab457e9d070a0246b078fbd2bcbf11f9a3d61072db2a04fb4d874f54704"
+    },
+    {
+      "id": "urn:agent-platform:agent-runtime-status-operation-descriptor:v1",
+      "path": "schemas/agent-runtime-status-operation-descriptor.schema.json",
+      "sha256": "68816de99f9547e755cc79f3f5ec71370ca5c721907c80e2e16dd15e49121ad4"
+    },
+    {
+      "id": "urn:agent-platform:approval-decision:v1",
+      "path": "schemas/approval-decision.schema.json",
+      "sha256": "88763b4df36cc2d3d3566d9b81e16940739122a895ef33d08558f3d3ed92c424"
+    },
+    {
+      "id": "urn:agent-platform:artifact-grant:v1",
+      "path": "schemas/artifact-grant.schema.json",
+      "sha256": "2f4f5ba90ff7c8c551bded04c435435c1632a1572b13b34fd0f47da5dfcb7b57"
+    },
+    {
+      "id": "urn:agent-platform:bounded-details:v1",
+      "path": "schemas/bounded-details.schema.json",
+      "sha256": "46734a906a769332f768529e0803665f3e1fe41f388c51cdaf57394504e3a48e"
+    },
+    {
+      "id": "urn:agent-platform:capability-error:v1",
+      "path": "schemas/capability-error.schema.json",
+      "sha256": "a2a02d757fbeea20c2230e5d85bb528641cee20342f0d6bec155b99159671816"
+    },
+    {
+      "id": "urn:agent-platform:child-agent-run-admission-reason-code:v1",
+      "path": "schemas/child-agent-run-admission-reason-code.schema.json",
+      "sha256": "4d436a151ab2401e3f4fc8256e5754c8c0ebf728fefed6c844e5b8393b894b1d"
+    },
+    {
+      "id": "urn:agent-platform:child-agent-run-spawn-request:v1",
+      "path": "schemas/child-agent-run-spawn-request.schema.json",
+      "sha256": "c3d5c72217594514a00e03494ba7b126570f66eec78aefc2893b35875de70ad8"
+    },
+    {
+      "id": "urn:agent-platform:commercial-authorization-binding:v1",
+      "path": "schemas/commercial-authorization-binding.schema.json",
+      "sha256": "7d265ef074fb8ce380ecd4fc5202fe8c55e5dd6f44a748a4b74524a5b0c1ec85"
+    },
+    {
+      "id": "urn:agent-platform:compatibility-decision:v1",
+      "path": "schemas/compatibility-decision.schema.json",
+      "sha256": "e22438a793cba9e4b879eb520b53cc910ad584aa8a462234b104b03d52a77031"
+    },
+    {
+      "id": "urn:agent-platform:compatibility-evidence:v1",
+      "path": "schemas/compatibility-evidence.schema.json",
+      "sha256": "71cdcae2e5d9922a2db381f45db0fc143bf1cab7743ea32aa4d7c24402a5f7fe"
+    },
+    {
+      "id": "urn:agent-platform:context-package:v1",
+      "path": "schemas/context-package.schema.json",
+      "sha256": "2625cd2ba07db3caa1aaa558643947b4519006e622fa5970a531d8393337bd18"
+    },
+    {
+      "id": "urn:agent-platform:effective-execution-limits:v1",
+      "path": "schemas/effective-execution-limits.schema.json",
+      "sha256": "4e5ff55f2f2d69fc9014cd7cef59a745b687ea9932554119ed7c1daace7d44f5"
+    },
+    {
+      "id": "urn:agent-platform:effective-permissions:v1",
+      "path": "schemas/effective-permissions.schema.json",
+      "sha256": "d44aab98d0eededac3ac1efc29c8a2f41c08dee6427fb3adbb1cde6b2d1bcced"
+    },
+    {
+      "id": "urn:agent-platform:execution-budget:v1",
+      "path": "schemas/execution-budget.schema.json",
+      "sha256": "4ae9cffa920104006eddf5341a0875331828c717e63b2ec6a6fb583c39b6c4f8"
+    },
+    {
+      "id": "urn:agent-platform:execution-scope:v1",
+      "path": "schemas/execution-scope.schema.json",
+      "sha256": "517a5fca769208dc1afaa122ceb6f3b239709c56e825c98840ad7c71dfdc733d"
+    },
+    {
+      "id": "urn:agent-platform:gateway-port-binding:v1",
+      "path": "schemas/gateway-port-binding.schema.json",
+      "sha256": "6fe4d6e09d349801f7932e2085900a99fd1144d8e2c217cc04ad16c29e396d3f"
+    },
+    {
+      "id": "urn:agent-platform:policy-decision:v1",
+      "path": "schemas/policy-decision.schema.json",
+      "sha256": "4f44d412b44526a40b3c5bc3c7a4aab8e1ad0d01d3a020d06a6ea55b37e81109"
+    },
+    {
+      "id": "urn:agent-platform:runtime-authorization:v1",
+      "path": "schemas/runtime-authorization.schema.json",
+      "sha256": "e178a1157d5932f2c650b3ed0ef7997c15daeabc4a4e8b37ecd5b8480a578592"
+    },
+    {
+      "id": "urn:agent-platform:runtime-gateway-bindings:v1",
+      "path": "schemas/runtime-gateway-bindings.schema.json",
+      "sha256": "c711b30a58c86190cede41ff0341792e6e9f4c1760c508bc77460b7d41aeea84"
+    },
+    {
+      "id": "urn:agent-platform:runtime-input-content:v1",
+      "path": "schemas/runtime-input-content.schema.json",
+      "sha256": "b4277752548c7005079b4fc4a4688e987963793a8cc07cd3585c8cee16619918"
+    },
+    {
+      "id": "urn:agent-platform:runtime-input-envelope:v1",
+      "path": "schemas/runtime-input-envelope.schema.json",
+      "sha256": "d1e776fdfc9a4911ee11237f08d8ee934ded412afb312e3d205d85583c0b2f02"
+    },
+    {
+      "id": "urn:agent-platform:standard-error:v1",
+      "path": "schemas/standard-error.schema.json",
+      "sha256": "1d24ba4f5bd8887603cf23bfcf2eef9e2dfc11292c87353682ef106a9d4bdf49"
+    },
+    {
+      "id": "urn:agent-platform:system-safety-control:v1",
+      "path": "schemas/system-safety-control.schema.json",
+      "sha256": "0bb0b4cc6cb8a0e253caaf7b99c7d0c59b0965d4fb520273093bdec81c657db0"
+    },
+    {
+      "id": "urn:agent-platform:usage-observation:v1",
+      "path": "schemas/usage-observation.schema.json",
+      "sha256": "384ab7ea3dba1fc49eebd5c91ae38a3563fd0bdf8d7b0776abda5ab8044a034b"
+    }
+  ]
+}

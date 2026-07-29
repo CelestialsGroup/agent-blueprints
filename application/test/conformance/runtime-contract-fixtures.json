@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "positive": [
+    ["examples/contracts/agent-runtime-capabilities.json", "urn:agent-platform:agent-runtime-capabilities:v1"],
+    ["examples/contracts/agent-runtime-checkpoint-manifest.json", "urn:agent-platform:agent-runtime-checkpoint-manifest:v1"],
+    ["examples/contracts/agent-runtime-command-token-claims.json", "urn:agent-platform:agent-runtime-invocation-token-claims:v1"],
+    ["examples/contracts/agent-runtime-command.json", "urn:agent-platform:agent-runtime-command:v1"],
+    ["examples/contracts/agent-runtime-event-page.json", "urn:agent-platform:agent-runtime-event-page:v1"],
+    ["examples/contracts/agent-runtime-event-read-operation-descriptor.json", "urn:agent-platform:agent-runtime-event-read-operation-descriptor:v1"],
+    ["examples/contracts/agent-runtime-event.json", "urn:agent-platform:agent-runtime-event:v1"],
+    ["examples/contracts/agent-runtime-events-token-claims.json", "urn:agent-platform:agent-runtime-invocation-token-claims:v1"],
+    ["examples/contracts/agent-runtime-invocation-jws-header.json", "urn:agent-platform:agent-runtime-invocation-jws-header:v1"],
+    ["examples/contracts/agent-runtime-invocation-token-claims.json", "urn:agent-platform:agent-runtime-invocation-token-claims:v1"],
+    ["examples/contracts/agent-runtime-run-status.json", "urn:agent-platform:agent-runtime-run-status:v1"],
+    ["examples/contracts/agent-runtime-start-no-sandbox.json", "urn:agent-platform:agent-runtime-start-request:v1"],
+    ["examples/contracts/agent-runtime-start-request.json", "urn:agent-platform:agent-runtime-start-request:v1"],
+    ["examples/contracts/agent-runtime-status-operation-descriptor.json", "urn:agent-platform:agent-runtime-status-operation-descriptor:v1"],
+    ["examples/contracts/agent-runtime-status-token-claims.json", "urn:agent-platform:agent-runtime-invocation-token-claims:v1"],
+    ["examples/contracts/agent-runtime-subagent-spawn-decision-command.json", "urn:agent-platform:agent-runtime-command:v1"],
+    ["examples/contracts/agent-runtime-system-safety-command-token-claims.json", "urn:agent-platform:agent-runtime-invocation-token-claims:v1"],
+    ["examples/contracts/agent-runtime-system-safety-command.json", "urn:agent-platform:agent-runtime-command:v1"],
+    ["examples/contracts/agent-runtime-task-started-event-data.json", "urn:agent-platform:agent-runtime-event-data:v1"],
+    ["examples/contracts/system-safety-control.json", "urn:agent-platform:system-safety-control:v1"]
+  ],
+  "negative": [
+    ["tests/invalid/agent-runtime-append-input-missing-control-binding.json", "urn:agent-platform:agent-runtime-command:v1"],
+    ["tests/invalid/agent-runtime-command-mixed-control-authorities.json", "urn:agent-platform:agent-runtime-command:v1"],
+    ["tests/invalid/agent-runtime-event-wrong-payload.json", "urn:agent-platform:agent-runtime-event:v1"],
+    ["tests/invalid/agent-runtime-header-with-capability-type.json", "urn:agent-platform:agent-runtime-invocation-jws-header:v1"],
+    ["tests/invalid/agent-runtime-safety-token-authorizes-start.json", "urn:agent-platform:agent-runtime-invocation-token-claims:v1"],
+    ["tests/invalid/agent-runtime-system-safety-resume.json", "urn:agent-platform:agent-runtime-command:v1"],
+    ["tests/invalid/agent-runtime-system-safety-token-missing-digest.json", "urn:agent-platform:agent-runtime-invocation-token-claims:v1"],
+    ["tests/invalid/agent-runtime-token-missing-operation-contract.json", "urn:agent-platform:agent-runtime-invocation-token-claims:v1"],
+    ["tests/invalid/agent-runtime-token-missing-tenant.json", "urn:agent-platform:agent-runtime-invocation-token-claims:v1"],
+    ["tests/invalid/agent-runtime-token-operation-contract-replay.json", "urn:agent-platform:agent-runtime-invocation-token-claims:v1"],
+    ["tests/invalid/child-runtime-start-missing-spawn-binding.json", "urn:agent-platform:agent-runtime-start-request:v1"],
+    ["tests/invalid/child-runtime-start-with-input-message.json", "urn:agent-platform:agent-runtime-start-request:v1"],
+    ["tests/invalid/runtime-checkpoint-compatible-missing-decision.json", "urn:agent-platform:agent-runtime-checkpoint-manifest:v1"],
+    ["tests/invalid/runtime-start-missing-executable-input.json", "urn:agent-platform:agent-runtime-start-request:v1"],
+    ["tests/invalid/system-safety-control-hard-revocation-pause.json", "urn:agent-platform:system-safety-control:v1"],
+    ["tests/invalid/system-safety-control-resume.json", "urn:agent-platform:system-safety-control:v1"]
+  ]
+}

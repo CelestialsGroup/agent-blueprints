@@ -7,7 +7,13 @@ name = "agent-native-runtime"
 version = "0.1.0"
 description = "Native Agent Runtime Provider for the Agent project"
 requires-python = ">=3.13,<3.15"
-dependencies = []
+dependencies = [
+  "cryptography==49.0.0",
+  "jsonschema==4.26.0",
+  "PyJWT==2.13.0",
+  "rfc8785==0.1.4",
+  "typing-extensions==4.15.0",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/agent_native_runtime"]

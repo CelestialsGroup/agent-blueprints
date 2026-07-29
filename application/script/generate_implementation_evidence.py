@@ -52,12 +52,20 @@ COMPONENTS = {
     "native-runtime": {
         "artifact_name": "agent-native-runtime-wheel",
         "build_system": "uv0.11.30+hatchling1.31.0+python3.14.6",
-        "toolchain_keys": ["PYTHON_TOOLCHAIN_IMAGE", "UV_BINARY_IMAGE"],
+        "toolchain_keys": [
+            "PYTHON_TOOLCHAIN_IMAGE",
+            "UV_BINARY_IMAGE",
+            "RUNTIME_PYTHON_CODEGEN_IMAGE",
+        ],
+        "inventory_tags": ["native-runtime", "runtime-contract-projection"],
         "source_files": [
             "toolchain/uv-toolchain.Dockerfile",
+            "toolchain/runtime-python-codegen-packages.json",
             "runtime/native/build-constraints.txt",
             "runtime/native/pyproject.toml",
             "runtime/native/uv.lock",
+            "script/generate_runtime_contract.sh",
+            "script/runtime_contract_projection.py",
             "script/validate_implementation.sh",
         ],
         "source_directories": ["runtime/native/src", "runtime/native/test"],
@@ -137,7 +145,7 @@ def create_sbom(component_name: str, source_digest: str, inventory: list[dict[st
     ]
     relationships: list[dict[str, str]] = []
     for dependency in sorted(inventory, key=lambda item: item["purl"]):
-        dependency_id = spdx_id(dependency["name"])
+        dependency_id = spdx_id(f"{dependency['name']}-{dependency['version']}")
         packages.append(
             {
                 "SPDXID": dependency_id,

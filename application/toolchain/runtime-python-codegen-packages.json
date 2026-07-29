@@ -1,0 +1,127 @@
+{
+  "distribution_count": 29,
+  "distributions": [
+    {
+      "name": "annotated-types",
+      "version": "0.8.0"
+    },
+    {
+      "name": "anyio",
+      "version": "4.14.2"
+    },
+    {
+      "name": "argcomplete",
+      "version": "3.7.0"
+    },
+    {
+      "name": "black",
+      "version": "26.5.1"
+    },
+    {
+      "name": "certifi",
+      "version": "2026.7.22"
+    },
+    {
+      "name": "click",
+      "version": "8.4.2"
+    },
+    {
+      "name": "datamodel-code-generator",
+      "version": "0.71.0"
+    },
+    {
+      "name": "genson",
+      "version": "1.4.0"
+    },
+    {
+      "name": "h11",
+      "version": "0.16.0"
+    },
+    {
+      "name": "httpcore",
+      "version": "1.0.9"
+    },
+    {
+      "name": "httpx",
+      "version": "0.28.1"
+    },
+    {
+      "name": "idna",
+      "version": "3.18"
+    },
+    {
+      "name": "inflect",
+      "version": "7.5.0"
+    },
+    {
+      "name": "isort",
+      "version": "8.0.1"
+    },
+    {
+      "name": "jinja2",
+      "version": "3.1.6"
+    },
+    {
+      "name": "markupsafe",
+      "version": "3.0.3"
+    },
+    {
+      "name": "more-itertools",
+      "version": "11.1.0"
+    },
+    {
+      "name": "mypy-extensions",
+      "version": "1.1.0"
+    },
+    {
+      "name": "packaging",
+      "version": "26.2"
+    },
+    {
+      "name": "pathspec",
+      "version": "1.1.1"
+    },
+    {
+      "name": "pip",
+      "version": "26.1.2"
+    },
+    {
+      "name": "platformdirs",
+      "version": "4.11.0"
+    },
+    {
+      "name": "pydantic",
+      "version": "2.13.4"
+    },
+    {
+      "name": "pydantic-core",
+      "version": "2.46.4"
+    },
+    {
+      "name": "pytokens",
+      "version": "0.4.1"
+    },
+    {
+      "name": "pyyaml",
+      "version": "6.0.3"
+    },
+    {
+      "name": "typeguard",
+      "version": "4.5.2"
+    },
+    {
+      "name": "typing-extensions",
+      "version": "4.16.0"
+    },
+    {
+      "name": "typing-inspection",
+      "version": "0.4.2"
+    }
+  ],
+  "generator": {
+    "name": "datamodel-code-generator",
+    "version": "0.71.0"
+  },
+  "image_reference": "koxudaxi/datamodel-code-generator:0.71.0@sha256:8f4fa7691eec8eb2fdee6216db914c42561bdd68dc10abe1aa347003f932ff3f",
+  "schema_version": 1
+}

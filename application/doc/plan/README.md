@@ -23,3 +23,7 @@ Current plans:
 - `B03.1-temporal-orchestration-replay-foundation.md`: bounded Temporal
   dependency admission, adapter, WorkflowRun start-confirmation, worker
   versioning, real-Temporal recovery, and deterministic Replay foundation.
+- `B03.2-native-runtime-core-conformance-safety-integration.md`: staged Runtime
+  Contract projection and dependency admission, Native Runtime Core component,
+  Go Provider adapter, platform authority prerequisites, and fenced System
+  Cancel integration plan with explicit Conformance evidence boundaries.

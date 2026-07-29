@@ -25,6 +25,12 @@ fencing, and real-database concurrency evidence without adding a Broker or Redis
 dependency. The remaining Phase 0B domain model, Temporal, Runtime HTTP, and
 product execution remain later slices.
 
+B03.2-P0 adds a 39-Schema Runtime Contract projection, digest-pinned Python
+generator image with an exact 29-distribution manifest, isolated sum-locked Go
+generator graph, exact Python Runtime lock, and independent Draft 2020-12,
+JOSE, and JCS fixture evidence. It does not add a Runtime service or production
+control path.
+
 Run `make validate-implementation` from the repository root. The command uses
 the exact container images in `toolchain/toolchain.env` when host toolchains do
 not match the governed versions. Reproducible B01 build artifacts are written
