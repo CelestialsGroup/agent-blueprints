@@ -15,6 +15,10 @@ dependencies = [
   "typing-extensions==4.15.0",
 ]
 
+[project.scripts]
+agent-native-runtime-migrate = "agent_native_runtime.cli:migrate_main"
+agent-native-runtime-serve = "agent_native_runtime.cli:serve_main"
+
 [dependency-groups]
 dev = [
   "mypy==2.3.0",

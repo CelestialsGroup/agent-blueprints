@@ -8,7 +8,11 @@ The B03.2a0 tests use a bounded private executor and a real SQLite file. The
 B03.2a1.0 tests add locked Strict I-JSON vectors, Schema and semantic admission,
 EdDSA/ES256 JWS verification, negative token matrices, and authorized read
 transactions. They do not substitute for the a1.1 real HTTP/mTLS process
-boundary or the a2 Go adapter and Suite harness.
+boundary or the a2 Go adapter and Suite harness. B03.2a1.1.1 adds a separate
+post-build matrix that installs the reproducible wheel, generates ephemeral test
+PKI, exercises the real migrate/serve subprocesses and bounded TLS/HTTP
+lifecycle, then discards every private test key. It does not enable or claim
+Start, Command, Status, or Event transport.
 
 The locked Gate runs Ruff format/lint, mypy strict checking, and these tests in
 one uv-frozen Python 3.14.6 environment. Durable tests also corrupt persisted

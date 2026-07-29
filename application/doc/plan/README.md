@@ -27,7 +27,7 @@ Current plans:
   Contract projection and dependency admission, Native Runtime Core component,
   Go Provider adapter, platform authority prerequisites, and fenced System
   Cancel integration plan with explicit Conformance evidence boundaries.
-- `B03.2a1-secure-provider-process.md`: approved split plan and validated a1.0
-  Secure Admission Core candidate, plus the later mTLS Provider Process; covers Strict
+- `B03.2a1-secure-provider-process.md`: approved split plan, validated a1.0/a1.1.0,
+  and the a1.1.1 mTLS Process Foundation candidate; covers Strict
   I-JSON, Schema/semantic admission, JWS binding, migrations, process tests,
   evidence, rollback, and explicit authority boundaries.

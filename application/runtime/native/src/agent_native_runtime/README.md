@@ -4,8 +4,11 @@ The package contains the B03.2a0 private durable Runtime kernel and the
 B03.2a1.0 secure admission core. It provides Provider-local SQLite state,
 command handling, cursor events, same-revision checkpoint/restart, bounded
 Strict I-JSON and Schema admission, JWS verification, and a replaceable
-execution-loop Port. HTTP/TLS process behavior and governed Gateway clients
-remain later slices.
+execution-loop Port. B03.2a1.1.1 adds only the component process foundation:
+immutable startup configuration, separate migrate/serve CLI, bounded loopback
+HTTP/1.1 and TLS, exact test workload identity mapping, Capabilities,
+health/readiness, and bounded drain. Runtime mutation/read routes and governed
+Gateway clients remain later slices.
 
 Modules in this package must not read PostgreSQL or Temporal persistence, store
 Platform authority, expose secrets, or leak private Agent/Thread/Checkpoint
