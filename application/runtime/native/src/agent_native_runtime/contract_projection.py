@@ -9,7 +9,6 @@ from jsonschema import Draft202012Validator, FormatChecker
 from referencing import Registry, Resource
 from referencing.jsonschema import DRAFT202012
 
-
 ALLOWED_JWS_ALGORITHMS = frozenset({"EdDSA", "ES256"})
 
 
@@ -50,11 +49,16 @@ def build_draft202012_validator(
             raise ValueError("Schema document lacks an absolute $id")
         schemas[identifier] = document
         resources.append(
-            (identifier, Resource.from_contents(document, default_specification=DRAFT202012))
+            (
+                identifier,
+                Resource.from_contents(document, default_specification=DRAFT202012),
+            )
         )
     try:
         root = schemas[schema_id]
     except KeyError as error:
-        raise ValueError(f"Schema is outside the admitted projection: {schema_id}") from error
+        raise ValueError(
+            f"Schema is outside the admitted projection: {schema_id}"
+        ) from error
     registry = Registry().with_resources(resources)
     return Draft202012Validator(root, registry=registry, format_checker=FormatChecker())

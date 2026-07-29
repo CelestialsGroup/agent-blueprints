@@ -15,5 +15,37 @@ dependencies = [
   "typing-extensions==4.15.0",
 ]
 
+[dependency-groups]
+dev = [
+  "mypy==2.3.0",
+  "ruff==0.16.0",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/agent_native_runtime"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 88
+extend-exclude = ["src/agent_native_runtime/generated"]
+
+[tool.ruff.lint]
+select = ["B", "E", "F", "I", "RUF", "SIM", "UP"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+warn_unreachable = true
+show_error_codes = true
+pretty = true
+files = ["src/agent_native_runtime", "test"]
+exclude = ["src/agent_native_runtime/generated/"]
+
+[[tool.mypy.overrides]]
+module = ["agent_native_runtime.generated.*"]
+follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+module = ["jsonschema", "jsonschema.*"]
+ignore_missing_imports = true

@@ -155,6 +155,11 @@ expected_python_runtime_dependencies = {
 }
 if set(pyproject["project"]["dependencies"]) != expected_python_runtime_dependencies:
     raise AssertionError("Native Runtime dependencies differ from the admitted P0 set")
+expected_python_quality_dependencies = {"mypy==2.3.0", "ruff==0.16.0"}
+if set(pyproject.get("dependency-groups", {}).get("dev", [])) != (
+    expected_python_quality_dependencies
+):
+    raise AssertionError("Native Runtime quality dependencies differ from the admitted set")
 
 uv_lock = tomllib.loads((ROOT / "runtime/native/uv.lock").read_text(encoding="utf-8"))
 if uv_lock.get("requires-python") != ">=3.13, <3.15":
@@ -235,6 +240,10 @@ required_components.update(
         ("referencing", "0.37.0"),
         ("rfc8785", "0.1.4"),
         ("rpds-py", "2026.6.3"),
+        ("ast-serialize", "0.6.0"),
+        ("librt", "0.13.0"),
+        ("mypy", "2.3.0"),
+        ("ruff", "0.16.0"),
         ("typing-extensions", "4.15.0"),
         ("annotated-types", "0.8.0"),
         ("anyio", "4.14.2"),
@@ -363,6 +372,32 @@ for item in admitted_runtime_projection_dependencies:
     ):
         raise AssertionError(f"{component_name} must record reviewed alternatives")
 
+admitted_native_quality_dependencies = [
+    item
+    for item in inventory["components"]
+    if item.get("native_runtime_lock_distribution") is True
+]
+for item in admitted_native_quality_dependencies:
+    component_name = f"{item['name']}@{item['version']}"
+    if item.get("maintenance_status") not in {"active", "upstream_selected"}:
+        raise AssertionError(f"{component_name} must record reviewed maintenance status")
+    for field in (
+        "maintenance_evidence",
+        "security_review_source",
+        "security_reviewed_at",
+        "upgrade_strategy",
+        "rollback_strategy",
+    ):
+        if not isinstance(item.get(field), str) or not item[field].strip():
+            raise AssertionError(f"{component_name} is missing {field}")
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", item["security_reviewed_at"]):
+        raise AssertionError(f"{component_name} has an invalid security review date")
+    alternatives = item.get("alternatives_considered")
+    if not isinstance(alternatives, list) or not alternatives or not all(
+        isinstance(alternative, str) and alternative.strip() for alternative in alternatives
+    ):
+        raise AssertionError(f"{component_name} must record reviewed alternatives")
+
 go_mod_components = {
     (match.group(1), match.group(2).removeprefix("v"))
     for line in go_mod.splitlines()
@@ -440,12 +475,13 @@ locked_python_runtime = {
     for package in uv_lock["package"]
     if package.get("source", {}).get("registry")
 }
-inventory_python_runtime = {
+inventory_python_runtime_lock = {
     (canonical_python_name(item["name"]), item["version"])
     for item in inventory["components"]
     if item["kind"] == "python_runtime_dependency"
+    or item.get("native_runtime_lock_distribution") is True
 }
-if locked_python_runtime != inventory_python_runtime:
+if locked_python_runtime != inventory_python_runtime_lock:
     raise AssertionError("uv.lock and reviewed Python Runtime dependency inventory differ")
 
 if inventory_by_name["github.com/pressly/goose/v3"].get("artifact_sha256") != toolchain[

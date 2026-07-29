@@ -14,6 +14,7 @@ UV_TOOLCHAIN_TAG="agent-uv-toolchain:${UV_VERSION}-python${PYTHON_VERSION}"
 EVIDENCE_DIR="$ROOT/build/evidence/b01"
 B03_EVIDENCE_DIR="$ROOT/build/evidence/b03.1"
 P0_EVIDENCE_DIR="$ROOT/build/evidence/b03.2-p0"
+A0_EVIDENCE_DIR="$ROOT/build/evidence/b03.2a0"
 CACHE_DIR="$ROOT/.cache/implementation"
 SQLC_CHECK_DIR="$CACHE_DIR/sqlc-check"
 P0_RUN_DIR="$CACHE_DIR/b03.2-p0-validation"
@@ -165,17 +166,34 @@ for attempt in range(50):
 
 docker run --rm \
   -e AGENT_CONTRACT_ROOT=/contract \
+  -e MYPY_CACHE_DIR=/tmp/mypy-cache \
   -e PYTHONDONTWRITEBYTECODE=1 \
+  -e RUFF_CACHE_DIR=/tmp/ruff-cache \
   -e UV_CACHE_DIR=/cache/uv \
   -e UV_LINK_MODE=copy \
   -e UV_PROJECT_ENVIRONMENT=/tmp/native-runtime-venv \
   -v "$CACHE_DIR:/cache" \
   -v "$CONTRACT_ROOT:/contract:ro" \
   -v "$ROOT:/workspace:ro" \
-  -w /workspace \
+  -w /workspace/runtime/native \
   "$UV_TOOLCHAIN_TAG" \
   run --frozen --project /workspace/runtime/native \
-    python -m unittest discover -s runtime/native/test \
+    sh -euc '
+      test "$(ruff --version)" = "ruff 0.16.0"
+      ruff --version
+      ruff format --check src test
+      echo "Ruff format check passed."
+      ruff check src test
+      echo "Ruff lint check passed."
+      case "$(mypy --version)" in
+        "mypy 2.3.0"*) ;;
+        *) echo "unexpected mypy version: $(mypy --version)" >&2; exit 1 ;;
+      esac
+      mypy --version
+      mypy --config-file pyproject.toml
+      echo "mypy strict check passed."
+      python -m unittest discover -s test -v
+    ' \
     2>&1 | tee "$P0_RUN_DIR/python-validation.log"
 
 docker run --rm \
@@ -221,6 +239,19 @@ docker run --rm \
   -v "$EVIDENCE_DIR:/out:ro" \
   "$PYTHON_TOOLCHAIN_IMAGE" \
   sh -euc '
+    python -c '\''
+import os
+import zipfile
+
+wheel = "/out/artifacts/native/" + os.environ["NATIVE_WHEEL"]
+with zipfile.ZipFile(wheel) as archive:
+    names = set(archive.namelist())
+for required in (
+    "agent_native_runtime/migrations/0001_runtime_durable_kernel.up.sql",
+    "agent_native_runtime/migrations/0001_runtime_durable_kernel.down.sql",
+):
+    assert required in names, required
+'\''
     python -m pip install --disable-pip-version-check --no-deps --root-user-action ignore \
       --target /tmp/native-runtime \
       "/out/artifacts/native/$NATIVE_WHEEL" >/dev/null
@@ -258,6 +289,21 @@ docker run --rm \
     --supply-chain-log /validation/supply-chain.log \
     --output /out/runtime-contract-projection.json
 
+mkdir -p "$A0_EVIDENCE_DIR"
+docker run --rm \
+  -e AGENT_CONTRACT_ROOT=/contract \
+  -v "$CONTRACT_ROOT:/contract:ro" \
+  -v "$ROOT:/workspace:ro" \
+  -v "$P0_RUN_DIR:/validation:ro" \
+  -v "$A0_EVIDENCE_DIR:/out" \
+  -w /workspace \
+  "$PYTHON_TOOLCHAIN_IMAGE" \
+  python script/generate_native_runtime_kernel_evidence.py \
+    --application-base-revision "$APPLICATION_BASE_REVISION" \
+    --validation-command "make validate-implementation" \
+    --python-validation-log /validation/python-validation.log \
+    --output /out/native-runtime-durable-kernel.json
+
 docker run --rm \
   -e AGENT_CONTRACT_ROOT=/contract \
   -v "$CONTRACT_ROOT:/contract:ro" \
@@ -283,4 +329,4 @@ docker run --rm \
     --traceability-report /out/evidence/phase0-implementation-traceability.json \
     --output-dir /out/evidence
 
-echo "B03.2-P0 Contract projection and bounded B03.1 validation passed; reproducible evidence preserved."
+echo "B03.2a0 durable kernel, B03.2-P0 projection, and bounded B03.1 validation passed; reproducible evidence preserved."

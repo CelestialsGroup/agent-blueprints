@@ -1,0 +1,10 @@
+DROP INDEX IF EXISTS runtime_events_read_idx;
+DROP INDEX IF EXISTS execution_work_claim_idx;
+DROP TABLE IF EXISTS execution_work;
+DROP TABLE IF EXISTS checkpoint_manifests;
+DROP TABLE IF EXISTS runtime_events;
+DROP TABLE IF EXISTS runtime_commands;
+DROP TABLE IF EXISTS consumed_mutation_jtis;
+DROP TABLE IF EXISTS start_idempotency;
+DROP TABLE IF EXISTS runtime_runs;
+DROP TABLE IF EXISTS provider_metadata;

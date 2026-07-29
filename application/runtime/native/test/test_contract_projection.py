@@ -3,7 +3,9 @@ from __future__ import annotations
 import json
 import os
 import unittest
+from collections.abc import Mapping
 from pathlib import Path
+from typing import Any, ClassVar, Protocol, cast
 
 import jwt
 from cryptography.hazmat.primitives.asymmetric import ec, ed25519
@@ -20,29 +22,44 @@ from agent_native_runtime.generated.runtimeapi import (
     agent_runtime_start_request,
 )
 
-
 ROOT = Path(__file__).resolve().parents[3]
 CONTRACT_ROOT = Path(
     os.environ.get("AGENT_CONTRACT_ROOT", ROOT.parent / "contract")
 ).resolve()
 
 
+class Validator(Protocol):
+    def validate(self, instance: object) -> None: ...
+
+
 class RuntimeContractProjectionTest(unittest.TestCase):
+    documents: ClassVar[list[Mapping[str, Any]]]
+    fixtures: ClassVar[dict[str, list[tuple[str, str]]]]
+
     @classmethod
     def setUpClass(cls) -> None:
-        projection = json.loads(
-            (ROOT / "internal/generated/runtimeapi/projection-manifest.json").read_text(
-                encoding="utf-8"
-            )
+        projection = cast(
+            dict[str, Any],
+            json.loads(
+                (
+                    ROOT / "internal/generated/runtimeapi/projection-manifest.json"
+                ).read_text(encoding="utf-8")
+            ),
         )
         cls.documents = [
-            json.loads((CONTRACT_ROOT / item["path"]).read_text(encoding="utf-8"))
+            cast(
+                Mapping[str, Any],
+                json.loads((CONTRACT_ROOT / item["path"]).read_text(encoding="utf-8")),
+            )
             for item in projection["schemas"]
         ]
-        cls.fixtures = json.loads(
-            (ROOT / "test/conformance/runtime-contract-fixtures.json").read_text(
-                encoding="utf-8"
-            )
+        cls.fixtures = cast(
+            dict[str, list[tuple[str, str]]],
+            json.loads(
+                (ROOT / "test/conformance/runtime-contract-fixtures.json").read_text(
+                    encoding="utf-8"
+                )
+            ),
         )
 
     def test_generated_transport_is_importable_and_closed(self) -> None:
@@ -50,16 +67,18 @@ class RuntimeContractProjectionTest(unittest.TestCase):
         self.assertTrue(agent_runtime_start_request.Schema.__closed__)
 
     def test_locked_runtime_fixtures_have_draft2020_parity(self) -> None:
-        validators = {}
+        validators: dict[str, Validator] = {}
         for relative, schema_id in self.fixtures["positive"]:
             validator = validators.setdefault(
-                schema_id, build_draft202012_validator(schema_id, self.documents)
+                schema_id,
+                cast(Validator, build_draft202012_validator(schema_id, self.documents)),
             )
             value = json.loads((CONTRACT_ROOT / relative).read_text(encoding="utf-8"))
             validator.validate(value)
         for relative, schema_id in self.fixtures["negative"]:
             validator = validators.setdefault(
-                schema_id, build_draft202012_validator(schema_id, self.documents)
+                schema_id,
+                cast(Validator, build_draft202012_validator(schema_id, self.documents)),
             )
             value = json.loads((CONTRACT_ROOT / relative).read_text(encoding="utf-8"))
             with self.subTest(relative=relative), self.assertRaises(ValidationError):
