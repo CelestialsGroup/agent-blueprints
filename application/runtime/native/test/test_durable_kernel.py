@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import stat
@@ -8,7 +9,9 @@ import unittest
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
+from importlib.resources import files
 from pathlib import Path
+from typing import Literal
 from unittest.mock import patch
 
 from agent_native_runtime.contract_projection import build_draft202012_validator
@@ -31,10 +34,13 @@ from agent_native_runtime.model import (
     MutationAdmission,
     RuntimeConfiguration,
     RuntimeEvent,
+    RuntimeSecurityBinding,
+    RuntimeStatus,
     StartMutation,
     event_data_to_document,
     format_timestamp,
 )
+from agent_native_runtime.store import SQLiteRuntimeStore
 
 ROOT = Path(__file__).resolve().parents[3]
 CONTRACT_ROOT = Path(
@@ -138,15 +144,112 @@ class DurableKernelTest(unittest.TestCase):
         self,
         jti: str,
         *,
-        operation: str = "start",
+        mutation: StartMutation | CommandMutation,
         authority_mode: str = "execution",
     ) -> MutationAdmission:
+        operation: Literal["start", "submit_command"]
+        if isinstance(mutation, StartMutation):
+            operation = "start"
+            tenant_id = mutation.tenant_id
+            provider_revision_id = self.configuration.provider_revision_id
+            runtime_run_id = mutation.runtime_run_id
+            agent_run_id = mutation.agent_run_id
+            workflow_run_id = mutation.workflow_run_id
+            work_order_id = mutation.work_order_id
+            run_manifest_digest = mutation.run_manifest_digest
+            runtime_authorization_digest = mutation.runtime_authorization_digest
+            invocation_id = mutation.invocation_id
+            invocation_attempt_id = mutation.invocation_attempt_id
+            fencing_token = mutation.fencing_token
+            operation_contract_id = "urn:agent-platform:agent-runtime-start-request:v1"
+            operation_digest_profile = "rfc8785-request-excluding-request-digest-v1"
+            operation_request_digest = mutation.request_digest
+        else:
+            operation = "submit_command"
+            binding = self.kernel.store.get_security_binding(mutation.runtime_run_id)
+            tenant_id = binding.tenant_id
+            provider_revision_id = binding.provider_revision_id
+            runtime_run_id = binding.runtime_run_id
+            agent_run_id = binding.agent_run_id
+            workflow_run_id = binding.workflow_run_id
+            work_order_id = binding.work_order_id
+            run_manifest_digest = binding.run_manifest_digest
+            runtime_authorization_digest = binding.runtime_authorization_digest
+            invocation_id = mutation.invocation_id
+            invocation_attempt_id = mutation.invocation_attempt_id
+            fencing_token = mutation.fencing_token
+            operation_contract_id = "urn:agent-platform:agent-runtime-command:v1"
+            operation_digest_profile = "rfc8785-command-excluding-command-digest-v1"
+            operation_request_digest = mutation.command_digest
         return MutationAdmission(
             issuer="agent-platform",
+            subject="runtime-controller",
             jti=jti,
-            operation=operation,  # type: ignore[arg-type]
+            operation=operation,
             authority_mode=authority_mode,  # type: ignore[arg-type]
+            issued_at=self.clock(),
+            not_before=self.clock(),
             expires_at=self.clock() + timedelta(minutes=2),
+            tenant_id=tenant_id,
+            provider_revision_id=provider_revision_id,
+            runtime_run_id=runtime_run_id,
+            agent_run_id=agent_run_id,
+            workflow_run_id=workflow_run_id,
+            work_order_id=work_order_id,
+            run_manifest_digest=run_manifest_digest,
+            runtime_authorization_digest=runtime_authorization_digest,
+            invocation_id=invocation_id,
+            invocation_attempt_id=invocation_attempt_id,
+            fencing_token=fencing_token,
+            policy_decision_digest=digest("5"),
+            execution_budget_digest=digest("6"),
+            effective_permissions_digest=digest("7"),
+            operation_contract_id=operation_contract_id,
+            operation_digest_profile=operation_digest_profile,
+            operation_request_digest=operation_request_digest,
+        )
+
+    def security_binding(self, mutation: StartMutation) -> RuntimeSecurityBinding:
+        return RuntimeSecurityBinding(
+            tenant_id=mutation.tenant_id,
+            provider_revision_id=self.configuration.provider_revision_id,
+            runtime_run_id=mutation.runtime_run_id,
+            agent_run_id=mutation.agent_run_id,
+            workflow_run_id=mutation.workflow_run_id,
+            work_order_id=mutation.work_order_id,
+            run_manifest_digest=mutation.run_manifest_digest,
+            runtime_authorization_digest=mutation.runtime_authorization_digest,
+            policy_decision_digest=digest("5"),
+            execution_budget_digest=digest("6"),
+            effective_permissions_digest=digest("7"),
+            authorization_issued_at=self.clock() - timedelta(minutes=1),
+            authorization_expires_at=self.clock() + timedelta(minutes=5),
+            policy_decided_at=self.clock() - timedelta(minutes=2),
+            policy_expires_at=self.clock() + timedelta(minutes=10),
+            budget_created_at=self.clock() - timedelta(minutes=3),
+            budget_expires_at=self.clock() + timedelta(minutes=10),
+            commercial_authorization_expires_at=self.clock() + timedelta(minutes=10),
+            artifact_grants_not_before=None,
+            artifact_grants_expire_at=None,
+        )
+
+    def start(self, mutation: StartMutation, jti: str) -> RuntimeStatus:
+        return self.kernel.start(
+            mutation,
+            self.admission(jti, mutation=mutation),
+            self.security_binding(mutation),
+        )
+
+    def submit(
+        self,
+        mutation: CommandMutation,
+        jti: str,
+        *,
+        authority_mode: str = "execution",
+    ) -> RuntimeStatus:
+        return self.kernel.submit_command(
+            mutation,
+            self.admission(jti, mutation=mutation, authority_mode=authority_mode),
         )
 
     def command(
@@ -181,7 +284,7 @@ class DurableKernelTest(unittest.TestCase):
 
     def start_and_run(self, runtime_run_id: str = "runtime-run-1") -> StartMutation:
         mutation = self.start_mutation(runtime_run_id)
-        self.kernel.start(mutation, self.admission(f"start-jti-{runtime_run_id}-0001"))
+        self.start(mutation, f"start-jti-{runtime_run_id}-0001")
         self.assertTrue(self.kernel.process_one(self.executor, owner="worker-1"))
         self.assertEqual(self.kernel.status(runtime_run_id).status, "running")
         return mutation
@@ -213,9 +316,10 @@ class DurableKernelTest(unittest.TestCase):
             migrations = connection.execute(
                 "SELECT version, migration_digest FROM schema_migrations"
             ).fetchall()
-            self.assertEqual(len(migrations), 1)
-            self.assertEqual(migrations[0]["version"], 1)
-            self.assertEqual(len(migrations[0]["migration_digest"]), 64)
+            self.assertEqual([row["version"] for row in migrations], [1, 2])
+            self.assertTrue(
+                all(len(row["migration_digest"]) == 64 for row in migrations)
+            )
         finally:
             connection.close()
 
@@ -250,40 +354,126 @@ class DurableKernelTest(unittest.TestCase):
     ) -> None:
         self.kernel.store.rollback_empty()
         self.kernel = NativeRuntimeKernel.open(self.configuration, clock=self.clock)
-        self.kernel.start(
-            self.start_mutation(), self.admission("start-jti-rollback-0001")
-        )
+        mutation = self.start_mutation()
+        self.start(mutation, "start-jti-rollback-0001")
         with self.assertRaises(StateConflictError):
             self.kernel.store.rollback_empty()
 
+    def test_data_bearing_v1_store_cannot_invent_security_bindings(self) -> None:
+        configuration = replace(
+            self.configuration,
+            state_root=Path(self.temporary.name) / "data-bearing-v1",
+        )
+        store = SQLiteRuntimeStore(configuration)
+        migration = (
+            files("agent_native_runtime.migrations")
+            .joinpath("0001_runtime_durable_kernel.up.sql")
+            .read_text(encoding="utf-8")
+        )
+        connection = store._connect()
+        try:
+            store._enable_wal(connection)
+            connection.execute("BEGIN IMMEDIATE")
+            connection.execute(
+                """
+                CREATE TABLE schema_migrations (
+                    version INTEGER PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    migration_digest TEXT NOT NULL,
+                    applied_at TEXT NOT NULL
+                ) STRICT
+                """
+            )
+            store._execute_sql_script(connection, migration)
+            connection.execute(
+                """
+                INSERT INTO schema_migrations(
+                    version, name, migration_digest, applied_at
+                ) VALUES (1, 'runtime_durable_kernel', ?, ?)
+                """,
+                (
+                    hashlib.sha256(migration.encode()).hexdigest(),
+                    format_timestamp(self.clock()),
+                ),
+            )
+            connection.execute(
+                """
+                INSERT INTO runtime_runs(
+                    runtime_run_id, tenant_id, conversation_id, work_order_id,
+                    workflow_run_id, agent_run_id, start_request_digest,
+                    run_manifest_digest, runtime_authorization_digest,
+                    workspace_revision_id, workspace_revision_digest, status,
+                    observed_fencing_token, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'accepted', 1, ?, ?)
+                """,
+                (
+                    "unbound-runtime-run",
+                    "tenant-1",
+                    "conversation-1",
+                    "work-order-1",
+                    "workflow-run-1",
+                    "agent-run-1",
+                    digest("1"),
+                    digest("2"),
+                    digest("3"),
+                    "workspace-revision-1",
+                    digest("4"),
+                    format_timestamp(self.clock()),
+                    format_timestamp(self.clock()),
+                ),
+            )
+            connection.execute("COMMIT")
+        finally:
+            connection.close()
+
+        with self.assertRaisesRegex(
+            ConfigurationDriftError,
+            "cannot be authoritatively upgraded",
+        ):
+            store.migrate()
+        connection = store._connect()
+        try:
+            self.assertEqual(
+                [
+                    row["version"]
+                    for row in connection.execute(
+                        "SELECT version FROM schema_migrations ORDER BY version"
+                    )
+                ],
+                [1],
+            )
+            self.assertIsNone(
+                connection.execute(
+                    "SELECT 1 FROM sqlite_master WHERE name = 'runtime_security_bindings'"
+                ).fetchone()
+            )
+        finally:
+            connection.close()
+
     def test_start_idempotency_conflict_and_jti_consumption_are_atomic(self) -> None:
         mutation = self.start_mutation()
-        first = self.kernel.start(mutation, self.admission("start-jti-idempotent-0001"))
-        replay = self.kernel.start(
-            mutation, self.admission("start-jti-idempotent-0002")
-        )
+        first = self.start(mutation, "start-jti-idempotent-0001")
+        replay = self.start(mutation, "start-jti-idempotent-0002")
         self.assertEqual(first, replay)
         self.assertEqual(
             len(self.kernel.events("runtime-run-1", after_event_sequence=0).events), 1
         )
 
         conflict_jti = "start-jti-conflict-0001"
+        conflict = replace(mutation, request_digest=digest("9"))
         with self.assertRaises(IdempotencyConflictError):
-            self.kernel.start(
-                replace(mutation, request_digest=digest("9")),
-                self.admission(conflict_jti),
-            )
+            self.start(conflict, conflict_jti)
         self.assertEqual(self.kernel.store.count_jti("agent-platform", conflict_jti), 0)
 
         with self.assertRaises(MutationReplayError):
-            self.kernel.start(mutation, self.admission("start-jti-idempotent-0001"))
+            self.start(mutation, "start-jti-idempotent-0001")
         self.assertEqual(self.kernel.status("runtime-run-1").status, "accepted")
 
     def test_concurrent_start_serializes_to_one_run_and_one_event(self) -> None:
         mutation = self.start_mutation()
 
         def start(jti: str) -> object:
-            return self.kernel.start(mutation, self.admission(jti))
+            return self.start(mutation, jti)
 
         with ThreadPoolExecutor(max_workers=2) as pool:
             results = list(
@@ -313,72 +503,49 @@ class DurableKernelTest(unittest.TestCase):
         )
         jti = "start-jti-sandbox-0001"
         with self.assertRaises(InvalidMutationError):
-            self.kernel.start(mutation, self.admission(jti))
+            self.start(mutation, jti)
         self.assertEqual(self.kernel.store.count_jti("agent-platform", jti), 0)
 
     def test_command_sequence_fencing_replay_and_authority(self) -> None:
         self.start_and_run()
         pause = self.command("pause-1", 1, 2, "pause")
-        paused = self.kernel.submit_command(
-            pause,
-            self.admission("command-jti-pause-0001", operation="submit_command"),
-        )
+        paused = self.submit(pause, "command-jti-pause-0001")
         self.assertEqual(paused.status, "paused")
-        replay = self.kernel.submit_command(
-            pause,
-            self.admission("command-jti-pause-0002", operation="submit_command"),
-        )
+        replay = self.submit(pause, "command-jti-pause-0002")
         self.assertEqual(replay.last_command_sequence, 1)
         with self.assertRaises(MutationReplayError):
-            self.kernel.submit_command(
-                pause,
-                self.admission("command-jti-pause-0001", operation="submit_command"),
-            )
+            self.submit(pause, "command-jti-pause-0001")
 
         sequence_jti = "command-jti-sequence-0001"
+        sequence = self.command("resume-3", 3, 4, "resume")
         with self.assertRaises(CommandSequenceError):
-            self.kernel.submit_command(
-                self.command("resume-3", 3, 4, "resume"),
-                self.admission(sequence_jti, operation="submit_command"),
-            )
+            self.submit(sequence, sequence_jti)
         self.assertEqual(self.kernel.store.count_jti("agent-platform", sequence_jti), 0)
 
         stale_jti = "command-jti-stale-0001"
+        stale = self.command("resume-2", 2, 2, "resume")
         with self.assertRaises(StaleFencingError):
-            self.kernel.submit_command(
-                self.command("resume-2", 2, 2, "resume"),
-                self.admission(stale_jti, operation="submit_command"),
-            )
+            self.submit(stale, stale_jti)
         self.assertEqual(self.kernel.store.count_jti("agent-platform", stale_jti), 0)
 
         safety_jti = "command-jti-safety-0001"
+        safety = self.command("resume-safety", 2, 3, "resume", system=True)
         with self.assertRaises(InvalidMutationError):
-            self.kernel.submit_command(
-                self.command("resume-safety", 2, 3, "resume", system=True),
-                self.admission(
-                    safety_jti,
-                    operation="submit_command",
-                    authority_mode="safety_control",
-                ),
-            )
+            self.submit(safety, safety_jti, authority_mode="safety_control")
         self.assertEqual(self.kernel.store.count_jti("agent-platform", safety_jti), 0)
 
-        resumed = self.kernel.submit_command(
-            self.command("resume-2", 2, 3, "resume"),
-            self.admission("command-jti-resume-0001", operation="submit_command"),
-        )
+        resume = self.command("resume-2", 2, 3, "resume")
+        resumed = self.submit(resume, "command-jti-resume-0001")
         self.assertEqual(resumed.status, "running")
         self.assertEqual(resumed.observed_fencing_token, 3)
 
     def test_cancel_is_terminal_only_after_executor_evidence(self) -> None:
         self.start_and_run()
-        accepted = self.kernel.submit_command(
-            self.command("cancel-1", 1, 2, "cancel", system=True),
-            self.admission(
-                "command-jti-cancel-0001",
-                operation="submit_command",
-                authority_mode="safety_control",
-            ),
+        cancel = self.command("cancel-1", 1, 2, "cancel", system=True)
+        accepted = self.submit(
+            cancel,
+            "command-jti-cancel-0001",
+            authority_mode="safety_control",
         )
         self.assertEqual(accepted.status, "cancel_requested")
         self.assertIsNone(accepted.completed_at)
@@ -397,10 +564,8 @@ class DurableKernelTest(unittest.TestCase):
 
     def test_checkpoint_is_content_addressed_and_restores_same_revision(self) -> None:
         self.start_and_run()
-        self.kernel.submit_command(
-            self.command("checkpoint-1", 1, 2, "checkpoint"),
-            self.admission("command-jti-checkpoint-0001", operation="submit_command"),
-        )
+        checkpoint_command = self.command("checkpoint-1", 1, 2, "checkpoint")
+        self.submit(checkpoint_command, "command-jti-checkpoint-0001")
         self.assertTrue(self.kernel.process_one(self.executor, owner="worker-1"))
         source = self.kernel.status("runtime-run-1")
         self.assertIsNotNone(source.checkpoint)
@@ -420,7 +585,7 @@ class DurableKernelTest(unittest.TestCase):
             request_digest=digest("a"),
             checkpoint=checkpoint,
         )
-        self.kernel.start(restore, self.admission("start-jti-restore-0001"))
+        self.start(restore, "start-jti-restore-0001")
         self.assertTrue(self.kernel.process_one(self.executor, owner="worker-1"))
         self.assertEqual(
             self.executor.restored["runtime-run-2"],
@@ -434,15 +599,13 @@ class DurableKernelTest(unittest.TestCase):
         )
         rejected_jti = "start-jti-restore-rejected-0001"
         with self.assertRaises(CheckpointCompatibilityError):
-            self.kernel.start(rejected, self.admission(rejected_jti))
+            self.start(rejected, rejected_jti)
         self.assertEqual(self.kernel.store.count_jti("agent-platform", rejected_jti), 0)
 
     def test_cursor_resume_and_expiry_are_explicit(self) -> None:
         self.start_and_run()
-        self.kernel.submit_command(
-            self.command("checkpoint-1", 1, 2, "checkpoint"),
-            self.admission("command-jti-checkpoint-0001", operation="submit_command"),
-        )
+        checkpoint_command = self.command("checkpoint-1", 1, 2, "checkpoint")
+        self.submit(checkpoint_command, "command-jti-checkpoint-0001")
         self.kernel.process_one(self.executor, owner="worker-1")
         resumed = self.kernel.events("runtime-run-1", after_event_sequence=1)
         self.assertEqual([event.event_sequence for event in resumed.events], [2])
@@ -467,10 +630,8 @@ class DurableKernelTest(unittest.TestCase):
 
     def test_retention_rejects_a_checkpoint_with_missing_content(self) -> None:
         self.start_and_run()
-        self.kernel.submit_command(
-            self.command("checkpoint-1", 1, 2, "checkpoint"),
-            self.admission("command-jti-checkpoint-0001", operation="submit_command"),
-        )
+        checkpoint_command = self.command("checkpoint-1", 1, 2, "checkpoint")
+        self.submit(checkpoint_command, "command-jti-checkpoint-0001")
         self.kernel.process_one(self.executor, owner="worker-1")
         checkpoint_path = self.kernel.checkpoints.object_paths()[0]
         checkpoint_path.unlink()
@@ -487,9 +648,8 @@ class DurableKernelTest(unittest.TestCase):
         )
 
     def test_expired_work_lease_recovers_without_duplicate_run_or_event(self) -> None:
-        self.kernel.start(
-            self.start_mutation(), self.admission("start-jti-crash-recovery-0001")
-        )
+        mutation = self.start_mutation()
+        self.start(mutation, "start-jti-crash-recovery-0001")
         abandoned = self.kernel.store.claim_work("dead-worker", self.clock())
         self.assertIsNotNone(abandoned)
         assert abandoned is not None
@@ -507,9 +667,8 @@ class DurableKernelTest(unittest.TestCase):
         )
 
     def test_expired_worker_cannot_complete_after_lease_loss(self) -> None:
-        self.kernel.start(
-            self.start_mutation(), self.admission("start-jti-lease-fencing-0001")
-        )
+        mutation = self.start_mutation()
+        self.start(mutation, "start-jti-lease-fencing-0001")
         abandoned = self.kernel.store.claim_work("dead-worker", self.clock())
         self.assertIsNotNone(abandoned)
         assert abandoned is not None
@@ -523,10 +682,8 @@ class DurableKernelTest(unittest.TestCase):
 
     def test_checkpoint_object_may_be_orphaned_but_manifest_never_is(self) -> None:
         self.start_and_run()
-        self.kernel.submit_command(
-            self.command("checkpoint-1", 1, 2, "checkpoint"),
-            self.admission("command-jti-checkpoint-0001", operation="submit_command"),
-        )
+        checkpoint_command = self.command("checkpoint-1", 1, 2, "checkpoint")
+        self.submit(checkpoint_command, "command-jti-checkpoint-0001")
         with (
             patch.object(
                 self.kernel.store,
@@ -545,10 +702,8 @@ class DurableKernelTest(unittest.TestCase):
 
     def test_emitted_events_validate_against_locked_contract(self) -> None:
         self.start_and_run()
-        self.kernel.submit_command(
-            self.command("checkpoint-1", 1, 2, "checkpoint"),
-            self.admission("command-jti-checkpoint-0001", operation="submit_command"),
-        )
+        checkpoint_command = self.command("checkpoint-1", 1, 2, "checkpoint")
+        self.submit(checkpoint_command, "command-jti-checkpoint-0001")
         self.kernel.process_one(self.executor, owner="worker-1")
         projection = json.loads(
             (ROOT / "internal/generated/runtimeapi/projection-manifest.json").read_text(

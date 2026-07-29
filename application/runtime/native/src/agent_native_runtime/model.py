@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, Literal, cast
 
@@ -17,6 +17,9 @@ from .errors import (
 SHA256_DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
 TERMINAL_STATES = frozenset({"succeeded", "failed", "cancelled"})
 SUPPORTED_COMMANDS = frozenset({"pause", "resume", "cancel", "checkpoint"})
+RUNTIME_OPERATIONS = frozenset(
+    {"start", "read_status", "submit_command", "read_events"}
+)
 RUNTIME_EVENT_TYPES = frozenset(
     {
         "runtime.run.started",
@@ -124,20 +127,162 @@ class RuntimeConfiguration:
 @dataclass(frozen=True, slots=True)
 class MutationAdmission:
     issuer: str
+    subject: str
     jti: str
-    operation: Literal["start", "submit_command"]
+    operation: Literal["start", "read_status", "submit_command", "read_events"]
     authority_mode: Literal["execution", "safety_control"]
+    issued_at: datetime
+    not_before: datetime
     expires_at: datetime
+    tenant_id: str
+    provider_revision_id: str
+    runtime_run_id: str
+    agent_run_id: str
+    workflow_run_id: str
+    work_order_id: str
+    invocation_id: str
+    invocation_attempt_id: str
+    run_manifest_digest: str
+    runtime_authorization_digest: str
+    fencing_token: int
+    policy_decision_digest: str
+    execution_budget_digest: str
+    effective_permissions_digest: str
+    operation_contract_id: str
+    operation_digest_profile: str
+    operation_request_digest: str
+    clock_skew_seconds: int = 0
 
     def validate(self, *, operation: str, now: datetime) -> None:
-        require_identifier(self.issuer, "issuer", maximum=200)
+        for field, value in (
+            ("issuer", self.issuer),
+            ("subject", self.subject),
+            ("tenant_id", self.tenant_id),
+            ("provider_revision_id", self.provider_revision_id),
+            ("runtime_run_id", self.runtime_run_id),
+            ("agent_run_id", self.agent_run_id),
+            ("workflow_run_id", self.workflow_run_id),
+            ("work_order_id", self.work_order_id),
+            ("invocation_id", self.invocation_id),
+            ("invocation_attempt_id", self.invocation_attempt_id),
+            ("operation_contract_id", self.operation_contract_id),
+            ("operation_digest_profile", self.operation_digest_profile),
+        ):
+            require_identifier(value, field, maximum=500)
         require_identifier(self.jti, "jti", minimum=16, maximum=500)
+        for field, value in (
+            ("run_manifest_digest", self.run_manifest_digest),
+            ("runtime_authorization_digest", self.runtime_authorization_digest),
+            ("policy_decision_digest", self.policy_decision_digest),
+            ("execution_budget_digest", self.execution_budget_digest),
+            ("effective_permissions_digest", self.effective_permissions_digest),
+            ("operation_request_digest", self.operation_request_digest),
+        ):
+            require_digest(value, field)
         if self.operation != operation:
             raise InvalidMutationError("mutation admission operation does not match")
+        if self.operation not in RUNTIME_OPERATIONS:
+            raise InvalidMutationError("mutation admission operation is invalid")
         if self.authority_mode not in {"execution", "safety_control"}:
             raise InvalidMutationError("mutation admission authority mode is invalid")
-        if require_utc(self.expires_at, "expires_at") <= require_utc(now, "now"):
+        if self.fencing_token < 1:
+            raise InvalidMutationError(
+                "mutation admission fencing token must be positive"
+            )
+        if not 0 <= self.clock_skew_seconds <= 30:
+            raise InvalidMutationError("mutation admission clock skew is invalid")
+        issued_at = require_utc(self.issued_at, "issued_at")
+        not_before = require_utc(self.not_before, "not_before")
+        expires_at = require_utc(self.expires_at, "expires_at")
+        if not issued_at <= not_before < expires_at:
+            raise InvalidMutationError("mutation admission time window is invalid")
+        if expires_at - issued_at > timedelta(seconds=300):
+            raise InvalidMutationError("mutation admission exceeds the 300 second TTL")
+        now_utc = require_utc(now, "now")
+        skew = timedelta(seconds=self.clock_skew_seconds)
+        if issued_at > now_utc + skew or not_before > now_utc + skew:
+            raise InvalidMutationError("mutation admission is not yet valid")
+        if expires_at + skew <= now_utc:
             raise MutationExpiredError("mutation admission has expired")
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeSecurityBinding:
+    tenant_id: str
+    provider_revision_id: str
+    runtime_run_id: str
+    agent_run_id: str
+    workflow_run_id: str
+    work_order_id: str
+    run_manifest_digest: str
+    runtime_authorization_digest: str
+    policy_decision_digest: str
+    execution_budget_digest: str
+    effective_permissions_digest: str
+    authorization_issued_at: datetime
+    authorization_expires_at: datetime
+    policy_decided_at: datetime
+    policy_expires_at: datetime
+    budget_created_at: datetime
+    budget_expires_at: datetime
+    commercial_authorization_expires_at: datetime
+    artifact_grants_not_before: datetime | None
+    artifact_grants_expire_at: datetime | None
+
+    def validate(self) -> None:
+        for field, value in (
+            ("tenant_id", self.tenant_id),
+            ("provider_revision_id", self.provider_revision_id),
+            ("runtime_run_id", self.runtime_run_id),
+            ("agent_run_id", self.agent_run_id),
+            ("workflow_run_id", self.workflow_run_id),
+            ("work_order_id", self.work_order_id),
+        ):
+            require_identifier(value, field)
+        for field, value in (
+            ("run_manifest_digest", self.run_manifest_digest),
+            ("runtime_authorization_digest", self.runtime_authorization_digest),
+            ("policy_decision_digest", self.policy_decision_digest),
+            ("execution_budget_digest", self.execution_budget_digest),
+            ("effective_permissions_digest", self.effective_permissions_digest),
+        ):
+            require_digest(value, field)
+        lower_bounds = (
+            require_utc(self.authorization_issued_at, "authorization_issued_at"),
+            require_utc(self.policy_decided_at, "policy_decided_at"),
+            require_utc(self.budget_created_at, "budget_created_at"),
+        )
+        upper_bounds = (
+            require_utc(self.authorization_expires_at, "authorization_expires_at"),
+            require_utc(self.policy_expires_at, "policy_expires_at"),
+            require_utc(self.budget_expires_at, "budget_expires_at"),
+            require_utc(
+                self.commercial_authorization_expires_at,
+                "commercial_authorization_expires_at",
+            ),
+        )
+        if max(lower_bounds) >= min(upper_bounds):
+            raise InvalidMutationError("Runtime security binding time window is empty")
+        if (self.artifact_grants_not_before is None) != (
+            self.artifact_grants_expire_at is None
+        ):
+            raise InvalidMutationError("Artifact Grant time bounds are incomplete")
+        if self.artifact_grants_not_before is not None:
+            grant_lower = require_utc(
+                self.artifact_grants_not_before, "artifact_grants_not_before"
+            )
+            grant_upper = require_utc(
+                cast(datetime, self.artifact_grants_expire_at),
+                "artifact_grants_expire_at",
+            )
+            if grant_lower < self.authorization_issued_at:
+                raise InvalidMutationError(
+                    "Artifact Grant predates RuntimeAuthorization"
+                )
+            if grant_lower >= grant_upper or grant_upper > min(upper_bounds):
+                raise InvalidMutationError(
+                    "Artifact Grant exceeds the Runtime security window"
+                )
 
 
 @dataclass(frozen=True, slots=True)

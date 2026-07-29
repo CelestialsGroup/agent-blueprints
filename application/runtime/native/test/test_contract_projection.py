@@ -16,6 +16,7 @@ from agent_native_runtime.contract_projection import (
     build_draft202012_validator,
     canonicalize_json,
     decode_json_without_duplicate_keys,
+    decode_strict_ijson,
 )
 from agent_native_runtime.generated.runtimeapi import (
     agent_runtime_capabilities,
@@ -97,6 +98,37 @@ class RuntimeContractProjectionTest(unittest.TestCase):
         for encoded in (b'{"a":1,"a":2}', b'{"n":NaN}', b'{"n":Infinity}'):
             with self.subTest(encoded=encoded), self.assertRaises(ValueError):
                 decode_json_without_duplicate_keys(encoded)
+
+    def test_strict_ijson_matches_every_locked_vector(self) -> None:
+        vectors = json.loads(
+            (CONTRACT_ROOT / "testdata/jcs-v1/vectors.json").read_text(encoding="utf-8")
+        )
+        for vector in vectors["strict_valid"]:
+            with self.subTest(vector=vector["id"]):
+                value = decode_strict_ijson(vector["input"].encode())
+                self.assertEqual(canonicalize_json(value).decode(), vector["canonical"])
+        for vector in vectors["invalid"]:
+            with self.subTest(vector=vector["id"]), self.assertRaises(ValueError):
+                decode_strict_ijson(vector["input"].encode())
+
+    def test_strict_ijson_rejects_encoding_and_structural_overflow(self) -> None:
+        rejected = (
+            b"\xef\xbb\xbf{}",
+            b'"\xff"',
+            b"[[[0]]]",
+            b'{"a":1,"b":2}',
+            b'{"n":12345}',
+        )
+        options: tuple[dict[str, int], ...] = (
+            {},
+            {},
+            {"max_depth": 3},
+            {"max_nodes": 4},
+            {"max_number_token_bytes": 4},
+        )
+        for encoded, bounds in zip(rejected, options, strict=True):
+            with self.subTest(encoded=encoded), self.assertRaises(ValueError):
+                decode_strict_ijson(encoded, **bounds)
 
     def test_jose_allowlist_supports_eddsa_and_es256(self) -> None:
         claims = {"contract": "runtime-core-v1"}

@@ -75,6 +75,34 @@ class WorkLeaseLostError(RuntimeKernelError):
     code = "work_lease_lost"
 
 
+class AdmissionError(RuntimeKernelError):
+    code = "runtime_admission_rejected"
+
+
+class StrictJsonError(AdmissionError):
+    code = "strict_ijson_rejected"
+
+
+class EncodedBodyTooLargeError(AdmissionError):
+    code = "encoded_body_too_large"
+
+
+class ContractSchemaError(AdmissionError):
+    code = "runtime_contract_schema_rejected"
+
+
+class DigestMismatchError(AdmissionError):
+    code = "runtime_digest_mismatch"
+
+
+class TokenValidationError(AdmissionError):
+    code = "runtime_token_rejected"
+
+
+class AuthorizationBindingError(AdmissionError):
+    code = "runtime_authorization_binding_rejected"
+
+
 @dataclass(slots=True)
 class CursorExpiredError(RuntimeKernelError):
     work_order_id: str

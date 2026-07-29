@@ -12,6 +12,7 @@ from typing import Any, cast
 
 from .contract_projection import canonicalize_json
 from .errors import (
+    AuthorizationBindingError,
     CommandSequenceError,
     ConfigurationDriftError,
     CursorExpiredError,
@@ -37,6 +38,7 @@ from .model import (
     RuntimeEvent,
     RuntimeEventData,
     RuntimeEventType,
+    RuntimeSecurityBinding,
     RuntimeStatus,
     StartMutation,
     WorkItem,
@@ -47,7 +49,11 @@ from .model import (
     parse_timestamp,
 )
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
+MIGRATIONS = (
+    (1, "runtime_durable_kernel"),
+    (2, "secure_admission_core"),
+)
 
 
 def _sha256_document(value: dict[str, Any]) -> str:
@@ -110,12 +116,6 @@ class SQLiteRuntimeStore:
         connection = self._connect()
         try:
             self._enable_wal(connection)
-            migration = (
-                files("agent_native_runtime.migrations")
-                .joinpath("0001_runtime_durable_kernel.up.sql")
-                .read_text(encoding="utf-8")
-            )
-            migration_digest = hashlib.sha256(migration.encode("utf-8")).hexdigest()
             connection.execute("BEGIN IMMEDIATE")
             connection.execute(
                 """
@@ -127,28 +127,60 @@ class SQLiteRuntimeStore:
                 ) STRICT
                 """
             )
-            applied = connection.execute(
-                "SELECT version, migration_digest FROM schema_migrations ORDER BY version"
+            applied_rows = connection.execute(
+                "SELECT version, name, migration_digest FROM schema_migrations ORDER BY version"
             ).fetchall()
-            if any(row["version"] > SCHEMA_VERSION for row in applied):
+            if any(row["version"] > SCHEMA_VERSION for row in applied_rows):
                 raise ConfigurationDriftError(
                     "SQLite schema is newer than this Runtime"
                 )
-            version_one = next((row for row in applied if row["version"] == 1), None)
-            if version_one is None:
+            applied = {row["version"]: row for row in applied_rows}
+            if tuple(applied) != tuple(range(1, len(applied) + 1)):
+                raise ConfigurationDriftError(
+                    "SQLite migrations are not a contiguous prefix"
+                )
+            for version, name in MIGRATIONS:
+                migration = (
+                    files("agent_native_runtime.migrations")
+                    .joinpath(f"{version:04d}_{name}.up.sql")
+                    .read_text(encoding="utf-8")
+                )
+                migration_digest = hashlib.sha256(migration.encode("utf-8")).hexdigest()
+                existing = applied.get(version)
+                if existing is not None:
+                    if (
+                        existing["name"] != name
+                        or existing["migration_digest"] != migration_digest
+                    ):
+                        raise ConfigurationDriftError(
+                            f"applied SQLite migration {version} has drifted"
+                        )
+                    continue
+                if version == 2 and any(
+                    connection.execute(f"SELECT 1 FROM {table} LIMIT 1").fetchone()
+                    is not None
+                    for table in (
+                        "runtime_runs",
+                        "start_idempotency",
+                        "consumed_mutation_jtis",
+                        "runtime_commands",
+                        "runtime_events",
+                        "checkpoint_manifests",
+                        "execution_work",
+                    )
+                ):
+                    raise ConfigurationDriftError(
+                        "data-bearing a0 store cannot be authoritatively upgraded"
+                    )
                 self._execute_sql_script(connection, migration)
                 applied_at = format_timestamp(datetime.now().astimezone())
                 connection.execute(
                     """
                     INSERT INTO schema_migrations(
                         version, name, migration_digest, applied_at
-                    ) VALUES (1, 'runtime_durable_kernel', ?, ?)
+                    ) VALUES (?, ?, ?, ?)
                     """,
-                    (migration_digest, applied_at),
-                )
-            elif version_one["migration_digest"] != migration_digest:
-                raise ConfigurationDriftError(
-                    "applied SQLite migration digest has drifted"
+                    (version, name, migration_digest, applied_at),
                 )
             connection.execute("COMMIT")
         except BaseException:
@@ -208,10 +240,56 @@ class SQLiteRuntimeStore:
                     "immutable Runtime configuration differs from the state root binding"
                 )
 
+    def bind_security_configuration(
+        self,
+        *,
+        configuration_digest: str,
+        contract_source_revision: str,
+        contract_manifest_digest: str,
+        runtime_suite_digest: str,
+        schema_closure_digest: str,
+        now: datetime,
+    ) -> None:
+        with self._transaction() as connection:
+            row = connection.execute(
+                "SELECT * FROM provider_security_metadata WHERE singleton = 1"
+            ).fetchone()
+            expected = (
+                configuration_digest,
+                contract_source_revision,
+                contract_manifest_digest,
+                runtime_suite_digest,
+                schema_closure_digest,
+            )
+            if row is None:
+                connection.execute(
+                    """
+                    INSERT INTO provider_security_metadata(
+                        singleton, security_configuration_digest,
+                        contract_source_revision, contract_manifest_digest,
+                        runtime_suite_digest, schema_closure_digest, configured_at
+                    ) VALUES (1, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (*expected, format_timestamp(now)),
+                )
+                return
+            actual = (
+                row["security_configuration_digest"],
+                row["contract_source_revision"],
+                row["contract_manifest_digest"],
+                row["runtime_suite_digest"],
+                row["schema_closure_digest"],
+            )
+            if actual != expected:
+                raise ConfigurationDriftError(
+                    "immutable security configuration differs from the state root binding"
+                )
+
     def rollback_empty(self) -> None:
         with self._transaction() as connection:
             for table in (
                 "runtime_runs",
+                "start_idempotency",
                 "consumed_mutation_jtis",
                 "runtime_commands",
                 "runtime_events",
@@ -225,6 +303,14 @@ class SQLiteRuntimeStore:
                     raise StateConflictError(
                         "data-bearing Runtime schema is forward-only"
                     )
+            connection.execute("DELETE FROM provider_security_metadata")
+            migration = (
+                files("agent_native_runtime.migrations")
+                .joinpath("0002_secure_admission_core.down.sql")
+                .read_text(encoding="utf-8")
+            )
+            self._execute_sql_script(connection, migration)
+            connection.execute("DELETE FROM schema_migrations WHERE version = 2")
             connection.execute("DELETE FROM provider_metadata")
             migration = (
                 files("agent_native_runtime.migrations")
@@ -238,8 +324,11 @@ class SQLiteRuntimeStore:
         self,
         mutation: StartMutation,
         admission: MutationAdmission,
+        security_binding: RuntimeSecurityBinding,
         now: datetime,
     ) -> RuntimeStatus:
+        security_binding.validate()
+        self._validate_start_security_binding(mutation, admission, security_binding)
         timestamp = format_timestamp(now)
         checkpoint_json = (
             json.dumps(
@@ -262,6 +351,9 @@ class SQLiteRuntimeStore:
                     raise RuntimeRunConflictError(
                         "start replay changed the immutable runtime_run_id"
                     )
+                self._require_security_binding(
+                    connection, admission, minimum_fencing=False
+                )
                 self._consume_jti(
                     connection,
                     admission,
@@ -312,6 +404,49 @@ class SQLiteRuntimeStore:
                     mutation.fencing_token,
                     checkpoint_json,
                     timestamp,
+                    timestamp,
+                ),
+            )
+            connection.execute(
+                """
+                INSERT INTO runtime_security_bindings(
+                    runtime_run_id, tenant_id, provider_revision_id, agent_run_id,
+                    workflow_run_id, work_order_id, run_manifest_digest,
+                    runtime_authorization_digest, policy_decision_digest,
+                    execution_budget_digest, effective_permissions_digest,
+                    authorization_issued_at, authorization_expires_at,
+                    policy_decided_at, policy_expires_at, budget_created_at,
+                    budget_expires_at, commercial_authorization_expires_at,
+                    artifact_grants_not_before, artifact_grants_expire_at, bound_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    security_binding.runtime_run_id,
+                    security_binding.tenant_id,
+                    security_binding.provider_revision_id,
+                    security_binding.agent_run_id,
+                    security_binding.workflow_run_id,
+                    security_binding.work_order_id,
+                    security_binding.run_manifest_digest,
+                    security_binding.runtime_authorization_digest,
+                    security_binding.policy_decision_digest,
+                    security_binding.execution_budget_digest,
+                    security_binding.effective_permissions_digest,
+                    format_timestamp(security_binding.authorization_issued_at),
+                    format_timestamp(security_binding.authorization_expires_at),
+                    format_timestamp(security_binding.policy_decided_at),
+                    format_timestamp(security_binding.policy_expires_at),
+                    format_timestamp(security_binding.budget_created_at),
+                    format_timestamp(security_binding.budget_expires_at),
+                    format_timestamp(
+                        security_binding.commercial_authorization_expires_at
+                    ),
+                    format_timestamp(security_binding.artifact_grants_not_before)
+                    if security_binding.artifact_grants_not_before
+                    else None,
+                    format_timestamp(security_binding.artifact_grants_expire_at)
+                    if security_binding.artifact_grants_expire_at
+                    else None,
                     timestamp,
                 ),
             )
@@ -368,6 +503,13 @@ class SQLiteRuntimeStore:
             ).fetchone()
             if run is None:
                 raise RuntimeRunNotFoundError(mutation.runtime_run_id)
+            self._require_security_binding(
+                connection,
+                admission,
+                minimum_fencing=False,
+                validate_execution_window=True,
+            )
+            self._validate_command_authority(mutation, admission)
 
             existing = connection.execute(
                 """
@@ -410,7 +552,6 @@ class SQLiteRuntimeStore:
                 raise StaleFencingError(
                     "command fencing token must be strictly newer than the observed token"
                 )
-            self._validate_command_authority(mutation, admission)
             next_state, work_kind = self._command_transition(
                 run["status"], mutation.type
             )
@@ -486,6 +627,67 @@ class SQLiteRuntimeStore:
             return self._status(connection, runtime_run_id)
         finally:
             connection.close()
+
+    def get_security_binding(self, runtime_run_id: str) -> RuntimeSecurityBinding:
+        with self._read_transaction() as connection:
+            row = connection.execute(
+                "SELECT * FROM runtime_security_bindings WHERE runtime_run_id = ?",
+                (runtime_run_id,),
+            ).fetchone()
+            if row is None:
+                raise RuntimeRunNotFoundError(runtime_run_id)
+            return self._security_binding_from_row(row)
+
+    def authorized_status(
+        self, admission: MutationAdmission, now: datetime
+    ) -> RuntimeStatus:
+        admission.validate(operation="read_status", now=now)
+        with self._read_transaction() as connection:
+            self._require_security_binding(connection, admission, minimum_fencing=True)
+            return self._status(connection, admission.runtime_run_id)
+
+    def authorized_events(
+        self,
+        admission: MutationAdmission,
+        *,
+        after_sequence: int,
+        limit: int,
+        now: datetime,
+    ) -> EventPage:
+        admission.validate(operation="read_events", now=now)
+        if after_sequence < 0:
+            raise InvalidMutationError("after_sequence must not be negative")
+        if not 1 <= limit <= 1000:
+            raise InvalidMutationError("event limit must be between 1 and 1000")
+        with self._read_transaction() as connection:
+            self._require_security_binding(connection, admission, minimum_fencing=True)
+            run = connection.execute(
+                """
+                SELECT work_order_id, earliest_event_sequence, last_event_sequence
+                FROM runtime_runs WHERE runtime_run_id = ?
+                """,
+                (admission.runtime_run_id,),
+            ).fetchone()
+            if run is None:
+                raise RuntimeRunNotFoundError(admission.runtime_run_id)
+            if after_sequence < run["earliest_event_sequence"] - 1:
+                raise CursorExpiredError(
+                    work_order_id=run["work_order_id"],
+                    requested_after=after_sequence,
+                    earliest_available=run["earliest_event_sequence"],
+                    latest_available=run["last_event_sequence"],
+                )
+            rows = connection.execute(
+                """
+                SELECT * FROM runtime_events
+                WHERE runtime_run_id = ? AND event_sequence > ?
+                ORDER BY event_sequence ASC LIMIT ?
+                """,
+                (admission.runtime_run_id, after_sequence, limit),
+            ).fetchall()
+            events = tuple(self._event(row) for row in rows)
+            next_sequence = events[-1].event_sequence if events else after_sequence
+            return EventPage(events=events, next_event_sequence=next_sequence)
 
     def read_events(
         self, runtime_run_id: str, after_sequence: int, limit: int
@@ -765,6 +967,179 @@ class SQLiteRuntimeStore:
             )
         finally:
             connection.close()
+
+    def _validate_start_security_binding(
+        self,
+        mutation: StartMutation,
+        admission: MutationAdmission,
+        binding: RuntimeSecurityBinding,
+    ) -> None:
+        expected = (
+            mutation.tenant_id,
+            self.configuration.provider_revision_id,
+            mutation.runtime_run_id,
+            mutation.agent_run_id,
+            mutation.workflow_run_id,
+            mutation.work_order_id,
+            mutation.run_manifest_digest,
+            mutation.runtime_authorization_digest,
+        )
+        bound = (
+            binding.tenant_id,
+            binding.provider_revision_id,
+            binding.runtime_run_id,
+            binding.agent_run_id,
+            binding.workflow_run_id,
+            binding.work_order_id,
+            binding.run_manifest_digest,
+            binding.runtime_authorization_digest,
+        )
+        admitted = (
+            admission.tenant_id,
+            admission.provider_revision_id,
+            admission.runtime_run_id,
+            admission.agent_run_id,
+            admission.workflow_run_id,
+            admission.work_order_id,
+            admission.run_manifest_digest,
+            admission.runtime_authorization_digest,
+        )
+        if bound != expected or admitted != expected:
+            raise AuthorizationBindingError(
+                "Start request, token and durable security scope differ"
+            )
+        if (
+            admission.policy_decision_digest != binding.policy_decision_digest
+            or admission.execution_budget_digest != binding.execution_budget_digest
+            or admission.effective_permissions_digest
+            != binding.effective_permissions_digest
+            or admission.invocation_id != mutation.invocation_id
+            or admission.invocation_attempt_id != mutation.invocation_attempt_id
+            or admission.fencing_token != mutation.fencing_token
+            or admission.operation_request_digest != mutation.request_digest
+        ):
+            raise AuthorizationBindingError(
+                "Start token differs from the presented execution binding"
+            )
+        self._validate_admission_window(admission, binding)
+
+    def _require_security_binding(
+        self,
+        connection: sqlite3.Connection,
+        admission: MutationAdmission,
+        *,
+        minimum_fencing: bool,
+        validate_execution_window: bool = False,
+    ) -> sqlite3.Row:
+        row = connection.execute(
+            """
+            SELECT binding.*, run.observed_fencing_token
+            FROM runtime_security_bindings AS binding
+            JOIN runtime_runs AS run USING (runtime_run_id)
+            WHERE binding.runtime_run_id = ?
+            """,
+            (admission.runtime_run_id,),
+        ).fetchone()
+        if row is None:
+            raise RuntimeRunNotFoundError(admission.runtime_run_id)
+        expected = (
+            admission.tenant_id,
+            admission.provider_revision_id,
+            admission.agent_run_id,
+            admission.workflow_run_id,
+            admission.work_order_id,
+            admission.run_manifest_digest,
+            admission.runtime_authorization_digest,
+            admission.policy_decision_digest,
+            admission.execution_budget_digest,
+            admission.effective_permissions_digest,
+        )
+        actual = (
+            row["tenant_id"],
+            row["provider_revision_id"],
+            row["agent_run_id"],
+            row["workflow_run_id"],
+            row["work_order_id"],
+            row["run_manifest_digest"],
+            row["runtime_authorization_digest"],
+            row["policy_decision_digest"],
+            row["execution_budget_digest"],
+            row["effective_permissions_digest"],
+        )
+        if actual != expected:
+            raise AuthorizationBindingError(
+                "Runtime token does not match the durable security binding"
+            )
+        if minimum_fencing and admission.fencing_token < row["observed_fencing_token"]:
+            raise StaleFencingError(
+                "read token fencing is older than the observed Runtime fencing"
+            )
+        if validate_execution_window and admission.authority_mode == "execution":
+            self._validate_admission_window(
+                admission, self._security_binding_from_row(row)
+            )
+        return cast(sqlite3.Row, row)
+
+    @staticmethod
+    def _security_binding_from_row(row: sqlite3.Row) -> RuntimeSecurityBinding:
+        return RuntimeSecurityBinding(
+            tenant_id=row["tenant_id"],
+            provider_revision_id=row["provider_revision_id"],
+            runtime_run_id=row["runtime_run_id"],
+            agent_run_id=row["agent_run_id"],
+            workflow_run_id=row["workflow_run_id"],
+            work_order_id=row["work_order_id"],
+            run_manifest_digest=row["run_manifest_digest"],
+            runtime_authorization_digest=row["runtime_authorization_digest"],
+            policy_decision_digest=row["policy_decision_digest"],
+            execution_budget_digest=row["execution_budget_digest"],
+            effective_permissions_digest=row["effective_permissions_digest"],
+            authorization_issued_at=parse_timestamp(row["authorization_issued_at"]),
+            authorization_expires_at=parse_timestamp(row["authorization_expires_at"]),
+            policy_decided_at=parse_timestamp(row["policy_decided_at"]),
+            policy_expires_at=parse_timestamp(row["policy_expires_at"]),
+            budget_created_at=parse_timestamp(row["budget_created_at"]),
+            budget_expires_at=parse_timestamp(row["budget_expires_at"]),
+            commercial_authorization_expires_at=parse_timestamp(
+                row["commercial_authorization_expires_at"]
+            ),
+            artifact_grants_not_before=parse_timestamp(
+                row["artifact_grants_not_before"]
+            )
+            if row["artifact_grants_not_before"]
+            else None,
+            artifact_grants_expire_at=parse_timestamp(row["artifact_grants_expire_at"])
+            if row["artifact_grants_expire_at"]
+            else None,
+        )
+
+    @staticmethod
+    def _validate_admission_window(
+        admission: MutationAdmission, binding: RuntimeSecurityBinding
+    ) -> None:
+        lower_bounds = [
+            binding.authorization_issued_at,
+            binding.policy_decided_at,
+            binding.budget_created_at,
+        ]
+        upper_bounds = [
+            binding.authorization_expires_at,
+            binding.policy_expires_at,
+            binding.budget_expires_at,
+            binding.commercial_authorization_expires_at,
+        ]
+        if binding.artifact_grants_not_before is not None:
+            lower_bounds.append(binding.artifact_grants_not_before)
+            assert binding.artifact_grants_expire_at is not None
+            upper_bounds.append(binding.artifact_grants_expire_at)
+        if admission.not_before < max(lower_bounds):
+            raise AuthorizationBindingError(
+                "execution token predates its durable authorization facts"
+            )
+        if admission.expires_at > min(upper_bounds):
+            raise AuthorizationBindingError(
+                "execution token outlives its durable authorization facts"
+            )
 
     def _consume_jti(
         self,

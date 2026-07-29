@@ -15,6 +15,7 @@ EVIDENCE_DIR="$ROOT/build/evidence/b01"
 B03_EVIDENCE_DIR="$ROOT/build/evidence/b03.1"
 P0_EVIDENCE_DIR="$ROOT/build/evidence/b03.2-p0"
 A0_EVIDENCE_DIR="$ROOT/build/evidence/b03.2a0"
+A1_0_EVIDENCE_DIR="$ROOT/build/evidence/b03.2a1.0"
 CACHE_DIR="$ROOT/.cache/implementation"
 SQLC_CHECK_DIR="$CACHE_DIR/sqlc-check"
 P0_RUN_DIR="$CACHE_DIR/b03.2-p0-validation"
@@ -249,6 +250,8 @@ with zipfile.ZipFile(wheel) as archive:
 for required in (
     "agent_native_runtime/migrations/0001_runtime_durable_kernel.up.sql",
     "agent_native_runtime/migrations/0001_runtime_durable_kernel.down.sql",
+    "agent_native_runtime/migrations/0002_secure_admission_core.up.sql",
+    "agent_native_runtime/migrations/0002_secure_admission_core.down.sql",
 ):
     assert required in names, required
 '\''
@@ -304,6 +307,22 @@ docker run --rm \
     --python-validation-log /validation/python-validation.log \
     --output /out/native-runtime-durable-kernel.json
 
+mkdir -p "$A1_0_EVIDENCE_DIR"
+docker run --rm \
+  -e AGENT_CONTRACT_ROOT=/contract \
+  -v "$CONTRACT_ROOT:/contract:ro" \
+  -v "$ROOT:/workspace:ro" \
+  -v "$P0_RUN_DIR:/validation:ro" \
+  -v "$A1_0_EVIDENCE_DIR:/out" \
+  -w /workspace \
+  "$PYTHON_TOOLCHAIN_IMAGE" \
+  python script/generate_secure_admission_evidence.py \
+    --application-base-revision "$APPLICATION_BASE_REVISION" \
+    --validation-command "make validate-implementation" \
+    --python-validation-log /validation/python-validation.log \
+    --supply-chain-log /validation/supply-chain.log \
+    --output /out/secure-admission-core.json
+
 docker run --rm \
   -e AGENT_CONTRACT_ROOT=/contract \
   -v "$CONTRACT_ROOT:/contract:ro" \
@@ -329,4 +348,4 @@ docker run --rm \
     --traceability-report /out/evidence/phase0-implementation-traceability.json \
     --output-dir /out/evidence
 
-echo "B03.2a0 durable kernel, B03.2-P0 projection, and bounded B03.1 validation passed; reproducible evidence preserved."
+echo "B03.2a1.0 secure admission, B03.2a0 durable kernel, B03.2-P0 projection, and bounded B03.1 validation passed; reproducible evidence preserved."

@@ -13,6 +13,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 GIT_REVISION = re.compile(r"^[0-9a-f]{40,64}$")
+TEST_COUNT = re.compile(r"Ran (\d+) tests")
 EXPECTED_CASE_IDS = (
     "capabilities-immutable",
     "start-idempotent",
@@ -79,7 +80,9 @@ def source_manifest() -> dict[str, Any]:
             "path": path.relative_to(ROOT).as_posix(),
             "sha256": "sha256:" + sha256_file(path),
         }
-        for path in sorted(set(paths), key=lambda item: item.relative_to(ROOT).as_posix())
+        for path in sorted(
+            set(paths), key=lambda item: item.relative_to(ROOT).as_posix()
+        )
     ]
     encoded = json.dumps(files, separators=(",", ":"), sort_keys=True).encode("utf-8")
     return {
@@ -98,12 +101,16 @@ def runtime_suite(lock: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]
         os.environ.get("AGENT_CONTRACT_ROOT", ROOT.parent / "contract")
     ).resolve()
     suite = json.loads(
-        (contract_root / "conformance/runtime/v1/suite.json").read_text(encoding="utf-8")
+        (contract_root / "conformance/runtime/v1/suite.json").read_text(
+            encoding="utf-8"
+        )
     )
     if suite["suite_digest"] != lock_entry["suite_digest"]:
         raise AssertionError("Runtime Suite digest differs from the Application lock")
     profile = next(
-        profile for profile in suite["profiles"] if profile["profile_id"] == "runtime-core-v1"
+        profile
+        for profile in suite["profiles"]
+        if profile["profile_id"] == "runtime-core-v1"
     )
     case_ids = tuple(test["test_id"] for test in profile["tests"])
     if case_ids != EXPECTED_CASE_IDS:
@@ -183,7 +190,11 @@ def case_matrix() -> list[dict[str, str]]:
         ),
     }
     return [
-        {"case_id": case_id, "verdict": results[case_id][0], "boundary": results[case_id][1]}
+        {
+            "case_id": case_id,
+            "verdict": results[case_id][0],
+            "boundary": results[case_id][1],
+        }
         for case_id in EXPECTED_CASE_IDS
     ]
 
@@ -206,11 +217,13 @@ def main() -> None:
         "mypy 2.3.0",
         "Success: no issues found in",
         "mypy strict check passed.",
-        "Ran 23 tests",
         "OK",
     ):
         if fragment not in validation_text:
             raise AssertionError(f"Native Runtime validation log lacks {fragment!r}")
+    counts = [int(value) for value in TEST_COUNT.findall(validation_text)]
+    if not counts or counts[-1] < 36:
+        raise AssertionError("Native Runtime validation log lacks the current test set")
 
     arguments.output.parent.mkdir(parents=True, exist_ok=True)
     copied_log = arguments.output.parent / "native-runtime-validation.log"
@@ -269,7 +282,7 @@ def main() -> None:
                 "mypy_version": "2.3.0",
                 "mypy_strict": "passed",
             },
-            "test_count": 23,
+            "test_count": counts[-1],
         },
         "runtime_core_case_matrix": case_matrix(),
         "proven": [
@@ -283,7 +296,7 @@ def main() -> None:
             "locked Ruff format and lint plus mypy strict checks over Native Runtime source and tests",
         ],
         "not_proven": [
-            "HTTP server, process entrypoint, Strict I-JSON, body limits, StandardError, JWS or mTLS",
+            "this a0 evidence does not prove HTTP/process entrypoints, Strict I-JSON, body limits, StandardError, JWS or mTLS",
             "Go AgentRuntimeProvider Port, HTTP adapter, outcome_unknown classification or reconciliation",
             "complete Start executable-context or RuntimeAuthorization authority admission",
             "production ProviderRevision, AgentRun, RuntimeRun, RunManifest, InvocationAttempt or CanonicalEvent authority",

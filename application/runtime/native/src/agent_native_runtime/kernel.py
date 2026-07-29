@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 
 from .checkpoint import CheckpointObjectStore
 from .errors import (
+    AuthorizationBindingError,
     CheckpointCompatibilityError,
     InvalidMutationError,
     RuntimeKernelError,
@@ -19,6 +20,7 @@ from .model import (
     EventPage,
     MutationAdmission,
     RuntimeConfiguration,
+    RuntimeSecurityBinding,
     RuntimeStatus,
     StartMutation,
 )
@@ -58,7 +60,10 @@ class NativeRuntimeKernel:
         return kernel
 
     def start(
-        self, mutation: StartMutation, admission: MutationAdmission
+        self,
+        mutation: StartMutation,
+        admission: MutationAdmission,
+        security_binding: RuntimeSecurityBinding,
     ) -> RuntimeStatus:
         now = self.clock()
         mutation.validate(now)
@@ -70,10 +75,33 @@ class NativeRuntimeKernel:
         if mutation.checkpoint is not None:
             self._validate_restore(mutation.checkpoint)
             self.checkpoints.read_verified(mutation.checkpoint)
-        return self.store.start(mutation, admission, now)
+        if (
+            admission.operation_contract_id
+            != "urn:agent-platform:agent-runtime-start-request:v1"
+            or admission.operation_digest_profile
+            != "rfc8785-request-excluding-request-digest-v1"
+            or admission.provider_revision_id != self.configuration.provider_revision_id
+        ):
+            raise AuthorizationBindingError(
+                "Start admission uses the wrong Contract, profile or ProviderRevision"
+            )
+        return self.store.start(mutation, admission, security_binding, now)
 
     def status(self, runtime_run_id: str) -> RuntimeStatus:
         return self.store.get_status(runtime_run_id)
+
+    def authorized_status(self, admission: MutationAdmission) -> RuntimeStatus:
+        if (
+            admission.operation_contract_id
+            != "urn:agent-platform:agent-runtime-status-operation-descriptor:v1"
+            or admission.operation_digest_profile != "rfc8785-full-document-v1"
+            or admission.authority_mode != "safety_control"
+            or admission.provider_revision_id != self.configuration.provider_revision_id
+        ):
+            raise AuthorizationBindingError(
+                "Status admission uses the wrong authority, Contract or ProviderRevision"
+            )
+        return self.store.authorized_status(admission, self.clock())
 
     def submit_command(
         self, mutation: CommandMutation, admission: MutationAdmission
@@ -81,12 +109,37 @@ class NativeRuntimeKernel:
         now = self.clock()
         mutation.validate(now)
         admission.validate(operation="submit_command", now=now)
+        self._validate_command_admission(mutation, admission)
         return self.store.submit_command(mutation, admission, now)
 
     def events(
         self, runtime_run_id: str, *, after_event_sequence: int, limit: int = 100
     ) -> EventPage:
         return self.store.read_events(runtime_run_id, after_event_sequence, limit)
+
+    def authorized_events(
+        self,
+        admission: MutationAdmission,
+        *,
+        after_event_sequence: int,
+        limit: int = 100,
+    ) -> EventPage:
+        if (
+            admission.operation_contract_id
+            != "urn:agent-platform:agent-runtime-event-read-operation-descriptor:v1"
+            or admission.operation_digest_profile != "rfc8785-full-document-v1"
+            or admission.authority_mode != "safety_control"
+            or admission.provider_revision_id != self.configuration.provider_revision_id
+        ):
+            raise AuthorizationBindingError(
+                "Event admission uses the wrong authority, Contract or ProviderRevision"
+            )
+        return self.store.authorized_events(
+            admission,
+            after_sequence=after_event_sequence,
+            limit=limit,
+            now=self.clock(),
+        )
 
     def prune_events(self, runtime_run_id: str, *, through_sequence: int) -> int:
         checkpoint = self.store.get_status(runtime_run_id).checkpoint
@@ -181,4 +234,28 @@ class NativeRuntimeKernel:
         if not 0 <= manifest.size_bytes <= self.configuration.max_checkpoint_bytes:
             raise CheckpointCompatibilityError(
                 "checkpoint size exceeds the configured limit"
+            )
+
+    def _validate_command_admission(
+        self, mutation: CommandMutation, admission: MutationAdmission
+    ) -> None:
+        if (
+            admission.operation_contract_id
+            != "urn:agent-platform:agent-runtime-command:v1"
+            or admission.operation_digest_profile
+            != "rfc8785-command-excluding-command-digest-v1"
+            or admission.provider_revision_id != self.configuration.provider_revision_id
+        ):
+            raise AuthorizationBindingError(
+                "Command admission uses the wrong Contract, profile or ProviderRevision"
+            )
+        if (
+            admission.runtime_run_id != mutation.runtime_run_id
+            or admission.invocation_id != mutation.invocation_id
+            or admission.invocation_attempt_id != mutation.invocation_attempt_id
+            or admission.fencing_token != mutation.fencing_token
+            or admission.operation_request_digest != mutation.command_digest
+        ):
+            raise AuthorizationBindingError(
+                "Command body and Runtime invocation token differ"
             )

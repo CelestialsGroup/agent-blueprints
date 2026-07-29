@@ -25,6 +25,28 @@ class RuntimeBuildIdentityTest(unittest.TestCase):
             BUILD_IDENTITY.target_profile,
             {profile["profile_id"] for profile in suite["profiles"]},
         )
+        lock = json.loads((ROOT / "dependency-lock.json").read_text(encoding="utf-8"))
+        projection = json.loads(
+            (ROOT / "internal/generated/runtimeapi/projection-manifest.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(
+            BUILD_IDENTITY.contract_source_revision,
+            lock["contract"]["source_revision"],
+        )
+        self.assertEqual(
+            BUILD_IDENTITY.contract_manifest_digest,
+            lock["contract"]["manifest_digest"],
+        )
+        self.assertEqual(
+            BUILD_IDENTITY.runtime_openapi_sha256,
+            projection["openapi_sha256"],
+        )
+        self.assertEqual(
+            BUILD_IDENTITY.runtime_schema_closure_sha256,
+            projection["schema_closure_sha256"],
+        )
 
 
 if __name__ == "__main__":
