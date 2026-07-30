@@ -11,6 +11,7 @@ from .errors import (
     DigestMismatchError,
     EncodedBodyTooLargeError,
     StrictJsonError,
+    TokenValidationError,
     UnsupportedOperationError,
 )
 from .kernel import Clock, NativeRuntimeKernel, system_clock
@@ -722,7 +723,7 @@ class SecureAdmissionCore:
             admission.system_safety_control_digest,
         )
         if actual != expected:
-            raise AuthorizationBindingError(
+            raise TokenValidationError(
                 "Runtime token does not match the presented execution context"
             )
 

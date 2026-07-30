@@ -28,6 +28,12 @@ Current plans:
   Go Provider adapter, platform authority prerequisites, and fenced System
   Cancel integration plan with explicit Conformance evidence boundaries.
 - `B03.2a1-secure-provider-process.md`: approved split plan, validated a1.0/a1.1.0,
-  and the a1.1.1 mTLS Process Foundation candidate; covers Strict
-  I-JSON, Schema/semantic admission, JWS binding, migrations, process tests,
-  evidence, rollback, and explicit authority boundaries.
+  the a1.1.1 mTLS Process Foundation candidate, and the independently validated
+  a1.1.2 Start boundary candidate; covers Strict I-JSON, Schema/semantic
+  admission, JWS binding, migrations, process tests, evidence, rollback, and
+  explicit authority boundaries.
+- `B03.2a1.1.2-start-http-boundary.md`: approved execution plan and mandatory
+  per-stage ledger for the Start-only HTTP boundary, including strict HTTP/1.1
+  framing, pre-parse body limits, mTLS/JWS binding, closed Contract response
+  mapping, installed-wheel controlled-fault evidence, rollback, stop conditions,
+  and the completed full-Gate ledger.

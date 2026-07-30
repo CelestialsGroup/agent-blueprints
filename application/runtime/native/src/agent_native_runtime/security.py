@@ -354,6 +354,7 @@ class RuntimeContractProjection:
             "urn:agent-platform:agent-runtime-invocation-jws-header:v1",
             "urn:agent-platform:agent-runtime-invocation-token-claims:v1",
             "urn:agent-platform:agent-runtime-capabilities:v1",
+            "urn:agent-platform:agent-runtime-run-status:v1",
             "urn:agent-platform:standard-error:v1",
         )
         try:
@@ -419,9 +420,10 @@ class RuntimeTokenVerifier:
         header_bytes = _decode_base64url(segments[0])
         claims_bytes = _decode_base64url(segments[1])
         _decode_base64url(segments[2])
-        header = self._strict_document(header_bytes, "Runtime JWS header")
-        self.projection.validate(
-            "urn:agent-platform:agent-runtime-invocation-jws-header:v1", header
+        header = self._token_document(
+            header_bytes,
+            "Runtime JWS header",
+            "urn:agent-platform:agent-runtime-invocation-jws-header:v1",
         )
         algorithm = _string(header.get("alg"), "Runtime JWS alg")
         kid = _string(header.get("kid"), "Runtime JWS kid")
@@ -443,12 +445,13 @@ class RuntimeTokenVerifier:
             )
         except jwt.PyJWTError as error:
             raise TokenValidationError("Runtime token signature is invalid") from error
-        claims = self._strict_document(claims_bytes, "Runtime token claims")
+        claims = self._token_document(
+            claims_bytes,
+            "Runtime token claims",
+            "urn:agent-platform:agent-runtime-invocation-token-claims:v1",
+        )
         if decoded != claims:
             raise TokenValidationError("Runtime token claims decode is ambiguous")
-        self.projection.validate(
-            "urn:agent-platform:agent-runtime-invocation-token-claims:v1", claims
-        )
         self._validate_claim_bindings(
             claims,
             authenticated_caller=authenticated_caller,
@@ -527,6 +530,18 @@ class RuntimeTokenVerifier:
         ):
             raise StrictJsonError(f"{name} must be a JSON object")
         return cast(dict[str, Any], value)
+
+    def _token_document(
+        self, encoded: bytes, name: str, schema_id: str
+    ) -> dict[str, Any]:
+        try:
+            document = self._strict_document(encoded, name)
+            self.projection.validate(schema_id, document)
+        except (ContractSchemaError, StrictJsonError) as error:
+            raise TokenValidationError(
+                "Runtime token document is not admitted"
+            ) from error
+        return document
 
     def _validate_claim_bindings(
         self,

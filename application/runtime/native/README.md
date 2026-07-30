@@ -24,14 +24,21 @@ Provider-local security bindings, and authorized Status/Event reads.
 B03.2a1.1.1 adds separate installed-wheel migration and serve entry points, an
 immutable file/environment configuration snapshot, a loopback-only bounded
 standard-library HTTP/1.1 + TLS process, test-PKI mTLS caller extraction,
-Capabilities, health/readiness, and bounded SIGTERM drain. Start, Command,
-Status and Event HTTP transport, the Go adapter, production composition,
-Platform authority, and aggregate Conformance remain unimplemented.
+Capabilities, health/readiness, and bounded SIGTERM drain. The B03.2a1.1.2
+candidate adds only `POST /v1/runs`: strict HTTP/1.1 framing, the Contract
+8 MiB pre-parse body limit, bounded Bearer extraction, exact mTLS subject/JWS
+binding, reuse of `SecureAdmissionCore.start`, and locked RunStatus/
+StandardError response validation. Command, Status, and Event HTTP transport,
+the Go adapter, production composition, Platform authority, and aggregate
+Conformance remain unimplemented.
 
 The Native Runtime quality toolchain is exact: `ruff==0.16.0`,
 `mypy==2.3.0` in strict mode, and standard-library `unittest` under the pinned
 Python 3.14.6 toolchain. The Application Gate checks Ruff format and lint, mypy
-over `src/` and `test/`, all 43 source unit/component tests, the five-test real
-installed-wheel process matrix, the frozen uv lock, and a reproducible wheel.
+over `src/` and `test/`, all 59 source unit/component tests, the five-test real
+installed-wheel process-foundation matrix, all 26 installed-wheel Start tests,
+the frozen uv lock, and a reproducible wheel. The Start matrix includes ten real
+subprocess cases and controlled pre-commit/response-loss fault injection; it
+does not prove kill -9, work-lease/checkpoint, or SQLite-reopen recovery.
 Generated Contract transport modules remain under their separate zero-diff
 regeneration and fixture-parity Gate.

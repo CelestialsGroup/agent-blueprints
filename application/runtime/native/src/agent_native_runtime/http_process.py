@@ -5,6 +5,7 @@ import json
 import secrets
 import socket
 import socketserver
+import sqlite3
 import ssl
 import threading
 import time
@@ -16,7 +17,23 @@ from typing import Any, BinaryIO, cast
 from urllib.parse import urlsplit
 
 from .admission import SecureAdmissionCore
-from .errors import ConfigurationError
+from .errors import (
+    AuthorizationBindingError,
+    CheckpointError,
+    ConfigurationError,
+    ContractSchemaError,
+    DigestMismatchError,
+    EncodedBodyTooLargeError,
+    IdempotencyConflictError,
+    InvalidMutationError,
+    MutationReplayError,
+    RuntimeRunConflictError,
+    StateConflictError,
+    StrictJsonError,
+    TokenValidationError,
+    UnsupportedOperationError,
+)
+from .model import RuntimeStatus, format_timestamp
 from .process_config import ProviderProcessConfiguration
 from .tls import (
     AuthenticatedCaller,
@@ -24,6 +41,179 @@ from .tls import (
     PeerIdentityNotAllowedError,
     authenticate_peer_certificate,
 )
+
+START_PATH = "/v1/runs"
+START_ENCODED_BODY_LIMIT = 8 * 1024 * 1024
+_BODY_READ_CHUNK_BYTES = 64 * 1024
+RUN_STATUS_SCHEMA_ID = "urn:agent-platform:agent-runtime-run-status:v1"
+STANDARD_ERROR_SCHEMA_ID = "urn:agent-platform:standard-error:v1"
+
+
+@dataclass(frozen=True, slots=True)
+class _HTTPErrorResponse:
+    status: HTTPStatus
+    code: str
+    message: str
+    retryable: bool
+    retry_after: int | None = None
+
+
+def _parse_content_length(values: list[str]) -> int | None:
+    if not values:
+        return None
+    if len(values) != 1:
+        raise ValueError("duplicate content length")
+    value = values[0]
+    if (
+        not value
+        or not value.isascii()
+        or not value.isdigit()
+        or (len(value) > 1 and value.startswith("0"))
+        or len(value) > 20
+    ):
+        raise ValueError("invalid content length")
+    return int(value, 10)
+
+
+def _is_exact_start_request_line(raw_requestline: bytes) -> bool:
+    return raw_requestline == b"POST /v1/runs HTTP/1.1\r\n"
+
+
+def _targets_start_boundary(command: str, path: str) -> bool:
+    target = urlsplit(path)
+    return (command == "POST" and target.path in {START_PATH, START_PATH + "/"}) or (
+        command != "POST" and path == START_PATH
+    )
+
+
+def _parse_bearer_authorization(values: list[str], *, max_token_bytes: int) -> str:
+    if len(values) != 1:
+        raise ValueError("exactly one authorization value is required")
+    value = values[0]
+    if not value.startswith("Bearer "):
+        raise ValueError("authorization scheme is not Bearer")
+    token = value.removeprefix("Bearer ")
+    if (
+        not token
+        or value != f"Bearer {token}"
+        or not token.isascii()
+        or len(token) > max_token_bytes
+    ):
+        raise ValueError("bearer token is not bounded ASCII")
+    segments = token.split(".")
+    if len(segments) != 3 or any(not segment for segment in segments):
+        raise ValueError("bearer token is not compact JWS")
+    admitted = frozenset(
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+    )
+    if any(character not in admitted for segment in segments for character in segment):
+        raise ValueError("bearer token contains invalid base64url characters")
+    return token
+
+
+def _runtime_status_document(status: RuntimeStatus) -> dict[str, Any]:
+    document: dict[str, Any] = {
+        "runtime_run_id": status.runtime_run_id,
+        "tenant_id": status.tenant_id,
+        "conversation_id": status.conversation_id,
+        "work_order_id": status.work_order_id,
+        "workflow_run_id": status.workflow_run_id,
+        "agent_run_id": status.agent_run_id,
+        "status": status.status,
+        "last_command_sequence": status.last_command_sequence,
+        "last_event_sequence": status.last_event_sequence,
+        "observed_fencing_token": status.observed_fencing_token,
+        "updated_at": format_timestamp(status.updated_at),
+    }
+    if status.checkpoint is not None:
+        document["checkpoint"] = status.checkpoint.to_document()
+    if status.completed_at is not None:
+        document["completed_at"] = format_timestamp(status.completed_at)
+    return document
+
+
+def _sqlite_is_temporarily_unavailable(error: sqlite3.OperationalError) -> bool:
+    error_code = getattr(error, "sqlite_errorcode", None)
+    if not isinstance(error_code, int):
+        return False
+    return error_code & 0xFF in {sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED}
+
+
+def _start_error_response(error: Exception) -> _HTTPErrorResponse:
+    if isinstance(error, EncodedBodyTooLargeError):
+        return _HTTPErrorResponse(
+            HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
+            "START_BODY_TOO_LARGE",
+            "The encoded Runtime Start request exceeds its limit.",
+            False,
+        )
+    if isinstance(error, TokenValidationError):
+        return _HTTPErrorResponse(
+            HTTPStatus.UNAUTHORIZED,
+            "RUNTIME_TOKEN_REJECTED",
+            "Runtime invocation token is not admitted.",
+            False,
+        )
+    if isinstance(error, AuthorizationBindingError):
+        return _HTTPErrorResponse(
+            HTTPStatus.FORBIDDEN,
+            "RUNTIME_AUTHORIZATION_REJECTED",
+            "Runtime Start authorization is not admitted.",
+            False,
+        )
+    if isinstance(
+        error,
+        (
+            IdempotencyConflictError,
+            MutationReplayError,
+            RuntimeRunConflictError,
+            StateConflictError,
+        ),
+    ):
+        return _HTTPErrorResponse(
+            HTTPStatus.CONFLICT,
+            "RUNTIME_START_CONFLICT",
+            "Runtime Start conflicts with an accepted mutation.",
+            False,
+        )
+    if isinstance(error, (UnsupportedOperationError, CheckpointError)):
+        return _HTTPErrorResponse(
+            HTTPStatus.UNPROCESSABLE_ENTITY,
+            "RUNTIME_START_UNSUPPORTED",
+            "Runtime Start requests unsupported execution semantics.",
+            False,
+        )
+    if isinstance(
+        error,
+        (
+            StrictJsonError,
+            ContractSchemaError,
+            DigestMismatchError,
+            InvalidMutationError,
+        ),
+    ):
+        return _HTTPErrorResponse(
+            HTTPStatus.BAD_REQUEST,
+            "RUNTIME_START_REJECTED",
+            "Runtime Start request is not admitted.",
+            False,
+        )
+    if isinstance(error, sqlite3.OperationalError) and (
+        _sqlite_is_temporarily_unavailable(error)
+    ):
+        return _HTTPErrorResponse(
+            HTTPStatus.SERVICE_UNAVAILABLE,
+            "PROVIDER_TEMPORARILY_UNAVAILABLE",
+            "Runtime Provider is temporarily unavailable.",
+            True,
+            1,
+        )
+    return _HTTPErrorResponse(
+        HTTPStatus.INTERNAL_SERVER_ERROR,
+        "INTERNAL_ERROR",
+        "Runtime Provider encountered an internal error.",
+        False,
+    )
 
 
 @dataclass(slots=True)
@@ -193,11 +383,13 @@ class BoundedTLSHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
             self._connection_slots.release()
 
     def _send_capacity_rejection(self, request: ssl.SSLSocket) -> None:
-        body = _standard_error_body(
+        document = _standard_error_document(
             "PROVIDER_CONNECTION_LIMIT",
             "Provider connection capacity is exhausted.",
             retryable=True,
         )
+        self.core.projection.validate(STANDARD_ERROR_SCHEMA_ID, document)
+        body = _encode_json(document)
         response = (
             b"HTTP/1.1 503 Service Unavailable\r\n"
             b"Content-Type: application/json\r\n"
@@ -248,6 +440,7 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
     def setup(self) -> None:
         super().setup()
         self._request_count = 0
+        self._content_length: int | None = None
         self.authenticated_caller: AuthenticatedCaller | None = None
         self.peer_error: PeerCertificateError | None = None
         server = self._provider_server
@@ -292,10 +485,21 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
             self.request_version = "HTTP/1.1"
             self.command = ""
             self.close_connection = True
+            is_start = (
+                self.authenticated_caller is not None
+                and self.peer_error is None
+                and _is_exact_start_request_line(self.raw_requestline)
+            )
             self._send_standard_error(
-                HTTPStatus.SERVICE_UNAVAILABLE,
-                "PROVIDER_CONCURRENCY_LIMIT",
-                "Provider request concurrency is exhausted.",
+                HTTPStatus.TOO_MANY_REQUESTS
+                if is_start
+                else HTTPStatus.SERVICE_UNAVAILABLE,
+                "PROVIDER_START_CONCURRENCY_LIMIT"
+                if is_start
+                else "PROVIDER_CONCURRENCY_LIMIT",
+                "Runtime Start concurrency is exhausted."
+                if is_start
+                else "Provider request concurrency is exhausted.",
                 retryable=True,
                 retry_after=1,
             )
@@ -327,9 +531,20 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
             if self.request_version != "HTTP/1.1":
                 self.close_connection = True
                 self._send_standard_error(
-                    HTTPStatus.HTTP_VERSION_NOT_SUPPORTED,
+                    HTTPStatus.BAD_REQUEST,
                     "HTTP_VERSION_REJECTED",
                     "Only HTTP/1.1 is admitted.",
+                    retryable=False,
+                )
+                return
+            if _targets_start_boundary(self.command, self.path) and not (
+                _is_exact_start_request_line(self.raw_requestline)
+            ):
+                self.close_connection = True
+                self._send_standard_error(
+                    HTTPStatus.BAD_REQUEST,
+                    "HTTP_START_TARGET_REJECTED",
+                    "Runtime Start requires exact POST /v1/runs over HTTP/1.1.",
                     retryable=False,
                 )
                 return
@@ -389,7 +604,105 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
         self._route_not_enabled()
 
     def do_POST(self) -> None:
-        self._route_not_enabled()
+        if self.path != START_PATH:
+            self._route_not_enabled()
+            return
+        if not self._provider_server.process_state.readiness.is_set():
+            self.close_connection = True
+            self._send_standard_error(
+                HTTPStatus.SERVICE_UNAVAILABLE,
+                "PROVIDER_NOT_READY",
+                "Runtime Provider is not accepting Start requests.",
+                retryable=True,
+                retry_after=1,
+            )
+            return
+        content_types = self.headers.get_all("Content-Type", failobj=[])
+        if content_types != ["application/json"]:
+            self.close_connection = True
+            self._send_standard_error(
+                HTTPStatus.BAD_REQUEST,
+                "HTTP_CONTENT_TYPE_REJECTED",
+                "Content-Type must be application/json.",
+                retryable=False,
+            )
+            return
+        if self._content_length is None:
+            self.close_connection = True
+            self._send_standard_error(
+                HTTPStatus.BAD_REQUEST,
+                "HTTP_FRAMING_REJECTED",
+                "Exactly one Content-Length is required.",
+                retryable=False,
+            )
+            return
+        if self._content_length > START_ENCODED_BODY_LIMIT:
+            self.close_connection = True
+            self._send_standard_error(
+                HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
+                "START_BODY_TOO_LARGE",
+                "The encoded Runtime Start request exceeds its limit.",
+                retryable=False,
+            )
+            return
+        try:
+            compact_jws = _parse_bearer_authorization(
+                self.headers.get_all("Authorization", failobj=[]),
+                max_token_bytes=self._provider_server.configuration.security.max_token_bytes,
+            )
+        except ValueError:
+            self.close_connection = True
+            self._send_standard_error(
+                HTTPStatus.UNAUTHORIZED,
+                "RUNTIME_TOKEN_REJECTED",
+                "Runtime invocation token is not admitted.",
+                retryable=False,
+            )
+            return
+        encoded_body = self._read_exact_body(self._content_length)
+        if encoded_body is None:
+            return
+        caller = self.authenticated_caller
+        if caller is None:
+            self.close_connection = True
+            self._send_standard_error(
+                HTTPStatus.UNAUTHORIZED,
+                "WORKLOAD_IDENTITY_REJECTED",
+                "Workload identity is not admitted.",
+                retryable=False,
+            )
+            return
+        try:
+            status = self._provider_server.core.start(
+                encoded_body,
+                compact_jws,
+                authenticated_caller=caller.token_subject,
+            )
+        except Exception as error:
+            response = _start_error_response(error)
+            self._send_standard_error(
+                response.status,
+                response.code,
+                response.message,
+                retryable=response.retryable,
+                retry_after=response.retry_after,
+            )
+            return
+        document = _runtime_status_document(status)
+        try:
+            self._provider_server.core.projection.validate(
+                RUN_STATUS_SCHEMA_ID, document
+            )
+        except Exception:
+            self.close_connection = True
+            self._send_standard_error(
+                HTTPStatus.INTERNAL_SERVER_ERROR,
+                "RESPONSE_VALIDATION_FAILED",
+                "Runtime Provider could not encode its response.",
+                retryable=False,
+            )
+            return
+        self._send_json(HTTPStatus.ACCEPTED, document)
 
     def do_PUT(self) -> None:
         self._route_not_enabled()
@@ -433,36 +746,88 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
                 retryable=False,
             )
             return False
-        lengths = self.headers.get_all("Content-Length", failobj=[])
-        if len(lengths) > 1:
+        if self.headers.get_all("Expect", failobj=[]):
             self.close_connection = True
             self._send_standard_error(
                 HTTPStatus.BAD_REQUEST,
                 "HTTP_FRAMING_REJECTED",
-                "Duplicate Content-Length is rejected.",
+                "Expect is not admitted.",
                 retryable=False,
             )
             return False
-        if lengths:
-            if not lengths[0].isascii() or not lengths[0].isdigit():
-                self.close_connection = True
-                self._send_standard_error(
-                    HTTPStatus.BAD_REQUEST,
-                    "HTTP_FRAMING_REJECTED",
-                    "Content-Length is invalid.",
-                    retryable=False,
-                )
-                return False
-            if int(lengths[0], 10) != 0:
-                self.close_connection = True
-                self._send_standard_error(
-                    HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
-                    "REQUEST_BODY_NOT_ADMITTED",
-                    "These foundation routes do not admit a request body.",
-                    retryable=False,
-                )
-                return False
+        try:
+            self._content_length = _parse_content_length(
+                self.headers.get_all("Content-Length", failobj=[])
+            )
+        except ValueError:
+            self.close_connection = True
+            self._send_standard_error(
+                HTTPStatus.BAD_REQUEST,
+                "HTTP_FRAMING_REJECTED",
+                "Content-Length is invalid or ambiguous.",
+                retryable=False,
+            )
+            return False
+        if self._content_length not in (None, 0) and not (
+            self.command == "POST"
+            and self.path == START_PATH
+            and self.request_version == "HTTP/1.1"
+        ):
+            self.close_connection = True
+            self._send_standard_error(
+                HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
+                "REQUEST_BODY_NOT_ADMITTED",
+                "This route does not admit a request body.",
+                retryable=False,
+            )
+            return False
         return True
+
+    def _read_exact_body(self, content_length: int) -> bytes | None:
+        deadline = (
+            time.monotonic()
+            + self._provider_server.configuration.limits.read_timeout_ms / 1_000
+        )
+        remaining = content_length
+        chunks: list[bytes] = []
+        while remaining:
+            timeout = deadline - time.monotonic()
+            if timeout <= 0:
+                self._body_read_failed(timeout=True)
+                return None
+            self.connection.settimeout(timeout)
+            try:
+                chunk = self.rfile.read(min(remaining, _BODY_READ_CHUNK_BYTES))
+            except TimeoutError:
+                self._body_read_failed(timeout=True)
+                return None
+            if not chunk:
+                self._body_read_failed(timeout=False)
+                return None
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        return b"".join(chunks)
+
+    def _body_read_failed(self, *, timeout: bool) -> None:
+        self.close_connection = True
+        if timeout:
+            self._provider_server.process_state.metrics.increment("read_timeouts")
+        self._send_standard_error(
+            HTTPStatus.BAD_REQUEST,
+            "HTTP_BODY_READ_REJECTED",
+            "The encoded request body was not received within its bounds.",
+            retryable=False,
+        )
+
+    def handle_expect_100(self) -> bool:
+        self.close_connection = True
+        self._send_standard_error(
+            HTTPStatus.BAD_REQUEST,
+            "HTTP_FRAMING_REJECTED",
+            "Expect is not admitted.",
+            retryable=False,
+        )
+        return False
 
     def _route_not_enabled(self) -> None:
         self._send_standard_error(
@@ -479,9 +844,7 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
         *,
         retry_after: int | None = None,
     ) -> None:
-        body = json.dumps(
-            document, ensure_ascii=True, separators=(",", ":"), sort_keys=True
-        ).encode("ascii")
+        body = _encode_json(document)
         if len(body) > self._provider_server.configuration.limits.max_response_bytes:
             self._send_standard_error(
                 HTTPStatus.INTERNAL_SERVER_ERROR,
@@ -501,7 +864,11 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
         retryable: bool,
         retry_after: int | None = None,
     ) -> None:
-        body = _standard_error_body(code, message, retryable=retryable)
+        document = _standard_error_document(code, message, retryable=retryable)
+        self._provider_server.core.projection.validate(
+            STANDARD_ERROR_SCHEMA_ID, document
+        )
+        body = _encode_json(document)
         self._write_json_response(status, body, retry_after=retry_after)
 
     def _write_json_response(
@@ -550,17 +917,21 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
         del format, args
 
 
-def _standard_error_body(code: str, message: str, *, retryable: bool) -> bytes:
+def _encode_json(document: dict[str, Any]) -> bytes:
     return json.dumps(
-        {
-            "code": code,
-            "message": message,
-            "retryable": retryable,
-            "trace_id": secrets.token_hex(16),
-        },
-        separators=(",", ":"),
-        sort_keys=True,
+        document, ensure_ascii=True, separators=(",", ":"), sort_keys=True
     ).encode("ascii")
+
+
+def _standard_error_document(
+    code: str, message: str, *, retryable: bool
+) -> dict[str, Any]:
+    return {
+        "code": code,
+        "message": message,
+        "retryable": retryable,
+        "trace_id": secrets.token_hex(16),
+    }
 
 
 def validate_process_documents(
@@ -577,11 +948,9 @@ def validate_process_documents(
         raise ConfigurationError(
             "Capabilities exceed the configured response body limit"
         )
-    standard_error = json.loads(
-        _standard_error_body(
-            "CONFIGURATION_VALIDATION",
-            "Configuration validation.",
-            retryable=False,
-        )
+    standard_error = _standard_error_document(
+        "CONFIGURATION_VALIDATION",
+        "Configuration validation.",
+        retryable=False,
     )
-    core.projection.validate("urn:agent-platform:standard-error:v1", standard_error)
+    core.projection.validate(STANDARD_ERROR_SCHEMA_ID, standard_error)
