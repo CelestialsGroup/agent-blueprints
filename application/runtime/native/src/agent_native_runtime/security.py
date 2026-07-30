@@ -355,6 +355,7 @@ class RuntimeContractProjection:
             "urn:agent-platform:agent-runtime-invocation-token-claims:v1",
             "urn:agent-platform:agent-runtime-capabilities:v1",
             "urn:agent-platform:agent-runtime-run-status:v1",
+            "urn:agent-platform:agent-runtime-event-page:v1",
             "urn:agent-platform:standard-error:v1",
         )
         try:

@@ -29,10 +29,11 @@ Current plans:
   Cancel integration plan with explicit Conformance evidence boundaries.
 - `B03.2a1-secure-provider-process.md`: approved split plan, validated a1.0/a1.1.0,
   the a1.1.1 mTLS Process Foundation candidate, and the independently validated
-  a1.1.2 Start and a1.1.3 Command/recovery boundary candidates; covers Strict
+  a1.1.2 Start, a1.1.3 Command/recovery and a1.1.4 legal read/evidence-closure
+  candidates; covers Strict
   I-JSON, Schema/semantic admission, JWS binding, migrations, process tests,
-  evidence, rollback, and explicit authority boundaries. Status/Event closure
-  remains a1.1.4.
+  evidence, rollback, and explicit authority boundaries. Malformed Status/Event
+  HTTP 400 and all aggregate/production claims remain outside the closure.
 - `B03.2a1.1.2-start-http-boundary.md`: approved execution plan and mandatory
   per-stage ledger for the Start-only HTTP boundary, including strict HTTP/1.1
   framing, pre-parse body limits, mTLS/JWS binding, closed Contract response
@@ -44,3 +45,10 @@ Current plans:
   recovery, and same-revision checkpoint crash consistency, with explicit
   production-worker, platform-authority, Status/Event, rollback, evidence, and
   maturity boundaries.
+- `B03.2a1.1.4-read-boundary-evidence-closure.md`: implemented and independently
+  validated execution plan and mandatory per-stage ledger for legal
+  Status/Event HTTP reads, OpenAPI default descriptor normalization, cursor
+  resume/expiry and final a1.1 Provider-local component evidence closure. The
+  missing Status/Event HTTP 400 authority remains machine-readable blocked; Go
+  adapter, platform authority, CanonicalEvent, production composition and
+  aggregate conformance are excluded.

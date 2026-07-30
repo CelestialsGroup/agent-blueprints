@@ -41,3 +41,13 @@ status or Phase 0 check-ID claims.
 
 B03.2-P0 projection evidence is emitted under `build/evidence/b03.2-p0`; it is
 component-boundary evidence, not a Runtime service or Conformance result.
+
+The ordered B03.2a1 evidence generators emit independently bounded artifacts
+through `build/evidence/b03.2a1.1.4`. The 1.1.4 generator binds the complete
+Application source manifest, locked Contract Suite/projection, predecessor
+evidence, byte-identical Native wheels, installed Status/Event behavior and
+supply-chain records. It preserves all 17 Suite case IDs in locked order,
+keeps the missing Status/Event HTTP 400 authority machine-readable blocked,
+and fixes aggregate `runtime-core-v1` to `not_claimed`. Source discovery rejects
+`__pycache__` and `*.pyc`; source, wheels, logs and final evidence are scanned
+for complete tokens, body/checkpoint canaries, private-key PEM and tracebacks.

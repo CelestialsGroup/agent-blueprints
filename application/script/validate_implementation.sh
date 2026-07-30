@@ -20,6 +20,7 @@ A1_1_0_EVIDENCE_DIR="$ROOT/build/evidence/b03.2a1.1.0"
 A1_1_1_EVIDENCE_DIR="$ROOT/build/evidence/b03.2a1.1.1"
 A1_1_2_EVIDENCE_DIR="$ROOT/build/evidence/b03.2a1.1.2"
 A1_1_3_EVIDENCE_DIR="$ROOT/build/evidence/b03.2a1.1.3"
+A1_1_4_EVIDENCE_DIR="$ROOT/build/evidence/b03.2a1.1.4"
 CACHE_DIR="$ROOT/.cache/implementation"
 SQLC_CHECK_DIR="$CACHE_DIR/sqlc-check"
 P0_RUN_DIR="$CACHE_DIR/b03.2-p0-validation"
@@ -358,6 +359,29 @@ docker run --rm \
     uv sync --frozen --project /workspace/runtime/native --no-install-project
     uv pip install --python /tmp/installed/bin/python --no-deps \
       "/out/artifacts/native/$NATIVE_WHEEL"
+    /tmp/installed/bin/python test/test_read_http_boundary.py -v
+  ' 2>&1 | tee "$P0_RUN_DIR/read-http-boundary-validation.log"
+
+docker run --rm \
+  --entrypoint sh \
+  -e AGENT_CONTRACT_ROOT=/contract \
+  -e AGENT_NATIVE_RUNTIME_INSTALLED_BIN=/tmp/installed/bin \
+  -e AGENT_TEST_APPLICATION_ROOT=/workspace \
+  -e NATIVE_WHEEL="$NATIVE_WHEEL" \
+  -e PYTHONDONTWRITEBYTECODE=1 \
+  -e UV_CACHE_DIR=/cache/uv \
+  -e UV_LINK_MODE=copy \
+  -e UV_PROJECT_ENVIRONMENT=/tmp/installed \
+  -v "$CACHE_DIR:/cache" \
+  -v "$CONTRACT_ROOT:/contract:ro" \
+  -v "$ROOT:/workspace:ro" \
+  -v "$EVIDENCE_DIR:/out:ro" \
+  -w /workspace/runtime/native \
+  "$UV_TOOLCHAIN_TAG" \
+  -euc '
+    uv sync --frozen --project /workspace/runtime/native --no-install-project
+    uv pip install --python /tmp/installed/bin/python --no-deps \
+      "/out/artifacts/native/$NATIVE_WHEEL"
     /tmp/installed/bin/python test/test_command_transaction_recovery.py -v
   ' 2>&1 | tee "$P0_RUN_DIR/command-transaction-recovery-validation.log"
 
@@ -574,4 +598,25 @@ docker run --rm \
     --implementation-evidence-dir /workspace/build/evidence/b01/evidence \
     --output /out/command-recovery-boundary.json
 
-echo "B03.2a1.1.3 Command and recovery boundary, B03.2a1.1.2 Start HTTP boundary, B03.2a1.1.1 mTLS process foundation, B03.2a1.1.0 pre-transport safety, B03.2a1.0 secure admission, B03.2a0 durable kernel, B03.2-P0 projection, and bounded B03.1 validation passed; reproducible evidence preserved."
+mkdir -p "$A1_1_4_EVIDENCE_DIR"
+docker run --rm \
+  -e AGENT_CONTRACT_ROOT=/contract \
+  -e PYTHONDONTWRITEBYTECODE=1 \
+  -v "$CONTRACT_ROOT:/contract:ro" \
+  -v "$ROOT:/workspace:ro" \
+  -v "$P0_RUN_DIR:/validation:ro" \
+  -v "$A1_1_4_EVIDENCE_DIR:/out" \
+  -w /workspace \
+  "$PYTHON_TOOLCHAIN_IMAGE" \
+  python script/generate_read_boundary_evidence.py \
+    --application-base-revision "$APPLICATION_BASE_REVISION" \
+    --validation-command "make validate-implementation" \
+    --python-validation-log /validation/python-validation.log \
+    --installed-read-log /validation/read-http-boundary-validation.log \
+    --supply-chain-log /validation/supply-chain.log \
+    --native-runtime-artifact "/workspace/build/evidence/b01/artifacts/native/$NATIVE_WHEEL" \
+    --native-runtime-rebuild "/workspace/build/evidence/b01/rebuild/native/$NATIVE_WHEEL" \
+    --implementation-evidence-dir /workspace/build/evidence/b01/evidence \
+    --output /out/read-boundary-evidence-closure.json
+
+echo "B03.2a1.1.4 Read boundary and evidence closure, B03.2a1.1.3 Command and recovery boundary, B03.2a1.1.2 Start HTTP boundary, B03.2a1.1.1 mTLS process foundation, B03.2a1.1.0 pre-transport safety, B03.2a1.0 secure admission, B03.2a0 durable kernel, B03.2-P0 projection, and bounded B03.1 validation passed; reproducible evidence preserved."

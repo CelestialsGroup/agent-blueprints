@@ -13,7 +13,7 @@ from contextlib import suppress
 from dataclasses import dataclass, field
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Any, BinaryIO, cast
+from typing import Any, BinaryIO, Literal, cast
 from urllib.parse import urlsplit
 
 from .admission import SecureAdmissionCore
@@ -23,6 +23,7 @@ from .errors import (
     CommandSequenceError,
     ConfigurationError,
     ContractSchemaError,
+    CursorExpiredError,
     DigestMismatchError,
     EncodedBodyTooLargeError,
     IdempotencyConflictError,
@@ -36,7 +37,13 @@ from .errors import (
     TokenValidationError,
     UnsupportedOperationError,
 )
-from .model import RuntimeStatus, format_timestamp
+from .model import (
+    EventPage,
+    RuntimeEvent,
+    RuntimeStatus,
+    event_data_to_document,
+    format_timestamp,
+)
 from .process_config import ProviderProcessConfiguration
 from .tls import (
     AuthenticatedCaller,
@@ -50,8 +57,11 @@ START_ENCODED_BODY_LIMIT = 8 * 1024 * 1024
 COMMAND_ENCODED_BODY_LIMIT = 256 * 1024
 _COMMAND_REQUEST_PREFIX = b"POST /v1/runs/"
 _COMMAND_REQUEST_SUFFIX = b"/commands HTTP/1.1\r\n"
+_READ_REQUEST_PREFIX = b"GET /v1/runs/"
+_READ_REQUEST_SUFFIX = b" HTTP/1.1\r\n"
 _BODY_READ_CHUNK_BYTES = 64 * 1024
 RUN_STATUS_SCHEMA_ID = "urn:agent-platform:agent-runtime-run-status:v1"
+EVENT_PAGE_SCHEMA_ID = "urn:agent-platform:agent-runtime-event-page:v1"
 STANDARD_ERROR_SCHEMA_ID = "urn:agent-platform:standard-error:v1"
 
 
@@ -62,6 +72,15 @@ class _HTTPErrorResponse:
     message: str
     retryable: bool
     retry_after: int | None = None
+    details: dict[str, object] | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class _ReadRequestTarget:
+    operation: Literal["read_status", "read_events"]
+    runtime_run_id: str
+    after_event_sequence: int = 0
+    limit: int = 1000
 
 
 def _parse_content_length(values: list[str]) -> int | None:
@@ -117,6 +136,84 @@ def _targets_command_boundary(command: str, path: str) -> bool:
     )
 
 
+def _parse_canonical_query_integer(
+    encoded: bytes, *, minimum: int, maximum: int
+) -> int | None:
+    if (
+        not encoded
+        or len(encoded) > 16
+        or any(byte < ord("0") or byte > ord("9") for byte in encoded)
+        or (len(encoded) > 1 and encoded.startswith(b"0"))
+    ):
+        return None
+    value = int(encoded, 10)
+    return value if minimum <= value <= maximum else None
+
+
+def _parse_exact_read_request_line(
+    raw_requestline: bytes,
+) -> _ReadRequestTarget | None:
+    if not (
+        raw_requestline.startswith(_READ_REQUEST_PREFIX)
+        and raw_requestline.endswith(_READ_REQUEST_SUFFIX)
+    ):
+        return None
+    encoded_target = raw_requestline[
+        len(_READ_REQUEST_PREFIX) : -len(_READ_REQUEST_SUFFIX)
+    ]
+    if not encoded_target or any(
+        byte < 0x21 or byte > 0x7E or byte in b"\\#%" for byte in encoded_target
+    ):
+        return None
+    path, separator, query = encoded_target.partition(b"?")
+    if b"?" in query:
+        return None
+
+    if b"/" not in path:
+        if separator or len(path) > 200:
+            return None
+        return _ReadRequestTarget("read_status", path.decode("ascii"))
+
+    runtime_run_id, route_separator, suffix = path.partition(b"/")
+    if (
+        not runtime_run_id
+        or len(runtime_run_id) > 200
+        or route_separator != b"/"
+        or suffix != b"events"
+        or b"/" in runtime_run_id
+    ):
+        return None
+    if not separator:
+        return _ReadRequestTarget("read_events", runtime_run_id.decode("ascii"))
+    if not query:
+        return None
+
+    values: dict[bytes, int] = {}
+    for parameter in query.split(b"&"):
+        name, equals, encoded_value = parameter.partition(b"=")
+        if not equals or name in values:
+            return None
+        if name == b"after_event_sequence":
+            value = _parse_canonical_query_integer(
+                encoded_value, minimum=0, maximum=9_007_199_254_740_991
+            )
+        elif name == b"limit":
+            value = _parse_canonical_query_integer(
+                encoded_value, minimum=1, maximum=1000
+            )
+        else:
+            return None
+        if value is None:
+            return None
+        values[name] = value
+    return _ReadRequestTarget(
+        "read_events",
+        runtime_run_id.decode("ascii"),
+        after_event_sequence=values.get(b"after_event_sequence", 0),
+        limit=values.get(b"limit", 1000),
+    )
+
+
 def _parse_bearer_authorization(values: list[str], *, max_token_bytes: int) -> str:
     if len(values) != 1:
         raise ValueError("exactly one authorization value is required")
@@ -161,6 +258,26 @@ def _runtime_status_document(status: RuntimeStatus) -> dict[str, Any]:
     if status.completed_at is not None:
         document["completed_at"] = format_timestamp(status.completed_at)
     return document
+
+
+def _runtime_event_document(event: RuntimeEvent) -> dict[str, Any]:
+    return {
+        "event_id": event.event_id,
+        "runtime_run_id": event.runtime_run_id,
+        "event_sequence": event.event_sequence,
+        "type": event.type,
+        "occurred_at": format_timestamp(event.occurred_at),
+        "data_version": event.data_version,
+        "data": event_data_to_document(event.data),
+        "source_cursor": event.source_cursor,
+    }
+
+
+def _event_page_document(page: EventPage) -> dict[str, Any]:
+    return {
+        "events": [_runtime_event_document(event) for event in page.events],
+        "next_event_sequence": page.next_event_sequence,
+    }
 
 
 def _sqlite_is_temporarily_unavailable(error: sqlite3.OperationalError) -> bool:
@@ -314,6 +431,60 @@ def _command_error_response(error: Exception) -> _HTTPErrorResponse:
             "RUNTIME_COMMAND_REJECTED",
             "Runtime Command request is not admitted.",
             False,
+        )
+    if isinstance(error, sqlite3.OperationalError) and (
+        _sqlite_is_temporarily_unavailable(error)
+    ):
+        return _HTTPErrorResponse(
+            HTTPStatus.SERVICE_UNAVAILABLE,
+            "PROVIDER_TEMPORARILY_UNAVAILABLE",
+            "Runtime Provider is temporarily unavailable.",
+            True,
+            1,
+        )
+    return _HTTPErrorResponse(
+        HTTPStatus.INTERNAL_SERVER_ERROR,
+        "INTERNAL_ERROR",
+        "Runtime Provider encountered an internal error.",
+        False,
+    )
+
+
+def _read_error_response(error: Exception) -> _HTTPErrorResponse:
+    if isinstance(error, TokenValidationError):
+        return _HTTPErrorResponse(
+            HTTPStatus.UNAUTHORIZED,
+            "RUNTIME_TOKEN_REJECTED",
+            "Runtime invocation token is not admitted.",
+            False,
+        )
+    if isinstance(error, (AuthorizationBindingError, StaleFencingError)):
+        return _HTTPErrorResponse(
+            HTTPStatus.FORBIDDEN,
+            "RUNTIME_AUTHORIZATION_REJECTED",
+            "Runtime read authorization is not admitted.",
+            False,
+        )
+    if isinstance(error, RuntimeRunNotFoundError):
+        return _HTTPErrorResponse(
+            HTTPStatus.NOT_FOUND,
+            "RUNTIME_RUN_NOT_FOUND",
+            "The admitted RuntimeRun does not exist in this Provider.",
+            False,
+        )
+    if isinstance(error, CursorExpiredError):
+        return _HTTPErrorResponse(
+            HTTPStatus.GONE,
+            "EVENT_CURSOR_EXPIRED",
+            "The Runtime event cursor is no longer retained.",
+            False,
+            details={
+                "work_order_id": error.work_order_id,
+                "requested_after_event_sequence": error.requested_after,
+                "earliest_available_event_sequence": error.earliest_available,
+                "latest_available_event_sequence": error.latest_available,
+                "recovery": "latest_compatible_checkpoint_or_platform_canonical_event_history",
+            },
         )
     if isinstance(error, sqlite3.OperationalError) and (
         _sqlite_is_temporarily_unavailable(error)
@@ -559,6 +730,7 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
         self._request_count = 0
         self._content_length: int | None = None
         self._command_runtime_run_id: str | None = None
+        self._read_target: _ReadRequestTarget | None = None
         self.authenticated_caller: AuthenticatedCaller | None = None
         self.peer_error: PeerCertificateError | None = None
         server = self._provider_server
@@ -687,6 +859,7 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
             self._command_runtime_run_id = _parse_exact_command_request_line(
                 self.raw_requestline
             )
+            self._read_target = _parse_exact_read_request_line(self.raw_requestline)
             if _targets_command_boundary(self.command, self.path) and (
                 self._command_runtime_run_id is None
             ):
@@ -728,6 +901,10 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
             server.request_slots.release()
 
     def do_GET(self) -> None:
+        read_target = getattr(self, "_read_target", None)
+        if read_target is not None:
+            self._handle_read(read_target)
+            return
         target = urlsplit(self.path)
         if target.query or target.fragment:
             self._route_not_enabled()
@@ -858,7 +1035,7 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
                 retry_after=response.retry_after,
             )
             return
-        self._send_status(status)
+        self._send_status(status, HTTPStatus.ACCEPTED)
 
     def _handle_command(self, runtime_run_id: str) -> None:
         request = self._mutation_request(
@@ -886,9 +1063,82 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
                 retry_after=response.retry_after,
             )
             return
-        self._send_status(status)
+        self._send_status(status, HTTPStatus.ACCEPTED)
 
-    def _send_status(self, status: RuntimeStatus) -> None:
+    def _read_request(self, operation: str) -> tuple[str, AuthenticatedCaller] | None:
+        if not self._provider_server.process_state.readiness.is_set():
+            self.close_connection = True
+            self._send_standard_error(
+                HTTPStatus.SERVICE_UNAVAILABLE,
+                "PROVIDER_NOT_READY",
+                f"Runtime Provider is not accepting {operation} requests.",
+                retryable=True,
+                retry_after=1,
+            )
+            return None
+        try:
+            compact_jws = _parse_bearer_authorization(
+                self.headers.get_all("Authorization", failobj=[]),
+                max_token_bytes=self._provider_server.configuration.security.max_token_bytes,
+            )
+        except ValueError:
+            self.close_connection = True
+            self._send_standard_error(
+                HTTPStatus.UNAUTHORIZED,
+                "RUNTIME_TOKEN_REJECTED",
+                "Runtime invocation token is not admitted.",
+                retryable=False,
+            )
+            return None
+        caller = self.authenticated_caller
+        if caller is None:
+            self.close_connection = True
+            self._send_standard_error(
+                HTTPStatus.UNAUTHORIZED,
+                "WORKLOAD_IDENTITY_REJECTED",
+                "Workload identity is not admitted.",
+                retryable=False,
+            )
+            return None
+        return compact_jws, caller
+
+    def _handle_read(self, target: _ReadRequestTarget) -> None:
+        request = self._read_request(
+            "Status" if target.operation == "read_status" else "Event"
+        )
+        if request is None:
+            return
+        compact_jws, caller = request
+        try:
+            if target.operation == "read_status":
+                status = self._provider_server.core.status(
+                    target.runtime_run_id,
+                    compact_jws,
+                    authenticated_caller=caller.token_subject,
+                )
+                self._send_status(status, HTTPStatus.OK)
+                return
+            page = self._provider_server.core.events(
+                target.runtime_run_id,
+                compact_jws,
+                authenticated_caller=caller.token_subject,
+                after_event_sequence=target.after_event_sequence,
+                limit=target.limit,
+            )
+        except Exception as error:
+            response = _read_error_response(error)
+            self._send_standard_error(
+                response.status,
+                response.code,
+                response.message,
+                retryable=response.retryable,
+                retry_after=response.retry_after,
+                details=response.details,
+            )
+            return
+        self._send_event_page(page)
+
+    def _send_status(self, status: RuntimeStatus, response_status: HTTPStatus) -> None:
         document = _runtime_status_document(status)
         try:
             self._provider_server.core.projection.validate(
@@ -903,7 +1153,24 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
                 retryable=False,
             )
             return
-        self._send_json(HTTPStatus.ACCEPTED, document)
+        self._send_json(response_status, document)
+
+    def _send_event_page(self, page: EventPage) -> None:
+        document = _event_page_document(page)
+        try:
+            self._provider_server.core.projection.validate(
+                EVENT_PAGE_SCHEMA_ID, document
+            )
+        except Exception:
+            self.close_connection = True
+            self._send_standard_error(
+                HTTPStatus.INTERNAL_SERVER_ERROR,
+                "RESPONSE_VALIDATION_FAILED",
+                "Runtime Provider could not encode its response.",
+                retryable=False,
+            )
+            return
+        self._send_json(HTTPStatus.OK, document)
 
     def do_PUT(self) -> None:
         self._route_not_enabled()
@@ -1067,8 +1334,11 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
         *,
         retryable: bool,
         retry_after: int | None = None,
+        details: dict[str, object] | None = None,
     ) -> None:
-        document = _standard_error_document(code, message, retryable=retryable)
+        document = _standard_error_document(
+            code, message, retryable=retryable, details=details
+        )
         self._provider_server.core.projection.validate(
             STANDARD_ERROR_SCHEMA_ID, document
         )
@@ -1124,14 +1394,21 @@ def _encode_json(document: dict[str, Any]) -> bytes:
 
 
 def _standard_error_document(
-    code: str, message: str, *, retryable: bool
+    code: str,
+    message: str,
+    *,
+    retryable: bool,
+    details: dict[str, object] | None = None,
 ) -> dict[str, Any]:
-    return {
+    document: dict[str, Any] = {
         "code": code,
         "message": message,
         "retryable": retryable,
         "trace_id": secrets.token_hex(16),
     }
+    if details is not None:
+        document["details"] = details
+    return document
 
 
 def validate_process_documents(

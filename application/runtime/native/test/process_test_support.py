@@ -644,6 +644,114 @@ class InstalledProcessTestCase(unittest.TestCase):
         )
         return body, token
 
+    def read_claims(
+        self,
+        start: dict[str, Any],
+        *,
+        operation: Literal["read_status", "read_events"],
+        jti: str,
+        runtime_run_id: str | None = None,
+        fencing_token: int | None = None,
+        after_event_sequence: int = 0,
+        limit: int = 1000,
+    ) -> dict[str, Any]:
+        authorization = cast(dict[str, Any], start["runtime_authorization"])
+        policy = cast(dict[str, Any], authorization["policy_decision"])
+        budget = cast(dict[str, Any], authorization["execution_budget"])
+        permissions = cast(dict[str, Any], authorization["effective_permissions"])
+        admitted_runtime_run_id = runtime_run_id or cast(str, start["runtime_run_id"])
+        admitted_fencing = fencing_token or cast(int, start["fencing_token"])
+        descriptor: dict[str, object] = {
+            "operation": operation,
+            "runtime_run_id": admitted_runtime_run_id,
+            "invocation_id": start["invocation_id"],
+            "invocation_attempt_id": start["invocation_attempt_id"],
+            "fencing_token": admitted_fencing,
+        }
+        if operation == "read_events":
+            descriptor.update(
+                {
+                    "after_event_sequence": after_event_sequence,
+                    "limit": limit,
+                }
+            )
+        now = int(self.now.timestamp())
+        return {
+            "iss": "agent-platform",
+            "sub": CALLER_SUBJECT,
+            "aud": self.base["runtime"]["provider_audience"],
+            "jti": jti,
+            "iat": now,
+            "nbf": now,
+            "exp": now + 240,
+            "tenant_id": start["tenant_id"],
+            "provider_revision_id": self.base["runtime"]["provider_revision_id"],
+            "runtime_run_id": admitted_runtime_run_id,
+            "agent_run_id": start["agent_run_id"],
+            "workflow_run_id": start["workflow_run_id"],
+            "work_order_id": start["work_order_id"],
+            "run_manifest_digest": start["run_manifest_digest"],
+            "runtime_authorization_digest": authorization["authorization_digest"],
+            "authority_mode": "safety_control",
+            "operation": operation,
+            "operation_contract_id": (
+                "urn:agent-platform:agent-runtime-status-operation-descriptor:v1"
+                if operation == "read_status"
+                else "urn:agent-platform:agent-runtime-event-read-operation-descriptor:v1"
+            ),
+            "operation_digest_profile": "rfc8785-full-document-v1",
+            "operation_request_digest": document_digest(descriptor),
+            "invocation_id": start["invocation_id"],
+            "invocation_attempt_id": start["invocation_attempt_id"],
+            "fencing_token": admitted_fencing,
+            "policy_decision_digest": policy["decision_digest"],
+            "execution_budget_digest": budget["budget_digest"],
+            "effective_permissions_digest": permissions["permissions_digest"],
+        }
+
+    def read_token(
+        self,
+        start: dict[str, Any],
+        *,
+        operation: Literal["read_status", "read_events"],
+        jti: str,
+        runtime_run_id: str | None = None,
+        fencing_token: int | None = None,
+        after_event_sequence: int = 0,
+        limit: int = 1000,
+        algorithm: Literal["EdDSA", "ES256"] = "EdDSA",
+        private_key: ed25519.Ed25519PrivateKey
+        | ec.EllipticCurvePrivateKey
+        | None = None,
+    ) -> str:
+        return self.sign_start(
+            self.read_claims(
+                start,
+                operation=operation,
+                jti=jti,
+                runtime_run_id=runtime_run_id,
+                fencing_token=fencing_token,
+                after_event_sequence=after_event_sequence,
+                limit=limit,
+            ),
+            algorithm=algorithm,
+            private_key=private_key,
+        )
+
+    def get_read(
+        self,
+        port: int,
+        path: str,
+        token: str | None,
+    ) -> tuple[int, dict[str, str], bytes]:
+        headers = {"Authorization": f"Bearer {token}"} if token is not None else {}
+        return self.request(
+            port,
+            self.pki.client,
+            path,
+            headers=headers,
+        )
+
     @staticmethod
     def clone(document: dict[str, Any]) -> dict[str, Any]:
         return deepcopy(document)

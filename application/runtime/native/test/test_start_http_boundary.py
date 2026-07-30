@@ -998,8 +998,8 @@ if INSTALLED_BIN is not None:
                 )
                 self.assert_error(
                     status_response,
-                    status=404,
-                    code="ROUTE_NOT_ENABLED",
+                    status=401,
+                    code="RUNTIME_TOKEN_REJECTED",
                 )
                 command_response = self.request(
                     server.port,
