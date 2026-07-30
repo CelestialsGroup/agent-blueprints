@@ -91,7 +91,11 @@ def serve_main(arguments: Sequence[str] | None = None) -> int:
             }
         )
         while not state.stopping.is_set():
-            server.handle_request()
+            try:
+                server.handle_request()
+            except (OSError, ValueError):
+                if not state.stopping.is_set():
+                    raise
     finally:
         server.begin_drain()
         drained = server.wait_for_drain()

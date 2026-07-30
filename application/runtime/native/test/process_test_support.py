@@ -239,6 +239,10 @@ class RunningServer:
         if self.process.poll() is None:
             self.process.send_signal(signal.SIGTERM)
         stdout, stderr = self.process.communicate(timeout=5)
+        if self.process.stdout is not None:
+            self.process.stdout.close()
+        if self.process.stderr is not None:
+            self.process.stderr.close()
         if self.process.returncode != 0:
             raise AssertionError(f"serve failed: {stderr}")
         events = [json.loads(line) for line in stdout.splitlines() if line.strip()]
@@ -492,6 +496,154 @@ class InstalledProcessTestCase(unittest.TestCase):
         )
         return body, token
 
+    def command_document(
+        self,
+        start: dict[str, Any],
+        *,
+        command_type: str = "cancel",
+        command_sequence: int = 1,
+        fencing_token: int = 2,
+        safety_control: bool = False,
+    ) -> dict[str, Any]:
+        document = cast(
+            dict[str, Any],
+            json.loads(
+                (
+                    CONTRACT_ROOT
+                    / "examples/contracts/agent-runtime-system-safety-command.json"
+                ).read_text(encoding="utf-8")
+            ),
+        )
+        document.update(
+            {
+                "command_id": f"runtime-http-command-{command_sequence:04d}",
+                "runtime_run_id": start["runtime_run_id"],
+                "command_sequence": command_sequence,
+                "type": command_type,
+                "invocation_id": start["invocation_id"],
+                "invocation_attempt_id": start["invocation_attempt_id"],
+                "fencing_token": fencing_token,
+                "idempotency_key": f"runtime-http-command-key-{command_sequence:04d}",
+                "deadline_at": self.timestamp(minutes=5),
+            }
+        )
+        document.pop("authorized_control_request_id", None)
+        document.pop("system_safety_control_id", None)
+        document.pop("system_safety_control_digest", None)
+        if command_type in {"pause", "resume", "cancel"}:
+            if safety_control and command_type in {"pause", "cancel"}:
+                document["system_safety_control_id"] = (
+                    f"runtime-http-safety-control-{command_sequence:04d}"
+                )
+                document["system_safety_control_digest"] = "sha256:" + "3" * 64
+            else:
+                document["authorized_control_request_id"] = (
+                    f"runtime-http-control-request-{command_sequence:04d}"
+                )
+        elif command_type in {"append_input", "interrupt"}:
+            document.update(
+                {
+                    "authorized_control_request_id": (
+                        f"runtime-http-control-request-{command_sequence:04d}"
+                    ),
+                    "input_id": f"runtime-http-input-{command_sequence:04d}",
+                    "input_content_digest": "sha256:" + "4" * 64,
+                }
+            )
+        elif command_type == "approval_decision":
+            document.update(
+                {
+                    "authorized_control_request_id": (
+                        f"runtime-http-control-request-{command_sequence:04d}"
+                    ),
+                    "approval_id": f"runtime-http-approval-{command_sequence:04d}",
+                    "decision": {"decision": "approve"},
+                }
+            )
+        elif command_type == "subagent_spawn_decision":
+            document.update(
+                {
+                    "spawn_request_id": f"runtime-http-spawn-{command_sequence:04d}",
+                    "child_agent_run_admission_decision_id": (
+                        f"runtime-http-child-admission-{command_sequence:04d}"
+                    ),
+                    "child_agent_run_admission_decision_digest": ("sha256:" + "5" * 64),
+                    "spawn_outcome": "accepted",
+                    "spawn_reason_codes": ["admitted"],
+                    "child_agent_run_id": (
+                        f"runtime-http-child-agent-run-{command_sequence:04d}"
+                    ),
+                }
+            )
+        elif command_type != "checkpoint":
+            raise AssertionError(f"unsupported test Command type: {command_type}")
+        refresh_self_digest(document, "command_digest")
+        return document
+
+    def command_claims(
+        self,
+        start: dict[str, Any],
+        command: dict[str, Any],
+        *,
+        jti: str,
+    ) -> dict[str, Any]:
+        authorization = cast(dict[str, Any], start["runtime_authorization"])
+        policy = cast(dict[str, Any], authorization["policy_decision"])
+        budget = cast(dict[str, Any], authorization["execution_budget"])
+        permissions = cast(dict[str, Any], authorization["effective_permissions"])
+        safety_control = "system_safety_control_id" in command
+        now = int(self.now.timestamp())
+        claims: dict[str, Any] = {
+            "iss": "agent-platform",
+            "sub": CALLER_SUBJECT,
+            "aud": self.base["runtime"]["provider_audience"],
+            "jti": jti,
+            "iat": now,
+            "nbf": now,
+            "exp": now + 240,
+            "tenant_id": start["tenant_id"],
+            "provider_revision_id": self.base["runtime"]["provider_revision_id"],
+            "runtime_run_id": command["runtime_run_id"],
+            "agent_run_id": start["agent_run_id"],
+            "workflow_run_id": start["workflow_run_id"],
+            "work_order_id": start["work_order_id"],
+            "run_manifest_digest": start["run_manifest_digest"],
+            "runtime_authorization_digest": authorization["authorization_digest"],
+            "authority_mode": "safety_control" if safety_control else "execution",
+            "operation": "submit_command",
+            "operation_contract_id": "urn:agent-platform:agent-runtime-command:v1",
+            "operation_digest_profile": ("rfc8785-command-excluding-command-digest-v1"),
+            "operation_request_digest": command["command_digest"],
+            "invocation_id": command["invocation_id"],
+            "invocation_attempt_id": command["invocation_attempt_id"],
+            "fencing_token": command["fencing_token"],
+            "policy_decision_digest": policy["decision_digest"],
+            "execution_budget_digest": budget["budget_digest"],
+            "effective_permissions_digest": permissions["permissions_digest"],
+        }
+        if safety_control:
+            claims["system_safety_control_id"] = command["system_safety_control_id"]
+            claims["system_safety_control_digest"] = command[
+                "system_safety_control_digest"
+            ]
+        return claims
+
+    def command_request(
+        self,
+        start: dict[str, Any],
+        command: dict[str, Any],
+        *,
+        jti: str,
+        algorithm: Literal["EdDSA", "ES256"] = "EdDSA",
+        claims: dict[str, Any] | None = None,
+    ) -> tuple[bytes, str]:
+        body = self.encode(command)
+        token = self.sign_start(
+            claims or self.command_claims(start, command, jti=jti),
+            algorithm=algorithm,
+        )
+        return body, token
+
     @staticmethod
     def clone(document: dict[str, Any]) -> dict[str, Any]:
         return deepcopy(document)
@@ -636,6 +788,9 @@ class InstalledProcessTestCase(unittest.TestCase):
         while time.monotonic() < deadline:
             if process.poll() is not None:
                 stderr = process.stderr.read() if process.stderr else ""
+                process.stdout.close()
+                if process.stderr is not None:
+                    process.stderr.close()
                 raise AssertionError(f"serve exited before readiness: {stderr}")
             if selector.select(timeout=0.1):
                 line = process.stdout.readline()
@@ -716,6 +871,29 @@ class InstalledProcessTestCase(unittest.TestCase):
         finally:
             connection.close()
 
+    def post_command(
+        self,
+        port: int,
+        runtime_run_id: str,
+        body: bytes,
+        token: str | None,
+        *,
+        headers: dict[str, str] | None = None,
+    ) -> tuple[int, dict[str, str], bytes]:
+        request_headers = {"Content-Type": "application/json"}
+        if token is not None:
+            request_headers["Authorization"] = f"Bearer {token}"
+        if headers:
+            request_headers.update(headers)
+        return self.request(
+            port,
+            self.pki.client,
+            f"/v1/runs/{runtime_run_id}/commands",
+            method="POST",
+            body=body,
+            headers=request_headers,
+        )
+
     def state_snapshot(self, state_root: Path) -> dict[str, object]:
         database = state_root / "runtime.sqlite3"
         connection = sqlite3.connect(database.resolve().as_uri() + "?mode=ro", uri=True)
@@ -752,3 +930,22 @@ class InstalledProcessTestCase(unittest.TestCase):
             }
         finally:
             connection.close()
+
+    def command_database_counts(self, state_root: Path) -> dict[str, int]:
+        counts = self.database_counts(state_root)
+        connection = sqlite3.connect(state_root / "runtime.sqlite3")
+        try:
+            counts.update(
+                {
+                    table: cast(
+                        int,
+                        connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[
+                            0
+                        ],
+                    )
+                    for table in ("runtime_commands", "checkpoint_manifests")
+                }
+            )
+        finally:
+            connection.close()
+        return counts

@@ -227,8 +227,14 @@ else:
                 oversized.connection.sendall(
                     b"GET /" + b"a" * 1_100 + b" HTTP/1.1\r\nHost: localhost\r\n\r\n"
                 )
-                self.assertEqual(oversized.response()[0], 414)
-                oversized.connection.close()
+                try:
+                    status, _, payload = oversized.response()
+                    self.assertEqual(status, 400)
+                    self.assertEqual(
+                        json.loads(payload)["code"], "HTTP_REQUEST_LINE_REJECTED"
+                    )
+                finally:
+                    oversized.connection.close()
 
                 headers = RawHTTPConnection(
                     self.tls_socket(server.port, self.pki.client)
@@ -238,8 +244,14 @@ else:
                     + b"a" * 4_200
                     + b"\r\n\r\n"
                 )
-                self.assertEqual(headers.response()[0], 431)
-                headers.connection.close()
+                try:
+                    status, _, payload = headers.response()
+                    self.assertEqual(status, 400)
+                    self.assertEqual(
+                        json.loads(payload)["code"], "HTTP_REQUEST_REJECTED"
+                    )
+                finally:
+                    headers.connection.close()
 
                 body = RawHTTPConnection(self.tls_socket(server.port, self.pki.client))
                 body.request(

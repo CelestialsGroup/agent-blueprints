@@ -20,6 +20,7 @@ from .admission import SecureAdmissionCore
 from .errors import (
     AuthorizationBindingError,
     CheckpointError,
+    CommandSequenceError,
     ConfigurationError,
     ContractSchemaError,
     DigestMismatchError,
@@ -28,6 +29,8 @@ from .errors import (
     InvalidMutationError,
     MutationReplayError,
     RuntimeRunConflictError,
+    RuntimeRunNotFoundError,
+    StaleFencingError,
     StateConflictError,
     StrictJsonError,
     TokenValidationError,
@@ -44,6 +47,9 @@ from .tls import (
 
 START_PATH = "/v1/runs"
 START_ENCODED_BODY_LIMIT = 8 * 1024 * 1024
+COMMAND_ENCODED_BODY_LIMIT = 256 * 1024
+_COMMAND_REQUEST_PREFIX = b"POST /v1/runs/"
+_COMMAND_REQUEST_SUFFIX = b"/commands HTTP/1.1\r\n"
 _BODY_READ_CHUNK_BYTES = 64 * 1024
 RUN_STATUS_SCHEMA_ID = "urn:agent-platform:agent-runtime-run-status:v1"
 STANDARD_ERROR_SCHEMA_ID = "urn:agent-platform:standard-error:v1"
@@ -83,6 +89,31 @@ def _targets_start_boundary(command: str, path: str) -> bool:
     target = urlsplit(path)
     return (command == "POST" and target.path in {START_PATH, START_PATH + "/"}) or (
         command != "POST" and path == START_PATH
+    )
+
+
+def _parse_exact_command_request_line(raw_requestline: bytes) -> str | None:
+    if not (
+        raw_requestline.startswith(_COMMAND_REQUEST_PREFIX)
+        and raw_requestline.endswith(_COMMAND_REQUEST_SUFFIX)
+    ):
+        return None
+    encoded = raw_requestline[
+        len(_COMMAND_REQUEST_PREFIX) : -len(_COMMAND_REQUEST_SUFFIX)
+    ]
+    rejected = b"/%?\\#"
+    if not encoded or any(
+        byte < 0x21 or byte > 0x7E or byte in rejected for byte in encoded
+    ):
+        return None
+    return encoded.decode("ascii")
+
+
+def _targets_command_boundary(command: str, path: str) -> bool:
+    target = urlsplit(path)
+    candidate = target.path
+    return candidate.startswith("/v1/runs/") and (
+        candidate.endswith("/commands") or candidate.endswith("/commands/")
     )
 
 
@@ -196,6 +227,92 @@ def _start_error_response(error: Exception) -> _HTTPErrorResponse:
             HTTPStatus.BAD_REQUEST,
             "RUNTIME_START_REJECTED",
             "Runtime Start request is not admitted.",
+            False,
+        )
+    if isinstance(error, sqlite3.OperationalError) and (
+        _sqlite_is_temporarily_unavailable(error)
+    ):
+        return _HTTPErrorResponse(
+            HTTPStatus.SERVICE_UNAVAILABLE,
+            "PROVIDER_TEMPORARILY_UNAVAILABLE",
+            "Runtime Provider is temporarily unavailable.",
+            True,
+            1,
+        )
+    return _HTTPErrorResponse(
+        HTTPStatus.INTERNAL_SERVER_ERROR,
+        "INTERNAL_ERROR",
+        "Runtime Provider encountered an internal error.",
+        False,
+    )
+
+
+def _command_error_response(error: Exception) -> _HTTPErrorResponse:
+    if isinstance(error, EncodedBodyTooLargeError):
+        return _HTTPErrorResponse(
+            HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
+            "COMMAND_BODY_TOO_LARGE",
+            "The encoded Runtime Command request exceeds its limit.",
+            False,
+        )
+    if isinstance(error, TokenValidationError):
+        return _HTTPErrorResponse(
+            HTTPStatus.UNAUTHORIZED,
+            "RUNTIME_TOKEN_REJECTED",
+            "Runtime invocation token is not admitted.",
+            False,
+        )
+    if isinstance(error, AuthorizationBindingError):
+        return _HTTPErrorResponse(
+            HTTPStatus.FORBIDDEN,
+            "RUNTIME_AUTHORIZATION_REJECTED",
+            "Runtime Command authorization is not admitted.",
+            False,
+        )
+    if isinstance(error, RuntimeRunNotFoundError):
+        return _HTTPErrorResponse(
+            HTTPStatus.NOT_FOUND,
+            "RUNTIME_RUN_NOT_FOUND",
+            "The admitted RuntimeRun does not exist in this Provider.",
+            False,
+        )
+    if isinstance(
+        error,
+        (
+            CommandSequenceError,
+            IdempotencyConflictError,
+            MutationReplayError,
+            RuntimeRunConflictError,
+            StaleFencingError,
+            StateConflictError,
+        ),
+    ):
+        return _HTTPErrorResponse(
+            HTTPStatus.CONFLICT,
+            "RUNTIME_COMMAND_CONFLICT",
+            "Runtime Command conflicts with accepted durable state.",
+            False,
+        )
+    if isinstance(error, (UnsupportedOperationError, CheckpointError)):
+        return _HTTPErrorResponse(
+            HTTPStatus.UNPROCESSABLE_ENTITY,
+            "RUNTIME_COMMAND_UNSUPPORTED",
+            "Runtime Command requests unsupported Provider semantics.",
+            False,
+        )
+    if isinstance(
+        error,
+        (
+            StrictJsonError,
+            ContractSchemaError,
+            DigestMismatchError,
+            InvalidMutationError,
+        ),
+    ):
+        return _HTTPErrorResponse(
+            HTTPStatus.BAD_REQUEST,
+            "RUNTIME_COMMAND_REJECTED",
+            "Runtime Command request is not admitted.",
             False,
         )
     if isinstance(error, sqlite3.OperationalError) and (
@@ -441,6 +558,7 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
         super().setup()
         self._request_count = 0
         self._content_length: int | None = None
+        self._command_runtime_run_id: str | None = None
         self.authenticated_caller: AuthenticatedCaller | None = None
         self.peer_error: PeerCertificateError | None = None
         server = self._provider_server
@@ -475,7 +593,12 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
             self.request_version = "HTTP/1.1"
             self.command = ""
             self.close_connection = True
-            self.send_error(HTTPStatus.REQUEST_URI_TOO_LONG)
+            self._send_standard_error(
+                HTTPStatus.BAD_REQUEST,
+                "HTTP_REQUEST_LINE_REJECTED",
+                "The HTTP request line exceeds its admitted bound.",
+                retryable=False,
+            )
             return
         if not self.raw_requestline:
             self.close_connection = True
@@ -490,15 +613,28 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
                 and self.peer_error is None
                 and _is_exact_start_request_line(self.raw_requestline)
             )
+            is_command = (
+                self.authenticated_caller is not None
+                and self.peer_error is None
+                and _parse_exact_command_request_line(self.raw_requestline) is not None
+            )
             self._send_standard_error(
                 HTTPStatus.TOO_MANY_REQUESTS
-                if is_start
+                if is_start or is_command
                 else HTTPStatus.SERVICE_UNAVAILABLE,
-                "PROVIDER_START_CONCURRENCY_LIMIT"
-                if is_start
+                (
+                    "PROVIDER_START_CONCURRENCY_LIMIT"
+                    if is_start
+                    else "PROVIDER_COMMAND_CONCURRENCY_LIMIT"
+                )
+                if is_start or is_command
                 else "PROVIDER_CONCURRENCY_LIMIT",
-                "Runtime Start concurrency is exhausted."
-                if is_start
+                (
+                    "Runtime Start concurrency is exhausted."
+                    if is_start
+                    else "Runtime Command concurrency is exhausted."
+                )
+                if is_start or is_command
                 else "Provider request concurrency is exhausted.",
                 retryable=True,
                 retry_after=1,
@@ -545,6 +681,20 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
                     HTTPStatus.BAD_REQUEST,
                     "HTTP_START_TARGET_REJECTED",
                     "Runtime Start requires exact POST /v1/runs over HTTP/1.1.",
+                    retryable=False,
+                )
+                return
+            self._command_runtime_run_id = _parse_exact_command_request_line(
+                self.raw_requestline
+            )
+            if _targets_command_boundary(self.command, self.path) and (
+                self._command_runtime_run_id is None
+            ):
+                self.close_connection = True
+                self._send_standard_error(
+                    HTTPStatus.BAD_REQUEST,
+                    "HTTP_COMMAND_TARGET_REJECTED",
+                    "Runtime Command requires an exact dynamic origin-form target over HTTP/1.1.",
                     retryable=False,
                 )
                 return
@@ -604,19 +754,28 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
         self._route_not_enabled()
 
     def do_POST(self) -> None:
-        if self.path != START_PATH:
-            self._route_not_enabled()
+        if self.path == START_PATH:
+            self._handle_start()
             return
+        runtime_run_id = getattr(self, "_command_runtime_run_id", None)
+        if runtime_run_id is not None:
+            self._handle_command(runtime_run_id)
+            return
+        self._route_not_enabled()
+
+    def _mutation_request(
+        self, *, operation: str, encoded_limit: int, body_too_large_code: str
+    ) -> tuple[bytes, str, AuthenticatedCaller] | None:
         if not self._provider_server.process_state.readiness.is_set():
             self.close_connection = True
             self._send_standard_error(
                 HTTPStatus.SERVICE_UNAVAILABLE,
                 "PROVIDER_NOT_READY",
-                "Runtime Provider is not accepting Start requests.",
+                f"Runtime Provider is not accepting {operation} requests.",
                 retryable=True,
                 retry_after=1,
             )
-            return
+            return None
         content_types = self.headers.get_all("Content-Type", failobj=[])
         if content_types != ["application/json"]:
             self.close_connection = True
@@ -626,7 +785,7 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
                 "Content-Type must be application/json.",
                 retryable=False,
             )
-            return
+            return None
         if self._content_length is None:
             self.close_connection = True
             self._send_standard_error(
@@ -635,16 +794,16 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
                 "Exactly one Content-Length is required.",
                 retryable=False,
             )
-            return
-        if self._content_length > START_ENCODED_BODY_LIMIT:
+            return None
+        if self._content_length > encoded_limit:
             self.close_connection = True
             self._send_standard_error(
                 HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
-                "START_BODY_TOO_LARGE",
-                "The encoded Runtime Start request exceeds its limit.",
+                body_too_large_code,
+                f"The encoded Runtime {operation} request exceeds its limit.",
                 retryable=False,
             )
-            return
+            return None
         try:
             compact_jws = _parse_bearer_authorization(
                 self.headers.get_all("Authorization", failobj=[]),
@@ -658,10 +817,10 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
                 "Runtime invocation token is not admitted.",
                 retryable=False,
             )
-            return
+            return None
         encoded_body = self._read_exact_body(self._content_length)
         if encoded_body is None:
-            return
+            return None
         caller = self.authenticated_caller
         if caller is None:
             self.close_connection = True
@@ -671,7 +830,18 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
                 "Workload identity is not admitted.",
                 retryable=False,
             )
+            return None
+        return encoded_body, compact_jws, caller
+
+    def _handle_start(self) -> None:
+        request = self._mutation_request(
+            operation="Start",
+            encoded_limit=START_ENCODED_BODY_LIMIT,
+            body_too_large_code="START_BODY_TOO_LARGE",
+        )
+        if request is None:
             return
+        encoded_body, compact_jws, caller = request
         try:
             status = self._provider_server.core.start(
                 encoded_body,
@@ -688,6 +858,37 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
                 retry_after=response.retry_after,
             )
             return
+        self._send_status(status)
+
+    def _handle_command(self, runtime_run_id: str) -> None:
+        request = self._mutation_request(
+            operation="Command",
+            encoded_limit=COMMAND_ENCODED_BODY_LIMIT,
+            body_too_large_code="COMMAND_BODY_TOO_LARGE",
+        )
+        if request is None:
+            return
+        encoded_body, compact_jws, caller = request
+        try:
+            status = self._provider_server.core.submit_command(
+                runtime_run_id,
+                encoded_body,
+                compact_jws,
+                authenticated_caller=caller.token_subject,
+            )
+        except Exception as error:
+            response = _command_error_response(error)
+            self._send_standard_error(
+                response.status,
+                response.code,
+                response.message,
+                retryable=response.retryable,
+                retry_after=response.retry_after,
+            )
+            return
+        self._send_status(status)
+
+    def _send_status(self, status: RuntimeStatus) -> None:
         document = _runtime_status_document(status)
         try:
             self._provider_server.core.projection.validate(
@@ -770,7 +971,10 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
             return False
         if self._content_length not in (None, 0) and not (
             self.command == "POST"
-            and self.path == START_PATH
+            and (
+                self.path == START_PATH
+                or getattr(self, "_command_runtime_run_id", None) is not None
+            )
             and self.request_version == "HTTP/1.1"
         ):
             self.close_connection = True
@@ -900,14 +1104,10 @@ class ProviderRequestHandler(BaseHTTPRequestHandler):
         message: str | None = None,
         explain: str | None = None,
     ) -> None:
-        del message, explain
-        try:
-            status = HTTPStatus(code)
-        except ValueError:
-            status = HTTPStatus.BAD_REQUEST
+        del code, message, explain
         self.close_connection = True
         self._send_standard_error(
-            status,
+            HTTPStatus.BAD_REQUEST,
             "HTTP_REQUEST_REJECTED",
             "The HTTP request is outside the admitted bounds.",
             retryable=False,

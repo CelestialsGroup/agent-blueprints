@@ -29,6 +29,7 @@ from agent_native_runtime.errors import (
     StaleFencingError,
     StrictJsonError,
     TokenValidationError,
+    UnsupportedOperationError,
 )
 from agent_native_runtime.kernel import NativeRuntimeKernel
 from agent_native_runtime.model import RuntimeConfiguration, format_timestamp
@@ -341,7 +342,7 @@ class SecureAdmissionTest(unittest.TestCase):
         budget = cast(dict[str, Any], authorization["execution_budget"])
         permissions = cast(dict[str, Any], authorization["effective_permissions"])
         now = int(self.clock().timestamp())
-        return {
+        claims = {
             "iss": "agent-platform",
             "sub": CALLER,
             "aud": self.runtime_configuration.provider_audience,
@@ -368,9 +369,52 @@ class SecureAdmissionTest(unittest.TestCase):
             "policy_decision_digest": policy["decision_digest"],
             "execution_budget_digest": budget["budget_digest"],
             "effective_permissions_digest": permissions["permissions_digest"],
-            "system_safety_control_id": command["system_safety_control_id"],
-            "system_safety_control_digest": command["system_safety_control_digest"],
         }
+        if "system_safety_control_id" in command:
+            claims["system_safety_control_id"] = command["system_safety_control_id"]
+            claims["system_safety_control_digest"] = command[
+                "system_safety_control_digest"
+            ]
+        return claims
+
+    def unsupported_command_document(
+        self, runtime_run_id: str, command_type: str
+    ) -> dict[str, Any]:
+        document = self.cancel_document(runtime_run_id)
+        document["type"] = command_type
+        document.pop("system_safety_control_id")
+        document.pop("system_safety_control_digest")
+        if command_type in {"append_input", "interrupt"}:
+            document.update(
+                {
+                    "authorized_control_request_id": "control-input-0001",
+                    "input_id": "runtime-input-0001",
+                    "input_content_digest": "sha256:" + "1" * 64,
+                }
+            )
+        elif command_type == "approval_decision":
+            document.update(
+                {
+                    "authorized_control_request_id": "control-approval-0001",
+                    "approval_id": "approval-0001",
+                    "decision": {"decision": "approve"},
+                }
+            )
+        elif command_type == "subagent_spawn_decision":
+            document.update(
+                {
+                    "spawn_request_id": "spawn-request-0001",
+                    "child_agent_run_admission_decision_id": "child-admission-0001",
+                    "child_agent_run_admission_decision_digest": ("sha256:" + "2" * 64),
+                    "spawn_outcome": "accepted",
+                    "spawn_reason_codes": ["admitted"],
+                    "child_agent_run_id": "child-agent-run-0001",
+                }
+            )
+        else:
+            raise AssertionError(f"unexpected unsupported command type: {command_type}")
+        refresh_self_digest(document, "command_digest")
+        return document
 
     def test_secure_lifecycle_uses_both_algorithms_and_authorized_reads(self) -> None:
         print(
@@ -613,6 +657,66 @@ class SecureAdmissionTest(unittest.TestCase):
             )
         finally:
             connection.close()
+
+    def test_unsupported_commands_require_full_token_context_before_rejection(
+        self,
+    ) -> None:
+        start = self.start_document()
+        runtime_run_id = cast(str, start["runtime_run_id"])
+        for index, command_type in enumerate(
+            (
+                "append_input",
+                "interrupt",
+                "approval_decision",
+                "subagent_spawn_decision",
+            ),
+            start=1,
+        ):
+            command = self.unsupported_command_document(runtime_run_id, command_type)
+            claims = self.command_claims(start, command)
+            claims["jti"] = f"runtime-unsupported-command-{index:08d}"
+            claims["authority_mode"] = "execution"
+
+            wrong_context = deepcopy(claims)
+            wrong_context["operation_request_digest"] = "sha256:" + "0" * 64
+            with (
+                self.subTest(command_type=command_type, case="request_context"),
+                patch.object(
+                    self.core.kernel.store,
+                    "_connect",
+                    side_effect=AssertionError("store opened before context rejection"),
+                ),
+                self.assertRaises(AuthorizationBindingError),
+            ):
+                self.core.submit_command(
+                    runtime_run_id,
+                    self.encode(command),
+                    self.sign(wrong_context),
+                    authenticated_caller=CALLER,
+                )
+
+            with (
+                self.subTest(command_type=command_type, case="unsupported"),
+                patch.object(
+                    self.core.kernel.store,
+                    "_connect",
+                    side_effect=AssertionError("unsupported command opened store"),
+                ),
+                self.assertRaises(UnsupportedOperationError),
+            ):
+                self.core.submit_command(
+                    runtime_run_id,
+                    self.encode(command),
+                    self.sign(claims),
+                    authenticated_caller=CALLER,
+                )
+
+            self.assertEqual(
+                self.core.kernel.store.count_jti(
+                    "agent-platform", cast(str, claims["jti"])
+                ),
+                0,
+            )
 
     def test_idempotent_command_replay_rechecks_authority(self) -> None:
         start, _, _ = self.admit_start()

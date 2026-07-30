@@ -149,6 +149,22 @@ class SecureAdmissionCore:
         *,
         authenticated_caller: str,
     ) -> RuntimeStatus:
+        mutation, admission, admitted_at = self.admit_command(
+            runtime_run_id,
+            encoded_body,
+            compact_jws,
+            authenticated_caller=authenticated_caller,
+        )
+        return self.kernel.submit_admitted_command(mutation, admission, admitted_at)
+
+    def admit_command(
+        self,
+        runtime_run_id: str,
+        encoded_body: bytes,
+        compact_jws: str,
+        *,
+        authenticated_caller: str,
+    ) -> tuple[CommandMutation, MutationAdmission, datetime]:
         document = self._document(
             encoded_body, schema_id=COMMAND_SCHEMA_ID, encoded_limit=COMMAND_BODY_LIMIT
         )
@@ -157,7 +173,6 @@ class SecureAdmissionCore:
                 "Command path and body runtime_run_id differ"
             )
         self._require_self_digest(document, "command_digest", "Runtime Command")
-        mutation = self._command_mutation(document)
         now = self.kernel.clock()
         admission = self.tokens.verify(
             compact_jws,
@@ -165,11 +180,14 @@ class SecureAdmissionCore:
             operation="submit_command",
             now=now,
         )
-        if admission.expires_at > mutation.deadline_at:
+        deadline = self._validate_command_context(document, admission)
+        if admission.expires_at > deadline:
             raise AuthorizationBindingError(
                 "Runtime command token outlives the command deadline"
             )
-        return self.kernel.submit_command(mutation, admission)
+        mutation = self._command_mutation(document)
+        admitted_at = self.kernel.validate_command(mutation, admission)
+        return mutation, admission, admitted_at
 
     def status(
         self,
@@ -584,6 +602,34 @@ class SecureAdmissionCore:
                 + ",".join(missing)
             )
         return ports
+
+    @staticmethod
+    def _validate_command_context(
+        document: Mapping[str, Any], admission: MutationAdmission
+    ) -> datetime:
+        expected = (
+            _string(document, "runtime_run_id"),
+            _string(document, "invocation_id"),
+            _string(document, "invocation_attempt_id"),
+            _integer(document, "fencing_token"),
+            _string(document, "command_digest"),
+            _optional_string(document, "system_safety_control_id"),
+            _optional_string(document, "system_safety_control_digest"),
+        )
+        actual = (
+            admission.runtime_run_id,
+            admission.invocation_id,
+            admission.invocation_attempt_id,
+            admission.fencing_token,
+            admission.operation_request_digest,
+            admission.system_safety_control_id,
+            admission.system_safety_control_digest,
+        )
+        if actual != expected:
+            raise AuthorizationBindingError(
+                "Command body and Runtime invocation token differ"
+            )
+        return _timestamp(document, "deadline_at")
 
     @staticmethod
     def _command_mutation(document: Mapping[str, Any]) -> CommandMutation:

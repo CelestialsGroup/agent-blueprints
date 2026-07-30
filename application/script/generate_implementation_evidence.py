@@ -110,7 +110,17 @@ def load_env(path: Path) -> dict[str, str]:
 def source_paths(component: dict[str, Any]) -> list[Path]:
     paths = [ROOT / relative for relative in COMMON_SOURCE_FILES + component["source_files"]]
     for relative in component["source_directories"]:
-        paths.extend(path for path in (ROOT / relative).rglob("*") if path.is_file())
+        discovered = tuple((ROOT / relative).rglob("*"))
+        forbidden = tuple(
+            path
+            for path in discovered
+            if "__pycache__" in path.parts or path.suffix == ".pyc"
+        )
+        if forbidden:
+            raise AssertionError(
+                f"source tree contains forbidden Python cache content: {forbidden[0]}"
+            )
+        paths.extend(path for path in discovered if path.is_file())
     return sorted(set(paths), key=lambda path: path.relative_to(ROOT).as_posix())
 
 

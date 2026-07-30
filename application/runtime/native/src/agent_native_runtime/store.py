@@ -623,66 +623,48 @@ class SQLiteRuntimeStore:
         admission: MutationAdmission,
         now: datetime,
     ) -> RuntimeStatus:
-        timestamp = format_timestamp(now)
         with self._transaction() as connection:
-            run = connection.execute(
-                "SELECT * FROM runtime_runs WHERE runtime_run_id = ?",
-                (mutation.runtime_run_id,),
-            ).fetchone()
-            if run is None:
-                raise RuntimeRunNotFoundError(mutation.runtime_run_id)
-            self._require_security_binding(
+            return self._submit_command_transaction(
                 connection,
+                mutation,
                 admission,
-                minimum_fencing=False,
-                validate_execution_window=True,
+                now,
             )
-            self._validate_command_authority(mutation, admission)
 
-            existing = connection.execute(
-                """
-                SELECT command_digest FROM runtime_commands
-                WHERE runtime_run_id = ? AND command_id = ?
-                """,
-                (mutation.runtime_run_id, mutation.command_id),
-            ).fetchone()
-            if existing is not None:
-                if existing["command_digest"] != mutation.command_digest:
-                    raise IdempotencyConflictError(
-                        "command_id is already bound to another digest"
-                    )
-                self._consume_jti(
-                    connection,
-                    admission,
-                    mutation.command_digest,
-                    mutation.runtime_run_id,
-                    now,
-                )
-                return self._status(connection, mutation.runtime_run_id)
+    def _submit_command_transaction(
+        self,
+        connection: sqlite3.Connection,
+        mutation: CommandMutation,
+        admission: MutationAdmission,
+        now: datetime,
+    ) -> RuntimeStatus:
+        timestamp = format_timestamp(now)
+        run = connection.execute(
+            "SELECT * FROM runtime_runs WHERE runtime_run_id = ?",
+            (mutation.runtime_run_id,),
+        ).fetchone()
+        if run is None:
+            raise RuntimeRunNotFoundError(mutation.runtime_run_id)
+        self._require_security_binding(
+            connection,
+            admission,
+            minimum_fencing=False,
+            validate_execution_window=True,
+        )
+        self._validate_command_authority(mutation, admission)
 
-            key_row = connection.execute(
-                """
-                SELECT command_digest FROM runtime_commands
-                WHERE runtime_run_id = ? AND idempotency_key = ?
-                """,
-                (mutation.runtime_run_id, mutation.idempotency_key),
-            ).fetchone()
-            if key_row is not None:
+        existing = connection.execute(
+            """
+            SELECT command_digest FROM runtime_commands
+            WHERE runtime_run_id = ? AND command_id = ?
+            """,
+            (mutation.runtime_run_id, mutation.command_id),
+        ).fetchone()
+        if existing is not None:
+            if existing["command_digest"] != mutation.command_digest:
                 raise IdempotencyConflictError(
-                    "command idempotency key is already bound to another command"
+                    "command_id is already bound to another digest"
                 )
-            expected_sequence = run["last_command_sequence"] + 1
-            if mutation.command_sequence != expected_sequence:
-                raise CommandSequenceError(
-                    f"expected command sequence {expected_sequence}, got {mutation.command_sequence}"
-                )
-            if mutation.fencing_token <= run["observed_fencing_token"]:
-                raise StaleFencingError(
-                    "command fencing token must be strictly newer than the observed token"
-                )
-            next_state, work_kind = self._command_transition(
-                run["status"], mutation.type
-            )
             self._consume_jti(
                 connection,
                 admission,
@@ -690,64 +672,94 @@ class SQLiteRuntimeStore:
                 mutation.runtime_run_id,
                 now,
             )
-            connection.execute(
-                """
-                INSERT INTO runtime_commands(
-                    runtime_run_id, command_id, command_digest, command_sequence, type,
-                    invocation_id, invocation_attempt_id, fencing_token, idempotency_key,
-                    authority_mode, authorized_control_request_id, system_safety_control_id,
-                    system_safety_control_digest, deadline_at, accepted_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    mutation.runtime_run_id,
-                    mutation.command_id,
-                    mutation.command_digest,
-                    mutation.command_sequence,
-                    mutation.type,
-                    mutation.invocation_id,
-                    mutation.invocation_attempt_id,
-                    mutation.fencing_token,
-                    mutation.idempotency_key,
-                    admission.authority_mode,
-                    mutation.authorized_control_request_id,
-                    mutation.system_safety_control_id,
-                    mutation.system_safety_control_digest,
-                    format_timestamp(mutation.deadline_at),
-                    timestamp,
-                ),
-            )
-            connection.execute(
-                """
-                UPDATE runtime_runs
-                SET status = ?, observed_fencing_token = ?, last_command_sequence = ?, updated_at = ?
-                WHERE runtime_run_id = ?
-                """,
-                (
-                    next_state,
-                    mutation.fencing_token,
-                    mutation.command_sequence,
-                    timestamp,
-                    mutation.runtime_run_id,
-                ),
-            )
-            if work_kind is not None:
-                connection.execute(
-                    """
-                    INSERT INTO execution_work(
-                        work_id, runtime_run_id, kind, command_id, state, created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, 'pending', ?, ?)
-                    """,
-                    (
-                        f"{mutation.runtime_run_id}:command:{mutation.command_id}",
-                        mutation.runtime_run_id,
-                        work_kind,
-                        mutation.command_id,
-                        timestamp,
-                        timestamp,
-                    ),
-                )
             return self._status(connection, mutation.runtime_run_id)
+
+        key_row = connection.execute(
+            """
+            SELECT command_digest FROM runtime_commands
+            WHERE runtime_run_id = ? AND idempotency_key = ?
+            """,
+            (mutation.runtime_run_id, mutation.idempotency_key),
+        ).fetchone()
+        if key_row is not None:
+            raise IdempotencyConflictError(
+                "command idempotency key is already bound to another command"
+            )
+        expected_sequence = run["last_command_sequence"] + 1
+        if mutation.command_sequence != expected_sequence:
+            raise CommandSequenceError(
+                f"expected command sequence {expected_sequence}, got {mutation.command_sequence}"
+            )
+        if mutation.fencing_token <= run["observed_fencing_token"]:
+            raise StaleFencingError(
+                "command fencing token must be strictly newer than the observed token"
+            )
+        next_state, work_kind = self._command_transition(run["status"], mutation.type)
+        self._consume_jti(
+            connection,
+            admission,
+            mutation.command_digest,
+            mutation.runtime_run_id,
+            now,
+        )
+        connection.execute(
+            """
+            INSERT INTO runtime_commands(
+                runtime_run_id, command_id, command_digest, command_sequence, type,
+                invocation_id, invocation_attempt_id, fencing_token, idempotency_key,
+                authority_mode, authorized_control_request_id, system_safety_control_id,
+                system_safety_control_digest, deadline_at, accepted_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                mutation.runtime_run_id,
+                mutation.command_id,
+                mutation.command_digest,
+                mutation.command_sequence,
+                mutation.type,
+                mutation.invocation_id,
+                mutation.invocation_attempt_id,
+                mutation.fencing_token,
+                mutation.idempotency_key,
+                admission.authority_mode,
+                mutation.authorized_control_request_id,
+                mutation.system_safety_control_id,
+                mutation.system_safety_control_digest,
+                format_timestamp(mutation.deadline_at),
+                timestamp,
+            ),
+        )
+        connection.execute(
+            """
+            UPDATE runtime_runs
+            SET status = ?, observed_fencing_token = ?, last_command_sequence = ?, updated_at = ?
+            WHERE runtime_run_id = ?
+            """,
+            (
+                next_state,
+                mutation.fencing_token,
+                mutation.command_sequence,
+                timestamp,
+                mutation.runtime_run_id,
+            ),
+        )
+        if work_kind is not None:
+            connection.execute(
+                """
+                INSERT INTO execution_work(
+                    work_id, runtime_run_id, kind, command_id, state, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, 'pending', ?, ?)
+                """,
+                (
+                    f"{mutation.runtime_run_id}:command:{mutation.command_id}",
+                    mutation.runtime_run_id,
+                    work_kind,
+                    mutation.command_id,
+                    timestamp,
+                    timestamp,
+                ),
+            )
+        return self._status(connection, mutation.runtime_run_id)
 
     def get_status(self, runtime_run_id: str) -> RuntimeStatus:
         connection = self._connect()
@@ -1031,54 +1043,70 @@ class SQLiteRuntimeStore:
         manifest_digest: str,
         now: datetime,
     ) -> RuntimeStatus:
+        with self._transaction() as connection:
+            return self._complete_checkpoint_transaction(
+                connection,
+                work,
+                manifest,
+                manifest_digest,
+                now,
+            )
+
+    def _complete_checkpoint_transaction(
+        self,
+        connection: sqlite3.Connection,
+        work: WorkItem,
+        manifest: CheckpointManifest,
+        manifest_digest: str,
+        now: datetime,
+    ) -> RuntimeStatus:
         manifest_json = json.dumps(
             manifest.to_document(), separators=(",", ":"), sort_keys=True
         )
-        with self._transaction() as connection:
-            self._require_work_lease(connection, work, now)
-            run = self._require_run(connection, work.runtime_run_id)
-            if manifest.runtime_run_id != work.runtime_run_id:
-                raise StateConflictError("checkpoint manifest changed runtime_run_id")
-            if manifest.event_sequence != run["last_event_sequence"]:
-                raise StateConflictError("checkpoint event sequence is stale")
-            connection.execute(
-                """
-                INSERT INTO checkpoint_manifests(
-                    checkpoint_id, runtime_run_id, command_id, manifest_digest,
-                    manifest_json, content_digest, content_reference, size_bytes, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    manifest.checkpoint_id,
-                    work.runtime_run_id,
-                    work.command_id,
-                    manifest_digest,
-                    manifest_json,
-                    manifest.digest,
-                    manifest.content_reference,
-                    manifest.size_bytes,
-                    format_timestamp(manifest.created_at),
-                ),
-            )
-            connection.execute(
-                """
-                UPDATE runtime_runs SET checkpoint_manifest_json = ?, updated_at = ?
-                WHERE runtime_run_id = ?
-                """,
-                (manifest_json, format_timestamp(now), work.runtime_run_id),
-            )
-            self._append_event(
-                connection,
+        self._require_work_lease(connection, work, now)
+        run = self._require_run(connection, work.runtime_run_id)
+        if manifest.runtime_run_id != work.runtime_run_id:
+            raise StateConflictError("checkpoint manifest changed runtime_run_id")
+        if manifest.event_sequence != run["last_event_sequence"]:
+            raise StateConflictError("checkpoint event sequence is stale")
+        connection.execute(
+            """
+            INSERT INTO checkpoint_manifests(
+                checkpoint_id, runtime_run_id, command_id, manifest_digest,
+                manifest_json, content_digest, content_reference, size_bytes, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                manifest.checkpoint_id,
                 work.runtime_run_id,
-                CheckpointCreatedEventData(
-                    checkpoint_id=manifest.checkpoint_id,
-                    checkpoint_manifest_digest=manifest_digest,
-                    content_reference=manifest.content_reference,
-                ),
-                now,
-            )
-            self._complete_work(connection, work, now)
-            return self._status(connection, work.runtime_run_id)
+                work.command_id,
+                manifest_digest,
+                manifest_json,
+                manifest.digest,
+                manifest.content_reference,
+                manifest.size_bytes,
+                format_timestamp(manifest.created_at),
+            ),
+        )
+        connection.execute(
+            """
+            UPDATE runtime_runs SET checkpoint_manifest_json = ?, updated_at = ?
+            WHERE runtime_run_id = ?
+            """,
+            (manifest_json, format_timestamp(now), work.runtime_run_id),
+        )
+        self._append_event(
+            connection,
+            work.runtime_run_id,
+            CheckpointCreatedEventData(
+                checkpoint_id=manifest.checkpoint_id,
+                checkpoint_manifest_digest=manifest_digest,
+                content_reference=manifest.content_reference,
+            ),
+            now,
+        )
+        self._complete_work(connection, work, now)
+        return self._status(connection, work.runtime_run_id)
 
     def checkpoint_manifest_digest(self, manifest: CheckpointManifest) -> str:
         return _sha256_document(manifest.to_document())

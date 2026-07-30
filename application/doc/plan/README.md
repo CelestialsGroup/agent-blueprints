@@ -29,11 +29,18 @@ Current plans:
   Cancel integration plan with explicit Conformance evidence boundaries.
 - `B03.2a1-secure-provider-process.md`: approved split plan, validated a1.0/a1.1.0,
   the a1.1.1 mTLS Process Foundation candidate, and the independently validated
-  a1.1.2 Start boundary candidate; covers Strict I-JSON, Schema/semantic
-  admission, JWS binding, migrations, process tests, evidence, rollback, and
-  explicit authority boundaries.
+  a1.1.2 Start and a1.1.3 Command/recovery boundary candidates; covers Strict
+  I-JSON, Schema/semantic admission, JWS binding, migrations, process tests,
+  evidence, rollback, and explicit authority boundaries. Status/Event closure
+  remains a1.1.4.
 - `B03.2a1.1.2-start-http-boundary.md`: approved execution plan and mandatory
   per-stage ledger for the Start-only HTTP boundary, including strict HTTP/1.1
   framing, pre-parse body limits, mTLS/JWS binding, closed Contract response
   mapping, installed-wheel controlled-fault evidence, rollback, stop conditions,
   and the completed full-Gate ledger.
+- `B03.2a1.1.3-command-recovery-boundary.md`: implemented and independently
+  validated execution plan and mandatory per-stage ledger for the Command-only
+  HTTP boundary, transaction SIGKILL/SQLite reopen, installed test-worker lease
+  recovery, and same-revision checkpoint crash consistency, with explicit
+  production-worker, platform-authority, Status/Event, rollback, evidence, and
+  maturity boundaries.

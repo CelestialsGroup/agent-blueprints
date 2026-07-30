@@ -5,7 +5,7 @@ from collections.abc import Callable
 from contextlib import suppress
 from datetime import UTC, datetime
 
-from .checkpoint import CheckpointObjectStore
+from .checkpoint import CheckpointObject, CheckpointObjectStore
 from .errors import (
     AuthorizationBindingError,
     CheckpointCompatibilityError,
@@ -23,6 +23,7 @@ from .model import (
     RuntimeSecurityBinding,
     RuntimeStatus,
     StartMutation,
+    WorkItem,
 )
 from .store import SQLiteRuntimeStore
 
@@ -119,11 +120,25 @@ class NativeRuntimeKernel:
     def submit_command(
         self, mutation: CommandMutation, admission: MutationAdmission
     ) -> RuntimeStatus:
+        now = self.validate_command(mutation, admission)
+        return self.submit_admitted_command(mutation, admission, now)
+
+    def validate_command(
+        self, mutation: CommandMutation, admission: MutationAdmission
+    ) -> datetime:
         now = self.clock()
         mutation.validate(now)
         admission.validate(operation="submit_command", now=now)
         self._validate_command_admission(mutation, admission)
-        return self.store.submit_command(mutation, admission, now)
+        return now
+
+    def submit_admitted_command(
+        self,
+        mutation: CommandMutation,
+        admission: MutationAdmission,
+        admitted_at: datetime,
+    ) -> RuntimeStatus:
+        return self.store.submit_command(mutation, admission, admitted_at)
 
     def events(
         self, runtime_run_id: str, *, after_event_sequence: int, limit: int = 100
@@ -166,6 +181,10 @@ class NativeRuntimeKernel:
         work = self.store.claim_work(owner, self.clock())
         if work is None:
             return False
+        self._process_claimed_work(work, executor)
+        return True
+
+    def _process_claimed_work(self, work: WorkItem, executor: ExecutionLoop) -> None:
         try:
             if work.kind == "start":
                 restored_state = (
@@ -181,28 +200,7 @@ class NativeRuntimeKernel:
             elif work.kind == "checkpoint":
                 payload = executor.checkpoint(work.runtime_run_id)
                 checkpoint_object = self.checkpoints.write(payload)
-                status = self.store.get_status(work.runtime_run_id)
-                command_identity = work.command_id or work.work_id
-                checkpoint_id = (
-                    "native-checkpoint-"
-                    + hashlib.sha256(
-                        f"{work.runtime_run_id}:{command_identity}".encode()
-                    ).hexdigest()[:32]
-                )
-                created_at = self.clock()
-                manifest = CheckpointManifest(
-                    checkpoint_id=checkpoint_id,
-                    runtime_run_id=work.runtime_run_id,
-                    provider_revision_id=self.configuration.provider_revision_id,
-                    source_runtime_revision=self.configuration.runtime_revision,
-                    event_sequence=status.last_event_sequence,
-                    content_reference=checkpoint_object.content_reference,
-                    digest=checkpoint_object.digest,
-                    size_bytes=checkpoint_object.size_bytes,
-                    portability="same_revision",
-                    compatibility_profile=self.configuration.checkpoint_profile,
-                    created_at=created_at,
-                )
+                manifest = self._checkpoint_manifest(work, checkpoint_object)
                 self.store.complete_checkpoint(
                     work,
                     manifest,
@@ -211,7 +209,6 @@ class NativeRuntimeKernel:
                 )
             else:
                 raise AssertionError(f"unknown durable work kind: {work.kind}")
-            return True
         except BaseException as error:
             error_code = (
                 error.code
@@ -221,6 +218,31 @@ class NativeRuntimeKernel:
             with suppress(WorkLeaseLostError):
                 self.store.release_work(work, error_code, self.clock())
             raise
+
+    def _checkpoint_manifest(
+        self, work: WorkItem, checkpoint_object: CheckpointObject
+    ) -> CheckpointManifest:
+        status = self.store.get_status(work.runtime_run_id)
+        command_identity = work.command_id or work.work_id
+        checkpoint_id = (
+            "native-checkpoint-"
+            + hashlib.sha256(
+                f"{work.runtime_run_id}:{command_identity}".encode()
+            ).hexdigest()[:32]
+        )
+        return CheckpointManifest(
+            checkpoint_id=checkpoint_id,
+            runtime_run_id=work.runtime_run_id,
+            provider_revision_id=self.configuration.provider_revision_id,
+            source_runtime_revision=self.configuration.runtime_revision,
+            event_sequence=status.last_event_sequence,
+            content_reference=checkpoint_object.content_reference,
+            digest=checkpoint_object.digest,
+            size_bytes=checkpoint_object.size_bytes,
+            portability="same_revision",
+            compatibility_profile=self.configuration.checkpoint_profile,
+            created_at=self.clock(),
+        )
 
     def _validate_restore(self, manifest: CheckpointManifest) -> None:
         manifest.validate()

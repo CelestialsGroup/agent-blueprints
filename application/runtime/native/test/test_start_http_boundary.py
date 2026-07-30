@@ -1010,8 +1010,8 @@ if INSTALLED_BIN is not None:
                 )
                 self.assert_error(
                     command_response,
-                    status=404,
-                    code="ROUTE_NOT_ENABLED",
+                    status=400,
+                    code="HTTP_CONTENT_TYPE_REJECTED",
                 )
 
         def test_body_limit_short_read_and_total_deadline_are_precommit(self) -> None:
