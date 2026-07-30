@@ -52,3 +52,11 @@ Current plans:
   missing Status/Event HTTP 400 authority remains machine-readable blocked; Go
   adapter, platform authority, CanonicalEvent, production composition and
   aggregate conformance are excluded.
+- `B03.2a2.0-framework-neutral-go-port-outcome-model.md`: implemented candidate
+  and mandatory per-stage ledger for the first independently closable a2 slice:
+  a framework-neutral Go Port, stable opaque values, closed read failure and
+  mutation outcomes, and an explicit fresh-read/no-retry reconciliation
+  requirement, with independent normal/Race evidence and complete checkpoint
+  Gate. It excludes the strict HTTP adapter, installed cross-language process
+  evidence, dynamic Suite closure, platform authority and production
+  composition; those remain separately ordered a2.1-a2.3 or B03.2b/B03.2c work.

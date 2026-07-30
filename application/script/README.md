@@ -51,3 +51,13 @@ keeps the missing Status/Event HTTP 400 authority machine-readable blocked,
 and fixes aggregate `runtime-core-v1` to `not_claimed`. Source discovery rejects
 `__pycache__` and `*.pyc`; source, wheels, logs and final evidence are scanned
 for complete tokens, body/checkpoint canaries, private-key PEM and tracebacks.
+
+`generate_go_port_outcome_evidence.py` emits the independent B03.2a2.0
+framework-neutral Go Port evidence under `build/evidence/b03.2a2.0`. It binds
+focused normal/Race behavior, the closed four-state mutation outcome and fresh
+read reconciliation requirement, standard-library-only production imports,
+module-file zero-diff, the exact 17-case Suite inventory and a1.1.4 predecessor.
+Every Suite case remains unevaluated in a2.0, aggregate conformance stays
+`not_claimed`, and HTTP/cross-language/production scopes remain blocked or
+not-in-slice. Its source manifest and copied artifacts retain the same
+cache/sensitive-content fail-closed policy.

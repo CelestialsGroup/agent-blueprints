@@ -21,6 +21,7 @@ A1_1_1_EVIDENCE_DIR="$ROOT/build/evidence/b03.2a1.1.1"
 A1_1_2_EVIDENCE_DIR="$ROOT/build/evidence/b03.2a1.1.2"
 A1_1_3_EVIDENCE_DIR="$ROOT/build/evidence/b03.2a1.1.3"
 A1_1_4_EVIDENCE_DIR="$ROOT/build/evidence/b03.2a1.1.4"
+A2_0_EVIDENCE_DIR="$ROOT/build/evidence/b03.2a2.0"
 CACHE_DIR="$ROOT/.cache/implementation"
 SQLC_CHECK_DIR="$CACHE_DIR/sqlc-check"
 P0_RUN_DIR="$CACHE_DIR/b03.2-p0-validation"
@@ -114,6 +115,24 @@ docker run --rm \
     go test ./...
     go test -race ./...
   ' 2>&1 | tee "$P0_RUN_DIR/go-validation.log"
+
+git -C "$ROOT/.." diff --exit-code "$APPLICATION_BASE_REVISION" -- \
+  application/go.mod application/go.sum
+echo "go-port-module-files-base-revision-zero-diff:passed" \
+  >"$P0_RUN_DIR/go-port-validation.log"
+docker run --rm \
+  -e GOCACHE=/cache/go-build \
+  -e GOMODCACHE=/cache/go-mod \
+  -e HOME=/tmp \
+  -v "$CACHE_DIR:/cache" \
+  -v "$ROOT:/workspace:ro" \
+  -w /workspace \
+  "$GO_TOOLCHAIN_IMAGE" \
+  sh -euc '
+    go test -count=1 -v ./internal/runtimeport
+    go test -count=1 -race -v ./internal/runtimeport
+    go list -f "go-port-imports:{{range .Imports}}{{.}};{{end}}" ./internal/runtimeport
+  ' 2>&1 | tee -a "$P0_RUN_DIR/go-port-validation.log"
 
 "$ROOT/script/test_postgres_integration.sh" "$CACHE_DIR" "$B03_EVIDENCE_DIR"
 
@@ -619,4 +638,21 @@ docker run --rm \
     --implementation-evidence-dir /workspace/build/evidence/b01/evidence \
     --output /out/read-boundary-evidence-closure.json
 
-echo "B03.2a1.1.4 Read boundary and evidence closure, B03.2a1.1.3 Command and recovery boundary, B03.2a1.1.2 Start HTTP boundary, B03.2a1.1.1 mTLS process foundation, B03.2a1.1.0 pre-transport safety, B03.2a1.0 secure admission, B03.2a0 durable kernel, B03.2-P0 projection, and bounded B03.1 validation passed; reproducible evidence preserved."
+mkdir -p "$A2_0_EVIDENCE_DIR"
+docker run --rm \
+  -e AGENT_CONTRACT_ROOT=/contract \
+  -e PYTHONDONTWRITEBYTECODE=1 \
+  -v "$CONTRACT_ROOT:/contract:ro" \
+  -v "$ROOT:/workspace:ro" \
+  -v "$P0_RUN_DIR:/validation:ro" \
+  -v "$A2_0_EVIDENCE_DIR:/out" \
+  -w /workspace \
+  "$PYTHON_TOOLCHAIN_IMAGE" \
+  python script/generate_go_port_outcome_evidence.py \
+    --application-base-revision "$APPLICATION_BASE_REVISION" \
+    --validation-command "make validate-implementation" \
+    --go-port-log /validation/go-port-validation.log \
+    --supply-chain-log /validation/supply-chain.log \
+    --output /out/framework-neutral-go-port-outcome-model.json
+
+echo "B03.2a2.0 framework-neutral Go Port/outcome model, B03.2a1.1.4 Read boundary and evidence closure, B03.2a1.1.3 Command and recovery boundary, B03.2a1.1.2 Start HTTP boundary, B03.2a1.1.1 mTLS process foundation, B03.2a1.1.0 pre-transport safety, B03.2a1.0 secure admission, B03.2a0 durable kernel, B03.2-P0 projection, and bounded B03.1 validation passed; reproducible evidence preserved."
