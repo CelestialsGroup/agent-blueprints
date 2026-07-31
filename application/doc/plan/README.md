@@ -60,3 +60,14 @@ Current plans:
   Gate. It excludes the strict HTTP adapter, installed cross-language process
   evidence, dynamic Suite closure, platform authority and production
   composition; those remain separately ordered a2.1-a2.3 or B03.2b/B03.2c work.
+- `B03.2a2.1-strict-unwired-http-adapter.md`: implemented candidate and
+  mandatory per-stage ledger for the next independently closable a2 slice: a
+  harness-only five-operation HTTPS adapter with required locked Contract
+  Schema/Runtime Event Registry validation, bounded exact response handling,
+  capability immutability, one-dispatch Start/Command and typed known/unknown/
+  not-dispatched outcomes. Independent normal/Race, real loopback mutual-TLS/
+  HTTP evidence and the complete Application Gate pass; this completion status
+  takes effect when the frozen plan state is included in a subsequent complete
+  source-rebind Gate with exit 0. Status/Event 400, undeclared read 429,
+  installed Native Runtime cross-language evidence, dynamic Suite closure,
+  production authority and composition remain blocked or outside this slice.

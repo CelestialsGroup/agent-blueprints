@@ -22,6 +22,7 @@ A1_1_2_EVIDENCE_DIR="$ROOT/build/evidence/b03.2a1.1.2"
 A1_1_3_EVIDENCE_DIR="$ROOT/build/evidence/b03.2a1.1.3"
 A1_1_4_EVIDENCE_DIR="$ROOT/build/evidence/b03.2a1.1.4"
 A2_0_EVIDENCE_DIR="$ROOT/build/evidence/b03.2a2.0"
+A2_1_EVIDENCE_DIR="$ROOT/build/evidence/b03.2a2.1"
 CACHE_DIR="$ROOT/.cache/implementation"
 SQLC_CHECK_DIR="$CACHE_DIR/sqlc-check"
 P0_RUN_DIR="$CACHE_DIR/b03.2-p0-validation"
@@ -133,6 +134,33 @@ docker run --rm \
     go test -count=1 -race -v ./internal/runtimeport
     go list -f "go-port-imports:{{range .Imports}}{{.}};{{end}}" ./internal/runtimeport
   ' 2>&1 | tee -a "$P0_RUN_DIR/go-port-validation.log"
+
+git -C "$ROOT/.." diff --exit-code "$APPLICATION_BASE_REVISION" -- \
+  application/go.mod application/go.sum
+echo "http-adapter-module-files-base-revision-zero-diff:passed" \
+  >"$P0_RUN_DIR/http-adapter-validation.log"
+docker run --rm \
+  -e AGENT_CONTRACT_ROOT=/contract \
+  -e GOCACHE=/cache/go-build \
+  -e GOMODCACHE=/cache/go-mod \
+  -e HOME=/tmp \
+  -v "$CACHE_DIR:/cache" \
+  -v "$CONTRACT_ROOT:/contract:ro" \
+  -v "$ROOT:/workspace:ro" \
+  -w /workspace \
+  "$GO_TOOLCHAIN_IMAGE" \
+  sh -euc '
+    go test -count=1 -v ./internal/runtimeport/contractprojection ./internal/runtimeport/httpadapter
+    go test -count=1 -race -v ./internal/runtimeport/contractprojection ./internal/runtimeport/httpadapter
+    go list -f "contractprojection-imports:{{range .Imports}}{{.}};{{end}}" ./internal/runtimeport/contractprojection
+    go list -f "httpadapter-imports:{{range .Imports}}{{.}};{{end}}" ./internal/runtimeport/httpadapter
+    importers="$(go list -f "{{range .Imports}}{{if eq . \"github.com/shell-echo/agent/internal/runtimeport/httpadapter\"}}{{$.ImportPath}}{{end}}{{end}}" ./... | sed "/^$/d")"
+    test -z "$importers"
+    echo "http-adapter-production-importers:none"
+    do_calls="$(find internal/runtimeport/httpadapter -name "*.go" ! -name "*_test.go" -exec grep -h -o "adapter.client.Do" {} + | wc -l | tr -d " ")"
+    test "$do_calls" = 1
+    echo "http-adapter-client-do-calls:$do_calls"
+  ' 2>&1 | tee -a "$P0_RUN_DIR/http-adapter-validation.log"
 
 "$ROOT/script/test_postgres_integration.sh" "$CACHE_DIR" "$B03_EVIDENCE_DIR"
 
@@ -655,4 +683,21 @@ docker run --rm \
     --supply-chain-log /validation/supply-chain.log \
     --output /out/framework-neutral-go-port-outcome-model.json
 
-echo "B03.2a2.0 framework-neutral Go Port/outcome model, B03.2a1.1.4 Read boundary and evidence closure, B03.2a1.1.3 Command and recovery boundary, B03.2a1.1.2 Start HTTP boundary, B03.2a1.1.1 mTLS process foundation, B03.2a1.1.0 pre-transport safety, B03.2a1.0 secure admission, B03.2a0 durable kernel, B03.2-P0 projection, and bounded B03.1 validation passed; reproducible evidence preserved."
+mkdir -p "$A2_1_EVIDENCE_DIR"
+docker run --rm \
+  -e AGENT_CONTRACT_ROOT=/contract \
+  -e PYTHONDONTWRITEBYTECODE=1 \
+  -v "$CONTRACT_ROOT:/contract:ro" \
+  -v "$ROOT:/workspace:ro" \
+  -v "$P0_RUN_DIR:/validation:ro" \
+  -v "$A2_1_EVIDENCE_DIR:/out" \
+  -w /workspace \
+  "$PYTHON_TOOLCHAIN_IMAGE" \
+  python script/generate_http_adapter_evidence.py \
+    --application-base-revision "$APPLICATION_BASE_REVISION" \
+    --validation-command "make validate-implementation" \
+    --http-adapter-log /validation/http-adapter-validation.log \
+    --supply-chain-log /validation/supply-chain.log \
+    --output /out/strict-unwired-http-adapter.json
+
+echo "B03.2a2.1 strict unwired HTTP adapter, B03.2a2.0 framework-neutral Go Port/outcome model, B03.2a1.1.4 Read boundary and evidence closure, B03.2a1.1.3 Command and recovery boundary, B03.2a1.1.2 Start HTTP boundary, B03.2a1.1.1 mTLS process foundation, B03.2a1.1.0 pre-transport safety, B03.2a1.0 secure admission, B03.2a0 durable kernel, B03.2-P0 projection, and bounded B03.1 validation passed; reproducible evidence preserved."

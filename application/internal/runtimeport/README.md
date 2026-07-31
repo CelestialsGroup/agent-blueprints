@@ -10,12 +10,19 @@ forbid replaying the original mutation. This requirement is a value boundary,
 not a reconciliation executor or persistence claim.
 
 The `contractprojection` subpackage owns existing generated-Contract parity
-helpers. Generated transport types, `net/http`, Native Runtime internals,
-private checkpoint content, Provider endpoint/TLS resolution, token issuance,
-and Platform PostgreSQL/Temporal facts do not leak into the root Port.
+helpers and the required harness-injected Draft 2020-12 Runtime document/Event
+Registry validator. The `httpadapter` subpackage implements all five Port
+operations over an explicitly injected HTTPS origin, mutual-TLS `http.Client`,
+client identity and Contract closure. It bounds requests/responses, maps only
+declared statuses, dispatches Start/Command once, and preserves post-dispatch
+uncertainty as `outcome_unknown` with fresh-read/no-original-retry requirements.
+Status/Event HTTP 400 and undeclared read HTTP 429 remain invalid responses
+because the locked OpenAPI does not authorize those mappings.
 
-No HTTP adapter, production constructor/registration, installed cross-language
-evidence, durable reconciliation caller, CanonicalEvent projection, Safety
-Controller, or aggregate `runtime-core-v1` claim exists here. Future adapters may
-be constructed only by separately admitted component/integration harnesses until
-the required production authorities and composition are approved.
+Only component/integration harnesses may construct the adapter. There is no
+production constructor/registration, Provider endpoint/TLS resolution, token
+issuance, installed Native Runtime cross-language evidence, durable
+reconciliation caller, CanonicalEvent projection, Safety Controller, Platform
+PostgreSQL/Temporal ownership, or aggregate `runtime-core-v1` claim. Generated
+transport types and `net/http` remain below the framework-neutral root Port;
+Native Runtime internals and private checkpoint content do not leak into it.

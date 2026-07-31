@@ -61,3 +61,14 @@ Every Suite case remains unevaluated in a2.0, aggregate conformance stays
 `not_claimed`, and HTTP/cross-language/production scopes remain blocked or
 not-in-slice. Its source manifest and copied artifacts retain the same
 cache/sensitive-content fail-closed policy.
+
+`generate_http_adapter_evidence.py` emits the independent B03.2a2.1 strict
+unwired Go HTTP adapter evidence under `build/evidence/b03.2a2.1`. It binds the
+locked Schema/Event Registry validator, real loopback mutual TLS and HTTP/1.1,
+exact five-operation routes, closed read and mutation status mapping,
+single-dispatch/no-original-mutation-retry behavior, normal/Race tests, exact
+production imports and the absence of production composition importers. It
+keeps installed Native Runtime cross-language behavior and every dynamic Suite
+case out of scope, records Status/Event 400 and read 429 authority gaps, and
+retains fail-closed source/cache/token/body/checkpoint/private-key/traceback
+scans.
