@@ -21,10 +21,11 @@
 | RLS | PostgreSQL 原生 RLS +事务内 `SET LOCAL` TenantContext | 独立数据库/Schema 做更强隔离等级 | 仅 Repository WHERE 条件 | RLS 是纵深防御，不替代应用授权；连接池归还前事务结束。策略、FK、Unique 和触发器由 Migration 与数据库集成测试证明。 |
 | Outbox/Inbox | PostgreSQL 事务表 + `FOR UPDATE SKIP LOCKED` dispatcher | 成熟后评估 Debezium/Kafka Connect | DB + broker 双写；Redis Stream 作事实源 | Phase 0 运维低、可对账；吞吐证据不足再引入 CDC。至少一次、幂等和 Fencing 保持不变。 |
 | Temporal | Temporal Server/Cloud + Go SDK；Worker Build ID/Deployment Versioning | 自建持久状态机仅用于局部短流程 | Celery/Redis 队列替代持久编排；框架 Checkpoint 作平台 History | Temporal 生态和长任务恢复成熟、MIT；运维中高。服务端与 SDK 分别精确锁定，Workflow Replay、Patch、Continue-as-New 和双 Worker 版本是升级前置。 |
-| Native Runtime | Python Agent Loop/Context/Skill 层 + Go Platform/Gateway 边界，通过 AgentRuntimeProvider 独立部署 | 全 Go Runtime Core；Python Capability Worker | 直接拿 DeerFlow、Dify 或其他完整项目当产品 Runtime | 自研 Native Runtime 是正式主实现。Python 适合 Agent/模型生态，Go 负责治理、账本和强制 Gateway；内部框架可替换，公共 Port 不变。0B 先实现 Core Profile，0D 扩展 General/Governed。 |
+| Native Runtime | Python Prompt/Context/Harness/Loop/Runtime-private Graph + Go Platform/Gateway 边界，通过 AgentRuntimeProvider 独立部署 | 全 Go Runtime Core；Python Capability Worker | 直接拿 DeerFlow、Dify、Codex 或其他完整项目当产品 Runtime；让框架 Thread/Graph/Checkpoint 成为平台事实 | 自研 Native Runtime 是正式主实现。Python 适合 Agent/模型生态，Go 负责治理、账本和强制 Gateway；内部五层按 `54_AGENT_RUNTIME_EXECUTION_ARCHITECTURE.md` 可替换，公共 Port 不变。Core lifecycle 与真实 Agent Loop 分开验收。 |
 | Adapter SDK | OpenAPI/JSON Schema 生成模型 + 手写薄 Port SDK；共享 JCS 向量 | 后续发布 Go/TS SDK | 跨语言共享数据库包；复制领域模型 | SDK 不拥有事实，只处理鉴权、摘要、错误、Cursor 和 Conformance。SDK major 与 Port major 对齐，生成代码不可手改。 |
 | Reference Runtime Probe | 独立 Go 最小 Provider，只实现 `runtime-core-v1` | 第二个极简 Python Provider | 为证明抽象而适配完整第三方项目 | 只验证 Port/Recovery/Workbench 不依赖 Native Runtime 内部模型，不承担产品能力或第三方兼容承诺。 |
-| 第三方 Agent 项目 | 锁定 Tag/Commit 研究模块边界、算法、功能和 UX | 周期性冻结新的只读研究快照 | Fork、包装或整体适配 DeerFlow/Dify/OpenHands 等 | 参考结论进入 ADR/Feature Radar；源码复用必须另做许可证、来源、安全和升级审查。参考不等于依赖或适配。 |
+| 第三方 Agent 项目 | 锁定 Tag/Commit 研究模块边界、算法、功能和 UX，并登记 Reference Adoption Ledger | 周期性冻结新的只读研究快照 | Fork、包装或整体适配 DeerFlow/Dify/OpenHands/Codex 等 | `55_REFERENCE_ADOPTION_LEDGER.md` 记录采纳/拒绝、许可证、安全、落点和复审；源码复用必须另做准入。参考不等于依赖、适配或成熟度证据。 |
+| Agent 协议与 Skill 格式 | Phase 0 实现受治理的 MCP Tool Client 与 Agent Skills/`SKILL.md` Package Importer；按专用 Binding/Suite 分 Role、Feature、Transport 和版本 | 采用通过供应链审查的官方 SDK 作为可替换 Adapter 依赖 | 万能 AgentProtocol；Runtime 直连 Server；本地可变 Skill 目录；从 SDK/字段推导兼容 | `56_AGENT_INTEROPERABILITY_PROTOCOLS.md` 固定边界。MCP Server、A2A、ACP、AG-UI 延后到 Phase 1 真实场景；协议状态与 Provider/项目适配状态分开。 |
 | Dify 参考 | 当期最新稳定 Tag/Commit 只作 Workflow、Plugin、RAG、契约生成和 SSE 参考 | Dify 2 Beta 只作 Knowledge Pipeline、Graph 模块和产品 Feature Radar | 整体嵌入或连接 Dify；复制前端；以 Dify Agent、Redis Run Store、Graph Engine 或 Local Sandbox 替代平台组件 | 2026-07-21 稳定参考为 `1.16.0@5c6372d`；`2.0.0-beta.2@2a84832` 创建更早且代码谱系分叉，不能因版本号更大而视为更稳定。修改版 Apache-2.0 存在多租户和前端附加限制，因此只提炼设计结论并由平台重新实现。 |
 | Capability/Model/Tool/MCP Gateway | Go 服务实现统一 `capability-provider-v1`、Policy、Ledger 与限额；Provider connector 可用官方 SDK | 受控 LiteLLM/远程 MCP 作为 Connector | 让 Runtime 直连模型/工具；把 LiteLLM/MCP SDK 设为事实源 | 核心执行与审计留在平台；第三方 SDK 可替换。MCP transport/版本由 ProviderRevision 固化，未知能力 fail-closed。 |
 | Sandbox Phase 0 | 平台 SandboxProvider + Native Controller/隔离执行后端 | Kubernetes Provider Adapter、远程 VM Provider | 包装第三方 Agent 项目的本地 Sandbox；把 Pod/VM/Endpoint 写入稳定模型 | 先验证 Port、隔离与对账，后端私有标识不外泄。Provider 独立升级/Draining。 |
@@ -50,6 +51,12 @@
 - Feature Radar 轨：Dify 2 Beta 的 Knowledge Pipeline、Graph 模块、Agent/Workflow Builder 只用于识别产品和模块候选。当前 `2.0.0-beta.2@2a84832998b4a005373859a82919a62a1bbbec42` 早于稳定快照且已分叉，不能直接回移代码或据此宣称成熟。
 - 实现轨：被采纳的行为在产品实现仓库中按 Blueprint 的 Scenario、ProviderRevision、Temporal Workflow、CanonicalEvent、Artifact、Usage 和 Workbench 契约重新实现；Dify 原生 Tenant、WorkflowRun、Thread、Snapshot、Redis Event、SQLite/tmux 或 Endpoint 不进入稳定事实源。
 - 非连接边界：当前不规划 Dify Workflow、Agent、MCP 或 Sandbox Provider；通用 Provider Port 继续为平台自有实现和未来独立需求服务，不能反向推导出第三方适配承诺。
+
+## Runtime 执行架构与参考治理
+
+Native Runtime 的 Prompt、Context、Harness、Loop 和 Runtime-private Graph 分层现已固定为实现边界，具体语义、版本化 Contract 要求、兼容窗口和停止条件见 `54_AGENT_RUNTIME_EXECUTION_ARCHITECTURE.md`。平台 WorkOrder、Temporal、AgentRun Graph、Invocation Ledger 和 CanonicalEvent 不因内部框架选择变化。
+
+OpenAI Codex 的 2026-07-31 研究快照锁定到 `f0c30e528a54bdf0fa9a4d52ff74b34383434811`，Apache-2.0 已核对；只采纳 Turn/Step Context、Context 规范化/rollback/compaction、Tool exposure/dispatch 分离和 Agent graph 稳定遍历。Codex Thread、rollout JSONL、SQLite、私有审批/沙箱和 Hook 不进入平台事实。所有参考项目的当前状态和复审要求统一见 `55_REFERENCE_ADOPTION_LEDGER.md`。
 
 ## 推荐总体栈
 
@@ -100,11 +107,11 @@ Python 只负责确实依赖 Python Agent/ML 生态的 Runtime/Capability Adapte
 
 ## 冻结时点
 
-现在固定：三语言边界、pnpm、Go 平台内核、自研 Native Runtime 主线、PostgreSQL/Temporal/对象存储/非权威 Redis 分工、HTTP/OpenAPI Port、pgx/sqlc/SQL-first Migration、Native Runtime Core 先行、独立 Reference Probe、Gateway 强制中介、OTel、ProviderRevision/BuildProvenance 升级模型，以及第三方项目“稳定 Tag/Commit 作代码参考、Beta 只作 Feature Radar”的版本策略。
+现在固定：三语言边界、pnpm、Go 平台内核、自研 Native Runtime 主线及其 Prompt/Context/Harness/Loop/Runtime-private Graph 分层、PostgreSQL/Temporal/对象存储/非权威 Redis 分工、HTTP/OpenAPI Port、pgx/sqlc/SQL-first Migration、Native Runtime Core 先行、独立 Reference Probe、Gateway 强制中介、OTel、ProviderRevision/BuildProvenance 升级模型，Phase 0 MCP Tool Client/Skill Package Import 边界，以及第三方项目“锁定 Tag/Commit、登记采纳账本、Beta 只作 Feature Radar”的版本策略。
 
-仅作 Phase 0 候选：Native Runtime 内部 Agent Loop/Context/Skill 库、Python/TS 生成器、WebSocket 库、MinIO/Redis 本地镜像、Sandbox Kubernetes Adapter、Next/React 精确依赖版本。它们首次实现前完成维护状态、许可证、CPython/Node 兼容性和安全审查。
+仅作 Phase 0 候选：Native Runtime 五层的具体库和算法、Python/TS 生成器、MCP/Skill Importer SDK、WebSocket 库、MinIO/Redis 本地镜像、Sandbox Kubernetes Adapter、Next/React 精确依赖版本。它们首次实现前完成维护状态、许可证、语言版本兼容性和安全审查；库的选择不能改变已固定分层和公共 Contract。
 
-推迟到 Phase 1/生产：可复用 Agent Roster/可视化 Workflow Builder 的产品范围、Temporal Cloud 或自建拓扑、云 PostgreSQL/S3/KMS 供应商、Redis 或 Valkey、Kubernetes 发行版、Service Mesh、GitOps/Rollout Controller、跨 Region/Cell、GPU/MicroVM 后端和观测供应商。第三方 Agent 项目保持只读参考，不列入实施阶段。
+推迟到 Phase 1/生产：MCP Server、MCP Context/反向请求、A2A、ACP、AG-UI，可复用 Agent Roster/可视化 Workflow Builder 的产品范围、Temporal Cloud 或自建拓扑、云 PostgreSQL/S3/KMS 供应商、Redis 或 Valkey、Kubernetes 发行版、Service Mesh、GitOps/Rollout Controller、跨 Region/Cell、GPU/MicroVM 后端和观测供应商。第三方 Agent 项目保持只读参考，不列入实施阶段。
 
 ## 七项缺口与技术落点
 
@@ -118,7 +125,7 @@ Python 只负责确实依赖 Python Agent/ML 生态的 Runtime/Capability Adapte
 | Workspace Manifest/多 Sandbox Slot | 独立 Content Manifest、`sandboxes[]`、`sandbox_slot_key`、不透明 Runtime Route | Artifact 校验、Slot-scoped Session、Controller 私有 Endpoint |
 | Event Registry/来源去重/Metadata/大小上限 | 双 Registry、Source identity/Dedupe、闭合 Metadata、encoded-body limit | Inbox Unique、413 pre-parse middleware、Projection allowlist |
 
-补充安全闭合：Egress 使用不可变、owner-scoped `EgressDestinationRevision`，权限比较 `destination_class`；Runtime、Capability、兼容 Plugin、Sandbox、Artifact 与 Egress 的执行 Token 必须完整落在实际授权时间窗内。Runtime/Capability/Plugin `safety_control` 只保留到期后的读取、取消和对账能力，不能恢复执行、访问过期 Artifact Grant 或产生新副作用。平台自动止损不能依赖新的 Business Grant：Agent Access 接受 sender-constrained、幂等的 Business Revocation Notice；收据同步拒绝新授权并为 WorkSession、WorkOrder、ArtifactOperation 和 ArtifactIngest 持久化可恢复 CAS/Outbox intents。WorkOrder 由 Go Safety Controller Domain Activity 仅追加 `SystemSafetyControl + Platform Event + Outbox`，并由 Runtime Command/Token 绑定同一 Tenant/WorkOrder/RuntimeRun/action/digest；ArtifactOperation/Ingest 按自身状态机 reduction-only Cancel。Safety Controller 可先作为 Worker 内模块，只有它拥有 Runtime 安全控制签发权限；该技术落点不改变 Business/Platform 事实源边界。以上问题由契约和实施责任共同关闭，任何框架选型都不能替代数据库与运行证据。
+补充安全闭合：Egress 使用不可变、owner-scoped `EgressDestinationRevision`，权限比较 `destination_class`；Runtime、Capability、兼容 Plugin、Sandbox、Artifact 与 Egress 的执行 Token 必须完整落在实际授权时间窗内。锁定的 Runtime/Capability/Plugin v1 `safety_control` 只保留到期后的读取、取消和对账能力，不能恢复执行、访问过期 Artifact Grant 或产生新副作用；新 Runtime Revision 按 `execution/observation/reduction_control` 分离，Capability/Plugin 不随 Runtime 自动改义。平台自动止损不能依赖新的 Business Grant：Agent Access 接受 sender-constrained、幂等的 Business Revocation Notice；收据同步拒绝新授权并为 WorkSession、WorkOrder、ArtifactOperation 和 ArtifactIngest 持久化可恢复 CAS/Outbox intents。WorkOrder 由 Go Safety Controller Domain Activity 仅追加 `SystemSafetyControl + Platform Event + Outbox`，并由 Runtime Command/Token 绑定同一 Tenant/WorkOrder/RuntimeRun/action/digest；ArtifactOperation/Ingest 按自身状态机 reduction-only Cancel。Safety Controller 可先作为 Worker 内模块，只有它拥有 Runtime 安全控制签发权限；该技术落点不改变 Business/Platform 事实源边界。以上问题由契约和实施责任共同关闭，任何框架选型都不能替代数据库与运行证据。
 
 ## 0A.1 到 0B
 

@@ -15,6 +15,7 @@
 - 完成 Terminal、Browser、Desktop Recording 和多通道回放
 - 增加 Provider 管理、Draining、Canary 和跨 Provider 观测
 - 按实际互操作需求评估第三方 Runtime Provider；参考项目不自动进入适配范围
+- 按已批准场景逐项实现 MCP Server、MCP Resource/Prompt/反向请求、A2A、ACP（Agent Client Protocol）或 AG-UI Adapter；每项单独锁定 Role/Feature/Transport/版本并通过专用 Conformance
 
 ## Phase 1B：Business 产品化
 

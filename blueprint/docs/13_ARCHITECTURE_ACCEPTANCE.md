@@ -15,8 +15,8 @@
 - RunManifest 携带实际输入、ContextPackage、ArtifactAccessRequirement、初始 Budget/Policy/Permissions 上限、商业授权 ID/Digest/到期上限、续期规则和四类 Gateway Binding；Runtime Start 携带本 Attempt 的等价/缩权 RuntimeAuthorization/ArtifactGrant，并拒绝内部作用域不闭合或越过商业/ArtifactGrant 时间窗的授权；
 - Conversation Turn 与 WorkOrder Control 分离，三个 CAS 所有权域分离，WorkOrder 可从 accepted 直接请求取消；
 - 通用 Capability Provider Port/Token 不要求 `plugin_id`；请求携带完整执行授权值并绑定 ProviderResolution/Instance/Audience，操作级 Token 以正式 Contract/Profile/Digest 绑定 Invoke/Status/Cancel/Event；Invoke `execution` 不越过原 deadline/CommercialAuthorization，后续前驱链 `safety_control` 只做 Status/Cancel/Event 且无 Artifact/副作用权限；`read_events` 有正反向游标证据；
-- Agent Runtime 的 Start/Command/Status/Event 和兼容 Plugin 的 Invoke/Status/Cancel/Event 也以单操作 Contract/Profile/Digest 绑定请求或规范化读描述符；路径、默认查询值和 Cursor 均不可脱离摘要替换；Plugin Invoke `execution` 受 Deadline/Artifact 窗口限制，到期后 `safety_control` 只能 Status/Cancel/Event；
-- Runtime `execution` Token 不越过 RuntimeAuthorization/命令 Deadline；到期后的 `safety_control` 只能 Status/Event/Cancel/Pause，不能恢复执行或产生新副作用；
+- 锁定 Runtime v1 的 Start/Command/Status/Event 和兼容 Plugin 的 Invoke/Status/Cancel/Event 也以单操作 Contract/Profile/Digest 绑定请求或规范化读描述符；路径、默认查询值和 Cursor 均不可脱离摘要替换；Plugin Invoke `execution` 受 Deadline/Artifact 窗口限制，到期后 `safety_control` 只能 Status/Cancel/Event；
+- 锁定 Runtime v1 的 `execution` Token 不越过 RuntimeAuthorization/命令 Deadline；到期后的 `safety_control` 只能 Status/Event/Cancel/Pause，不能恢复执行或产生新副作用；新 Runtime Authority Revision 由 1.1 节单独验收；
 - 用户 Runtime 控制继续绑定 WorkOrderControlRequest + ExecutionGrant；Business 撤销通过 sender-constrained、幂等的 CommercialAuthorizationRevocation 接口进入，Platform 不改写商业事实；授权到期/撤销和紧急止损使用唯一 Safety Controller 签发、仅追加的 SystemSafetyControl。两种 Command 授权来源互斥，系统来源与 Token 必须绑定相同 Tenant/WorkOrder/RuntimeRun/action/digest/触发证据，且不能授权 Resume、Append、Interrupt、Approval 或 Checkpoint；
 - CommercialAuthorization 撤销收据带 JCS 摘要与同步 deny 生效点，并精确枚举 WorkSession、活动 WorkOrder、ArtifactOperation、ArtifactIngest 的 CAS/Outbox intents；fan-out 可恢复且未完成不得宣称撤销闭合；
 - Service/Grant/Session 与六类执行 Token 均有用途专属的闭合 JWS Header Schema，唯一 `typ`、Algorithm/Key allowlist 与 Claims Profile 不得交叉接受；
@@ -36,6 +36,38 @@
 
 该 Gate 不包含 GitHub CI、仓库供应链准入或冻结基线；通过只表示候选架构可以进入实施。
 
+### 1.1 Runtime 执行契约演进 Gate
+
+已有 Runtime lifecycle/component evidence 可以作为历史实现证据保留，但在真实 Agent Loop、动态 Suite 提升或生产 Runtime caller 接线前，还必须完成：
+
+- Status/Event HTTP 400/429 的权威响应矩阵以新的不可变 AgentRuntimeProvider v1 patch Contract Revision 闭合；
+- Runtime Token 新 Revision 将 `execution/observation/reduction_control` 分离：用户 Pause/Cancel 仍走绑定新 WorkOrderControlRequest/ExecutionGrant 的 `execution`，过期读取绑定 ReconciliationCase，只有平台自动 Pause/Cancel 使用绑定 SystemSafetyControl 的 `reduction_control`；
+- `PromptPolicyBindingV1` 固化 Policy/Builder/Serializer Revision 与摘要、指令来源 Revision、角色优先级和内容保存策略，但不保存明文 Prompt；
+- `ContextPackageV2` 固化 Builder/Policy、选择/遗漏、顺序、预算、信任和 Assembly Digest；独立 `ContextResolverBindingV1` 固化每类引用使用的受治理 Port、Contract、Audience、Route、Digest Profile 和授权要求；
+- `EffectiveExecutionLimitsV2` 及受影响 Budget Contract 明确单请求、AgentRun 累计和 WorkOrder 共享作用域；
+- `ModelStepEvidenceV1`、`AgentRuntimeCheckpointManifestV2`、`RunManifestV3`、`StartAgentRuntimeRunRequestV2`、`AgentRuntimeEventDataV2` 和 `agent-runtime-core-v2` Registry 发布相容的新版本；
+- 新 `runtime-agent-loop-v1` Conformance 覆盖 Context trust/确定性、Prompt injection 不扩权、Step Snapshot、Tool exposure/dispatch、预算、Compaction、Graph revision/有界并行/确定性恢复、Checkpoint/Resume 和未知副作用禁止重发；
+- Schema/OpenAPI、semantic constraints、状态机、Registry、Fixture、Example、Manifest、Suite、兼容性报告和消费者双版本测试同步通过 Gate；
+- Application 重新锁定新 Blueprint/Contract Revision 后才开始对应实现。
+
+只修改 Blueprint 或叙述性 Contract 文档不算该 Gate 通过；旧 Run 和旧 ProviderRevision 继续使用其原 Contract/Profile，不原地迁移。
+
+### 1.2 Agent 互操作契约 Gate
+
+在宣称 Phase 0 支持 MCP Tool Client 或 Agent Skills/Skill Package 前，必须完成：
+
+- `McpConnectorBindingV1` 固化协议 Revision、Client Feature Profile、`stdio`/`streamable_http` Transport Profile、允许协商版本、Server/Destination/Command、身份/Credential、Tool allowlist、上限、Session/通知策略和 Binding Digest；
+- MCP Tool Projection 将 Server/Tool identity、input/output Schema Digest、side-effect、幂等、取消、进度、Artifact 和风险语义映射到 CapabilityDefinition；未知语义采用保守默认并 fail-closed；
+- 每次 MCP Tool Call 进入 Capability Invocation/Attempt、Fencing、Budget、Approval、Artifact Staging 和结果对账；Runtime 无直连路径，SDK 不自动重试未知副作用；
+- MCP Negotiation Evidence 证明版本/能力交集、Server identity、Tool Set/Schema Digest 和拒绝/降级原因；动态 Tool 变化只能产生新 Step Snapshot；
+- `stdio` 与 `streamable_http` 分 Profile 覆盖宿主命令/环境泄漏、Credential、TLS、Redirect、SSRF/DNS rebinding、超限、断连、重复/乱序、取消和旧 Fencing；
+- `SkillPackageManifestV1` 与 `SkillImportEvidenceV1` 固化 Format/Package/File Digest、Source、Publisher、License/Notice、Signature、Capability/Dependency、权限请求、Importer/Scanner Revision、逐项结论和输出 Artifact/Experience/Provider Revision；
+- Skill Import 的正反向 Fixture 覆盖路径穿越、危险符号链接、重复规范化路径、特殊文件、超限/解压炸弹、远程引用、摘要/签名、脚本隔离、权限扩张、Revision 漂移和许可证证据；
+- `mcp-client-tools-v1` 与 `skill-package-import-v1` Suite、Schema、semantic constraints、Fixture、Example、Manifest、兼容性报告和消费者双版本测试同步通过完整 Contract Gate；
+- Application 重新锁定新 Blueprint/Contract Revision 后再实现并分别形成 `implemented`、`certified`、`enabled` Evidence。
+
+MCP Server、MCP Resource/Prompt/反向请求、A2A、ACP 和 AG-UI 不因本 Gate 通过而获得支持声明。每一项必须按 `56_AGENT_INTEROPERABILITY_PROTOCOLS.md` 发布自己的 Binding/Mapping/Suite 并独立验收。
+
 ## 2. 0B 实现验收
 
 - WorkOrder、Tenant-qualified WorkflowRun、单次赋值 RootBinding、Root/Sub-agent AgentRun、RunManifest 和 AgentRuntimeRun 引用闭合；Orchestration 或 Root Admission 前失败不需要伪造下游对象；
@@ -51,6 +83,8 @@
 
 - Business → ExecutionGrant → ConversationTurn → Temporal → Runtime/Sandbox → Event/Artifact/Usage 可以重复运行和恢复；
 - 自研 Native Runtime 通过 `runtime-general-v1 + governed-v1`，主 SandboxProvider 与强制 Gateway 链路成立；
+- Native Runtime 另通过 `runtime-agent-loop-v1`，证明模型步骤上下文与信任边界、Tool exposure/dispatch、累计预算、Compaction、Graph 确定性、Checkpoint/Resume 和副作用对账不依赖框架私有事实；
+- MCP Tool Client 和 Skill Package Import 分别通过专用 Suite，并至少完成一个锁定 Transport 的 Gateway 调用和一个 Quarantine/Import/Select/Run 纵向链路；协议 Evidence 不依赖可变 Session、动态 Tool 列表或本地 Skill 目录；
 - Workbench、Runtime Gateway、Artifact、Recording、Experience 和 Delivery 使用同一标准事实流；
 - 独立 Reference Probe 通过 `runtime-core-v1`，不复用 Native Runtime 私有执行包，也不要求第三方项目适配；
 - 0C-0G 各阶段的 Conformance 与纵向验收均绑定精确 Blueprint Revision、Contract Revision/Manifest Digest 和 Suite Digest。

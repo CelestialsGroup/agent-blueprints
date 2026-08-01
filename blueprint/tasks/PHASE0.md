@@ -29,7 +29,7 @@ Phase 0 实现一条真实、可恢复的 Manus-like Conversation 链路。目�
 - 固化 Conversation Workspace、Branch WorkspaceRevision Head、Fork 与 CAS 提交；Sandbox Slot 唯一范围是 WorkOrder，不允许并行 Branch 共享可变文件头；
 - 发布 ConversationBranch Create/Fork 命令，固定来源 Branch、Message Cut、WorkspaceRevision 与两类 Head CAS；Debug Rerun 和 Parallel Branch 必须先创建新 Branch，再创建新的 Turn/Grant/Resolution/Manifest；
 - 为 Chat、Plan、Tool、Approval、Artifact、Background Task、Usage 和终态定义核心 Event Payload，并由 RunManifest 绑定不可变 Registry ID/Version/Digest；
-- 固化 AgentRuntimeInvocation Token 对 Tenant、ProviderRevision、Run、Attempt、Fencing、Policy、Budget、Permissions 和请求摘要的绑定；执行授权到期后只允许 `safety_control` 做 Status/Event/Cancel/Pause，不允许恢复执行或产生副作用；
+- 固化 AgentRuntimeInvocation Token 对 Tenant、ProviderRevision、Run、Attempt、Fencing、Policy、Budget、Permissions 和请求摘要的绑定；锁定 v1 在执行授权到期后只允许 `safety_control` 做 Status/Event/Cancel/Pause，不允许恢复执行或产生副作用；进入真实 Agent Loop 前按本文件后续检查点发布分离 `observation/reduction_control` 的新 Revision；
 - 固化 Service、ExecutionGrant、WorkSession、Plugin、Capability、Artifact、Egress、Runtime 与 Sandbox 的独立闭合 JWS Header Profile；每类唯一 `typ`，Header 与 Claims 同时验证，禁止跨 Profile 接受；
 - 固化 Terminal `runtime-gateway/v1` 的 Generation、按 Channel Cursor/Sequence、ACK/Window、Control ID + Digest、重连和 Recording Checkpoint；
 - 固化 TechnicalUsage 的 MeterDefinition、归属、Evidence、幂等、更正、连续 UsageReport，以及嵌入完整 Report 的 BusinessSettlementEnvelope/Callback；
@@ -38,6 +38,8 @@ Phase 0 实现一条真实、可恢复的 Manus-like Conversation 链路。目�
 - ProviderResolution 固化 Resolver/Input/Candidate/Evidence/Decision；Runtime 与 Sandbox Slot 只引用 Resolution；Sandbox 是否存在由 Capability 决定；
 - ProviderResolution 显式绑定 Tenant/ClientApplication/ExecutionScope；WorkOrder 与 ArtifactOperation 可解析 Provider，ArtifactIngest 明确不调度 Provider。依赖身份时通过 identity_dependency 绑定 PrincipalContextSnapshot；幂等范围固定为 Tenant + ClientApplication + Operation + Key Digest；
 - 发布独立 `capability-provider-v1` 与操作级 Capability Token；请求携带完整执行授权值并绑定 ProviderResolution/Instance/Audience，Invoke `execution` 不越过原 deadline/CommercialAuthorization，后续前驱链 `safety_control` 只做 Status/Cancel/Event 且无 Artifact/副作用权限；禁止以 `plugin_id` 作为 Model/Tool/MCP/Skill/Renderer 等公共执行前提；
+- 发布 `McpConnectorBindingV1`、MCP Tool Projection/Negotiation Evidence 和 `mcp-client-tools-v1` Conformance；`stdio`/`streamable_http` 分 Profile 固定协议/能力协商、Server/Destination/Command、身份/Credential、Tool Schema/side-effect/幂等、上限和禁用 Feature，Runtime 不得直连 Server；
+- 发布 `SkillPackageManifestV1`、`SkillImportEvidenceV1` 和 `skill-package-import-v1` Conformance；Package 经 Quarantine、路径/大小/摘要/签名/来源/许可证/脚本/权限校验后生成不可变 Artifact/Experience/Provider Revision，Importer 不执行包内脚本；
 - Model/Tool Gateway 复用 Capability Port；发布 `artifact-gateway-v1`、`egress-gateway-v1`、ArtifactStagingGrant 与操作 Token，明确 Staging Commit 不能 Finalize ArtifactVersion；
 - Capability Status/Event 与 Artifact Read 使用正式 Operation Descriptor；所有 Capability/Artifact Token 绑定 Contract ID、Digest Profile 和摘要，并为 `read_events` 提供正反向 Cursor 证据；
 - Egress 使用不可变、Owner-scoped DestinationRevision，Token 绑定 Revision ID/Digest/Class，EffectivePermissions 按 Class 而不是 Destination ID 授权；
@@ -96,6 +98,10 @@ Phase 0 实现一条真实、可恢复的 Manus-like Conversation 链路。目�
 
 同时实现自研 Native Runtime 的 Core Profile，覆盖 Start、Status、Cursor Event、用户 Cancel、授权到期/Deadline 触发的 Platform Safety Controller + fenced SystemSafetyControl Cancel、最小 Checkpoint/Restart 和无 Sandbox 模式，并完整通过 `runtime-core-v1`。这是产品主 Runtime 的第一阶段；公共 Schema、Provider SDK 和 Workbench Projection 不得按其内部 Agent Loop 定制。
 
+当前 Runtime lifecycle、Provider process、Port/HTTP adapter 和 installed cross-language component 可以在旧 Contract Revision 下形成有界证据。进入动态 Runtime Suite 提升、真实 Agent Loop 或生产 caller/composition 前，必须先执行 `54_AGENT_RUNTIME_EXECUTION_ARCHITECTURE.md` 定义的 Runtime 执行契约演进检查点：关闭 Status/Event 400/429 authority gap，发布分离 `execution/observation/reduction_control` 的 Token Revision，以及 `PromptPolicyBindingV1`、`ContextPackageV2`、`ContextResolverBindingV1`、`EffectiveExecutionLimitsV2` 与受影响 Budget、`ModelStepEvidenceV1`、`AgentRuntimeCheckpointManifestV2`、`RunManifestV3`、`StartAgentRuntimeRunRequestV2`、`AgentRuntimeEventDataV2`、`agent-runtime-core-v2` Registry 和 `runtime-agent-loop-v1`。Application 重新锁定通过 Gate 的 Blueprint/Contract Revision 后才能继续对应实现；不得用已有组件代码反向决定新 Contract。
+
+MCP Tool Client 与 Skill Package Import 同样必须先执行 `56_AGENT_INTEROPERABILITY_PROTOCOLS.md` 和 `13_ARCHITECTURE_ACCEPTANCE.md` 1.2 的 Contract Gate。既有 Plugin Manifest 的 MCP Transport 字段、Provider `skill` kind 和 Catalog `skill_pack` kind 只是可复用底座，不能作为协议已实现或已认证证据。
+
 验收证据：
 
 - Migration 可从空库升级并安全回滚；
@@ -134,6 +140,8 @@ PostgreSQL / Outbox
 
 主链路必须支持 Append-input、Interrupt、Pause/Resume、Approval、Background Task、平台治理的 Child Spawn/Admission 和 Cancel；所有 Command 仅追加，绑定请求摘要并使用 Fencing。Model、Tool、Artifact 和 Egress 必须经过受治理 Gateway。多 Agent 验收必须证明共享预算不会因并行 Child 被重复消费，Root 成功不遗留活动 Child，WorkOrder Cancel 覆盖全部 RuntimeRun，失联 Child 可被对账器发现。
 
+主链路至少通过一个锁定 MCP Client Transport Profile 调用已准入 Tool。协商结果、Tool Projection 和 Step Snapshot 必须绑定同一 Tool Set/Schema Digest；Tool Call 进入 Capability Invocation/Attempt，断连或响应丢失按副作用语义对账，Runtime 无法取得原始 MCP Endpoint/Credential 或绕过 Gateway。
+
 执行顺序固定为：解析 Runtime/Sandbox Provider 并记录 Resolution Evidence；按 Capability 可选创建 Sandbox；固化含 WorkspaceRevision 和实际 Sandbox ID 的 RunManifest；最后 Start Runtime。RunManifest 不得引用尚未创建的 Sandbox，也不得让 Sandbox 复制 ProviderRevision Snapshot。
 
 验收证据：Worker/Adapter 重启可恢复；Provider 响应丢失进入对账；旧 Attempt 和旧 Command 结果被拒绝；Artifact 只有通过 Staging/Ingest Scan 验证后才能由 Platform Finalize；ArtifactOperation 的 Projection 无法绕过唯一 Invocation Ledger；Secret 只能经 Credential Gateway 单次获取且不落入持久介质。
@@ -150,11 +158,11 @@ Browser/Desktop 可以提供受控实时查看，但在 Capture、Consent、Reda
 
 ## 0F：Experience 与 nexu
 
-至少导入一个 html-anything Template，形成 ExperienceCatalogEntry、不可变 TemplateRevision、源/预览 Artifact 和已认证 ProviderRevision。Scenario 通过 Catalog 发现选项，WorkOrder 和 RunManifest 绑定精确 Revision 摘要。
+至少导入一个 html-anything Template，形成 ExperienceCatalogEntry、不可变 TemplateRevision、源/预览 Artifact 和已认证 ProviderRevision；同时导入一个锁定格式的 Skill Package，形成 Quarantine/Import Evidence、不可变 Artifact/`skill_pack` Experience 和按需 Skill ProviderRevision。Scenario 通过 Catalog 发现选项，WorkOrder、RunManifest 和 Step Snapshot 绑定精确 Revision 摘要。
 
 将 html-to-pptx 或 html-video 实现为 Converter Provider，生成派生 ArtifactVersion。Scenario、Workbench 和 Runtime Adapter 中不得硬编码 Plugin ID。
 
-验收证据：隐藏、撤销、未准入或缺少 Entitlement 的 Revision 无法选择；相同输入固定 Provider/Experience Revision 后可重现相同执行配置和 Artifact 来源链。
+验收证据：隐藏、撤销、未准入或缺少 Entitlement 的 Revision 无法选择；相同输入固定 Provider/Experience Revision 后可重现相同执行配置和 Artifact 来源链；路径穿越、危险符号链接、超限包、远程引用、无效摘要/签名、安装期脚本和权限扩张均被拒绝，包内容变化产生新 Revision。
 
 ## 0G：Agent Runtime Port 可替换性
 
@@ -170,6 +178,8 @@ Native Runtime 与 Reference Provider 必须通过 `runtime-core-v1`；Native Ru
 
 - ExecutionGrant 超限、重用和跨 Tenant 攻击；
 - Runtime 绕过 Model/Tool/Egress Gateway；
+- MCP 版本无交集、能力谎报、Tool Schema/列表漂移、宿主命令/环境泄漏、SSRF/DNS rebinding、重复/丢失响应与未知副作用重试；
+- Skill Package 路径穿越、符号链接、重复路径、解压炸弹、远程下载、恶意脚本、Prompt injection、权限扩张和 Revision 漂移；
 - Provider 响应丢失、重复响应、旧 Fencing Token 和非幂等重试；
 - Runtime/Recording 中的 Secret、Token 和未加密字节泄漏；
 - SecretGrant 过期/撤销/重放、Credential Gateway Audit 不可用、跨 Workload Token 重放和持久化扫描；
@@ -189,7 +199,7 @@ Native Runtime 与 Reference Provider 必须通过 `runtime-core-v1`；Native Ru
 |---|---|
 | Contract Gate 通过 | Contract Scripts 对锁定 Contract Revision 完成 Schema、语义、状态机、JCS、OpenAPI、Manifest 和候选兼容性检查；不包含 GitHub CI/仓库准入 |
 | 0B 实现完成 | 持久化脊柱、Native Runtime Core、数据库事务、Replay 与 `runtime-core-v1` 有真实证据 |
-| 0C-0G 集成完成 | Business 纵向链、主 Runtime/Sandbox、Workbench/Recording、Experience 与 Reference Probe 可以重复部署与运行 |
+| 0C-0G 集成完成 | Business 纵向链、主 Runtime/Sandbox、MCP Tool Client、Skill Import/Experience、Workbench/Recording 与 Reference Probe 可以重复部署与运行 |
 | 0H 最小可靠性证据 | 故障、安全、隔离、容量和恢复测试有可复现报告 |
 | 正式冻结 | 独立完成消费者兼容性、仓库供应链、公共 CI、冻结基线和人工批准 |
 | 生产就绪 | 不由 Phase 0 自动授予，仍需独立容量、SLO、安全和生产恢复批准 |
@@ -197,6 +207,7 @@ Native Runtime 与 Reference Provider 必须通过 `runtime-core-v1`；Native Ru
 ## 不提前实现
 
 - 用户上传的任意 Plugin、完整 Marketplace 或收入分成；
+- MCP Server/Resource/Prompt/反向请求、A2A、ACP 或 AG-UI 产品 Adapter；
 - ACP 平台核心、本地 JSONL/SQLite Session 事实源或 Hook 安全边界；
 - 任意远程 JavaScript、完整 Office 编辑器或复杂 UI Extension；
 - 持久 Evaluation/Rubric 领域模型；

@@ -1,8 +1,8 @@
 # Agent 项目总览
 
-> 状态：Contract Gate 已通过；实现、集成、可靠性、正式冻结和生产批准独立判定
+> 状态：Blueprint 已形成 Runtime 执行与 Agent 互操作架构候选；对应的新 Contract Revision 待发布，后续实现、集成、可靠性、正式冻结和生产批准独立判定
 >
-> 更新日期：2026-07-22
+> 更新日期：2026-08-01
 
 ## 项目目标
 
@@ -16,11 +16,12 @@ Agent 项目的目标是构建一个类似 Manus 的通用、多租户 Agent 平
 - Chat、Plan、Timeline、Terminal、Browser、Desktop、Files 和 Artifact Workbench
 - 实时 Sandbox 查看、Runtime Recording 和历史回放
 - 可替换的 Agent Runtime、Sandbox、Model、Tool、Template、Renderer、Editor 和 Converter Provider
+- 受治理的 MCP、Agent Skills/Skill Package，以及后续按场景启用的 A2A、ACP、AG-UI 互操作边界
 - html-anything、Open Design、motion-anything、html-to-pptx 和 html-video 等 nexu-io 能力
 - Business 自有的 User、Organization、Membership、Product、Order、Payment、Entitlement 和 Quota 系统
 - 多租户安全、可观测性、可靠恢复、容量治理和长期升级能力
 
-平台可以借鉴 DeerFlow、Dify、OpenHands、Magentic-UI、Open Deep Research、OpenManus、AutoGPT、Grok Build、browser-use、E2B、Daytona、Quicksand、Letta Code 和 LLM Space，但这些项目只用于研究架构、能力和 UX，不在当前适配计划内，也不能成为平台依赖或稳定事实源。
+平台可以借鉴 DeerFlow、Dify、OpenHands、LangGraph、OpenAI Agents SDK、OpenAI Codex、Magentic-UI、Open Deep Research、OpenManus、AutoGPT、Grok Build、browser-use、E2B、Daytona、Quicksand、Letta Code 和 LLM Space，但这些项目只用于研究架构、能力和 UX，不在当前适配计划内，也不能成为平台依赖或稳定事实源。采纳、拒绝、锁定基线、许可证和复审状态统一记录在 `blueprint/docs/55_REFERENCE_ADOPTION_LEDGER.md`。生态协议/格式是另一条治理轴：支持 MCP 或 Skill Package 不表示适配上述项目，具体 Role、Feature、Transport、版本和 Conformance 见 `blueprint/docs/56_AGENT_INTEROPERABILITY_PROTOCOLS.md`。
 
 LLM Space 只用于 Agent Engineering Workbench、Trace 调试、Run 对比和 Evaluation UX 参考，不作为生产 Runtime、最终用户 Workbench 或权威数据源。
 
@@ -39,13 +40,13 @@ LLM Space 只用于 Agent Engineering Workbench、Trace 调试、Run 对比和 E
 
 | 层级 | 状态 | 说明 |
 |---|---|---|
-| 产品边界 | 候选完成 | Business/Platform 所有权、Conversation、Provider、Sandbox、Artifact、Recording 等边界已有设计 |
-| 声明式契约 | 本地 Gate 通过 | 精确计数与 Manifest Digest 以 `script/evidence/` 中绑定当前 Contract Checkout 的最新报告为准 |
-| 产品实现 | B01 Gate 通过 | 实现代码与证据位于 `application/`；只证明当前骨架构建与身份绑定，不代表 0B 完成 |
-| Phase 0 | 未完成 | 当前只有实现骨架；持久化/Temporal/Runtime 操作与 0C-0H 纵向链和证据仍未完成 |
+| 产品边界 | 候选演进中 | 稳定平台主干保持不变；Runtime 五层执行架构和协议互操作边界已进入 Blueprint，尚未形成对应新 Contract Gate 结论 |
+| 声明式契约 | 既有 Revision Gate 通过；新 Revision 待发布 | 精确 Manifest/Suite Digest 以绑定对应 Contract Checkout 的 Gate 报告为准；旧 Gate 不能证明新 Runtime 执行或 Agent 互操作契约 |
+| 产品实现 | 分阶段推进 | 实时切片、命令、证据和未证明边界只以 `application/doc/plan/README.md` 及绑定源码的 evidence 为准；根 README 不复制易漂移的阶段号 |
+| Phase 0 | 未完成 | 组件通过不等于 0B、0C-0G 集成、0H 可靠性或完整 Agent Loop 完成 |
 | 生产可靠性 | 未证明 | 故障注入、隔离、容量、SLO、备份恢复和生产运行证据尚未完成 |
 
-“契约验证通过”只表示候选契约内部可接纳，不等于实现完成，也不等于生产就绪。
+“契约验证通过”只表示对应不可变 Contract Revision 内部可接纳，不等于新 Blueprint 要求已进入 Contract，也不等于实现完成或生产就绪。
 
 ## 系统架构
 
@@ -78,6 +79,7 @@ LLM Space 只用于 Agent Engineering Workbench、Trace 调试、Run 对比和 E
 ┌─────────────────────────────────────────────────────────────────────┐
 │ Provider 与执行平面                                                 │
 │ AgentRuntimeProvider / SandboxProvider / Capability Provider        │
+│ MCP / Skill Import / A2A / ACP / AG-UI Edge Adapter                 │
 │ Model Gateway / Tool-MCP Gateway / Artifact Gateway / Egress Gateway│
 │ Runtime Gateway                                                     │
 └──────────────┬─────────────────────┬───────────────────┬────────────┘
@@ -129,6 +131,10 @@ Scenario
 每次 Run 在准入时锁定精确的 Tenant、Branch WorkspaceRevision、AgentRunWorkspaceBinding、ProviderResolution、ProviderRevision、AdmissionDecision、Scenario、Event Registry、Experience Revision、按需 Sandbox Slot、共享 WorkOrder Budget、单 Run Resource Allocation、授权/策略摘要和 RunManifest。Runtime 与 Sandbox Slot 只引用统一 ProviderResolution，不复制第二份 Revision/Conformance 快照。运行中的 Run 不允许因成本、健康状态或偏好变化静默切换 Provider。
 
 Provider 原生 Checkpoint 默认只在同一 Revision 或明确声明并通过测试的兼容范围内恢复，不承诺跨框架可移植。
+
+Native Runtime 内部采用 Prompt、Context、Harness、Loop 和 Runtime-private Graph 五层执行架构；平台 WorkOrder、Temporal、AgentRun Graph、Invocation Ledger 和 CanonicalEvent 不随内部框架变化。每个模型步骤固定同一 Context/Model/Tool/Environment/权限快照，并通过脱敏 ModelStepEvidence 绑定实际可见输入。完整设计及契约版本顺序见 `blueprint/docs/54_AGENT_RUNTIME_EXECUTION_ARCHITECTURE.md`。
+
+外部协议只通过受治理 Adapter/Importer 接入。Phase 0 目标是 MCP Tool Client 和 Agent Skills/`SKILL.md` 包的最小、可验证支持；MCP Server、A2A、ACP（Agent Client Protocol）和 AG-UI 按 Phase 1 真实场景启用。任何协议都必须锁定 Role、Feature、Transport、版本、来源/目标和 Conformance，不能让外部 Session、Task、Event 或本地 Skill 目录成为平台事实。完整矩阵见 `blueprint/docs/56_AGENT_INTEROPERABILITY_PROTOCOLS.md`。
 
 ## Conversation 与执行链
 

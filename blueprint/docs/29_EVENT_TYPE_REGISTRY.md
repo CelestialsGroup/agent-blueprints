@@ -66,6 +66,8 @@ Delta 必须按以下任一策略合并：
 
 Runtime 的 `message.delta` 可以短期传输或批量合并；`message.completed`、`plan.updated`、`task.completed`、`usage.reported` 和 Run 终态必须有持久、可重建的引用。Headless/Workbench/IDE Adapter 只能投影同一核心流，不创建竞争事实源。
 
+新的 `agent-runtime-core-v2` Registry 可以注册 `runtime.model.step.recorded`，并将其绑定到闭合 `AgentRuntimeEventDataV2` Payload Schema；Payload 只能是脱敏的 ModelStepEvidence 引用，不能将模型正文或 Provider 私有推理过程嵌入 Event。该 Event 将 Step 与 Prompt/Context/Model/Tool/Harness 摘要、Usage Observation、Invocation 和 Event 序列范围关联；Projection 不得据此取得重新 Dispatch 权限。旧 Registry Revision 保持不可变。
+
 ## 留存
 
 当 SSE Cursor 早于最早保留序列时返回 410，并提供：

@@ -52,6 +52,8 @@ WorkOrder 流排序只使用 `work_sequence`。Conversation 创建、归档/删�
 
 AgentRuntimeProvider 的核心事件使用 Contract 资源 `event-types/agent-runtime-core-v1.json`。Registry 自带内容摘要，RunManifest 固化 ID/Version/Digest。Chat、Plan、Tool/Approval、Artifact、Background Task、Usage 和 Runtime 终态均绑定 `agent-runtime-event-data-v1` 的闭合 Payload；平台接受后以同一 Runtime Registry Revision 和 Provider 来源身份写入 CanonicalEvent。Platform 自身领域变化只绑定 `platform-core-v1`，其中 `work_order.safety_control.issued` 记录系统 Pause/Cancel 权限及触发证据摘要。两类 CanonicalEvent 都必须验证精确 Registry Digest、`type + data_version` 和 Payload Schema；Provider 私有 Registry 不允许进入核心流。新增核心类型必须发布新的 Registry Revision，不能向任意 `data` 偷渡字段。
 
+真实 Agent Loop 使用 `agent-runtime-core-v2` Registry 与闭合 `AgentRuntimeEventDataV2` Payload Schema 增加有界 `runtime.model.step.recorded` 引用。事件只携带 ModelStepEvidence ID/Digest、Step identity、内容分类和加密引用，不保存明文 Prompt、完整 Context、Reasoning、Token、凭据或工具敏感正文；旧 `agent-runtime-core-v1` 不原地增加 Event Type。ModelStepEvidence 绑定的 Prompt/Context/Model/Tool/Harness 摘要和 Usage/Invocation 关系见 `54_AGENT_RUNTIME_EXECUTION_ARCHITECTURE.md`。
+
 ## 写入事务
 
 1. 按 `(tenant_id, producer_id, source_stream_id, source_event_id)` 写 Inbox 唯一键并校验 Dedupe Key；Provider 来源额外绑定不可变 `provider_revision_id`，Cursor 只用于恢复读取，不作为唯一事件身份。

@@ -39,7 +39,9 @@ Capability Provider 的长任务控制不创建新的逻辑 Invocation。Invoke�
 
 Agent Runtime 的 Start/Command/Status/Event 以及兼容 Plugin Bridge 的 Invoke/Status/Cancel/Event 采用同一项安全规则：Body、HTTP Path 与按 OpenAPI 默认值规范化的 Query 共同形成正式操作文档；操作 Token 绑定其 Contract/Profile/Digest。兼容 Bridge 的 Invoke `execution` 受原 Deadline/Artifact 窗口限制，后续 `safety_control` 只能 Status/Cancel/Event。逻辑 `invocation_id` 必须同时存在于 Runtime Command 与 Token，不能只靠 Attempt ID 推断。
 
-Runtime Token 额外区分 `execution` 与 `safety_control`。前者受 RuntimeAuthorization/操作 Deadline 双重限制；后者可在执行授权到期后用于 Status/Event/Cancel/Pause 和对账，但必须继续绑定原 Manifest、最后 RuntimeAuthorization 摘要、Attempt、Fencing、Policy/Budget/Permissions 摘要。用户 Pause/Cancel 绑定已授权 WorkOrderControlRequest；平台自动止损则绑定不可变 SystemSafetyControl ID/Digest，且 Token `nbf` 不得早于该事实签发时间。两条来源互斥，任何可继续执行或产生新副作用的命令都 fail-closed。
+锁定的 Runtime v1 Token 区分 `execution` 与 `safety_control`。前者受 RuntimeAuthorization/操作 Deadline 双重限制；后者可在执行授权到期后用于 Status/Event/Cancel/Pause 和对账，但必须继续绑定原 Manifest、最后 RuntimeAuthorization 摘要、Attempt、Fencing、Policy/Budget/Permissions 摘要。用户 Pause/Cancel 绑定已授权 WorkOrderControlRequest；平台自动止损则绑定不可变 SystemSafetyControl ID/Digest，且 Token `nbf` 不得早于该事实签发时间。两条来源互斥，任何可继续执行或产生新副作用的命令都 fail-closed。
+
+新 Runtime Token Revision 将该复合权限拆为 `observation` 和 `reduction_control`：Status/Event 执行期读取绑定当前 RuntimeAuthorization，过期对账读取绑定开放的 InvocationReconciliationCase，安全确认读取绑定 SystemSafetyControl；用户 Pause/Cancel 使用绑定新 WorkOrderControlRequest/ExecutionGrant 的 `execution`，只有 `reduction_control` 能发送系统 Pause/Cancel。旧 Invocation/Run 继续使用其锁定 v1，不原地迁移。
 
 ## 准备 Attempt
 

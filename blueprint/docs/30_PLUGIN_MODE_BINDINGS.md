@@ -48,6 +48,8 @@ Kubernetes Job 被删除但外部副作用结果未知时，Invocation 进入 `o
 
 ## mcp
 
+本节只描述旧 Plugin Bridge 的 MCP 运行模式，不构成平台 MCP Client 或 Server 支持声明。新 MCP Connector 必须按 `56_AGENT_INTEROPERABILITY_PROTOCOLS.md` 固化 Role、Feature、Transport、协议版本、Server identity、Tool Projection、Negotiation Evidence 和专用 Conformance，再映射到 `capability-provider-v1`。
+
 MCP Adapter 负责：
 
 - Capability Request 到 Tool Call 的映射

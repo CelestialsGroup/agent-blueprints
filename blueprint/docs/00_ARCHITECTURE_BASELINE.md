@@ -22,6 +22,7 @@ Agent Access 与稳定内核
         ▼
 执行与扩展平面
   AgentRuntimeProvider / SandboxProvider / Capability Provider
+  MCP / Skill Import / A2A / ACP / AG-UI Edge Adapter
   Model / Tool / Artifact / Egress / Runtime Gateway
         │
         ▼
@@ -55,6 +56,10 @@ AgentRuntimeRun mutation -> Invocation 1 -> N Attempt
 
 每个 AgentRun 由 Tenant/Conversation/Branch WorkspaceRevision、已消费 ExecutionGrant 的请求 Contract/Profile/Digest、实际有界输入、ContextPackage、ArtifactAccessRequirement、初始预算/策略/权限上限、商业授权 ID/Digest/到期上限、授权续期规则、四类 Gateway Binding、ProviderResolution、AdmissionDecision、Event Registry、Experience Revision、按需 Sandbox Slot 和 RunManifest 固化。短期 RuntimeAuthorization/ArtifactGrant 属于 InvocationAttempt，只能在同一 Manifest 与商业有效期内等价或缩权续期；其 Budget/Policy/Permissions 必须绑定同一 Tenant/WorkOrder/CommercialAuthorization，ArtifactGrant 不得早于 Authorization 签发或晚于其到期。Runtime 与 Sandbox Slot 只引用 ProviderResolution，避免重复快照产生冲突。没有 Sandbox Capability 的 Run 可以使用空 `sandboxes[]`；运行中的 Run 不得静默切换 Provider。
 
+Native Runtime 内部按 Prompt、Context、Harness、Loop 和 Runtime-private Graph 分层；该分层不改变公共 AgentRuntimeProvider，也不复制平台控制面。每个模型步骤以不可变 Step Snapshot 固定 Context、Model、Tool exposure/dispatch、Environment 和权限，并通过脱敏 ModelStepEvidence 绑定实际输入摘要；Platform AgentRun Graph、Temporal、Invocation Ledger 和 CanonicalEvent 继续拥有跨 Run 拓扑、恢复、副作用和终态。完整边界见 `54_AGENT_RUNTIME_EXECUTION_ARCHITECTURE.md`。
+
+外部 Agent 协议和 Skill 格式只通过受治理 Adapter、Importer 或 Gateway 映射到已有稳定 Contract。Phase 0 目标是 MCP Tool Client 与最小 Agent Skills/Skill Package Import；MCP Server、A2A、ACP（Agent Client Protocol）和 AG-UI 延后到真实 Phase 1 场景。协议 Session、Task、Event、动态 Tool 列表、本地 Skill 目录和 SDK 对象不进入稳定内核，完整边界见 `56_AGENT_INTEROPERABILITY_PROTOCOLS.md`。
+
 Sub-agent 由 Parent Runtime 的类型化 SpawnRequest 触发，但其身份、Provider、预算、Workspace/Sandbox 和是否准入均由 Platform 决定。所有 AgentRun 共享同一个 WorkOrder ExecutionBudget Ledger，并各自持有只包含资源维度的更窄 AgentRunBudgetAllocation；深度、总数和并发只取 WorkOrder ExecutionBudget，在 Admission 事务中硬限制，不复制为 Child 配额。Pause/Cancel 通过持久 fan-out 覆盖所有活动 RuntimeRun，WorkOrder 终态等待 Root 和全部 required Child 收敛，孤儿 Child 由对账器发现并减权。
 
 ## 可靠性边界
@@ -71,9 +76,10 @@ Sub-agent 由 Parent Runtime 的类型化 SpawnRequest 触发，但其身份、P
 - Agent Access 对同时出现在 URL 与正文中的 WorkOrder、Artifact、IngestSession、Conversation 和 CommercialAuthorization 标识使用机器可读 `x-path-body-bindings`，错绑在授权消费和对象查找前 fail-closed。
 - BusinessSettlementEnvelope 嵌入完整不可变 UsageReport，或在可证明没有任何执行 Attempt/TechnicalUsage 时绑定 NoUsageAttestation；缺失用量不等于零，Envelope 不包含价格、货币、余额或商业结论。
 - Runtime Checkpoint 与 Sandbox Snapshot 的跨 Revision 恢复必须绑定 Platform CompatibilityDecision/Evidence；Secret 只由 SecretGrant + 单操作 Credential Gateway 交付，二者都 fail-closed。
+- 新 Runtime Contract Revision 将执行、Status/Event 观察和系统 Pause/Cancel 减权拆成 `execution/observation/reduction_control`；过期读取绑定 ReconciliationCase，安全控制绑定 SystemSafetyControl，旧 v1 `safety_control` 只作为旧 Run 的兼容事实保留。
 - CommercialAuthorization 撤销收据同步建立 deny，并以可恢复 CAS/Outbox intents 覆盖 WorkSession、WorkOrder、ArtifactOperation 与 ArtifactIngest。ArtifactOperation 的 intent 先持久进入 `cancel_requested`；已派发取消和未知结果分别进入 `cancelling`/`cancellation_reconciling`，不以取消意图冒充终态证据。
 - 系统不承诺全局 Exactly-once。
 
 ## 当前状态
 
-当前 Blueprint 已通过本地契约 Gate，但尚未冻结。Blueprint 不包含或追踪真实 Agent Platform 产品实现；Phase 0 的 Adapter、Migration、Runtime Gateway、故障注入、容量和备份恢复结论必须由锁定该 Blueprint Revision 的实现仓库与运行环境分别提供。
+既有锁定 Blueprint/Contract Revision 拥有其历史本地 Contract Gate；当前新增的 Runtime 执行与 Agent 互操作候选尚未发布对应 Contract Revision，也未通过其新 Gate。Blueprint 不包含或追踪真实 Agent Platform 产品实现；Phase 0 的 Adapter、Migration、Runtime Gateway、故障注入、容量和备份恢复结论必须由重新锁定该 Blueprint Revision 的实现仓库与运行环境分别提供。

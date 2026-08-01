@@ -77,6 +77,14 @@ Bearer Token 只授权一个 `invoke`、`status`、`cancel` 或 `read_events` �
 
 Provider 输出只包含 Structured Result、StagedArtifact 和 UsageObservation。UsageObservation 没有 Platform `entry_id`、Tenant/ExecutionScope 归属、Idempotency Key 或 `recorded_at`；Platform 校验 Meter/Evidence/Attempt 后才创建 TechnicalUsageEntry。WorkOrder Runtime 用量绑定 AgentRun/RuntimeRun，ArtifactOperation 用量绑定其唯一 Invocation 和选定 ProviderRevision。Provider 只能读取已授权 ArtifactVersion 或写 Staging，不能 Finalize 正式 ArtifactVersion。
 
+## 外部协议 Binding
+
+`capability-provider-v1` 是平台内部稳定 Port，不代表它原生使用或完整兼容 MCP、A2A 或任一 SDK。外部协议必须由专用 Adapter 将锁定的 Role、Feature、Transport 和版本映射到 Capability 语义；Adapter 私有 Session/Task/Request ID、Endpoint、动态发现结果和 SDK 类型不进入 CapabilityDefinition、ProviderResolution 或 Invocation 公共模型。
+
+MCP Tool 在进入本 Port 前必须通过 `McpConnectorBindingV1` 和不可变 Tool Projection，固定 Server/Tool identity、Schema Digest、side-effect、幂等、取消、进度、Artifact 和风险语义。每次 Tool Call 仍创建 Capability Invocation/Attempt 并执行 Fencing、Approval、Budget、Credential、Artifact Staging 和未知结果对账；MCP SDK 的默认重试不能覆盖平台规则。Skill Package 不是 Wire Protocol，必须先由 Importer 生成不可变 Artifact/Experience/Provider Revision，再由本 Port 执行其中已准入的 Capability。
+
+协议支持的状态、Phase 范围、安全和 Conformance 见 `56_AGENT_INTEROPERABILITY_PROTOCOLS.md`。通用 Capability Conformance 不能替代 MCP Transport/Negotiation 或 Skill Import 的专用 Suite，反向也同样不能替代。
+
 ## Plugin 实现声明
 
 Plugin 只声明：

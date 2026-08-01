@@ -6,8 +6,8 @@ Agent Blueprint 是当前产品边界候选设计。它以纯 Markdown 独立定
 
 | 层级 | 当前状态 | 说明 |
 |---|---|---|
-| 架构设计 | 候选完成 | 核心所有权、Provider 模型、Conversation、Sandbox、Recording 和 Business 交接已有设计 |
-| 契约验证 | Contract 独立判定 | Schema、OpenAPI、状态机、Fixture、跨语言 JCS 和语义 Gate 由锁定的 Contract Revision 给出结果 |
+| 架构设计 | 候选演进中 | 稳定平台主干已有设计；Runtime 五层执行语义和 Agent 互操作目标已形成候选，仍需评审冻结 |
+| 契约验证 | 既有 Revision 独立判定；新 Revision 待发布 | Schema、OpenAPI、状态机、Fixture、跨语言 JCS 和语义 Gate 只证明其锁定 Contract Revision，不能覆盖尚未发布的 Runtime 执行与互操作契约 |
 | 开发规范 | 候选完成 | Phase 0 技术选型、语言边界、数据不变量和阶段验收已有明确规则 |
 | 产品实现 | Blueprint 不判定 | 源码、Migration、部署物、组件与集成证据属于独立实现仓库 |
 | 生产证明 | Blueprint 不判定 | 故障、容量、安全隔离、Replay 和恢复证据必须由实现与运行环境独立提供 |
@@ -22,16 +22,21 @@ Agent Blueprint 是当前产品边界候选设计。它以纯 Markdown 独立定
 4. `docs/README.md`：详细规范索引和事实源层级。
 5. `docs/52_BLUEPRINT_CONTRACT_APPLICATION_BOUNDARY.md`：Blueprint、Contract 与 Application 的依赖、Revision 和证据边界。
 6. `docs/53_APPLICATION_DEVELOPMENT_STANDARDS.md`：Application 编码、测试、评审与 Definition of Done。
-7. `tasks/PHASE0.md`：唯一 Phase 0 实现与验收路线。
-8. `prompts/CODEX_PHASE0_BOOTSTRAP.md`：实现代理入口。
+7. `docs/54_AGENT_RUNTIME_EXECUTION_ARCHITECTURE.md`：Runtime 五层执行架构、Contract 演进和停止条件。
+8. `docs/55_REFERENCE_ADOPTION_LEDGER.md`：外部项目的锁定基线、采纳/拒绝边界和复审要求。
+9. `docs/56_AGENT_INTEROPERABILITY_PROTOCOLS.md`：MCP、Skill Package、A2A、ACP 和 AG-UI 的支持矩阵、Adapter 边界与 Conformance。
+10. `tasks/PHASE0.md`：唯一 Phase 0 实现与验收路线。
+11. `prompts/CODEX_PHASE0_BOOTSTRAP.md`：实现代理入口。
 
-Blueprint 决定架构意图和禁止项，Contract 决定精确 Wire 行为，Application 的 DDL/代码决定实现事实；三者冲突时必须停止并按变更流修复，不能让实现便利静默覆盖上游规则。当前 0A 架构与契约闭合具备进入实现的候选条件；GitHub CI、仓库准入和冻结基线在后续阶段独立处理。
+Blueprint 决定架构意图和禁止项，Contract 决定精确 Wire 行为，Application 的 DDL/代码决定实现事实；三者冲突时必须停止并按变更流修复，不能让实现便利静默覆盖上游规则。既有 0A Contract Revision 仍可支撑已锁定的 lifecycle/component 范围，但不满足真实 Agent Loop 的新 Context、Authority、Evidence 和恢复要求，也不包含 MCP Client/Skill Package 的专用 Binding 与 Conformance；后续范围必须先完成 Blueprint 评审，再发布并通过新的完整 Contract Gate。GitHub CI、仓库准入和冻结基线继续独立处理。
 
 ## 已确定的边界
 
 - Business Application 拥有 User、Organization、Membership、Product、Order、Payment、Entitlement 和商业额度。
 - Agent Platform 拥有 Conversation、WorkOrder、Workflow、Event、Artifact、Technical Usage、Provider、Sandbox、RuntimeRecording 和 Experience Catalog。
 - Agent Runtime 和 Sandbox 只能通过带解析证据的 Provider Port/Resolution 接入，框架或基础设施私有模型不得进入稳定内核。
+- Native Runtime 内部采用 Prompt、Context、Harness、Loop 和 Runtime-private Graph 五层架构；Platform WorkOrder、Temporal、AgentRun Graph、Invocation Ledger 和 CanonicalEvent 仍是跨 Run 的唯一治理事实。参考项目的采纳、拒绝和复审统一进入 Reference Adoption Ledger，不从项目清单推导依赖或兼容承诺。
+- 外部协议与格式只存在于 Adapter/Importer/Gateway 边界。Phase 0 目标是 MCP Tool Client 与最小 Agent Skills/Skill Package Import；MCP Server、A2A、ACP（Agent Client Protocol）和 AG-UI 按 Phase 1 场景启用。每个 Role/Feature/Transport/版本必须分别完成 Contract、Conformance 和 Enablement，不能从 SDK 或字段存在推导兼容。
 - ExecutionGrant 精确绑定请求 Contract/Digest Profile；Conversation Branch Create/Fork 命令精确绑定来源 Message Cut、WorkspaceRevision Head 与 CAS。
 - 新 Turn 与现有 WorkOrder 控制使用不同请求；Message、Workspace 和 Active Work 使用独立 CAS 版本。
 - 用户控制仍需要新的 Business ExecutionGrant；Business 授权撤销通过 sender-constrained 的不可变 Revocation Notice 进入 Platform。授权到期、撤销、Deadline/预算触发或紧急停机时，唯一 Platform Safety Controller 以不可变 `SystemSafetyControl` 仅执行 Pause/Cancel。该路径不能恢复执行、追加输入、批准、Checkpoint 或产生新副作用。
@@ -62,4 +67,4 @@ make validate-contract
 
 ## 下一里程碑
 
-Blueprint 在 0A.2 契约收口后进入受控演进：实现仓库按 `tasks/PHASE0.md` 推进 0B-0H；实现中发现的契约缺口先回到 Blueprint 独立评审并产生新的不可变 Revision/Digest，再由实现升级依赖。第三方 Agent 项目只作参考；Blueprint 的公共 CI、兼容性基线和正式冻结仍独立处理。
+先共同评审并冻结 `docs/54_AGENT_RUNTIME_EXECUTION_ARCHITECTURE.md`、`docs/55_REFERENCE_ADOPTION_LEDGER.md` 与 `docs/56_AGENT_INTEROPERABILITY_PROTOCOLS.md`。随后先发布 Runtime Status/Event authority patch，再发布 Prompt/Context/Budget/Evidence/Checkpoint/Run 与 MCP Client/Skill Import 的相容新 Contract Revision 及 Conformance。完整 Contract Gate 通过后，Application 才能升级锁定 Revision 并实现真实 Agent Loop 与互操作纵向链路；既有 lifecycle/component 切片和协议字段不反向决定新契约。Blueprint 的公共 CI、兼容性基线和正式冻结仍独立处理。

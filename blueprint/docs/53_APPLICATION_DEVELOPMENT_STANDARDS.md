@@ -186,6 +186,14 @@ persistence / gateway / orchestration / provider adapters
 
 - 使用 `src/` Layout、锁定 Python/uv 和精确依赖。公共包有类型标注；Runtime Port 边界禁止 `Any`、未约束 Dict 和隐式 Pydantic Coercion。
 - Pydantic/生成 DTO 只用于 Wire 边界；内部 Agent Loop 使用明确的领域/运行值，并通过 Mapper 转换，不让第三方框架对象成为公共模型。
+- Native Runtime 将 lifecycle driver 与 Prompt Policy、Context Manager、Harness Step Snapshot、Agent Loop、Tool Router 和 Runtime-private Graph 分离；`start/cancel/checkpoint` 生命周期接口不能冒充完整 Agent Loop。
+- Prompt Builder/Serializer 只能消费 Run admission 固化的 PromptPolicyBinding 和指令来源 Revision；运行中配置变化不能静默改变现有 Run，普通日志/Trace 不记录明文 Prompt。
+- 每次模型请求从同一个不可变 Step Snapshot 生成模型 Context、模型可见 Tool Spec 和实际 Dispatch Registry；三者任一 Revision/Digest 不一致即 fail-closed，禁止运行中从可变全局配置重新解析。
+- Context Manager 区分原始历史与模型可见历史，使用显式 history revision、规范化、diff、rollback、compaction 和 token/byte accounting；摘要或截断不能覆盖不可变原始 Message/Artifact。
+- Context Item 保留来源、内容分类、信任等级和解释角色；网页、检索、文件与 Tool 输出中的指令默认按不可信数据处理，不能扩大 Tool exposure、跳过 Approval 或获得 Egress/Secret 权限。Prompt、Guardrail 和 Hook 不替代 Policy/Gateway/Sandbox 强制执行。
+- 模型可见 Tool Spec 与 Tool Registry 分离；模型未见或当前 Step 未授权的工具不得 Dispatch，直接受治理调用也必须拥有独立来源和 Invocation 证据。
+- Agent Loop step、ModelStepEvidence 和 Checkpoint 水位必须可关联；结果未知的非幂等工具调用不得由 Loop、恢复代码或框架 retry 自动重发。
+- Runtime-private Graph revision 使用稳定节点 identity、内容摘要、显式依赖、有界节点/边/并发和确定性 ready-set 顺序；Checkpoint 恢复必须重建相同水位，声明为 DAG 的依赖发现环或结果未知副作用时 fail-closed。
 - Exception 分为 Contract、Authorization、Conflict、Deadline、Cancellation、Dependency 和 Outcome Unknown 等类别，在 Port 边界统一映射。
 - Async 代码不得在 Event Loop 执行阻塞 I/O；阻塞库通过有界线程/进程 Adapter，显式 Timeout、Cancellation 和并发上限。
 - Background Task 必须有 Owner 和 Await/Cancel 路径；禁止未追踪的 `create_task`、无界队列和模块级可变单例。

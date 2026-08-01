@@ -22,7 +22,9 @@ Scenario -> CapabilityDefinition -> ProviderResolution + Resolver Evidence
          -> Plugin / Runtime / Sandbox Provider
 ```
 
-自研 Native Runtime 是正式产品主实现，也必须通过框架中立的 AgentRuntimeProvider Port。冻结该 Port 前，另行实现一个不复用 Native Runtime 内部执行包的最小 Reference Contract Probe，并共同通过 `runtime-core-v1`；这证明 Port 可替换，不构成第三方兼容承诺。DeerFlow、Dify、OpenHands、LangGraph、OpenAI Agents SDK 等项目只用于研究架构、能力和 UX，不在当前适配计划内。外层可靠性统一由 Temporal、PostgreSQL、兼容 S3 的 Storage 和平台 Ledger 提供。
+自研 Native Runtime 是正式产品主实现，也必须通过框架中立的 AgentRuntimeProvider Port。冻结该 Port 前，另行实现一个不复用 Native Runtime 内部执行包的最小 Reference Contract Probe，并共同通过 `runtime-core-v1`；这证明 Port 可替换，不构成第三方兼容承诺。Native Runtime 内部按 Prompt、Context、Harness、Loop 和 Runtime-private Graph 分层，完整边界见 `docs/54_AGENT_RUNTIME_EXECUTION_ARCHITECTURE.md`。
+
+DeerFlow、Dify、OpenHands、LangGraph、OpenAI Agents SDK、OpenAI Codex 等项目只用于研究架构、能力和 UX，不在当前适配计划内；采纳和拒绝进入 `docs/55_REFERENCE_ADOPTION_LEDGER.md`。MCP、Agent Skills/Skill Package、A2A、ACP 和 AG-UI 属于独立的互操作治理轴，只通过 Adapter/Importer/Gateway 接入，具体目标、状态和 Conformance 见 `docs/56_AGENT_INTEROPERABILITY_PROTOCOLS.md`。外层可靠性统一由 Temporal、PostgreSQL、兼容 S3 的 Storage 和平台 Ledger 提供。
 
 Phase 0 使用平台自己的 Native SandboxProvider 与隔离执行后端；后端可通过同一 Port、ProviderRevision 和 Conformance Suite 独立升级替换，第三方 Sandbox 项目只作控制面与隔离模型参考。html-anything、Open Design、motion-anything、html-to-pptx/html-video 通过 Catalog/Template/Skill/Editor/Converter Provider 集成。
 
@@ -36,4 +38,4 @@ export AGENT_CONTRACT_ROOT=<contract-root>
 make validate-contract
 ```
 
-架构设计已完成 0A 候选收口；对应机器契约曾通过本地 Gate，但目录拆分后的精确结果只以 Contract Scripts 对锁定 Contract Revision 生成的 `evidence/VALIDATION.json` 和验证报告为准。Contract Gate 不对 Application 的组件完成度、集成链路、可靠性或生产批准作出结论。详情从 `START_HERE.md` 开始。
+既有 0A Blueprint/Contract Revision 拥有其历史本地 Gate；当前 Runtime 执行与 Agent 互操作候选尚未发布对应机器 Contract，也未通过其新 Gate。目录拆分后的精确结果只以 Contract Scripts 对锁定 Contract Revision 生成的 `evidence/VALIDATION.json` 和验证报告为准。Contract Gate 不对 Application 的组件完成度、集成链路、可靠性或生产批准作出结论。详情从 `START_HERE.md` 开始。

@@ -138,4 +138,4 @@ OpenAPI 使用 `x-required-work-session-scopes` 表达 Bearer/Cookie Scheme 无�
 
 所有 Runtime、Sandbox、Capability、Artifact、Egress 和兼容 Plugin 操作 Token 还必须用 `sub` 绑定当前 mTLS/Workload Identity；验证 Audience 不能替代验证 Caller Subject，另一合法工作负载取得 Token 时也必须拒绝。Sandbox Capability 发现是先于 Operation 的控制面协商，只允许已准入控制面 mTLS 身份，不接受也不要求伪造 Sandbox Operation Token。
 
-执行 Token 的时间窗是双向包含关系：`nbf` 不早于所绑定 RuntimeAuthorization、PolicyDecision 或 Artifact Grant 生效，`exp` 不晚于对应执行期限。Runtime/Capability/Plugin 的 `safety_control` 只保留取消与对账权，不重新激活已经过期的执行或 Artifact 权限。
+执行 Token 的时间窗是双向包含关系：`nbf` 不早于所绑定 RuntimeAuthorization、PolicyDecision 或 Artifact Grant 生效，`exp` 不晚于对应执行期限。锁定的 Runtime/Capability/Plugin v1 `safety_control` 只保留取消与对账权，不重新激活已经过期的执行或 Artifact 权限。Runtime 新 Revision 进一步以 `observation` 单独授权 Status/Event，以 `reduction_control` 单独授权 SystemSafetyControl Pause/Cancel；三类权限和 Operation Digest 不得互换。Capability/Plugin 的演进另行版本化，不因 Runtime 变更自动改义。

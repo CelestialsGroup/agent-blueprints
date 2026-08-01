@@ -26,10 +26,17 @@
 - **MeterDefinition**：不含价格的不可变技术计量语义和基础单位。
 - **ExecutionBudget / PolicyDecision**：Platform 从商业限制和全部策略作用域导出的不可变执行预算与 `deny > ask > allow` 决策。
 - **AgentRuntimeProvider**：启动/Command/Status/Event/Checkpoint 的稳定 Agent Runtime Port；自研 Native Runtime 是主实现，第三方 Agent 项目只作参考或未来可选 Provider。
+- **Prompt Policy / Revision**：Native Runtime 用于组合模型基础指令、Scenario、Experience、Skill 和安全提示的版本化策略及不可变摘要；`PromptPolicyBinding` 在 Run admission 时固化 Policy/Builder/Serializer 与指令来源，不保存明文 Prompt。
+- **ContextPackage**：Context Builder 在策略、信任和预算约束下生成的有序、不可变、可解析模型上下文描述；Conversation 历史只是候选来源。
+- **ContextResolverBinding**：把 ContextPackage 中的内容寻址引用绑定到受治理 Artifact/Capability Port 的 Contract、Audience、Route、Digest Profile 和短期读取授权要求；不携带裸 Endpoint。
+- **RuntimeTurnContext / StepContext**：Runtime 私有的请求级默认执行上下文及每次模型采样快照；不得与 Platform `ConversationTurn` 混用，对外只通过版本化摘要和 ModelStepEvidence 证明。
+- **Harness Step Snapshot**：一次模型采样请求使用的不可变 Runtime 私有快照，固定 Context、Model、Tool exposure/dispatch、Environment、Workspace/Sandbox、Skill、Budget、Policy、Permissions 和 Approval 状态。
+- **ModelStepEvidence**：模型步骤实际 Prompt/Context/Model/Tool/Harness 摘要、Usage/Invocation 关系、内容分类和加密正文引用的脱敏证据；普通 Event/Telemetry 不保存正文。
+- **Runtime-private Graph**：只表达一个 AgentRun 内 Plan/Step/局部依赖的 Provider 私有图；不能替代 Platform AgentRun Graph、Temporal History 或 Invocation Ledger。
 - **ChildAgentRunSpawnRequest**：Parent Runtime 发出的类型化委派需求；不能自行选择 Provider、预算、Sandbox 或 Child AgentRun 身份。
 - **WorkflowRunRootBinding**：Root Admission 成功后单次赋值的 WorkflowRun 到 Root AgentRun/RunManifest 绑定；准入前失败时不存在。
 - **RuntimeAuthorization**：绑定一个 Runtime InvocationAttempt 的短期仅追加授权 Revision；可在同一 RunManifest 下等价或缩权续期，并携带 fresh ArtifactGrant。
-- **AgentRuntimeInvocation Token**：绑定 Tenant、ProviderRevision、RunManifest、RuntimeAuthorization、Attempt、Fencing、Policy、Budget、Permissions 和请求摘要的短期调用授权；`execution` 受执行期限限制，`safety_control` 只允许到期后读取或 Cancel/Pause。
+- **AgentRuntimeInvocation Token**：绑定 Tenant、ProviderRevision、RunManifest、RuntimeAuthorization、Attempt、Fencing、Policy、Budget、Permissions 和请求摘要的短期调用授权；旧 v1 使用 `execution/safety_control`，新 Revision 将 Business 授权的执行/用户控制、只读观察和系统减权拆成 `execution/observation/reduction_control`。
 - **SystemSafetyControl**：Platform-owned、不可变且仅用于减权的控制事实；在新的 Business Grant 不可用或不应成为前提时，以 Tenant/WorkOrder/RuntimeRun、Pause/Cancel action、触发证据和摘要授权停止动作，不能恢复执行或产生新副作用。
 - **CommercialAuthorizationRevocation**：Business-owned 的不可变撤销通知；由 sender-constrained Business workload 提交，Platform 保存带摘要的幂等 deny 收据与 WorkSession/WorkOrder/ArtifactOperation/ArtifactIngest CAS/Outbox intents。WorkOrder 派生 fenced SystemSafetyControl，其他 Scope 按自身状态机减权；Platform 不回写商业授权事实。
 - **RunManifest**：固化 Tenant、Scenario、ProviderResolution/Admission、Event Registry、Experience、Sandbox、Runtime、ArtifactAccessRequirement 和初始授权上限的执行快照；不保存短期 bearer Grant。
@@ -54,6 +61,13 @@
 - **ConformanceSuiteManifest**：内容寻址的机器可读测试清单；认证结果绑定 Suite ID/Version/Digest/Profile 和 Evidence。
 - **ExperienceCatalogEntry**：用户可发现的 Template、Skill、Design System 或 Editor 条目。
 - **TemplateRevision / SelectedExperience**：不可变 Experience 内容及 Run 中的精确选择。
+- **Interoperability Adapter**：把一个锁定的外部协议 Role/Feature/Transport/Revision 映射到平台稳定 Contract 的边缘组件；不拥有 WorkOrder、AgentRun、Invocation 或授权事实。
+- **McpConnectorBinding**：MCP Client 连接使用的不可变协议、Feature、Transport、Server/Destination/Command、身份、Credential、Tool allowlist、上限和协商策略绑定；原始 Endpoint 与 Session 保持 Gateway 私有。
+- **Skill Package / SkillPackageManifest**：锁定格式 Revision 的指令、资源、脚本和元数据包及其规范化不可变清单；Skill 是导入格式和 Experience/Provider 输入，不是统一 Wire Protocol。
+- **SkillImportEvidence**：Skill 从 Source/Upload 经 Quarantine、校验、规范化、扫描和准入生成 Artifact/Experience/Provider Revision 的内容寻址证据。
+- **A2A**：Agent-to-Agent 互操作协议；远程 Task 只作 Adapter/Invocation 关联，需要 Sub-agent 时仍必须经过平台 Child Spawn/Admission。
+- **ACP（Agent Client Protocol）**：IDE/客户端到 Agent 的边缘交互协议；本文不使用 ACP 表示 Agent Communication Protocol，ACP Session 不等于 Conversation 或授权事实。
+- **AG-UI**：Agent 到用户界面的事件互操作协议；只投影 CanonicalEvent/Task/Artifact，用户动作仍通过正式 Turn/Control API 回写。
 
 ## Artifact 与 Runtime
 

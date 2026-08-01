@@ -18,6 +18,14 @@ Run 准入会重新检查 Scenario 的 `required_tags`、TemplateRevision 的 `r
 
 Scenario UI 使用签名 UI Schema 和类型化选项源。`/template_id` 等字段查询 Experience Catalog，绝不硬编码 Plugin ID。
 
+## Skill Package 导入
+
+Agent Skills/`SKILL.md` 等 Skill Package 先进入 Quarantine Artifact，由锁定 Revision 的 Importer 校验格式、规范化路径、大小、摘要、签名、来源、许可证、远程引用、脚本和权限声明，再生成 `SkillPackageManifestV1`、`SkillImportEvidenceV1`、不可变 ArtifactVersion 与 `skill_pack` Experience Revision。需要可执行 Capability 时，另绑定通过准入的 Skill ProviderRevision；格式合法不等于 Provider 已认证或 Tenant 已启用。
+
+Importer 不得在 API、Worker 或控制面宿主机执行包内脚本。Script 只能作为内容寻址的受控 Sandbox Command 或已准入 Provider 实现运行；Manifest 权限只是请求，最终 Tool、Workspace、Artifact、Network、Secret 和副作用权限由 Business/Platform Policy、Approval、RunManifest、Gateway 与 Sandbox 收窄。Run/Step 固定精确 Skill/Experience/Provider Revision，修改文件或依赖必须创建新 Revision，不能读取用户目录中的可变包作为执行事实。
+
+完整格式、导入证据、攻击样例和 Phase 范围见 `56_AGENT_INTEROPERABILITY_PROTOCOLS.md`。
+
 ## nexu-io 集成 Profile
 
 - html-anything Template/Skill 目录：Catalog 导入器加 Template Provider。

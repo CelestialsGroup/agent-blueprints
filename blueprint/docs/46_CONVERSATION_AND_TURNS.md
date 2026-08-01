@@ -46,7 +46,11 @@ Conversation 生命周期由 Contract 资源 `state-machines/conversation-v1.jso
 
 ## 上下文与记忆
 
-Conversation 历史不等同于模型 Prompt。版本化 Context Builder Capability 在预算和策略约束下选择 Message、Artifact 和摘要。长期记忆、检索或摘要均由 Provider 实现，其精确 Revision 固化在 RunManifest 中。
+Conversation 历史不等同于模型 Prompt。版本化 Context Builder Capability 在预算、策略和信任约束下，从 Message、Artifact、Instruction、Memory、Catalog Revision 和 Workspace Manifest 等候选来源生成有序 ContextPackage。长期记忆、检索、摘要和 Compaction 可以由 Provider 实现，但其 Builder/Policy Revision、输入来源、选择与遗漏原因、顺序、预算、摘要和最终 Assembly Digest 必须固化并可审计。
+
+Context 引用必须是受 Start 总大小约束的闭合 inline content，或通过 RunManifest 固化的 Context Resolver Binding 和短期授权解析的内容寻址引用。裸 `reference_id`、进程本地路径、框架 Thread ID 或 Provider 私有存储约定不能成为跨 Runtime 协议。相同 `(kind, reference_id)` 不得用不同摘要重复出现；数组 `uniqueItems` 不能替代该语义约束。
+
+每次模型请求由 Runtime Harness 创建不可变 Step Snapshot，固定当前 Context history revision、模型、模型可见 Tool Spec、实际 Dispatch Registry、Environment/Workspace/Sandbox、Skill/Capability、Budget/Policy/Permissions 和 Approval 状态。模型实际可见输入通过脱敏 ModelStepEvidence 绑定摘要与加密正文引用，不写入普通 Event、Trace、Metric 或日志。完整分层和 Contract 演进要求见 `54_AGENT_RUNTIME_EXECUTION_ARCHITECTURE.md`。
 
 ## Session 授权
 
