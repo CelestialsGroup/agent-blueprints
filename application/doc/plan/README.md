@@ -66,8 +66,18 @@ Current plans:
   Schema/Runtime Event Registry validation, bounded exact response handling,
   capability immutability, one-dispatch Start/Command and typed known/unknown/
   not-dispatched outcomes. Independent normal/Race, real loopback mutual-TLS/
-  HTTP evidence and the complete Application Gate pass; this completion status
-  takes effect when the frozen plan state is included in a subsequent complete
-  source-rebind Gate with exit 0. Status/Event 400, undeclared read 429,
-  installed Native Runtime cross-language evidence, dynamic Suite closure,
-  production authority and composition remain blocked or outside this slice.
+  HTTP evidence and final complete source-rebind Gate pass. Status/Event 400,
+  undeclared read 429, installed Native Runtime cross-language evidence,
+  dynamic Suite closure, production authority and composition remain blocked
+  or outside this slice.
+- `B03.2a2.2.0-installed-cross-language-five-operation-component.md`: implemented
+  candidate and mandatory per-stage ledger for the first a2.2 slice. It compiles
+  the Go adapter tests for normal/Race execution beside the real installed
+  Native Runtime wheel/process and proves Capabilities, Start,
+  Status, Command and Events over ephemeral Ed25519 mutual TLS, HTTP/1.1 sockets
+  and Provider-local SQLite, plus declared closed failures. Independent evidence
+  and the checkpoint complete Application Gate pass; completion takes effect
+  only after the frozen documents pass the final complete source-rebind Gate.
+  Response-loss/restart reconciliation mechanics are separately ordered a2.2.1
+  work; dynamic Suite evaluation, production authority/composition and aggregate
+  `runtime-core-v1` remain excluded.

@@ -72,3 +72,15 @@ keeps installed Native Runtime cross-language behavior and every dynamic Suite
 case out of scope, records Status/Event 400 and read 429 authority gaps, and
 retains fail-closed source/cache/token/body/checkpoint/private-key/traceback
 scans.
+
+`generate_installed_cross_language_evidence.py` emits the independent
+B03.2a2.2.0 installed five-operation component evidence under
+`build/evidence/b03.2a2.2.0`. It binds normal/Race Go test binaries to the real
+installed Native Runtime wheel/process, ephemeral Ed25519 mutual TLS, HTTP/1.1
+loopback sockets, explicit migration plus `open_current`, and Provider-local
+SQLite. It records the Registry resource SHA separately from its internal
+digest, preserves all 17 Suite cases as `not_evaluated_in_a2_2_0`, keeps
+aggregate conformance `not_claimed`, and rejects production importers, new
+dependencies, source imports, cache files, or sensitive log/evidence content.
+Response-loss/restart reconciliation, dynamic Suite evaluation and production
+composition remain outside this evidence.
