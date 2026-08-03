@@ -2,21 +2,25 @@
 
 日期：2026-08-03
 
-状态：阶段 0.1 已完成；已建立、索引并按 R01 独立只读审查修订计划，尚未修改任何 Contract
-机器资源、Script validator、Gate evidence、Application dependency lock 或 Application 实现。
-后续阶段必须在独立授权下按本文顺序执行。
+状态：Stage 1/1.1/1.2 已在提交
+`793215cbe1b79c0f4cb7f16b13ec71b9483920fd` 修改 Runtime OpenAPI 与两个专用 error Schema，
+并经总控/R02 最终复审和总控独立验收。当前只有 Stage 2.0 readiness/topology 计划修订为未暂存、
+未提交差异；fixture、semantic constraints、Suite、Manifest、Script validator、Gate evidence、
+Application dependency lock 与 Application 实现均未进入 Stage 2。后续阶段必须在独立授权下按本文
+顺序执行。
 
 ## 1. 目标与权威边界
 
-本计划为 AgentRuntimeProvider 的 Status/Event read 关闭两个既有机器契约缺口：
+本计划源于 Stage 0 输入基线中 AgentRuntimeProvider Status/Event read 的两个历史机器契约缺口：
 
 1. `GET /v1/runs/{runtime_run_id}` 与
    `GET /v1/runs/{runtime_run_id}/events` 缺少 HTTP 400 响应权威；
 2. 两个 read 操作缺少 HTTP 429、强制 `Retry-After` 及调用方重试边界。
 
-交付物是新的、不可变的 AgentRuntimeProvider v1 patch Contract Revision。建议将 OpenAPI
-`info.version` 从 `1.0.0` 提升为 `1.0.1`，Runtime Suite 从 `1.0.0` 提升为 `1.0.1`；最终版本号
-如与仓库发布规则冲突必须停止评审，不能沿用旧摘要冒充新 Revision。
+交付物是新的、不可变的 AgentRuntimeProvider v1 patch Contract Revision。Stage 1 已将 OpenAPI
+`info.version` 从 `1.0.0` 提升为 `1.0.1`；Runtime Suite 仍保持历史 `1.0.0`，只允许在 Stage 2A
+draft 中提升为 `1.0.1`，并在 Stage 2B guarded finalize 后形成最终摘要。任何版本号如与仓库发布
+规则冲突必须停止评审，不能沿用旧摘要冒充新 Revision。
 
 权威顺序固定为：Blueprint 文档 -> Contract 机器资源 -> Application 消费与实现。现有 Native
 Runtime、Go adapter、测试或历史 evidence 只能说明旧 Revision 的消费者事实，不能反向决定、
@@ -28,18 +32,19 @@ Runtime、Go adapter、测试或历史 evidence 只能说明旧 Revision 的消�
 
 | 项目 | 精确值 | 解释 |
 |---|---|---|
-| Repository base commit | `a8024901547df93453685ecb8044fe58399c30df` | 当前 HEAD 与要求提交精确相同；工作树、暂存区均干净 |
+| Repository authority base commit | `a8024901547df93453685ecb8044fe58399c30df` | 历史 Blueprint/Contract 输入基线；Stage 2.0 当前 HEAD 包含它但不再与它相同 |
 | 阶段 0.1 plan base commit | `68c3fb956228c7cb657c733c8b3763cdb2c9422c` | 总控与 R01 只读审查后的计划提交；阶段 0.1 开始前 HEAD 精确相同且工作树干净 |
+| Stage 1 Contract commit | `793215cbe1b79c0f4cb7f16b13ec71b9483920fd` | 总控与 R02 最终复审并独立验收；Stage 2.0 开始时 HEAD 精确相同、工作树/暂存区干净，`a802490...` 为祖先 |
 | Blueprint Source Revision | `8e767457c808d148af371cd5e85d98a723bcfb282584b0726e7d207dbb2edbda` | `governed_source_snapshot_sha256`，48 个 Markdown 文件 |
 | Blueprint Source Tree Digest | `sha256:8e767457c808d148af371cd5e85d98a723bcfb282584b0726e7d207dbb2edbda` | 使用 Application lock verifier 的长度前缀、路径排序算法只读计算；未刷新 lock |
 | Contract Source Revision | `c7548d4a7e181895ca6c7c0ccfb585ccc2352433da8856c57d1d09ca3cb9a7e7` | 阶段 0 写入前的 `governed_source_snapshot_sha256`，684 个 JSON/Markdown/YAML 文件 |
 | Contract Source Tree Digest | `sha256:c7548d4a7e181895ca6c7c0ccfb585ccc2352433da8856c57d1d09ca3cb9a7e7` | 是本计划的 Contract 输入基线，不是未来 patch 的输出摘要 |
-| Contract Manifest Digest | `sha256:fac0299efcf04471f58f1f0668818a5148526371bd413deb5993c5aacb2762ce` | 269 个受治理 Manifest resources；状态为 `candidate-not-frozen` |
-| Runtime Suite | `agent-runtime-provider@1.0.0` / `runtime-core-v1` | 当前 Suite 声明 |
+| Stage 0 Contract Manifest Digest | `sha256:fac0299efcf04471f58f1f0668818a5148526371bd413deb5993c5aacb2762ce` | Stage 0 输入基线声明 269 个受治理 Manifest resources；状态为 `candidate-not-frozen` |
+| Stage 0 Runtime Suite | `agent-runtime-provider@1.0.0` / `runtime-core-v1` | Stage 0 输入基线 Suite 声明；Stage 2.0 现场仍未修改该 Suite |
 | Runtime Suite Digest | `sha256:9ef6d50df9f1032476ea2ada2c16d70c15d88368acf59794062df7dfce0bb356` | Suite 内声明的内容摘要 |
 | Suite Manifest resource digest | `sha256:268ff34c549e01f223201262f2dab96d2718146aea383a8180d8cbf26a52eb44` | Manifest 对当前 Suite 文件的资源摘要 |
 
-辅助原始文件 SHA-256：Manifest 文件为
+阶段 0 输入基线的辅助原始文件 SHA-256：Manifest 文件为
 `7d08437ef48add8ef8638c61d76878050bcb544e96a1e44d6dc122b55c165dfb`，Runtime OpenAPI 为
 `f75bd9484d9059435021f65147cab1a22b4cb0376ea47ce6e165fde0494f5811`，semantic constraints 为
 `82500752b4689c4c87c4c849c2432c25d98831137753f25f11d99fb7201b52ff`。原始文件摘要、
@@ -48,9 +53,12 @@ Manifest 声明摘要和 Suite 内声明摘要用途不同，不得互换。
 本计划自身加入 Contract 后会改变 Contract Source Revision，因此最终 Gate evidence 必须在所有
 Contract 文档和机器资源冻结后重新计算并绑定输出 Revision；不能把上述输入基线写成未来输出。
 
-## 3. 已审计事实与历史 evidence 边界
+## 3. Stage 0 历史基线与 evidence 边界
 
-当前 Runtime OpenAPI 已为 Status/Event 声明规范化 read descriptor：
+以下 OpenAPI 缺口是 Stage 0 在 `a802490...` 输入基线上作出的历史审计，不是 Stage 1 提交后的
+当前机器 Contract 事实。Stage 1 当前 OpenAPI 已为两个 GET operation 增加专用 400/429、结构化
+HTTP/header/retry authority 与精确 precedence，但 fixture/semantic/Suite/Manifest/Script closure
+仍未完成。Stage 0 Runtime OpenAPI 已为 Status/Event 声明规范化 read descriptor：
 
 - Status：`urn:agent-platform:agent-runtime-status-operation-descriptor:v1`，
   `rfc8785-full-document-v1`；
@@ -58,9 +66,9 @@ Contract 文档和机器资源冻结后重新计算并绑定输出 Revision；�
   `rfc8785-full-document-v1`；省略 query 时规范化为
   `after_event_sequence=0`、`limit=1000`。
 
-当前响应表为 Status `200/401/403/404/500/503`，Events
+Stage 0 历史响应表为 Status `200/401/403/404/500/503`，Events
 `200/401/403/404/410/500/503`；两者均缺少 400 与 429。公共 `BadRequest`、
-`TooManyRequests` 已存在并引用 `StandardError`，但当前 `TooManyRequests` 只把
+`TooManyRequests` 已存在并引用 `StandardError`，但当时 `TooManyRequests` 只把
 `Retry-After` 描述为最小值为 1 的整数，没有证明两个 read 操作采用该响应，也没有把 body
 的 `retryable` 与 status/header 闭合。
 
@@ -80,7 +88,7 @@ Contract candidate 的历史本地 Gate 结果。
 ### 3.1 R01 独立审查处置
 
 R01 只读审查 thread `019fc53f-6f65-7291-9486-32030db8b938` 在精确 `a802490...`、clean
-worktree 上独立确认：C01 是可分离的 v1 patch；当前两个 GET operation 确实缺少 400/429；
+worktree 上独立确认：C01 是可分离的 v1 patch；Stage 0 基线两个 GET operation 确实缺少 400/429；
 旧 Gate 缺少精确 Blueprint/Contract/Script revision binding；Suite patch 会机械传播到八个
 候选 fixture；兼容比较器尚不能表达 Suite 收紧后的再认证要求；listener 在 operation 识别前的
 连接饱和不构成 C01 429 evidence。阶段 0.1 对其结论作如下显式处置：
@@ -209,7 +217,8 @@ Events 只接受精确 `GET /v1/runs/{runtime_run_id}/events`，除相同 path �
 - `trace_id` 必填且非空；`message` 不固定单一文案，但必须是非空 string 且 `maxLength=2000`，
   与既有 `BoundedDetails` string 同量级；
 - `details` 继续由 `BoundedDetails` 保持结构有界。message/details/violations 的敏感信息排除和公开
-  reason vocabulary 由阶段 2 semantic、正反向 fixture 与 validator 闭合，阶段 1 不声称已证明；
+  reason vocabulary 由 Stage 2A semantic/正反向 fixture draft、Stage 3A validator 与 Stage 2B
+  focused execution 闭合，阶段 1 不声称已证明；
 - 响应必须带一个 `Retry-After`，Wire 表示固定为十进制整数 delta-seconds，最小值 1；
 - 缺失、重复、非整数、0/负数或无法安全解析的 `Retry-After` 使响应不符合新 Contract，调用方
   将其分类为 invalid response，不得据此重试；
@@ -265,7 +274,11 @@ TLS/HTTP listener 尚未识别出精确 operation 时的连接饱和、accept ba
 
 ## 10. 受影响文件族与写所有权
 
-后续实施必须串行移交；同一时间不得有两个 writer 修改同一文件或生成同一 digest/evidence。
+后续实施必须串行移交；同一时间只有 C01 一个 writer，且它只能持有一个 ownership domain。执行
+顺序固定为 `Contract Stage 2A -> Script Stage 3A -> Contract Stage 2B -> Script Stage 3B -> frozen
+Stage 4`。每次跨域前先停止当前 domain 写入并由总控只读审查；审查通过后才释放当前 ownership、
+取得下一个 ownership。阶段 ledger 在 handoff window 单独更新，更新期间机器 Contract/Script source
+均只读，不形成第二个并行 writer。
 
 ### 10.1 Contract writer 独占
 
@@ -302,29 +315,57 @@ Git 中旧 Contract Revision 和其历史 `1.0.0` 对象仍须可解析、可验
 
 `contract/semantic-constraints-v1.json` 继续不属于当前 Manifest inventory。它的变化由最终精确
 Contract Source Revision 与 `validate_semantics.py` 中真实执行的 check 共同绑定；Manifest 只按
-现有 inventory 定义重算。阶段 2 不修改 Python/Node Manifest verifier 的 inventory 根，也不预设
+现有 inventory 定义重算。Stage 2B 不修改 Python/Node Manifest verifier 的 inventory 根，且不会
 因 semantic constraints 产生新的 resource count。
+
+Stage 2.0 现场的 Manifest 文件仍声明 `resource_count=269`，`resources` 长度也是 269；未变化的
+Python/Node inventory roots 在当前工作树都发现 271 个路径。Manifest 相对 discovered inventory
+唯一缺少 Stage 1 新增的：
+
+- `schemas/agent-runtime-read-bad-request-error.schema.json`；
+- `schemas/agent-runtime-read-throttled-error.schema.json`。
+
+这是 Stage 1 已形成、Stage 2.0 明确登记的既存 Manifest drift，不是 Stage 2A 新引入。Stage 2A 的
+正反例与 semantic constraints 不属于 inventory，Runtime Suite 是既有 inventory 路径；因此在
+inventory roots 不变且 Stage 2A 不新增 inventory resource 的前提下，Stage 2B `--refresh` 的预期
+最终 `resource_count` 与 `resources` 长度均为 271。实施时若 discovered count 或路径差异不再精确
+符合上述前提，必须在 refresh 前停止并解释具体新增/删除路径，不得为匹配本文硬写 count。
+
+Contract ownership 分两次取得：
+
+- Stage 2A 只写两个正例、两个反例、`semantic-constraints-v1.json`、Runtime Suite
+  `suite.json` 和本计划 ledger；八个传播文件与 Manifest 保持不变；
+- Stage 2B 只在已经审查的 Script guard 下 finalize Runtime Suite digest、八个传播文件与现有
+  inventory Manifest，并更新 ledger。Stage 2B 不重新解释 Stage 2A authority draft。
+
+Stage 2A 的 Contract draft 与 Stage 3A/2B 可以保留在同一未提交工作树中串行完成；任何已知
+unknown semantic mapping、stale Suite digest、未传播 fixture 或无 Suite-aware comparator 的中间态
+都不得提交。只有 Stage 2B 跨域 focused checkpoint 全绿且总控审查通过后，才允许考虑一个包含
+一致 Contract/Script slice 的提交。
 
 ### 10.2 Script writer 独占
 
-Contract writer 冻结机器资源后，Script writer 才可写：
+Stage 2A draft 经总控只读审查、Contract writer 释放 ownership 后，Stage 3A Script writer 才可写；
+Stage 3A 期间 Contract draft 只读。Stage 3A 审查通过后释放 Script ownership，Stage 2B 才重新取得
+Contract ownership；Stage 2B 审查通过并再次释放 Contract ownership 后，Stage 3B 才可写 Script
+source binding/evidence generator：
 
 | 文件/目录 | 计划变化 |
 |---|---|
-| `script/contract/validation/offline_static_audit.py` | 强制两个 read operation 的 400/429、错误 Schema、必需 Retry-After 和 operation descriptor 边界 |
-| `script/contract/validation/validate_contracts.py` | 注册两个正例和两个反例的 Schema validation |
-| `script/contract/validation/validate_semantics.py` | 注册并真实执行 `runtime_read.http_authority`，验证 code/retryable/descriptor/error closure |
-| `script/contract/maintenance/refresh_example_digests.py` | 将新 Suite version/digest 只传播到 10.1 列出的八个候选 fixture；禁止无关资源或历史对象漂移 |
-| `script/contract/compatibility/check_contract_compatibility.py` | 比较 OpenAPI version、Suite version/digest/profile/有序 test set；结论必须为 `wire-additive + requires recertification`，并 fail closed 检查删除/重排/收紧和 base commit |
-| `script/contract/validation/generate_validation_evidence.py` | 输出精确 Blueprint/Contract/Manifest/Script/Suite revisions/digests 和 C01 closure |
-| `script/evidence/VALIDATION.json` | 最终完整 Gate 的机器 evidence；不得手改 |
-| `script/evidence/CONTRACT_VALIDATION_REPORT.md` | 同源人类报告；明确不提升 Application/冻结/生产成熟度 |
+| `script/contract/validation/offline_static_audit.py` | Stage 3A：强制两个 read operation 的 400/429、错误 Schema、必需 Retry-After 和 operation descriptor 边界 |
+| `script/contract/validation/validate_contracts.py` | Stage 3A：注册两个正例和两个反例的 Schema validation，并提供 C01 focused self-test |
+| `script/contract/validation/validate_semantics.py` | Stage 3A：注册并真实执行 `runtime_read.http_authority`，验证 code/retryable/descriptor/error closure |
+| `script/contract/maintenance/refresh_example_digests.py` | Stage 3A：增加 C01 guarded finalize/self-test；只重算 Runtime Suite digest，并将 version/digest 恰好传播到 10.1 八个候选 fixture，任何第九个传播 diff fail closed |
+| `script/contract/compatibility/check_contract_compatibility.py` | Stage 3A：比较 OpenAPI version、Suite version/digest/profile/有序 test set；唯一成功结论为 `wire-additive + requires recertification`，并 fail closed 检查删除/重排/收紧和 base commit |
+| `script/contract/validation/generate_validation_evidence.py` | Stage 3B：输出精确 Blueprint/Contract/Manifest/Script/Suite revisions/digests 和 C01 closure |
+| `script/evidence/VALIDATION.json` | Stage 4 完整 Gate 的机器 evidence；不得手改或在 Stage 2A/3A/2B 生成 |
+| `script/evidence/CONTRACT_VALIDATION_REPORT.md` | Stage 4 同源人类报告；明确不提升 Application/冻结/生产成熟度 |
 | `script/build/validation/**` | 临时 Gate 输出，不提交为 Contract 资源 |
 
 Script Revision 使用独立的 `governed_source_snapshot_sha256`：以 `script/` 为根，确定性纳入
 Contract Gate 源码、Makefile、`.tool-versions`、requirements/package/pnpm/Go locks，排除
 `.venv/`、`node_modules/`、`build/` 与 `evidence/` 输出；按相对路径排序并以路径/内容长度前缀
-计算 SHA-256。若实际仓库已有更正式且等价的 Script Revision 规则，应在阶段 3 先统一，不能
+计算 SHA-256。若实际仓库已有更正式且等价的 Script Revision 规则，应在 Stage 3B 先统一，不能
 同时输出两个含义不明的 revision。
 
 ### 10.3 Application 只读
@@ -406,7 +447,7 @@ lint green 记为 authority closure。
 R02 只读审查 thread `019fc56d-b49d-7a51-ae01-491f34587e44` 指出两个 P1：原始 HTTP 到 400
 的分类没有进入机器契约，retry/header 的关键规则仍只能靠 prose 判断。Stage 1.1 先固定以下
 结构决策，再修改 OpenAPI；不修改 descriptor Schema。所有 `x-runtime-read-*` object 都是封闭
-authority：Stage 3 validator 必须按完整键集、值类型、枚举和数组顺序 fail closed，缺键、多键、
+authority：Stage 3A validator 必须按完整键集、值类型、枚举和数组顺序 fail closed，缺键、多键、
 未知枚举或仅有 description substring 均不得通过。
 
 #### Status 原始 HTTP authority
@@ -564,7 +605,7 @@ body:
 ```
 
 只有 listener 已通过精确 GET path shape 识别 Events operation 后，这些 body/framing 拒绝才是
-C01 400；未知 route 或 operation 识别前 parser failure 仍为 `c01-out-of-scope`。Stage 3
+C01 400；未知 route 或 operation 识别前 parser failure 仍为 `c01-out-of-scope`。Stage 3A
 validator 必须比较 Events/Status `body` 的完整键集和值，不能依赖 description substring。
 
 429 `x-runtime-read-header-authority.retry-after` 的 Stage 1.2 精确对象为：
@@ -586,82 +627,209 @@ retry-after:
 `type: integer/minimum: 1` 只约束成功解析后的值，不能替代 wire grammar。`rejected-lexical-forms`
 顺序是 authority 的一部分；overflow 或其他不安全解析继续由 `invalid-response-on` 的
 `unsafe-parse` 覆盖。400 header authority 保持只有 `presence: forbidden`，不增加 lexical 键。
-Stage 3 Script 必须按封闭键集、数组顺序和原始 wire value fail closed，不得自行解释
+Stage 3A Script 必须按封闭键集、数组顺序和原始 wire value fail closed，不得自行解释
 `canonical-decimal-integer-delta-seconds` 枚举或依赖 prose。
 
-### 阶段 2：Fixture、semantic、Suite、Manifest 与 compatibility
+### 阶段 2.0：readiness/topology 只读审计（本轮）
 
-1. 加入两个正例和两个反例；
-2. 新增并执行 `runtime_read.http_authority` semantic check；每个 `contract_gate` mapping 必须在
-   本次 Gate 注册且真实执行；
-3. Runtime Suite 提升 `1.0.1`，在 `runtime-core-v1` 原顺序的 read 邻近位置加入四个唯一
-   case；重算 Suite digest；
-4. 运行 `refresh_example_digests.py`，将 Suite `1.0.1` version/digest 机械传播到 10.1 精确列出的
-   七个 `contract/examples/contracts/*.json` 和一个 semantic-invalid fixture；refresh 后逐文件审查，
-   不得出现第九个传播文件。候选 fixture 只描述目标 `1.0.1`，不得追溯改写旧 Revision 中已发布
-   ProviderRevision、Run、Checkpoint 或 compatibility 事实；
-5. 按现有 Manifest inventory 更新 resources/digests；Python/Node 结果必须一致。
-   `semantic-constraints-v1.json` 不新纳入 inventory，其变化由 Contract Source Revision + 实际
-   semantic Gate execution 绑定；若发现 Blueprint/Contract 明确要求纳入，立即停止并升级独立
-   治理前置；
-6. 用 base commit `a802490...` 做显式候选 compatibility comparison，同时比较 OpenAPI version、
-   Runtime Suite version/digest/profile/有序 test set。唯一允许的 C01 结论是
-   `wire-additive + requires recertification`：wire response 是 additive，但 Suite 增加四个必测 case，
-   所有目标 `1.0.1` ProviderRevision 必须重新认证，不能继承 `1.0.0` 的 17-case 结果；
-7. 若 compatibility comparator 无法结构化表达 Suite 收紧和 `requires recertification`，立即停止
-   阶段 2；不得用 OpenAPI additive 结果替代 Suite 再认证结论，也不得写成正式 frozen-baseline
-   通过。
+本阶段只读取现场并修订本文，不修改 Contract/Script 机器资源或 evidence。精确现场证据：
 
-focused 验证：
+| 资源 | 当前 SHA-256 / 结构 | 现场结论 |
+|---|---|---|
+| `script/contract/validation/validate_semantics.py` | `88b5bfad57267f3687dbeac66919dddab29f81a562670ee6c913c5c3671ea200`；167 个 KNOWN、166 个静态 literal mark | `runtime_read.http_authority` 不在 KNOWN，也没有被 mark；traceability 对 unknown check 和未执行 check 分别在当前 validator 中 fail closed。Stage 3A 注册并真实执行前，Stage 2A 新 mapping 必然不能作为 green evidence |
+| `script/contract/compatibility/check_contract_compatibility.py` | `f4d8ed6dabb1fe64648b3eadbf675f39cd8e4132cc3028d673515c803e8d707d` | 当前 316 行 comparator 从 Manifest/baseline inventory 比较 Schema、OpenAPI、state machine 等 wire 资源；不读取 Runtime Suite version/digest/profile/有序 test set，也没有 `requires recertification` 输出。按旧 Stage 2 直接执行必触发停止条件 |
+| `script/contract/maintenance/refresh_example_digests.py` | `2d37d4606807527c73f56f77fc69c18724114abe7ddff87cc4799a3b4208fe85`；5629 行、280 个 `write()` 调用点 | 当前入口先重算并写回七套 Suite，随后广泛重建 examples/invalid fixtures；没有 C01 mode 或“恰好八个传播 diff”guard。无 guard 的运行不能作为 Stage 2B evidence |
+| `verify_contract_manifest.py` / `.mjs` | `e9b8a3ed619e7c6cb65899aa505f26858d31c9b21232d2d280e2f9da456491ae` / `c641f7eea75223d4ddf848570b484012985be205bf7d93d1cbe981dd556ebd30` | Python 支持 `--print-values`/`--refresh` 后再核验；Node 只重建 inventory 并核验。Manifest 声明 `resource_count=269`、`resources` 长度 269；未变的 Python/Node roots 都发现 271，差集精确为 Stage 1 两个新 error Schema。Runtime Suite 已在 inventory，semantic constraints 不在；当前是已知 drift，不是 green |
+| `offline_static_audit.py` / `validate_contracts.py` | `e403f820208a99da9b001365169d69e874d3f03f6a1da9886e2cae88314bbea4` / `85108ae8be9d9594d7ad806a896f440542c4e59d38fb8745fca9b516e06c3a95` | Stage 3A 必须补 C01 结构化解析与正反例/self-test，不能把 Stage 1 的临时 equality assertion 当成长期 Gate |
+
+只读命令为 `git rev-parse/status/merge-base`、定向 `rg/sed/nl/wc`、Python AST/JSON 读取和
+`shasum -a 256`；没有执行 validator、refresh、Manifest `--refresh`、compatibility comparator 或
+full Gate。Stage 2.0 non-goals 是所有机器 Contract、Script、Application、evidence 与 dependency
+lock；唯一交付是本文 topology/ledger 未提交 diff。
+
+### 阶段 2A：Contract authoritative draft
+
+Contract writer 只编辑 10.1 中的两个正例、两个反例、`semantic-constraints-v1.json`、Runtime
+Suite `suite.json` 和本计划 ledger：
+
+1. 正反例精确表达 400/429 body；header/raw HTTP 规则仍由结构化 OpenAPI 与后续 Script 验证；
+2. 新增 `runtime_read.http_authority` `contract_gate` mapping，但明确当前 Script 尚不认识它；
+3. Runtime Suite 将 `suite_version` 提升为 `1.0.1`，只在 `runtime-core-v1` read 邻近位置加入 Status
+   400、Event 400、Status 429、Event 429 四个唯一 case，保持其他 profile/test 顺序不变；
+4. `suite_digest` 在 Stage 2B guarded finalize 前不视为最终，不手工伪造已验证 digest；
+5. 不运行 broad refresh，不修改八个传播文件或 Manifest，不运行/不声称 semantic、Manifest 或
+   compatibility green；保留未提交 Contract draft 供总控只读审查；
+6. 保留 Stage 1 已产生的 Manifest 269 -> discovered 271 drift，不把它归因于 Stage 2A。只读重算
+   inventory path set；Stage 2A 结束时仍须仅缺两个 Stage 1 Schema，且不得出现新的 inventory 路径。
+
+Stage 2A 只读/focused 检查：
+
+```bash
+cd /Users/echo/.codex/worktrees/65b0/agent
+git diff --check
+git status --short
+git diff --name-status 793215cbe1b79c0f4cb7f16b13ec71b9483920fd
+git diff --name-only 793215cbe1b79c0f4cb7f16b13ec71b9483920fd | LC_ALL=C sort
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+root = Path("contract")
+manifest = json.loads((root / "compatibility/contract-manifest.json").read_text())
+paths = [
+    *sorted((root / "schemas").glob("*.json")),
+    *sorted((root / "examples/schemas").glob("*.json")),
+    *sorted((root / "openapi").glob("*.yaml")),
+    *sorted((root / "state-machines").glob("*.json")),
+    *sorted((root / "event-types").rglob("*.json")),
+    *sorted((root / "conformance").rglob("*.json")),
+    *sorted((root / "testdata").rglob("*")),
+]
+python_discovered = {path.relative_to(root).as_posix() for path in paths if path.is_file()}
+node_discovered = set()
+for relative, suffix in (
+    ("schemas", ".json"),
+    ("examples/schemas", ".json"),
+    ("openapi", ".yaml"),
+    ("state-machines", ".json"),
+    ("event-types", ".json"),
+    ("conformance", ".json"),
+    ("testdata", None),
+):
+    for path in (root / relative).rglob("*"):
+        if path.is_file() and (suffix is None or path.name.endswith(suffix)):
+            node_discovered.add(path.relative_to(root).as_posix())
+listed = {item["path"] for item in manifest["resources"]}
+expected_missing = {
+    "schemas/agent-runtime-read-bad-request-error.schema.json",
+    "schemas/agent-runtime-read-throttled-error.schema.json",
+}
+assert manifest["resource_count"] == len(manifest["resources"]) == len(listed) == 269
+assert python_discovered == node_discovered
+assert len(python_discovered) == 271
+assert python_discovered - listed == expected_missing
+assert listed - python_discovered == set()
+PY
+```
+
+Evidence 仅为未提交 owner diff、JSON parse、四 case 的 ID/顺序/唯一性断言和明确的 expected-red
+清单：unknown semantic mapping、待 finalize Suite digest、八传播文件未更新、comparator 缺 Suite
+能力，以及 Stage 1 已存在的 Manifest declared/listed 269 对 discovered 271 drift。该 drift 不是
+Stage 2A 新增；若 Stage 2A 结束时 Manifest path 差集不再精确等于上述两个 Schema，立即停止并解释。
+任何人不得提交或把该中间态描述为 Contract green。总控只读审查通过后，Contract writer 停止并
+释放 ownership。
+
+### 阶段 3A：Script enforcement handoff
+
+单一 C01 writer 串行取得 Script ownership；Stage 2A Contract draft 全程只读。只修改 10.2 的
+`offline_static_audit.py`、`validate_contracts.py`、`validate_semantics.py`、
+`refresh_example_digests.py`、`check_contract_compatibility.py` 及其同文件 self-test：
+
+1. validator 从 Stage 2A 结构化 Contract 读取意义，注册并真实 mark/执行
+   `runtime_read.http_authority`；缺/多键、未知枚举、错误数组顺序、raw header lexical/value、错误
+   body/retryable/response precedence 均 fail closed；Script 不得成为意义来源；
+2. refresh helper 增加隔离 self-test 与 C01 guarded finalize mode；该 mode 先在临时 Contract tree
+   计算候选结果，除 Runtime Suite `suite_digest` 外，传播 diff 必须恰好是 10.1 八个文件；缺一或
+   出现第九个路径时不向工作树应用任何结果，fail closed，且不运行原 broad rebuild 路径；
+3. comparator 同时读取 base/current OpenAPI version 与 Runtime Suite version/digest/profile/有序
+   test set；C01 additive wire + 四 case 收紧的唯一成功输出是
+   `wire-additive + requires recertification`，不能退化为普通 pass；
+4. self-tests 使用临时 Contract copy/mutation，不能 finalize 工作树 Contract、刷新 Manifest 或生成
+   evidence。
+
+Stage 3A focused self-test 入口在本阶段实现并固定为：
 
 ```bash
 cd /Users/echo/.codex/worktrees/65b0/agent/script
 export AGENT_BLUEPRINT_ROOT=../blueprint
 export AGENT_CONTRACT_ROOT=../contract
-.venv/bin/python contract/maintenance/refresh_example_digests.py
-.venv/bin/python contract/validation/validate_contracts.py
-.venv/bin/python contract/validation/validate_semantics.py
+.venv/bin/python contract/validation/offline_static_audit.py --self-test-c01-runtime-read
+.venv/bin/python contract/validation/validate_contracts.py --self-test-c01-runtime-read
+.venv/bin/python contract/validation/validate_semantics.py --self-test-c01-runtime-read
+.venv/bin/python contract/maintenance/refresh_example_digests.py --self-test-c01-runtime-read
+.venv/bin/python contract/compatibility/check_contract_compatibility.py --self-test-c01-runtime-read
+```
+
+Stage 3A 只证明 Script 能力已准备好，不能声称当前跨域 Contract green。保持未提交，更新 ledger
+后由总控只读审查；通过后 Script writer 停止并释放 ownership。
+
+### 阶段 2B：Contract deterministic finalize
+
+Contract writer 重新取得 ownership，Script source 只读，并只使用已经审查的 Stage 3A 工具：
+
+1. 从 repository root 原样重跑 Stage 2A 的 Python/Node inventory path-set 内联断言；确认未变 roots
+   的 discovered count 精确为 271，Manifest 缺失集合仍只有两个 Stage 1 Schema；否则停止并列出
+   精确新增/删除路径；
+2. guarded finalize 重算 Runtime Suite digest，并将 `1.0.1` version/digest 恰好传播到八个候选
+   fixture；逐文件确认它们是新候选对象，不追溯改写旧 Revision；
+3. refresh 前再由 Python `--print-values` 确认 guarded finalize 未改变 271 count，然后按现有 inventory
+   执行 `--refresh` Manifest，再用 `--print-values`、Python verify
+   与 Node verify 交叉核验。预期最终 `resource_count=271`、`resources` 长度 271，Manifest paths 与
+   discovered paths 完全相等；Python/Node 必须对 RFC 8785 JCS `resources_digest` 与去除
+   `manifest_digest` 后的 JCS `manifest_digest` 得出相同结果。不得手写 271 或摘要；
+4. `semantic-constraints-v1.json` 仍不进入 Manifest；真实执行 Contract/semantic focused lanes，
+   确认 mapping 已注册且本轮真实执行；
+5. 对 base `a802490...` 执行增强 comparator，必须唯一得到
+   `wire-additive + requires recertification`；任何普通 compatible/pass 都不合格；
+6. 审查 refresh 前后路径集合：除 Suite digest/Manifest finalize 外，传播必须恰好八文件，无其他
+   Contract drift。
+
+先执行 Stage 2A 命令块中的 inventory 内联断言，再执行：
+
+```bash
+cd /Users/echo/.codex/worktrees/65b0/agent/script
+export AGENT_BLUEPRINT_ROOT=../blueprint
+export AGENT_CONTRACT_ROOT=../contract
+.venv/bin/python contract/maintenance/refresh_example_digests.py --c01-runtime-read-finalize
+.venv/bin/python contract/manifest/verify_contract_manifest.py --print-values
+.venv/bin/python contract/manifest/verify_contract_manifest.py --refresh
+.venv/bin/python contract/manifest/verify_contract_manifest.py --print-values
 .venv/bin/python contract/manifest/verify_contract_manifest.py
 node contract/manifest/verify_contract_manifest.mjs
+jq -e '(.resource_count == 271) and ((.resources | length) == 271)' \
+  ../contract/compatibility/contract-manifest.json
+jq '{resource_count, resources_length: (.resources | length), resources_digest, manifest_digest}' \
+  ../contract/compatibility/contract-manifest.json
+.venv/bin/python contract/validation/offline_static_audit.py
+.venv/bin/python contract/validation/validate_contracts.py
+.venv/bin/python contract/validation/validate_semantics.py
 CONTRACT_FROZEN_BASE_REF=a8024901547df93453685ecb8044fe58399c30df \
   .venv/bin/python contract/compatibility/check_contract_compatibility.py
 ```
 
-Evidence：新的 Suite ID/version/digest/profile/有序 test set、八个且仅八个机械传播文件、Manifest
-resource count/resources digest/manifest digest、semantic check inventory/实际执行结果、Fixture
-正反向结果，以及结构化 `wire-additive + requires recertification` base comparison。不得覆盖旧
-Suite digest、追溯改写旧对象，或把 comparison 写成正式冻结兼容结论。
+Evidence：新 Suite ID/version/digest/profile/有序 test set、八个且仅八个传播 diff；Manifest 最终
+declared count 271、listed length 271、discovered count 271、路径集合完全相等，以及 Python
+`--print-values`/verify、Node verify、Manifest `resources` 与双实现 JCS 摘要一致性；semantic mapping
+inventory/本次执行结果、正反 fixture、结构化
+`wire-additive + requires recertification` comparison。Stage 2A + 3A + 2B 可以位于同一未提交工作树，
+但只有该跨域 focused checkpoint 全绿并经总控只读审查后才允许提交；禁止提交任一红色中间态。
 
-### 阶段 3：Script Gate source binding
+### 阶段 3B：Script source binding/evidence generator
+
+Stage 2B 审查通过并释放 Contract ownership 后，Script writer 再取得 ownership：
 
 1. 实现确定性 Blueprint、Contract、Script governed source snapshot；
-2. `generate_validation_evidence.py` 必须输出：
-   `blueprint_source_revision`、`contract_source_revision`、
-   `contract_manifest_digest`、`script_source_revision`、Runtime Suite
-   ID/version/digest/profile、base commit、验证工具版本和生成时间；
-3. evidence generator 重新读取 Manifest/Suite 并核对各 lane 属于同一 digest，禁止从计划常量
-   复制；
-4. 报告明确旧 2026-07-27 evidence 不覆盖 `a802490` 或 C01；
-5. Script self-tests 覆盖缺字段、旧 digest、缺/非法 Retry-After、错误 retryable、响应集合回退和
-   source snapshot 漂移均 fail closed。
-
-focused 验证：
+2. `generate_validation_evidence.py` 必须输出
+   `blueprint_source_revision`、`contract_source_revision`、`contract_manifest_digest`、
+   `script_source_revision`、Runtime Suite ID/version/digest/profile、base commit、工具版本和生成时间；
+3. generator 重新读取 Manifest/Suite 并核对各 lane 同 digest，禁止复制计划常量；
+4. self-tests 使缺字段、旧 digest、非法 Retry-After、错误 retryable、响应回退、source drift 均
+   fail closed，并明确 2026-07-27 evidence 不覆盖 `a802490` 或 C01；
+5. 本阶段只测试 generator/source binding，不生成最终 `script/evidence/*`。
 
 ```bash
 cd /Users/echo/.codex/worktrees/65b0/agent/script
 export AGENT_BLUEPRINT_ROOT=../blueprint
 export AGENT_CONTRACT_ROOT=../contract
 .venv/bin/python contract/validation/check_supply_chain.py
-.venv/bin/python contract/validation/offline_static_audit.py
-.venv/bin/python contract/validation/validate_contracts.py
-.venv/bin/python contract/validation/validate_semantics.py
+.venv/bin/python contract/validation/generate_validation_evidence.py --self-test
 ```
 
-此阶段只证明 Script validator 可以 fail closed；还不能声称完整 Gate 通过。
+Stage 3B 只证明 source binding/evidence generator 可 fail closed；还不能声称完整 Gate 通过。
 
 ### 阶段 4：冻结源文件与完整 Contract Gate
 
-先回填本计划阶段 1-3 的实际差异、验证、偏差、停止条件和剩余风险，然后冻结所有 Contract 与
+先回填本计划阶段 1、2A、3A、2B、3B 的实际差异、验证、偏差、停止条件和剩余风险，然后冻结所有 Contract 与
 Script source。冻结后运行一次完整 Gate；Gate 后不得再编辑纳入 source revision 的文件。
 
 ```bash
@@ -691,7 +859,7 @@ git diff --check
 git status --short --branch
 ```
 
-若实际 evidence shape 与上述 jq 路径有经评审的更佳命名，阶段 3 必须先更新本文并冻结，不能在
+若实际 evidence shape 与上述 jq 路径有经评审的更佳命名，Stage 3B 必须先更新本文并冻结，不能在
 Gate 后为通过 jq 再改报告。
 
 ### 阶段 5：兼容审查与下游 handoff
@@ -714,11 +882,21 @@ Gate 后为通过 jq 再改报告。
 - 400 无法与 401/403/404/410 保持无歧义 precedence，或会形成跨租户存在性 oracle；
 - 429 无法强制 `Retry-After` 与 `StandardError.retryable=true` 同时成立；
 - Script validator 只能靠文件路径、字符串存在或实现行为证明 Contract，而不能解析结构化资源；
-- semantic `contract_gate` check 未注册/未执行，Fixture/Suite case 未进入 Manifest/digest，或
-  Python/Node Manifest 结果不一致；
-- Suite version/digest refresh 改写 10.1 八个候选 fixture 之外的文件，或把候选 `1.0.1` 传播解释
+- Stage 2A 的 `runtime_read.http_authority` unknown/unexecuted 是已记录的 expected-red draft，禁止
+  在此状态运行 Gate、声称 green 或提交；Stage 3A 审查结束时若仍未注册并真实执行，则停止，不得
+  进入 Stage 2B；
+- Stage 2A/3A/2B/3B handoff 未经总控只读审查、同一时刻出现两个 domain writer，或有人尝试提交
+  unknown semantic mapping、stale Suite digest、未传播 fixture、旧 Manifest/comparator 的红色中间态；
+- Stage 2A 结束时未变 inventory roots 的 discovered count 不等于 271，或 Manifest/path 差集不再
+  精确等于两个 Stage 1 新 Schema；必须先列出并解释具体新增/删除路径，禁止为匹配计划硬写 count；
+- Stage 3A 前运行无 C01 guard 的 broad `refresh_example_digests.py`，或 guarded finalize 不能在临时
+  self-test 中证明 Runtime Suite digest 之外恰好八个传播 diff；
+- Stage 2B semantic check 未注册/未执行、四个 Suite case 未进入最终 Suite digest/Manifest，或
+  Manifest 最终不是 declared/listed/discovered 271、路径集合不相等、JCS resources/manifest digest
+  不能由 Python/Node 一致证明；
+- Suite version/digest guarded refresh 改写 10.1 八个候选 fixture 之外的传播文件，或把候选 `1.0.1` 传播解释
   为旧 ProviderRevision/Run/Checkpoint/compatibility 事实的原地迁移；
-- compatibility comparator 未比较 OpenAPI version 与 Suite version/digest/profile/有序 test set、无法
+- Stage 3A 结束后 compatibility comparator 仍未比较 OpenAPI version 与 Suite version/digest/profile/有序 test set、无法
   表达 `wire-additive + requires recertification`、报告 breaking change，或新 Revision 需要覆盖旧
   Suite/ProviderRevision；
 - 找到 Blueprint/Contract 明确要求 `semantic-constraints-v1.json` 必须进入 Manifest inventory；
@@ -777,7 +955,13 @@ implementation-not-assessed，不能用 Contract Gate 标为 provider passed。
 - 当前没有正式 frozen baseline；相对 `a802490...` 的 comparison 只是候选审查，不能宣称正式
   compatibility pass；
 - Contract Manifest 不替代完整 Contract Source Revision，Script evidence 也不替代 Application
-  evidence；缺少任一绑定都不能发布 C01 完成结论。
+  evidence；缺少任一绑定都不能发布 C01 完成结论；
+- Stage 2A 会形成有意保留的未提交 expected-red draft；若 ownership handoff、总控审查或“不提交
+  红色中间态”约束失守，semantic/Manifest/compatibility 结论会互相矛盾；
+- 当前 refresh helper 的 broad rebuild 与 comparator 的 Suite blindness 都是 Stage 3A 必须先关闭的
+  tooling risk；在 guard/self-test 审查通过前，任何 refresh 或 compatibility 输出都不是 C01 evidence；
+- Manifest inventory 不含 semantic constraints 是显式治理选择，因此最终 closure 必须同时绑定精确
+  Contract Source Revision 与真实 semantic execution，不能只引用 Manifest digest。
 
 ## 16. 阶段台账
 
@@ -785,9 +969,12 @@ implementation-not-assessed，不能用 Contract Gate 标为 provider passed。
 |---|---|---|---|---|
 | 0. 计划与索引 | 已完成 | 新增本计划、Contract 计划索引；根 README 增加索引入口；未改机器资源、Script、Application | 基线 HEAD/clean/ancestor 只读核对通过；阶段末执行 `git diff --check`、owner path diff、status | 仅计划成熟度；旧 Gate/evidence 不提升；后续阶段未授权、未执行 |
 | 0.1 R01 审查修订 | 已完成 | 补齐八个 Suite 传播文件、Suite 再认证比较、operation precedence、Manifest inventory 与 Cache-Control 治理决策；只改本计划 | 总控只读检查 + R01 thread `019fc53f-6f65-7291-9486-32030db8b938`；基线 `68c3fb9...` clean/ancestor；阶段末执行 Markdown-only diff/status | 采用最小切片、传播、precedence、recertification、binding；不采用 Manifest inventory 扩张、Cache-Control 外推、descriptor Schema 扩张、旧 token/JTI 重放、替代 error code；理由见 3.1。仍仅计划成熟度 |
-| 1/1.1/1.2 Schema/OpenAPI + R02 纠偏 | 已完成，待总控与 R02 最终复审 | 新增两个 Runtime read error Schema；Runtime OpenAPI `1.0.1` 为 Status/Event 增加专用 400/429、封闭的 HTTP/header/retry 与既有 precedence/admission authority；Stage 1.2 补齐 Events body/framing 与 Retry-After 原始 wire grammar；未改其他机器资源 | 初始 focused checkpoint 见 16.1；R02 首次纠偏见 16.2；二次 findings、equality 与重跑见 16.3；固定容器均 exit 0，Redocly 9/9 为 0 error/0 warning | 现有 Script 尚未 fail-closed 断言新增 authority，Stage 2 semantic/fixture/Suite/Manifest 仍未执行，green 不是 authority closure；未暂存、未提交，阶段 2 未授权 |
-| 2. Fixture/Suite/Manifest/compatibility | 未开始 | 待独立授权 | 待执行 semantic/manifest/八文件传播/结构化 base comparison | 新 digest 尚不存在；必须得到 `wire-additive + requires recertification` |
-| 3. Script source binding | 未开始 | 待独立授权 | 待执行 validator fail-closed tests | Script 仍未绑定新 source revisions |
+| 1/1.1/1.2 Schema/OpenAPI + R02 纠偏 | 已完成并提交 | 总控与 R02 最终复审通过；提交 `793215cbe1b79c0f4cb7f16b13ec71b9483920fd` 只含计划、Runtime OpenAPI、两个新 error Schema | 初始 focused checkpoint 见 16.1；R02 两次纠偏见 16.2/16.3；固定容器均 exit 0，Redocly 9/9 为 0 error/0 warning；总控独立验收 commit | 仅 Stage 1 authority；Script/fixture/Suite/Manifest closure 仍未执行，maturity 不提升 |
+| 2.0 readiness/topology | 已完成 R02 纠偏，待总控/R02 复审 | 只读审计五类 Script/Manifest 能力并将顺序改为 2A -> 3A -> 2B -> 3B -> 4；R02 后补齐当前状态及 Manifest 269/271 既存 drift；只改本计划 | 精确 HEAD/clean/ancestor；定向 source read、AST/JSON inventory、SHA-256、declared/listed/discovered/path-set/owner diff，见 16.4 | 未运行 validator/refresh/comparator/full Gate；只得到 readiness 结论，无 Contract maturity |
+| 2A Contract authoritative draft | 未开始 | 两正例、两反例、semantic mapping、Suite 1.0.1/四 case、ledger；未提交 expected-red draft | JSON/owner/order/unique 与 Manifest 269/271 path-set 只读断言；总控 handoff 审查 | 保留 Stage 1 既存 Manifest drift；不运行 broad refresh/Manifest/semantic/compat；不得提交 |
+| 3A Script enforcement | 未开始 | 五个 Script validator/helper/comparator + self-tests；Contract draft 只读 | 临时 copy/mutation focused self-tests；总控 handoff 审查 | Script 不得成为意义来源；不 finalize Contract、不生成 evidence |
+| 2B Contract deterministic finalize | 未开始 | guarded Suite digest + 恰好八传播 + 现有 inventory Manifest | Python print/verify、Node verify、final 271 resources/path-set/JCS 摘要、contract/semantic、Suite-aware compatibility focused checkpoint | 若 discovered 仍为 271 则 final 必须为 271；任何计数/路径变化先停止解释；semantic constraints 不入 Manifest |
+| 3B source binding/evidence generator | 未开始 | 精确 Blueprint/Contract/Manifest/Script/Suite source binding 与 generator/self-tests | supply-chain + generator fail-closed self-tests | 不提前生成最终 evidence；还不是 full Gate |
 | 4. 完整 Gate | 未开始 | 待独立授权 | 待冻结后运行一次完整 Gate | 2026-07-27 报告不适用 |
 | 5. Handoff | 未开始 | 待独立授权 | 待双版本与 owner diff 审查 | Application lock/实现保持不变 |
 
@@ -832,11 +1019,11 @@ unstaged 或 untracked 变化。阶段末计划内源差异只有：
   前置；它不是额外 Gate lane，只产生 ignored build 输出。
 - 400 的固定 message 有第 7.1 节明确 authority，故 Schema 使用 const。第 8 节没有授权 429
   单一 message；Stage 1.1 接受 R02 的有界性澄清，只收窄为非空 string、`maxLength=2000`，不使用
-  const。敏感信息与公开 reason vocabulary 留给阶段 2 semantic/fixture/validator。
+  const。敏感信息与公开 reason vocabulary 留给 Stage 2A/3A/2B semantic/fixture/validator closure。
 
 剩余风险与成熟度：现有 `offline_static_audit.py`、`validate_contracts.py` 尚未结构化断言两个新
 Schema 的 code/retryable、429 required Retry-After、两操作 precedence/admission/retry 扩展，也
-没有阶段 2 正反向 fixture/semantic/Suite/Manifest 绑定；Redocly 只证明 OpenAPI 结构与 lint。
+没有 Stage 2A/3A/2B 正反向 fixture/semantic/Suite/Manifest 绑定；Redocly 只证明 OpenAPI 结构与 lint。
 因此上述 green 只是阶段 1 focused checkpoint，不是 C01 authority closure、完整 Contract Gate、
 Provider conformance、Application 实现或任何 maturity 提升。
 
@@ -865,7 +1052,7 @@ R02 findings 与处置：
   禁止 Retry-After；429 缺失/重复/非法/不安全解析均为 invalid response 且不得重试。
 - 接受 P2 clarification。throttled Schema 的 message 不固定单一文案，只增加 `minLength=1` 与
   `maxLength=2000`。message/details/violations 敏感信息排除、公开 reason vocabulary，以及 400
-  details/violations 仍由阶段 2 semantic、正反向 fixture 和 validator 闭合，本阶段不声称证明。
+  details/violations 仍由 Stage 2A/3A/2B semantic、正反向 fixture 和 validator 闭合，本阶段不声称证明。
 
 Stage 1.1 实际命令与结果：
 
@@ -898,8 +1085,8 @@ Stage 1.1 没有变化；文件已由本轮命令实际覆盖和重新计算，�
 作废。随后以 `set -eu`、前后两次 `pnpm --version == 11.15.1` 和
 `@redocly/cli == 2.39.0` 断言重跑，exit 0，才接受 9/9 lint 结果。现有 Script 仍没有 C01 专属
 fail-closed validator，递归 equality 断言只是本阶段 focused review check，不是 Script authority
-closure；阶段 2 仍需完成 semantic、正反向 fixture、Suite 1.0.1/digest/八文件传播、Manifest
-source binding 与 compatibility recertification，阶段 3 才能固化 Script validator/self-test。
+closure；Stage 2A 仍需形成 semantic/fixture/Suite draft，Stage 3A 实现 enforcement，Stage 2B
+finalize digest/八文件传播/Manifest/compatibility，Stage 3B 再固化 source binding/evidence generator。
 未发现 C01 专属 Cache-Control authority，也无需扩大到 descriptor Schema 或其他禁止路径；未触发
 停止条件。没有运行 full Gate，没有暂存或提交，所有 maturity 上限保持不变。
 
@@ -919,7 +1106,7 @@ R02 二次 findings 与处置：
   `rejected-lexical-forms`；OpenAPI 随后逐键同步。pattern 约束单个原始 header field value，Header
   Object 的 integer/minimum 只约束解析值，`unsafe-parse` 继续覆盖 overflow/不安全解析。400
   authority 保持只有 `presence: forbidden`。
-- Stage 3 validator 责任同步收紧为封闭键集、数组顺序和 raw wire value fail closed；不能解释
+- Stage 3A validator 责任同步收紧为封闭键集、数组顺序和 raw wire value fail closed；不能解释
   `canonical-*` prose/枚举来替代精确对象。本阶段没有修改 Script。
 
 Stage 1.2 实际命令与结果：
@@ -948,7 +1135,49 @@ Script 已检查新 authority。第一次 equality 工具调用因 Markdown fenc
 完整命令 exit 0。
 
 剩余风险与成熟度：现有 Script 不检查 Events body 键集、Retry-After raw lexical pattern 或有序
-reject vocabulary；Stage 2 仍需 semantic、正反向 fixture、Suite 1.0.1/digest/八文件传播、Manifest
-source binding 和 compatibility recertification，Stage 3 才能实现 fail-closed validator/self-test。
+reject vocabulary；Stage 2A 先形成未提交 authority draft，Stage 3A 才实现 validator/refresh/
+comparator enforcement，Stage 2B 才能 finalize semantic、正反向 fixture、Suite 1.0.1/digest、八文件
+传播与 Manifest/compatibility，Stage 3B 再完成 source binding/evidence generator。
 focused equality/validator/Redocly green 不构成 authority closure、完整 Gate、Provider conformance、
 Application 实现或 maturity 提升。未触发停止条件，未运行 full Gate，未暂存或提交。
+
+### 16.4 阶段 2.0 readiness/topology 修订实际记录
+
+基线与 owner：开始时 HEAD 精确为
+`793215cbe1b79c0f4cb7f16b13ec71b9483920fd`，工作树与暂存区干净，`a802490...` 为祖先。
+本阶段唯一写入是本计划 Markdown；没有修改 Schema/OpenAPI/fixture/semantic/Suite/Manifest、Script、
+Application、dependency lock 或 evidence，也没有运行任何生成/refresh/Gate 命令。
+
+只读命令与结果：
+
+| 命令 | Exit | 结果 |
+|---|---:|---|
+| `git rev-parse HEAD`、`git merge-base --is-ancestor a802490... HEAD`、`git status --porcelain`、`git diff --cached --name-only` | 0 | 精确 Stage 1 commit、祖先关系、初始 clean worktree/空暂存区通过 |
+| `rg/sed/nl/wc` 定向读取五个 Script、两个 Manifest verifier、Runtime Suite 与当前 Manifest | 0 | 未执行被审计代码；确认真实控制流、CLI 和 inventory 边界 |
+| Python AST 只读统计 `KNOWN_CONTRACT_CHECKS` 与 literal `mark_checks` | 0 | 167 known、166 marked；`runtime_read.http_authority` 在两者均为 false |
+| 定向读取 semantic traceability fail-closed 分支 | 0 | unknown check 与 known-but-unexecuted check 都抛出 AssertionError；Stage 2A mapping 在 Stage 3A 前不能 green |
+| 定向读取 comparator `baseline_resources/compare` 与最终输出 | 0 | 只比较 Manifest inventory 的 Schema/OpenAPI/state-machine wire 行为；无 Runtime Suite compare 或 `requires recertification` 结果 |
+| `wc -l` + `rg` refresh helper | 0 | 5629 行、280 个 `write()` 调用点；入口重算七套 Suite并广泛写 fixture；无 C01 guard |
+| Python JSON + 独立 inventory path-set 只读断言、定向读取 Python/Node verifier | 0 | declared count=269、listed length=269；未变 roots 的 Python/Node discovered 都为 271 且集合相等；Manifest 唯一缺少两个 Stage 1 error Schema，无 stale-only path；Runtime Suite 在 inventory，semantic constraints 不在；Python 有 `--print-values`/`--refresh`，Node 只核验 |
+| `shasum -a 256` 七个 readiness Script 文件 | 0 | 摘要与 11 节 Stage 2.0 evidence table 一致 |
+| `git diff --check`、owner path、empty staged | 0 | 阶段末只允许本计划未提交 Markdown diff；无 whitespace/staged/越界变化 |
+
+拓扑决策：旧 Stage 2 同时要求新增 unknown semantic mapping、立即执行 semantic、运行无 guard broad
+refresh，并调用不具备 Suite 语义的 comparator，执行上自相矛盾。修订后固定为单 writer 串行
+`2A Contract draft -> 总控审查 -> 3A Script enforcement -> 总控审查 -> 2B Contract finalize ->
+总控审查 -> 3B source binding -> frozen Stage 4`。2A/3A/2B 可以保留在同一未提交工作树，但禁止
+提交任何 known-red intermediate；最终 semantic/compatibility 仍必须真实执行，没有被删除或弱化。
+
+R02 对 Stage 2.0 plan-only 的 findings 与处置：
+
+- 接受 P1。原计划把 Manifest 写成笼统“当前 269 resources”，没有区分声明/列举与现场 discovered
+  inventory。只读断言确认 declared=269、listed=269、Python/Node discovered=271，唯一缺失路径为
+  两个 Stage 1 新 error Schema；已将其登记为 Stage 1 既存 drift，并同步 2A expected-red、2B
+  preflight/final 271 + path-set/JCS 证明、停止条件和 ledger。若实施时 discovered 不再是 271，先
+  解释精确路径变化，绝不硬写 count。
+- 接受 P2。首页已改为 Stage 1/1.1/1.2 在 `793215c...` 修改机器 Contract 并经总控/R02 验收，
+  当前仅 Stage 2.0 plan-only 未提交；第 1/3 节的“缺 400/429”改为 Stage 0 历史基线事实。历史阶段
+  ledger 保持原样，不把历史执行记录改写为当前状态。
+
+Stage 2.0 non-goals：不实现 Script 能力、不创建 Stage 2A fixture/Suite draft、不刷新 digest/Manifest、
+不生成 evidence、不运行 full Gate、不提交。当前 maturity 与 Stage 1 后完全相同，Stage 2A 尚未授权。
