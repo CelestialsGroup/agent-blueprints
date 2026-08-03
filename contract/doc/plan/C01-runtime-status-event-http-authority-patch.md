@@ -206,7 +206,10 @@ Events 只接受精确 `GET /v1/runs/{runtime_run_id}/events`，除相同 path �
 
 - `code` 固定为 `RUNTIME_READ_THROTTLED`；
 - `retryable` 固定为 `true`；
-- `trace_id` 必填且非空，message/details 继续遵守有界无敏感信息规则；
+- `trace_id` 必填且非空；`message` 不固定单一文案，但必须是非空 string 且 `maxLength=2000`，
+  与既有 `BoundedDetails` string 同量级；
+- `details` 继续由 `BoundedDetails` 保持结构有界。message/details/violations 的敏感信息排除和公开
+  reason vocabulary 由阶段 2 semantic、正反向 fixture 与 validator 闭合，阶段 1 不声称已证明；
 - 响应必须带一个 `Retry-After`，Wire 表示固定为十进制整数 delta-seconds，最小值 1；
 - 缺失、重复、非整数、0/负数或无法安全解析的 `Retry-After` 使响应不符合新 Contract，调用方
   将其分类为 invalid response，不得据此重试；
@@ -397,6 +400,194 @@ node contract/validation/lint_openapi_zero.mjs
 Evidence：`script/build/validation/static.json`、`contracts.json`、`openapi.json`，以及阶段 ledger
 记录的命令、exit code、OpenAPI 0 error/0 warning。任何 validator 尚未验证新增规则时不得把
 lint green 记为 authority closure。
+
+### 阶段 1.1：R02 authority 纠偏
+
+R02 只读审查 thread `019fc56d-b49d-7a51-ae01-491f34587e44` 指出两个 P1：原始 HTTP 到 400
+的分类没有进入机器契约，retry/header 的关键规则仍只能靠 prose 判断。Stage 1.1 先固定以下
+结构决策，再修改 OpenAPI；不修改 descriptor Schema。所有 `x-runtime-read-*` object 都是封闭
+authority：Stage 3 validator 必须按完整键集、值类型、枚举和数组顺序 fail closed，缺键、多键、
+未知枚举或仅有 description substring 均不得通过。
+
+#### Status 原始 HTTP authority
+
+`getAgentRuntimeRun.x-runtime-read-http-authority` 的精确形状：
+
+```yaml
+authority-version: runtime-read-http-authority-v1
+operation-recognition:
+  method: GET
+  path-shape: /v1/runs/{runtime_run_id}
+  match: exact
+  unknown-route: c01-out-of-scope
+  pre-operation-parser-failure: c01-out-of-scope
+runtime-run-id:
+  segment-count: 1
+  min-length: 1
+  max-length: 200
+  case-fold: forbidden
+  unicode-normalization: forbidden
+  slash-collapse: forbidden
+  dot-segment-processing: forbidden
+  encoded-path-separator-equivalence: forbidden
+query:
+  mode: forbidden
+  empty-marker: reject-400
+  unknown-parameter: reject-400
+  repeated-parameter: reject-400
+body:
+  mode: forbidden
+  nonzero-content-length: reject-400
+  ambiguous-content-length: reject-400
+  transfer-encoding: reject-400
+  expect: reject-400
+descriptor-digest-mismatch: reject-403
+```
+
+只有精确 GET path shape 进入该 operation；未知 route 和 operation 识别前 parser failure 不由
+C01 承诺。operation 已识别后，上述 path/query/body 任一拒绝项都是 400，且不得读取 Run。
+
+#### Events 原始 HTTP authority
+
+`readAgentRuntimeEvents.x-runtime-read-http-authority` 复用与 Status 完全相同的
+`authority-version`、`operation-recognition` 和 `runtime-run-id` 键集，`path-shape` 固定为
+`/v1/runs/{runtime_run_id}/events`；其余精确形状为：
+
+```yaml
+query:
+  mode: allowlist
+  allowed-parameters: [after_event_sequence, limit]
+  multiplicity: at-most-once-each
+  ordering: any
+  unknown-parameter: reject-400
+  repeated-parameter: reject-400
+  ambiguous-percent-encoding: reject-400
+  lexical-format: canonical-unsigned-ascii-decimal
+  lexical-pattern: '^(0|[1-9][0-9]*)$'
+  rejected-lexical-forms: [sign, leading-zero, empty, whitespace, exponent, fraction]
+  parameters:
+    after_event_sequence:
+      omission-default: 0
+      explicit-default-equivalent: true
+      minimum: 0
+      maximum: 9007199254740991
+    limit:
+      omission-default: 1000
+      explicit-default-equivalent: true
+      minimum: 1
+      maximum: 1000
+  malformed-or-out-of-range: reject-400
+  valid-retention-expiry: respond-410
+descriptor-digest-mismatch: reject-403
+```
+
+#### Retry 与 response header authority
+
+两个 GET 的 `x-runtime-read-retry` 保持相同封闭键集。Status 的精确对象为：
+
+```yaml
+authority-version: runtime-read-retry-authority-v1
+durable-caller-minimum-wait: at-least-retry-after
+attempt: fresh-authorized-read-attempt
+token: fresh
+fencing: non-stale
+descriptor-digest: recompute-for-new-attempt-token-fencing
+logical-status-target: unchanged
+event-cursor-limit: not-applicable
+event-cursor-advance-on-429: not-applicable
+adapter-auto-retry: forbidden
+mutation-replay: forbidden
+```
+
+Events 的精确对象为：
+
+```yaml
+authority-version: runtime-read-retry-authority-v1
+durable-caller-minimum-wait: at-least-retry-after
+attempt: fresh-authorized-read-attempt
+token: fresh
+fencing: non-stale
+descriptor-digest: recompute-for-new-attempt-token-fencing
+logical-status-target: not-applicable
+event-cursor-limit: unchanged
+event-cursor-advance-on-429: forbidden
+adapter-auto-retry: forbidden
+mutation-replay: forbidden
+```
+
+新 descriptor digest 必须绑定新 Attempt、fresh token 和 non-stale fencing，不得复用旧 digest。
+Events 的 cursor/limit 保持同一逻辑值且 429 不推进 cursor。
+
+两个专用 response component 使用 `x-runtime-read-header-authority`。400 的精确对象为：
+
+```yaml
+authority-version: runtime-read-header-authority-v1
+retry-after:
+  presence: forbidden
+```
+
+429 的精确对象为：
+
+```yaml
+authority-version: runtime-read-header-authority-v1
+retry-after:
+  presence: required
+  cardinality: exactly-one
+  wire-format: canonical-decimal-integer-delta-seconds
+  minimum: 1
+  invalid-response-on: [missing, repeated, non-integer, zero, negative, unsafe-parse]
+  invalid-response-retry: forbidden
+```
+
+OpenAPI Header Object 的 `required: true/type: integer/minimum: 1` 与该 authority 必须同时存在；
+未声明 header 不能替代 400 的显式 `presence: forbidden`。429 header 缺失、重复、非整数、0、
+负数或不安全解析都分类为 invalid response，调用方不得据此重试。
+
+### 阶段 1.2：R02 二次 authority 纠偏
+
+R02 二次只读复审 thread `019fc56d-b49d-7a51-ae01-491f34587e44` 指出 Stage 1.1 仍有两个
+P1：Events 没有像 Status 一样结构化禁止 body/framing，429 的 canonical
+`Retry-After` 也没有展开为可检查的原始 wire lexical grammar。Stage 1.2 只补这两个封闭对象，
+不修改 descriptor Schema 或其他切片。
+
+`readAgentRuntimeEvents.x-runtime-read-http-authority` 在 Stage 1.1 精确对象中、`query` 之后和
+`descriptor-digest-mismatch` 之前加入以下完整 `body` 对象；键集和值必须与 Status 的 `body`
+对象逐键一致：
+
+```yaml
+body:
+  mode: forbidden
+  nonzero-content-length: reject-400
+  ambiguous-content-length: reject-400
+  transfer-encoding: reject-400
+  expect: reject-400
+```
+
+只有 listener 已通过精确 GET path shape 识别 Events operation 后，这些 body/framing 拒绝才是
+C01 400；未知 route 或 operation 识别前 parser failure 仍为 `c01-out-of-scope`。Stage 3
+validator 必须比较 Events/Status `body` 的完整键集和值，不能依赖 description substring。
+
+429 `x-runtime-read-header-authority.retry-after` 的 Stage 1.2 精确对象为：
+
+```yaml
+authority-version: runtime-read-header-authority-v1
+retry-after:
+  presence: required
+  cardinality: exactly-one
+  wire-format: canonical-decimal-integer-delta-seconds
+  lexical-pattern: '^[1-9][0-9]*$'
+  rejected-lexical-forms: [leading-zero, plus-sign, minus-sign, whitespace, decimal-point, exponent, non-ascii-digit, empty]
+  minimum: 1
+  invalid-response-on: [missing, repeated, non-integer, zero, negative, unsafe-parse]
+  invalid-response-retry: forbidden
+```
+
+`lexical-pattern` 约束未经解析的单个 `Retry-After` header field value；OpenAPI Header Object 的
+`type: integer/minimum: 1` 只约束成功解析后的值，不能替代 wire grammar。`rejected-lexical-forms`
+顺序是 authority 的一部分；overflow 或其他不安全解析继续由 `invalid-response-on` 的
+`unsafe-parse` 覆盖。400 header authority 保持只有 `presence: forbidden`，不增加 lexical 键。
+Stage 3 Script 必须按封闭键集、数组顺序和原始 wire value fail closed，不得自行解释
+`canonical-decimal-integer-delta-seconds` 枚举或依赖 prose。
 
 ### 阶段 2：Fixture、semantic、Suite、Manifest 与 compatibility
 
@@ -594,8 +785,170 @@ implementation-not-assessed，不能用 Contract Gate 标为 provider passed。
 |---|---|---|---|---|
 | 0. 计划与索引 | 已完成 | 新增本计划、Contract 计划索引；根 README 增加索引入口；未改机器资源、Script、Application | 基线 HEAD/clean/ancestor 只读核对通过；阶段末执行 `git diff --check`、owner path diff、status | 仅计划成熟度；旧 Gate/evidence 不提升；后续阶段未授权、未执行 |
 | 0.1 R01 审查修订 | 已完成 | 补齐八个 Suite 传播文件、Suite 再认证比较、operation precedence、Manifest inventory 与 Cache-Control 治理决策；只改本计划 | 总控只读检查 + R01 thread `019fc53f-6f65-7291-9486-32030db8b938`；基线 `68c3fb9...` clean/ancestor；阶段末执行 Markdown-only diff/status | 采用最小切片、传播、precedence、recertification、binding；不采用 Manifest inventory 扩张、Cache-Control 外推、descriptor Schema 扩张、旧 token/JTI 重放、替代 error code；理由见 3.1。仍仅计划成熟度 |
-| 1. Schema/OpenAPI | 未开始 | 待独立授权 | 待执行 focused Contract/OpenAPI validation | 400/429 仍未闭合 |
+| 1/1.1/1.2 Schema/OpenAPI + R02 纠偏 | 已完成，待总控与 R02 最终复审 | 新增两个 Runtime read error Schema；Runtime OpenAPI `1.0.1` 为 Status/Event 增加专用 400/429、封闭的 HTTP/header/retry 与既有 precedence/admission authority；Stage 1.2 补齐 Events body/framing 与 Retry-After 原始 wire grammar；未改其他机器资源 | 初始 focused checkpoint 见 16.1；R02 首次纠偏见 16.2；二次 findings、equality 与重跑见 16.3；固定容器均 exit 0，Redocly 9/9 为 0 error/0 warning | 现有 Script 尚未 fail-closed 断言新增 authority，Stage 2 semantic/fixture/Suite/Manifest 仍未执行，green 不是 authority closure；未暂存、未提交，阶段 2 未授权 |
 | 2. Fixture/Suite/Manifest/compatibility | 未开始 | 待独立授权 | 待执行 semantic/manifest/八文件传播/结构化 base comparison | 新 digest 尚不存在；必须得到 `wire-additive + requires recertification` |
 | 3. Script source binding | 未开始 | 待独立授权 | 待执行 validator fail-closed tests | Script 仍未绑定新 source revisions |
 | 4. 完整 Gate | 未开始 | 待独立授权 | 待冻结后运行一次完整 Gate | 2026-07-27 报告不适用 |
 | 5. Handoff | 未开始 | 待独立授权 | 待双版本与 owner diff 审查 | Application lock/实现保持不变 |
+
+### 16.1 阶段 1 实际执行记录
+
+基线与所有权：阶段开始时 HEAD 精确为
+`717b0c29e1f3d3062496b01b28d9f9da13d0f2c7`，`a802490...` 为祖先，工作树无 staged、
+unstaged 或 untracked 变化。阶段末计划内源差异只有：
+
+- `contract/schemas/agent-runtime-read-bad-request-error.schema.json`；
+- `contract/schemas/agent-runtime-read-throttled-error.schema.json`；
+- `contract/openapi/agent-runtime-provider-v1.yaml`；
+- 本计划的阶段 1 ledger。
+
+实际命令与结果：
+
+| 命令 | Exit | 结果 |
+|---|---:|---|
+| `git rev-parse HEAD`、`git merge-base --is-ancestor a802490... HEAD`、`git status --porcelain` | 0 | 精确基线、祖先关系、clean worktree 通过 |
+| `cd script && .venv/bin/python contract/validation/offline_static_audit.py` | 127 | host 缺少 `script/.venv`，未进入 validator |
+| `cd script && .venv/bin/python contract/validation/validate_contracts.py` | 127 | host 缺少 `script/.venv`，未进入 validator |
+| `cd script && node contract/validation/lint_openapi_zero.mjs` | 127 | host PATH 无 Node，未进入 validator |
+| `docker run --rm ... python:3.14.6-bookworm ... python contract/validation/offline_static_audit.py` | 0 | hash-pinned requirements；通过 668 JSON、15 YAML、9 OpenAPI、5 Markdown |
+| `docker run --rm ... python:3.14.6-bookworm ... python contract/validation/validate_contracts.py` | 0 | 244 Schema、293 valid fixture、82 invalid fixture、Strict I-JSON 全部通过 |
+| `docker run --rm ... python:3.14.6-bookworm ... python contract/validation/prepare_openapi.py` | 0 | lint 前置投影：236 Registry-backed Schema、9 OpenAPI；只写 ignored `script/build/` |
+| `docker run --rm ... node:24.18.0-bookworm ... node contract/validation/lint_openapi_zero.mjs` | 0 | `pnpm@11.15.1` + `@redocly/cli@2.39.0`；9/9 OpenAPI 均 0 error、0 warning |
+| `git diff --check`、owner path diff、`Cache-Control` absence、Schema/OpenAPI 结构断言 | 0 | 无空白错误、越界源文件或无权威 header；400 无 Retry-After，429 header required/integer/minimum 1 |
+
+临时 build 输出（均被 `script/.gitignore` 的 `build/` 规则排除，未暂存）：
+
+| 输出 | SHA-256 | 内容摘要 |
+|---|---|---|
+| `script/build/validation/static.json` | `6286695ad924f5aa57653034fa9e6d4f2a23a12e44507b5ff324504b16afeaec` | 668 JSON / 15 YAML / 9 OpenAPI / 5 Markdown |
+| `script/build/validation/contracts.json` | `2f1cd4dc520d9487bb3755ba9ca228b5953cbe58bed69a4f0aac82151d468a23` | 244 Schema / 293 valid / 82 invalid / Strict I-JSON passed |
+| `script/build/validation/openapi.json` | `7ae418dbee9cbd592737722bf7651eeea85e9f21287a561c99bc794ff0a45450` | 9 documents / 0 errors / 0 warnings |
+
+偏差与判断：
+
+- host 缺少计划假定的本地 `.venv` 与 Node，且系统 Python 3.9/3.12 不满足锁定的 3.13-3.14；
+  未运行 bootstrap、未在仓库安装依赖，改用已有的精确 Python 3.14.6/Node 24.18.0 一次性容器。
+- `lint_openapi_zero.mjs` 要求先存在 Registry 投影，因此运行同仓 `prepare_openapi.py` 作为 lint
+  前置；它不是额外 Gate lane，只产生 ignored build 输出。
+- 400 的固定 message 有第 7.1 节明确 authority，故 Schema 使用 const。第 8 节没有授权 429
+  单一 message；Stage 1.1 接受 R02 的有界性澄清，只收窄为非空 string、`maxLength=2000`，不使用
+  const。敏感信息与公开 reason vocabulary 留给阶段 2 semantic/fixture/validator。
+
+剩余风险与成熟度：现有 `offline_static_audit.py`、`validate_contracts.py` 尚未结构化断言两个新
+Schema 的 code/retryable、429 required Retry-After、两操作 precedence/admission/retry 扩展，也
+没有阶段 2 正反向 fixture/semantic/Suite/Manifest 绑定；Redocly 只证明 OpenAPI 结构与 lint。
+因此上述 green 只是阶段 1 focused checkpoint，不是 C01 authority closure、完整 Contract Gate、
+Provider conformance、Application 实现或任何 maturity 提升。
+
+停止条件复核：未发现 C01 专属 Cache-Control authority；无需修改 descriptor Schema、公共
+`standard-error`、Claims、state machine、Event Registry、Script 或 Application；429 可以在
+operation 识别和 caller/token/descriptor binding 后、provider-local state read 前闭合，且不依赖
+Run 是否存在。阶段 1 无停止条件触发。
+
+### 16.2 阶段 1.1 R02 纠偏实际执行记录
+
+基线与所有权：纠偏开始和结束时 HEAD 均精确为
+`717b0c29e1f3d3062496b01b28d9f9da13d0f2c7`，`a802490...` 为祖先；暂存区始终为空。开始时
+工作树只含已经总控与 R02 只读审查的四个 Stage 1 计划内路径，Stage 1.1 没有撤销这些改动，也
+没有把写入扩到 descriptor Schema、公共 `standard-error`、semantic/Suite/Manifest、Script、
+Application 或 evidence source。
+
+R02 findings 与处置：
+
+- 接受 P1-1。先在本计划第 1.1 节固定封闭键集，再为两个 GET operation 加入精确
+  `x-runtime-read-http-authority` 并同步 description。它结构化覆盖 operation 识别边界、单 path
+  segment 与禁止等价化、Status query/body/framing 拒绝、Events query/default/lexical/range、
+  descriptor digest mismatch 403；不修改 descriptor Schema。
+- 接受 P1-2。为两个 operation 加入封闭 `x-runtime-read-retry`，为专用 400/429 response 加入
+  封闭 `x-runtime-read-header-authority`；明确 fresh Attempt/token/non-stale fencing、新 digest 不复用、
+  caller 至少等待、Events cursor 不推进、adapter auto retry 与 mutation replay 均禁止。400 显式
+  禁止 Retry-After；429 缺失/重复/非法/不安全解析均为 invalid response 且不得重试。
+- 接受 P2 clarification。throttled Schema 的 message 不固定单一文案，只增加 `minLength=1` 与
+  `maxLength=2000`。message/details/violations 敏感信息排除、公开 reason vocabulary，以及 400
+  details/violations 仍由阶段 2 semantic、正反向 fixture 和 validator 闭合，本阶段不声称证明。
+
+Stage 1.1 实际命令与结果：
+
+| 命令 | Exit | 结果 |
+|---|---:|---|
+| `git rev-parse HEAD`；`git merge-base --is-ancestor a802490... HEAD`；`git status --short`；`git diff --cached --name-only` | 0 | 精确基线、祖先关系、四路径 owner diff、空暂存区通过 |
+| `git diff --check`；JSON parse；owner path 与 `Cache-Control` absence 检查 | 0 | 无 whitespace error、越界路径、JSON 解析错误或新增 Cache-Control |
+| `docker run --rm -v /Users/echo/.codex/worktrees/65b0/agent:/workspace -w /workspace/script python:3.14.6-bookworm sh -lc 'python -m pip install --require-hashes -r requirements-contracts.txt; ...'` | 0 | 临时安装 hash-pinned requirements；YAML/JSON 递归 equality 断言精确匹配第 1.1 节三个封闭 authority、response 集合、error Schema 与 header 规则 |
+| 同一 Python 3.14.6 容器：`python contract/validation/offline_static_audit.py` | 0 | 668 JSON、15 YAML、9 OpenAPI、5 Markdown |
+| 同一 Python 3.14.6 容器：`python contract/validation/validate_contracts.py` | 0 | 244 Schema、293 valid fixture、82 invalid fixture、Strict I-JSON passed |
+| 同一 Python 3.14.6 容器：`python contract/validation/prepare_openapi.py` | 0 | 236 Registry-backed Schema、9 OpenAPI；只写 ignored `script/build/` |
+| `docker run --rm -v /Users/echo/.codex/worktrees/65b0/agent:/workspace node:24.18.0-bookworm sh -lc 'corepack prepare pnpm@11.15.1 --activate; ...; pnpm add --save-dev --ignore-scripts @redocly/cli@2.39.0; node contract/validation/lint_openapi_zero.mjs'` | 0 | 在容器 `/tmp/script` 安装依赖并复制未修改 lint script；仓库无 node_modules；9/9 OpenAPI 均 0 error、0 warning |
+| `shasum -a 256 script/build/validation/{static,contracts,openapi}.json`；`git check-ignore -v ...` | 0 | 三份输出摘要已复核，均由 `script/.gitignore` 的 `build/` 规则排除 |
+
+Stage 1.1 刷新后的临时 build 输出：
+
+| 输出 | SHA-256 | 内容摘要 |
+|---|---|---|
+| `script/build/validation/static.json` | `6286695ad924f5aa57653034fa9e6d4f2a23a12e44507b5ff324504b16afeaec` | 668 JSON / 15 YAML / 9 OpenAPI / 5 Markdown |
+| `script/build/validation/contracts.json` | `2f1cd4dc520d9487bb3755ba9ca228b5953cbe58bed69a4f0aac82151d468a23` | 244 Schema / 293 valid / 82 invalid / Strict I-JSON passed |
+| `script/build/validation/openapi.json` | `7ae418dbee9cbd592737722bf7651eeea85e9f21287a561c99bc794ff0a45450` | 9 documents / 0 errors / 0 warnings |
+
+三个 digest 与 Stage 1 相同，因为当前报告只记录文档/fixture 计数和 lint totals，而这些 totals 在
+Stage 1.1 没有变化；文件已由本轮命令实际覆盖和重新计算，不能据相同 digest 推断新增 authority
+已被现有 Script 检查。
+
+偏差、剩余未闭合边界与停止条件：本轮没有重复执行预期必然 exit 127 的 host `.venv`/Node 命令，
+直接复用 Stage 1 已记录的环境偏差与精确一次性容器。最终 Node refresh 的第一次尝试发生 Corepack
+网络下载失败；该 shell 未设置 fail-fast，随后 fallback 到非锁定 pnpm 并返回 0，因此整次结果主动
+作废。随后以 `set -eu`、前后两次 `pnpm --version == 11.15.1` 和
+`@redocly/cli == 2.39.0` 断言重跑，exit 0，才接受 9/9 lint 结果。现有 Script 仍没有 C01 专属
+fail-closed validator，递归 equality 断言只是本阶段 focused review check，不是 Script authority
+closure；阶段 2 仍需完成 semantic、正反向 fixture、Suite 1.0.1/digest/八文件传播、Manifest
+source binding 与 compatibility recertification，阶段 3 才能固化 Script validator/self-test。
+未发现 C01 专属 Cache-Control authority，也无需扩大到 descriptor Schema 或其他禁止路径；未触发
+停止条件。没有运行 full Gate，没有暂存或提交，所有 maturity 上限保持不变。
+
+### 16.3 阶段 1.2 R02 二次纠偏实际执行记录
+
+基线与所有权：开始和结束时 HEAD 均精确为
+`717b0c29e1f3d3062496b01b28d9f9da13d0f2c7`，`a802490...` 为祖先；暂存区始终为空，源差异
+始终只含两个新 error Schema、Runtime OpenAPI 和本计划。没有撤销已验收改动，也没有触碰
+descriptor/`standard-error`/semantic/Suite/Manifest/Script/Application/evidence。
+
+R02 二次 findings 与处置：
+
+- 接受 P1 Events body/framing。计划先固定与 Status 逐键一致的五键 `body` 对象；OpenAPI 随后在
+  Events authority 的 `query` 与 `descriptor-digest-mismatch` 之间加入该对象，并同步 description，
+  明确只有 operation 精确识别后的拒绝才是 C01 400。
+- 接受 P1 Retry-After wire lexical grammar。计划先固定 `^[1-9][0-9]*$` 和稳定有序的八项
+  `rejected-lexical-forms`；OpenAPI 随后逐键同步。pattern 约束单个原始 header field value，Header
+  Object 的 integer/minimum 只约束解析值，`unsafe-parse` 继续覆盖 overflow/不安全解析。400
+  authority 保持只有 `presence: forbidden`。
+- Stage 3 validator 责任同步收紧为封闭键集、数组顺序和 raw wire value fail closed；不能解释
+  `canonical-*` prose/枚举来替代精确对象。本阶段没有修改 Script。
+
+Stage 1.2 实际命令与结果：
+
+| 命令 | Exit | 结果 |
+|---|---:|---|
+| `git rev-parse HEAD`；`git merge-base --is-ancestor a802490... HEAD`；`git status --short`；`git diff --cached --name-only` | 0 | 精确基线、祖先关系、四路径 owner diff、空暂存区通过 |
+| Python 3.14.6 容器内 YAML parse + Stage 1.2 plan fenced YAML/OpenAPI recursive equality、键序与数组序断言 | 0 | Events/Status body 完全相等；429 header authority 与有序八项 lexical reject 完全相等；400 authority 未扩张；description 边界存在 |
+| `docker run --rm ... python:3.14.6-bookworm ... python contract/validation/offline_static_audit.py` | 0 | 668 JSON、15 YAML、9 OpenAPI、5 Markdown；ledger 完成后再次刷新同一最终 source，仍为 exit 0 |
+| 同一 Python 3.14.6 容器：`python contract/validation/validate_contracts.py` | 0 | 244 Schema、293 valid fixture、82 invalid fixture、Strict I-JSON passed |
+| 同一 Python 3.14.6 容器：`python contract/validation/prepare_openapi.py` | 0 | 236 Registry-backed Schema、9 OpenAPI；只写 ignored `script/build/` |
+| `docker run --rm ... node:24.18.0-bookworm ... pnpm@11.15.1 ... @redocly/cli@2.39.0 ... lint_openapi_zero.mjs` | 0 | 前后断言 pnpm 11.15.1、Redocly 2.39.0；临时 `/tmp/script` 安装；9/9 OpenAPI 均 0 error、0 warning |
+| `git diff --check`；owner path/empty staged/`Cache-Control` absence；`shasum -a 256`；`git check-ignore -v` | 0 | 无 whitespace error、越界源文件、暂存内容或 Cache-Control；三份输出被 `script/.gitignore` 排除 |
+
+Stage 1.2 刷新后的临时 build 输出：
+
+| 输出 | SHA-256 | 内容摘要 |
+|---|---|---|
+| `script/build/validation/static.json` | `6286695ad924f5aa57653034fa9e6d4f2a23a12e44507b5ff324504b16afeaec` | 668 JSON / 15 YAML / 9 OpenAPI / 5 Markdown |
+| `script/build/validation/contracts.json` | `2f1cd4dc520d9487bb3755ba9ca228b5953cbe58bed69a4f0aac82151d468a23` | 244 Schema / 293 valid / 82 invalid / Strict I-JSON passed |
+| `script/build/validation/openapi.json` | `7ae418dbee9cbd592737722bf7651eeea85e9f21287a561c99bc794ff0a45450` | 9 documents / 0 errors / 0 warnings |
+
+digest 再次相同是因为三份报告只保存数量/totals，Stage 1.2 没有改变这些值；不能据此声称现有
+Script 已检查新 authority。第一次 equality 工具调用因 Markdown fence 与调用封装的反引号冲突，
+在 Docker 启动前即失败，无 validator exit 或仓库写入；改用 Python `chr(96)` 构造 fence 后，
+完整命令 exit 0。
+
+剩余风险与成熟度：现有 Script 不检查 Events body 键集、Retry-After raw lexical pattern 或有序
+reject vocabulary；Stage 2 仍需 semantic、正反向 fixture、Suite 1.0.1/digest/八文件传播、Manifest
+source binding 和 compatibility recertification，Stage 3 才能实现 fail-closed validator/self-test。
+focused equality/validator/Redocly green 不构成 authority closure、完整 Gate、Provider conformance、
+Application 实现或 maturity 提升。未触发停止条件，未运行 full Gate，未暂存或提交。

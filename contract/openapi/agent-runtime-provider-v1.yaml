@@ -2,7 +2,7 @@ openapi: 3.1.1
 
 info:
   title: Agent Runtime Provider Protocol
-  version: 1.0.0
+  version: 1.0.1
   description: |
     Stable anti-corruption contract for stateful Agent Runtime providers. The platform
     is implemented first by the product's self-developed Native Runtime. Third-party Agent
@@ -106,10 +106,87 @@ paths:
       tags: [Runs]
       operationId: getAgentRuntimeRun
       summary: Read the confirmed provider-local state of a runtime run
+      description: |
+        Only an exact GET /v1/runs/{runtime_run_id} path shape identifies this Status
+        operation. runtime_run_id is one 1..200 character segment and is not case-folded,
+        Unicode-normalized, slash-collapsed, dot-segment processed or made equivalent to
+        an encoded path separator. Unknown routes and parser failures before operation
+        recognition are outside C01. Once recognized, any query including an empty marker,
+        unknown or repeated parameter is 400. A body, nonzero or ambiguous Content-Length,
+        Transfer-Encoding or Expect is also 400.
+
+        Response evaluation is 400 request/descriptor rejection, 401 authentication
+        rejection, 403 caller/token/descriptor binding rejection, 429 authorized read
+        admission rejection, 404 provider-local absence, then 200 success. A syntactically
+        valid descriptor whose digest does not match the token is 403, not 400. Read
+        admission is evaluated before provider-local state and independently of whether
+        the RuntimeRun exists. Listener saturation before this operation is identified is
+        not a Status 429.
+
+        A conforming adapter does not automatically retry this operation. After a valid
+        429 response, only a durable caller may wait at least Retry-After and create a
+        fresh authorized read attempt with a fresh token and non-stale fencing. The
+        descriptor digest is recomputed for those new bindings and never reused from the
+        prior attempt; the logical Status target stays unchanged. A Status read never
+        authorizes replay of a mutation.
       x-required-runtime-token-operation: read_status
       x-operation-contract-id: urn:agent-platform:agent-runtime-status-operation-descriptor:v1
       x-operation-digest-profile: rfc8785-full-document-v1
       x-operation-descriptor-schema: ../schemas/agent-runtime-status-operation-descriptor.schema.json
+      x-runtime-read-http-authority:
+        authority-version: runtime-read-http-authority-v1
+        operation-recognition:
+          method: GET
+          path-shape: /v1/runs/{runtime_run_id}
+          match: exact
+          unknown-route: c01-out-of-scope
+          pre-operation-parser-failure: c01-out-of-scope
+        runtime-run-id:
+          segment-count: 1
+          min-length: 1
+          max-length: 200
+          case-fold: forbidden
+          unicode-normalization: forbidden
+          slash-collapse: forbidden
+          dot-segment-processing: forbidden
+          encoded-path-separator-equivalence: forbidden
+        query:
+          mode: forbidden
+          empty-marker: reject-400
+          unknown-parameter: reject-400
+          repeated-parameter: reject-400
+        body:
+          mode: forbidden
+          nonzero-content-length: reject-400
+          ambiguous-content-length: reject-400
+          transfer-encoding: reject-400
+          expect: reject-400
+        descriptor-digest-mismatch: reject-403
+      x-runtime-read-response-precedence:
+        - '400'
+        - '401'
+        - '403'
+        - '429'
+        - '404'
+        - '200'
+      x-runtime-read-admission:
+        operation-recognition-required: true
+        caller-token-descriptor-binding-required: true
+        before-provider-state-read: true
+        independent-of-run-existence: true
+        listener-saturation-eligible: false
+      x-runtime-read-retry:
+        authority-version: runtime-read-retry-authority-v1
+        durable-caller-minimum-wait: at-least-retry-after
+        attempt: fresh-authorized-read-attempt
+        token: fresh
+        fencing: non-stale
+        descriptor-digest: recompute-for-new-attempt-token-fencing
+        logical-status-target: unchanged
+        event-cursor-limit: not-applicable
+        event-cursor-advance-on-429: not-applicable
+        adapter-auto-retry: forbidden
+        mutation-replay: forbidden
       responses:
         '200':
           description: Current runtime state
@@ -117,10 +194,14 @@ paths:
             application/json:
               schema:
                 $ref: ../schemas/agent-runtime-run-status.schema.json
+        '400':
+          $ref: '#/components/responses/RuntimeReadBadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RuntimeReadTooManyRequests'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -182,10 +263,114 @@ paths:
       tags: [Runs]
       operationId: readAgentRuntimeEvents
       summary: Read durable provider-local events after a runtime cursor
+      description: |
+        Only an exact GET /v1/runs/{runtime_run_id}/events path shape identifies this Event
+        read operation. runtime_run_id uses the same single-segment 1..200 and no-transform
+        rules as Status. Unknown routes and parser failures before operation recognition
+        are outside C01. After this operation is recognized, a request body, nonzero or
+        ambiguous Content-Length, Transfer-Encoding or Expect is 400.
+
+        Query is an order-independent allowlist of after_event_sequence and limit, each at
+        most once. Omission defaults to 0 and 1000 and is logically equivalent to explicit
+        defaults in the descriptor. Explicit values must match ^(0|[1-9][0-9]*)$ as
+        canonical unsigned ASCII decimal. Signs, leading zeroes, empty values, whitespace,
+        exponent/fraction forms, repeated or unknown parameters and ambiguous percent
+        encoding are 400. after_event_sequence is 0..9007199254740991 and limit is 1..1000;
+        malformed or out-of-range values are 400, while only a valid cursor beyond the
+        retention boundary is 410.
+
+        Response evaluation is 400 request/descriptor rejection, 401 authentication
+        rejection, 403 caller/token/descriptor binding rejection, 429 authorized read
+        admission rejection, 404 provider-local absence, 410 retention expiry for a valid
+        cursor, then 200 success. A syntactically valid descriptor whose digest does not
+        match the token is 403, not 400. Read admission is evaluated before provider-local
+        Run or cursor state and independently of whether the RuntimeRun exists. Listener
+        saturation before this operation is identified is not an Event read 429.
+
+        A conforming adapter does not automatically retry this operation or advance the
+        cursor after 429. Only a durable caller may wait at least Retry-After and create a
+        fresh authorized read attempt with a fresh token and non-stale fencing. The
+        descriptor digest is recomputed for those new bindings and never reused from the
+        prior attempt; the logical cursor/limit stay unchanged. An Event read never
+        authorizes replay of a mutation.
       x-required-runtime-token-operation: read_events
       x-operation-contract-id: urn:agent-platform:agent-runtime-event-read-operation-descriptor:v1
       x-operation-digest-profile: rfc8785-full-document-v1
       x-operation-descriptor-schema: ../schemas/agent-runtime-event-read-operation-descriptor.schema.json
+      x-runtime-read-http-authority:
+        authority-version: runtime-read-http-authority-v1
+        operation-recognition:
+          method: GET
+          path-shape: /v1/runs/{runtime_run_id}/events
+          match: exact
+          unknown-route: c01-out-of-scope
+          pre-operation-parser-failure: c01-out-of-scope
+        runtime-run-id:
+          segment-count: 1
+          min-length: 1
+          max-length: 200
+          case-fold: forbidden
+          unicode-normalization: forbidden
+          slash-collapse: forbidden
+          dot-segment-processing: forbidden
+          encoded-path-separator-equivalence: forbidden
+        query:
+          mode: allowlist
+          allowed-parameters: [after_event_sequence, limit]
+          multiplicity: at-most-once-each
+          ordering: any
+          unknown-parameter: reject-400
+          repeated-parameter: reject-400
+          ambiguous-percent-encoding: reject-400
+          lexical-format: canonical-unsigned-ascii-decimal
+          lexical-pattern: '^(0|[1-9][0-9]*)$'
+          rejected-lexical-forms: [sign, leading-zero, empty, whitespace, exponent, fraction]
+          parameters:
+            after_event_sequence:
+              omission-default: 0
+              explicit-default-equivalent: true
+              minimum: 0
+              maximum: 9007199254740991
+            limit:
+              omission-default: 1000
+              explicit-default-equivalent: true
+              minimum: 1
+              maximum: 1000
+          malformed-or-out-of-range: reject-400
+          valid-retention-expiry: respond-410
+        body:
+          mode: forbidden
+          nonzero-content-length: reject-400
+          ambiguous-content-length: reject-400
+          transfer-encoding: reject-400
+          expect: reject-400
+        descriptor-digest-mismatch: reject-403
+      x-runtime-read-response-precedence:
+        - '400'
+        - '401'
+        - '403'
+        - '429'
+        - '404'
+        - '410'
+        - '200'
+      x-runtime-read-admission:
+        operation-recognition-required: true
+        caller-token-descriptor-binding-required: true
+        before-provider-state-read: true
+        independent-of-run-existence: true
+        listener-saturation-eligible: false
+      x-runtime-read-retry:
+        authority-version: runtime-read-retry-authority-v1
+        durable-caller-minimum-wait: at-least-retry-after
+        attempt: fresh-authorized-read-attempt
+        token: fresh
+        fencing: non-stale
+        descriptor-digest: recompute-for-new-attempt-token-fencing
+        logical-status-target: not-applicable
+        event-cursor-limit: unchanged
+        event-cursor-advance-on-429: forbidden
+        adapter-auto-retry: forbidden
+        mutation-replay: forbidden
       parameters:
         - name: after_event_sequence
           in: query
@@ -210,10 +395,14 @@ paths:
             application/json:
               schema:
                 $ref: ../schemas/agent-runtime-event-page.schema.json
+        '400':
+          $ref: '#/components/responses/RuntimeReadBadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RuntimeReadTooManyRequests'
         '404':
           $ref: '#/components/responses/NotFound'
         '410':
@@ -256,6 +445,53 @@ components:
         type: string
 
   responses:
+    RuntimeReadBadRequest:
+      description: |
+        The listener identified an Agent Runtime Status or Event read, but the request
+        could not form a unique valid read descriptor. This response is non-retryable,
+        does not read provider-local Run or cursor state and does not include Retry-After.
+      x-runtime-read-header-authority:
+        authority-version: runtime-read-header-authority-v1
+        retry-after:
+          presence: forbidden
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/agent-runtime-read-bad-request-error.schema.json
+    RuntimeReadTooManyRequests:
+      description: |
+        The listener identified an Agent Runtime Status or Event read and request syntax,
+        workload identity, token, operation, caller, descriptor digest, InvocationAttempt
+        and fencing bindings all passed, but read admission temporarily rejected the read.
+        Admission is evaluated before provider-local state and cannot depend on or reveal
+        whether the RuntimeRun exists. A conforming adapter does not retry internally.
+        Only a durable caller may wait at least Retry-After and create a fresh authorized
+        read attempt; this response never authorizes replay of a mutation.
+      x-runtime-read-header-authority:
+        authority-version: runtime-read-header-authority-v1
+        retry-after:
+          presence: required
+          cardinality: exactly-one
+          wire-format: canonical-decimal-integer-delta-seconds
+          lexical-pattern: '^[1-9][0-9]*$'
+          rejected-lexical-forms: [leading-zero, plus-sign, minus-sign, whitespace, decimal-point, exponent, non-ascii-digit, empty]
+          minimum: 1
+          invalid-response-on: [missing, repeated, non-integer, zero, negative, unsafe-parse]
+          invalid-response-retry: forbidden
+      headers:
+        Retry-After:
+          required: true
+          description: |
+            The single raw header field value must match ^[1-9][0-9]*$. The integer type
+            and minimum constrain the parsed delta-seconds value and do not replace that
+            wire lexical grammar.
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/agent-runtime-read-throttled-error.schema.json
     BadRequest:
       description: Malformed request.
       content:

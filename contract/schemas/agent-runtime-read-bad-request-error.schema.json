@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:agent-runtime-read-bad-request-error:v1",
+  "title": "AgentRuntimeReadBadRequestError",
+  "description": "Closed StandardError response for a recognized Agent Runtime Status or Event read request that cannot form a valid operation descriptor.",
+  "allOf": [
+    {
+      "$ref": "urn:agent-platform:standard-error:v1"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "code": {
+          "const": "RUNTIME_READ_REQUEST_INVALID"
+        },
+        "message": {
+          "const": "Runtime read request is invalid."
+        },
+        "retryable": {
+          "const": false
+        },
+        "trace_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:agent-runtime-read-throttled-error:v1",
+  "title": "AgentRuntimeReadThrottledError",
+  "description": "Closed StandardError response for an authorized Agent Runtime Status or Event read that is rejected by read admission before provider-local state is inspected.",
+  "allOf": [
+    {
+      "$ref": "urn:agent-platform:standard-error:v1"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "code": {
+          "const": "RUNTIME_READ_THROTTLED"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "retryable": {
+          "const": true
+        },
+        "trace_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false
+}
