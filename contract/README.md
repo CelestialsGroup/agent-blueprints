@@ -13,6 +13,7 @@ This directory contains the independently versioned, declarative agreements for 
 - `testdata/`: positive and negative contract fixtures.
 - `compatibility/`: candidate compatibility policy and resource manifest.
 - `examples/`: valid example documents referenced by the agreements.
+- [`doc/plan/`](doc/plan/): indexed, reviewable execution plans for Contract-owned changes.
 
 Architecture intent and Phase responsibilities live in the separately versioned Blueprint. Validation code, dependency locks, build output, and Contract Gate reports live outside this package under `script/contract/` or an equivalent release-governance system.
 
