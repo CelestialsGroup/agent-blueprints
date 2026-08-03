@@ -2,9 +2,14 @@
 from __future__ import annotations
 
 import copy
+import ast
 import hashlib
 import json
 import os
+import shutil
+import subprocess
+import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -64,6 +69,464 @@ def bytes_digest(value: bytes) -> str:
     return "sha256:" + hashlib.sha256(value).hexdigest()
 
 
+_C01_ACTIVE_SUITE = "conformance/runtime/v1/suite.json"
+_C01_HISTORICAL_SUITE = "conformance/runtime/v1/revisions/1.0.0/suite.json"
+_C01_ACTIVE_OPENAPI = "openapi/agent-runtime-provider-v1.yaml"
+_C01_HISTORICAL_OPENAPI = "openapi/agent-runtime-provider-v1.0.0.snapshot.yaml"
+_C01_HISTORICAL_SUITE_RAW_SHA256 = (
+    "268ff34c549e01f223201262f2dab96d2718146aea383a8180d8cbf26a52eb44"
+)
+_C01_HISTORICAL_SUITE_DIGEST = (
+    "sha256:9ef6d50df9f1032476ea2ada2c16d70c15d88368acf59794062df7dfce0bb356"
+)
+_C01_HISTORICAL_OPENAPI_SHA256 = (
+    "f75bd9484d9059435021f65147cab1a22b4cb0376ea47ce6e165fde0494f5811"
+)
+_C01_RUNTIME_READ_CHECK = "runtime_read.http_authority"
+_C01_MANIFEST_PENDING_PATHS = {
+    "schemas/agent-runtime-read-bad-request-error.schema.json",
+    "schemas/agent-runtime-read-throttled-error.schema.json",
+    _C01_HISTORICAL_SUITE,
+    _C01_HISTORICAL_OPENAPI,
+}
+
+
+def _c01_tree_hashes(root: Path) -> dict[str, str]:
+    return {
+        path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in sorted(item for item in root.rglob("*") if item.is_file())
+    }
+
+
+def _c01_manifest_inventory_paths(root: Path) -> set[str]:
+    paths = [
+        *sorted((root / "schemas").glob("*.json")),
+        *sorted((root / "examples/schemas").glob("*.json")),
+        *sorted((root / "openapi").glob("*.yaml")),
+        *sorted((root / "state-machines").glob("*.json")),
+        *sorted((root / "event-types").rglob("*.json")),
+        *sorted((root / "conformance").rglob("*.json")),
+        *sorted((root / "testdata").rglob("*")),
+    ]
+    return {path.relative_to(root).as_posix() for path in paths if path.is_file()}
+
+
+def _c01_validate_manifest_preimage(root: Path) -> None:
+    manifest = read_from(root, "compatibility/contract-manifest.json")
+    listed = {resource["path"] for resource in manifest["resources"]}
+    if manifest.get("resource_count") != len(manifest["resources"]) or len(listed) != len(manifest["resources"]):
+        raise AssertionError("C01 Manifest declared/listed inventory is internally inconsistent")
+    discovered = _c01_manifest_inventory_paths(root)
+    if discovered - listed != _C01_MANIFEST_PENDING_PATHS or listed - discovered:
+        raise AssertionError("C01 Manifest pre-finalize drift is not the reviewed four-path pending set")
+
+
+def read_from(root: Path, relative: str) -> dict[str, Any]:
+    return json.loads((root / relative).read_text(encoding="utf-8"))
+
+
+def _c01_stable_constraint_id(entry: dict[str, Any]) -> str:
+    material = f"{entry['schema_id']}\n{entry['constraint_index']}\n{entry['statement']}".encode()
+    return "sem-" + hashlib.sha256(material).hexdigest()[:16]
+
+
+def _c01_validator_marks_runtime_read(script_root: Path) -> None:
+    path = script_root / "contract/validation/validate_semantics.py"
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    known = False
+    marks = False
+    top_level_executes = False
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and any(
+            isinstance(target, ast.Name) and target.id == "KNOWN_CONTRACT_CHECKS"
+            for target in node.targets
+        ):
+            known = any(
+                isinstance(child, ast.Constant) and child.value == _C01_RUNTIME_READ_CHECK
+                for child in ast.walk(node.value)
+            )
+        if isinstance(node, ast.FunctionDef) and node.name == "validate_c01_runtime_read_semantics":
+            marks = any(
+                isinstance(child, ast.Call)
+                and isinstance(child.func, ast.Attribute)
+                and child.func.attr == "add"
+                and any(
+                    isinstance(argument, ast.Name) and argument.id == "_C01_RUNTIME_READ_CHECK"
+                    for argument in child.args
+                )
+                for child in ast.walk(node)
+            )
+    for node in tree.body:
+        if isinstance(node, ast.Expr) and isinstance(node.value, ast.Call):
+            function = node.value.func
+            if isinstance(function, ast.Name) and function.id == "validate_c01_runtime_read_semantics":
+                top_level_executes = True
+    if not (known and marks and top_level_executes):
+        raise AssertionError("C01 semantic check is not known, marked, and executed by the normal Gate")
+
+
+def _c01_supplemental_traceability(root: Path, script_root: Path) -> list[dict[str, Any]]:
+    _c01_validator_marks_runtime_read(script_root)
+    schemas: dict[str, dict[str, Any]] = {}
+    for path in sorted((root / "schemas").glob("*.json")):
+        schema = read_from(root, path.relative_to(root).as_posix())
+        if schema["$id"] in schemas:
+            raise AssertionError("C01 semantic Schema ID collision")
+        schemas[schema["$id"]] = schema
+    traceability = read_from(root, "semantic-constraints-v1.json")
+    expected_critical = {
+        schema_id for schema_id, schema in schemas.items()
+        if schema.get("x-semantic-constraints")
+    }
+    declared_critical = traceability.get("critical_schema_ids", [])
+    if len(declared_critical) != len(set(declared_critical)) or set(declared_critical) != expected_critical:
+        raise AssertionError("C01 semantic critical_schema_ids drift")
+    generated = {
+        (schema_id, index): statement
+        for schema_id in declared_critical
+        for index, statement in enumerate(schemas[schema_id]["x-semantic-constraints"])
+    }
+    ids: set[str] = set()
+    coordinates: set[tuple[str, int]] = set()
+    critical_seen: set[tuple[str, int]] = set()
+    supplemental: list[dict[str, Any]] = []
+    for entry in traceability.get("constraints", []):
+        if set(entry) != {"constraint_id", "schema_id", "constraint_index", "statement", "enforcements"}:
+            raise AssertionError("C01 semantic traceability entry shape drift")
+        if entry["schema_id"] not in schemas or entry["constraint_id"] != _c01_stable_constraint_id(entry):
+            raise AssertionError("C01 semantic traceability unresolved Schema or stable ID drift")
+        coordinate = (entry["schema_id"], entry["constraint_index"])
+        if entry["constraint_id"] in ids or coordinate in coordinates:
+            raise AssertionError("C01 semantic traceability ID/coordinate collision")
+        ids.add(entry["constraint_id"])
+        coordinates.add(coordinate)
+        if coordinate in generated:
+            if entry["statement"] != generated[coordinate]:
+                raise AssertionError("C01 critical semantic statement drift")
+            critical_seen.add(coordinate)
+        else:
+            if entry["schema_id"] in expected_critical:
+                raise AssertionError("C01 damaged critical entry cannot be classified as supplemental")
+            supplemental.append(copy.deepcopy(entry))
+        for enforcement in entry["enforcements"]:
+            if set(enforcement) != {"kind", "artifact", "check_id", "status"}:
+                raise AssertionError("C01 supplemental enforcement shape drift")
+            artifact = enforcement["artifact"]
+            if artifact.startswith("urn:agent-platform:contract-validation:"):
+                if enforcement["check_id"] != _C01_RUNTIME_READ_CHECK and entry in supplemental:
+                    raise AssertionError("C01 supplemental Contract Gate check drift")
+            elif artifact.startswith("urn:agent-platform:blueprint:"):
+                continue
+            elif not (root / artifact).is_file():
+                raise AssertionError("C01 semantic enforcement artifact is unresolved")
+    if critical_seen != set(generated):
+        raise AssertionError("C01 semantic traceability lost a generated critical constraint")
+    if [entry["schema_id"] for entry in supplemental] != [
+        "urn:agent-platform:agent-runtime-read-bad-request-error:v1",
+        "urn:agent-platform:agent-runtime-read-throttled-error:v1",
+    ]:
+        raise AssertionError("C01 supplemental traceability ordered set drift")
+    return supplemental
+
+
+def _c01_validate_immutable_registry(root: Path) -> dict[str, Any]:
+    suite_path = root / _C01_HISTORICAL_SUITE
+    openapi_path = root / _C01_HISTORICAL_OPENAPI
+    if hashlib.sha256(suite_path.read_bytes()).hexdigest() != _C01_HISTORICAL_SUITE_RAW_SHA256:
+        raise AssertionError("C01 historical Runtime Suite snapshot byte drift")
+    suite = read_from(root, _C01_HISTORICAL_SUITE)
+    if (
+        suite.get("suite_id"), suite.get("suite_version"), suite.get("suite_digest")
+    ) != ("agent-runtime-provider", "1.0.0", _C01_HISTORICAL_SUITE_DIGEST):
+        raise AssertionError("C01 historical Runtime Suite tuple drift")
+    if digest_without(suite, "suite_digest") != suite["suite_digest"]:
+        raise AssertionError("C01 historical Runtime Suite self-digest drift")
+    if hashlib.sha256(openapi_path.read_bytes()).hexdigest() != _C01_HISTORICAL_OPENAPI_SHA256:
+        raise AssertionError("C01 historical Runtime OpenAPI snapshot byte drift")
+    if read_yaml_from(root, _C01_HISTORICAL_OPENAPI).get("info", {}).get("version") != "1.0.0":
+        raise AssertionError("C01 historical Runtime OpenAPI version drift")
+    return suite
+
+
+def read_yaml_from(root: Path, relative: str) -> dict[str, Any]:
+    return yaml.safe_load((root / relative).read_text(encoding="utf-8"))
+
+
+def _c01_reject_active_passed_facts(root: Path, active_digest: str) -> None:
+    def walk(value: Any):
+        if isinstance(value, dict):
+            yield value
+            for child in value.values():
+                yield from walk(child)
+        elif isinstance(value, list):
+            for child in value:
+                yield from walk(child)
+    for path in sorted((root / "examples/contracts").glob("*.json")):
+        for item in walk(read_from(root, path.relative_to(root).as_posix())):
+            if (
+                item.get("suite_id") == "agent-runtime-provider"
+                and item.get("suite_version") == "1.0.1"
+                and item.get("suite_digest") == active_digest
+                and item.get("result") in {"passed", "certified"}
+            ):
+                raise AssertionError("C01 active 1.0.1 Suite is represented as passed/certified")
+
+
+def _c01_validate_historical_fact_bindings(root: Path) -> None:
+    historical_suite = (
+        "agent-runtime-provider", "1.0.0", _C01_HISTORICAL_SUITE_DIGEST,
+    )
+    historical_port = (
+        "agent-runtime-provider", "v1", "sha256:" + _C01_HISTORICAL_OPENAPI_SHA256,
+    )
+
+    def walk(value: Any):
+        if isinstance(value, dict):
+            yield value
+            for child in value.values():
+                yield from walk(child)
+        elif isinstance(value, list):
+            for child in value:
+                yield from walk(child)
+
+    suite_facts = 0
+    port_facts = 0
+    for path in sorted((root / "examples/contracts").glob("*.json")):
+        for item in walk(read_from(root, path.relative_to(root).as_posix())):
+            if item.get("suite_id") == "agent-runtime-provider" and {
+                "suite_version", "suite_digest",
+            } <= set(item):
+                suite_facts += 1
+                if (item["suite_id"], item["suite_version"], item["suite_digest"]) != historical_suite:
+                    raise AssertionError(f"C01 historical Runtime Suite fact was rebound: {path.name}")
+            if item.get("protocol") == "agent-runtime-provider" and {
+                "protocol_version", "contract_digest",
+            } <= set(item):
+                port_facts += 1
+                if (item["protocol"], item["protocol_version"], item["contract_digest"]) != historical_port:
+                    raise AssertionError(f"C01 historical Runtime Port fact was rebound: {path.name}")
+    if suite_facts == 0 or port_facts == 0:
+        raise AssertionError("C01 historical Runtime fact closure was not discovered")
+
+
+def _c01_finalize_active_suite(root: Path, script_root: Path) -> set[str]:
+    _c01_validate_manifest_preimage(root)
+    _c01_validate_immutable_registry(root)
+    _c01_validate_historical_fact_bindings(root)
+    _c01_supplemental_traceability(root, script_root)
+    before = _c01_tree_hashes(root)
+    suite_path = root / _C01_ACTIVE_SUITE
+    suite = read_from(root, _C01_ACTIVE_SUITE)
+    if suite.get("suite_id") != "agent-runtime-provider" or suite.get("suite_version") != "1.0.1":
+        raise AssertionError("C01 active Runtime Suite identity/version drift")
+    candidate = copy.deepcopy(suite)
+    candidate["suite_digest"] = digest_without(candidate, "suite_digest")
+    _c01_reject_active_passed_facts(root, candidate["suite_digest"])
+    candidate_bytes = (json.dumps(candidate, indent=2, ensure_ascii=False) + "\n").encode()
+    temporary = suite_path.with_name(f".{suite_path.name}.c01-{os.getpid()}")
+    original_bytes = suite_path.read_bytes()
+    try:
+        temporary.write_bytes(candidate_bytes)
+        os.replace(temporary, suite_path)
+        after = _c01_tree_hashes(root)
+        changed = {path for path in set(before) | set(after) if before.get(path) != after.get(path)}
+        if changed - {_C01_ACTIVE_SUITE}:
+            raise AssertionError(f"C01 active finalize changed forbidden paths: {sorted(changed)}")
+        if read_from(root, _C01_ACTIVE_SUITE)["suite_digest"] != candidate["suite_digest"]:
+            raise AssertionError("C01 active Runtime Suite finalize did not persist its self-digest")
+    except Exception:
+        suite_path.write_bytes(original_bytes)
+        raise
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+    return changed
+
+
+def _c01_run_expected_failure(root: Path, script_root: Path, label: str) -> None:
+    before = _c01_tree_hashes(root)
+    try:
+        _c01_finalize_active_suite(root, script_root)
+    except (AssertionError, FileNotFoundError):
+        pass
+    else:
+        raise AssertionError(f"C01 refresh mutation did not fail closed: {label}")
+    if _c01_tree_hashes(root) != before:
+        raise AssertionError(f"C01 refresh failed mutation was not atomic: {label}")
+
+
+def _c01_self_test() -> None:
+    protected_before = {
+        "contract": _c01_tree_hashes(CONTRACT_ROOT),
+        "build": _c01_tree_hashes(SCRIPT_ROOT / "build") if (SCRIPT_ROOT / "build").exists() else {},
+        "evidence": _c01_tree_hashes(SCRIPT_ROOT / "evidence") if (SCRIPT_ROOT / "evidence").exists() else {},
+    }
+    with tempfile.TemporaryDirectory(prefix="c01-refresh-") as temporary:
+        base = Path(temporary)
+        contract_copy = base / "contract"
+        script_copy = base / "script"
+        shutil.copytree(CONTRACT_ROOT, contract_copy)
+        shutil.copytree(SCRIPT_ROOT, script_copy, ignore=shutil.ignore_patterns("build", "evidence", ".venv", "node_modules"))
+        pre_finalize = _c01_tree_hashes(contract_copy)
+        changed = _c01_finalize_active_suite(contract_copy, script_copy)
+        if changed != {_C01_ACTIVE_SUITE}:
+            raise AssertionError("C01 guarded finalize did not change exactly the active Runtime Suite")
+        post_finalize = _c01_tree_hashes(contract_copy)
+        if any(
+            pre_finalize[path] != post_finalize[path]
+            for path in pre_finalize if path != _C01_ACTIVE_SUITE
+        ):
+            raise AssertionError("C01 guarded finalize rewrote immutable/historical Contract bytes")
+
+        broad_contract = base / "broad-contract"
+        shutil.copytree(CONTRACT_ROOT, broad_contract)
+        supplemental_before = _c01_supplemental_traceability(broad_contract, script_copy)
+        broad_before = _c01_tree_hashes(broad_contract)
+        environment = os.environ.copy()
+        environment["AGENT_CONTRACT_ROOT"] = str(broad_contract)
+        result = subprocess.run(
+            [sys.executable, str(script_copy / "contract/maintenance/refresh_example_digests.py")],
+            cwd=script_copy, env=environment, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            check=False,
+        )
+        if result.returncode != 0:
+            raise AssertionError(f"C01 normal broad regeneration self-test failed: {result.stderr}")
+        supplemental_after = _c01_supplemental_traceability(broad_contract, script_copy)
+        if supplemental_after != supplemental_before:
+            raise AssertionError("C01 normal broad regeneration changed supplemental ordered objects")
+        broad_after = _c01_tree_hashes(broad_contract)
+        broad_changed = {
+            path for path in set(broad_before) | set(broad_after)
+            if broad_before.get(path) != broad_after.get(path)
+        }
+        if broad_changed - {_C01_ACTIVE_SUITE}:
+            raise AssertionError(f"C01 normal broad regeneration changed historical facts: {sorted(broad_changed)}")
+
+        mutation_root = base / "mutations"
+        shutil.copytree(CONTRACT_ROOT, mutation_root)
+        snapshot = mutation_root / _C01_HISTORICAL_SUITE
+        snapshot_bytes = snapshot.read_bytes()
+        snapshot.unlink()
+        _c01_run_expected_failure(mutation_root, script_copy, "snapshot-missing")
+        snapshot.parent.mkdir(parents=True, exist_ok=True)
+        snapshot.write_bytes(snapshot_bytes + b"\n")
+        _c01_run_expected_failure(mutation_root, script_copy, "snapshot-drift")
+        snapshot.write_bytes(snapshot_bytes)
+
+        openapi_snapshot = mutation_root / _C01_HISTORICAL_OPENAPI
+        openapi_snapshot_bytes = openapi_snapshot.read_bytes()
+        openapi_snapshot.unlink()
+        _c01_run_expected_failure(mutation_root, script_copy, "openapi-snapshot-missing")
+        openapi_snapshot.write_bytes(openapi_snapshot_bytes + b"\n")
+        _c01_run_expected_failure(mutation_root, script_copy, "openapi-snapshot-drift")
+        openapi_snapshot.write_bytes(openapi_snapshot_bytes)
+
+        manifest_path = mutation_root / "compatibility/contract-manifest.json"
+        manifest_bytes = manifest_path.read_bytes()
+        extra = mutation_root / "conformance/runtime/v1/revisions/extra.json"
+        extra.write_text("{}\n", encoding="utf-8")
+        _c01_run_expected_failure(mutation_root, script_copy, "manifest-path-set")
+        extra.unlink()
+        manifest_path.write_bytes(manifest_bytes)
+
+        semantic_path = mutation_root / "semantic-constraints-v1.json"
+        semantic_bytes = semantic_path.read_bytes()
+        semantic_mutations = {
+            "supplemental-delete": lambda value, indexes: value["constraints"].pop(indexes[0]),
+            "supplemental-modify": lambda value, indexes: value["constraints"][indexes[0]].update({"statement": "drift"}),
+            "supplemental-duplicate": lambda value, indexes: value["constraints"].append(copy.deepcopy(value["constraints"][indexes[0]])),
+            "supplemental-collision": lambda value, indexes: value["constraints"][indexes[1]].update({
+                "constraint_id": value["constraints"][indexes[0]]["constraint_id"],
+            }),
+            "supplemental-unresolved-schema": lambda value, indexes: value["constraints"][indexes[0]].update({
+                "schema_id": "urn:missing",
+            }),
+            "supplemental-reorder": lambda value, indexes: value["constraints"].__setitem__(
+                slice(indexes[0], indexes[1] + 1),
+                [value["constraints"][indexes[1]], value["constraints"][indexes[0]]],
+            ),
+        }
+        for label, mutate in semantic_mutations.items():
+            traceability = json.loads(semantic_bytes)
+            indexes = [
+                index for index, entry in enumerate(traceability["constraints"])
+                if entry["schema_id"].startswith("urn:agent-platform:agent-runtime-read-")
+            ]
+            mutate(traceability, indexes)
+            semantic_path.write_text(json.dumps(traceability, indent=2) + "\n", encoding="utf-8")
+            _c01_run_expected_failure(mutation_root, script_copy, label)
+            semantic_path.write_bytes(semantic_bytes)
+
+        validator_path = script_copy / "contract/validation/validate_semantics.py"
+        validator_bytes = validator_path.read_bytes()
+        validator_source = validator_bytes.decode("utf-8")
+        validator_path.write_text(
+            validator_source.replace(
+                '    "runtime_read.http_authority",\n}',
+                '}',
+                1,
+            ),
+            encoding="utf-8",
+        )
+        _c01_run_expected_failure(mutation_root, script_copy, "supplemental-unknown-check")
+        validator_path.write_bytes(validator_bytes)
+        validator_path.write_text(
+            validator_source.replace(
+                "validate_c01_runtime_read_semantics(\n    CONTRACT_ROOT, KNOWN_CONTRACT_CHECKS, EXECUTED_CONTRACT_CHECKS,\n)",
+                "_c01_runtime_read_normal_execution_removed()",
+                1,
+            ),
+            encoding="utf-8",
+        )
+        _c01_run_expected_failure(mutation_root, script_copy, "supplemental-known-but-unexecuted")
+        validator_path.write_bytes(validator_bytes)
+
+        revision_path = mutation_root / "examples/contracts/agent-runtime-provider-revision.json"
+        revision_bytes = revision_path.read_bytes()
+        revision = json.loads(revision_bytes)
+        active = read_from(mutation_root, _C01_ACTIVE_SUITE)
+        active_digest = digest_without(active, "suite_digest")
+        revision["conformance"][0].update({
+            "suite_version": "1.0.1", "suite_digest": active_digest, "result": "passed",
+        })
+        revision_path.write_text(json.dumps(revision, indent=2) + "\n", encoding="utf-8")
+        _c01_run_expected_failure(mutation_root, script_copy, "active-passed")
+        revision_path.write_bytes(revision_bytes)
+
+        revision = json.loads(revision_bytes)
+        revision["port"]["contract_digest"] = "sha256:" + hashlib.sha256(
+            (mutation_root / _C01_ACTIVE_OPENAPI).read_bytes()
+        ).hexdigest()
+        revision_path.write_text(json.dumps(revision, indent=2) + "\n", encoding="utf-8")
+        _c01_run_expected_failure(mutation_root, script_copy, "historical-port-rebind")
+        revision_path.write_bytes(revision_bytes)
+
+    protected_after = {
+        "contract": _c01_tree_hashes(CONTRACT_ROOT),
+        "build": _c01_tree_hashes(SCRIPT_ROOT / "build") if (SCRIPT_ROOT / "build").exists() else {},
+        "evidence": _c01_tree_hashes(SCRIPT_ROOT / "evidence") if (SCRIPT_ROOT / "evidence").exists() else {},
+    }
+    if protected_after != protected_before:
+        raise AssertionError("C01 refresh self-test changed current Contract/build/evidence state")
+
+
+if sys.argv[1:] == ["--self-test-c01-runtime-read"]:
+    _c01_self_test()
+    print("C01 Runtime read refresh self-test passed.")
+    raise SystemExit(0)
+if sys.argv[1:] == ["--c01-runtime-read-finalize"]:
+    changed = _c01_finalize_active_suite(CONTRACT_ROOT, SCRIPT_ROOT)
+    print(f"C01 Runtime read active Suite finalized: {sorted(changed)}")
+    raise SystemExit(0)
+if len(sys.argv) != 1:
+    raise SystemExit(f"Unknown arguments: {sys.argv[1:]}")
+
+
+C01_SUPPLEMENTAL_TRACEABILITY = _c01_supplemental_traceability(CONTRACT_ROOT, SCRIPT_ROOT)
+HISTORICAL_RUNTIME_SUITE = _c01_validate_immutable_registry(CONTRACT_ROOT)
+_c01_validate_historical_fact_bindings(CONTRACT_ROOT)
+
+
 suite_paths = {
     "agent_access": "conformance/agent-access/v1/suite.json",
     "agent_runtime": "conformance/runtime/v1/suite.json",
@@ -111,9 +574,9 @@ runtime_compatibility_evidence = {
     "source_runtime_revision": runtime_checkpoint["source_runtime_revision"],
     "target_provider_revision_id": "apr_01J00000000000000000000001",
     "target_runtime_revision": "native-runtime-2026.08",
-    "suite_id": suites["agent_runtime"]["suite_id"],
-    "suite_version": suites["agent_runtime"]["suite_version"],
-    "suite_digest": suites["agent_runtime"]["suite_digest"],
+    "suite_id": HISTORICAL_RUNTIME_SUITE["suite_id"],
+    "suite_version": HISTORICAL_RUNTIME_SUITE["suite_version"],
+    "suite_digest": HISTORICAL_RUNTIME_SUITE["suite_digest"],
     "profile_id": runtime_checkpoint["compatibility_profile"],
     "test_run_reference": "conformance://runtime/checkpoint/run-01",
     "test_run_digest": digest({"runtime_checkpoint_test_run": "run-01"}),
@@ -251,7 +714,7 @@ for path in revision_paths:
             "sandbox": "sandbox-provider",
         }.get(revision["provider_kind"], "capability-provider")
         contract_path = {
-            "agent_runtime": "openapi/agent-runtime-provider-v1.yaml",
+            "agent_runtime": _C01_HISTORICAL_OPENAPI,
             "sandbox": "openapi/sandbox-provider-v1.yaml",
         }.get(revision["provider_kind"], "openapi/capability-provider-v1.yaml")
         revision["port"] = {
@@ -261,12 +724,12 @@ for path in revision_paths:
             "binding_digest": legacy_binding_digest or digest({"binding": revision["provider_revision_id"]}),
         }
     contract_path = {
-        "agent_runtime": "openapi/agent-runtime-provider-v1.yaml",
+        "agent_runtime": _C01_HISTORICAL_OPENAPI,
         "sandbox": "openapi/sandbox-provider-v1.yaml",
     }.get(revision["provider_kind"], "openapi/capability-provider-v1.yaml")
     revision["port"]["contract_digest"] = file_digest(contract_path)
     if revision["provider_kind"] == "agent_runtime":
-        suite = suites["agent_runtime"]
+        suite = HISTORICAL_RUNTIME_SUITE
         profile_for = lambda capability: "governed-v1" if capability == "agent.runtime.execute" else "runtime-general-v1"
     elif revision["provider_kind"] == "sandbox":
         suite = suites["sandbox"]
@@ -3068,9 +3531,9 @@ runtime_capabilities["event_registries"] = [{
 }]
 runtime_capabilities["checkpoint_profiles"] = [{
     "profile_id": "runtime-checkpoint-compatibility-v1",
-    "suite_id": suites["agent_runtime"]["suite_id"],
-    "suite_version": suites["agent_runtime"]["suite_version"],
-    "suite_digest": suites["agent_runtime"]["suite_digest"],
+    "suite_id": HISTORICAL_RUNTIME_SUITE["suite_id"],
+    "suite_version": HISTORICAL_RUNTIME_SUITE["suite_version"],
+    "suite_digest": HISTORICAL_RUNTIME_SUITE["suite_digest"],
 }]
 write("examples/contracts/agent-runtime-capabilities.json", runtime_capabilities)
 
@@ -5623,7 +6086,7 @@ traceability = {
     "critical_schema_ids": [
         read(f"schemas/{filename}")["$id"] for filename in traceability_profiles
     ],
-    "constraints": traceability_constraints,
+    "constraints": traceability_constraints + copy.deepcopy(C01_SUPPLEMENTAL_TRACEABILITY),
 }
 write("semantic-constraints-v1.json", traceability)
 print("Refreshed Provider, Scenario, Experience, execution, Recording and reconciliation digests.")

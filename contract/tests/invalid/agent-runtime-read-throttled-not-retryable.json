@@ -1,0 +1,6 @@
+{
+  "code": "RUNTIME_READ_THROTTLED",
+  "message": "Runtime read admission is temporarily throttled.",
+  "retryable": false,
+  "trace_id": "trace-runtime-read-throttled-001"
+}

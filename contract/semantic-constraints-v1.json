@@ -7587,6 +7587,58 @@
           "status": "phase0_implementation_required"
         }
       ]
+    },
+    {
+      "constraint_id": "sem-05ee41967cf0b073",
+      "schema_id": "urn:agent-platform:agent-runtime-read-bad-request-error:v1",
+      "constraint_index": 0,
+      "statement": "For an exactly recognized Agent Runtime Status or Event GET, the closed OpenAPI runtime-read HTTP authority and response precedence classify invalid path, query, body or framing as 400 before provider-local state, keep a syntactically valid descriptor digest mismatch at 403, forbid Retry-After on 400, and require the closed RUNTIME_READ_REQUEST_INVALID StandardError body with retryable false; optional diagnostics contain only bounded public field names or reason codes and never raw targets, credentials, mTLS identities, SQL or provider state, or cross-tenant identifiers",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "urn:agent-platform:contract-validation:semantic-validator",
+          "check_id": "runtime_read.http_authority",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "conformance_test",
+          "artifact": "conformance/runtime/v1/suite.json",
+          "check_id": "status-read-invalid-request-400",
+          "status": "phase0_implementation_required"
+        },
+        {
+          "kind": "conformance_test",
+          "artifact": "conformance/runtime/v1/suite.json",
+          "check_id": "event-read-invalid-request-400",
+          "status": "phase0_implementation_required"
+        }
+      ]
+    },
+    {
+      "constraint_id": "sem-610d8569f7bda04c",
+      "schema_id": "urn:agent-platform:agent-runtime-read-throttled-error:v1",
+      "constraint_index": 0,
+      "statement": "For an exactly recognized and authorized Agent Runtime Status or Event GET, the closed OpenAPI runtime-read admission, header, retry and response-precedence authority permits 429 only after request, authentication and caller-token-descriptor binding and before provider-local state, independently of RuntimeRun existence; 429 requires the closed RUNTIME_READ_THROTTLED StandardError body with retryable true and exactly one raw Retry-After field matching ^[1-9][0-9]*$ with a parsed value of at least 1, while an invalid header forbids retry, adapters never retry automatically, durable callers create a fresh authorized read attempt without mutation replay or Event cursor advance, and optional diagnostics remain bounded, public and free of sensitive or cross-tenant data",
+      "enforcements": [
+        {
+          "kind": "semantic_validator",
+          "artifact": "urn:agent-platform:contract-validation:semantic-validator",
+          "check_id": "runtime_read.http_authority",
+          "status": "contract_gate"
+        },
+        {
+          "kind": "conformance_test",
+          "artifact": "conformance/runtime/v1/suite.json",
+          "check_id": "status-read-throttled-429",
+          "status": "phase0_implementation_required"
+        },
+        {
+          "kind": "conformance_test",
+          "artifact": "conformance/runtime/v1/suite.json",
+          "check_id": "event-read-throttled-429",
+          "status": "phase0_implementation_required"
+        }
+      ]
     }
   ]
 }

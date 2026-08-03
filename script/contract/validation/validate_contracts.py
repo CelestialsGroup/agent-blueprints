@@ -6,6 +6,9 @@ import hashlib
 import json
 import math
 import os
+import shutil
+import sys
+import tempfile
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -107,6 +110,270 @@ def load(path: Path) -> Any:
 
 def digest(value: Any) -> str:
     return "sha256:" + hashlib.sha256(rfc8785.dumps(value)).hexdigest()
+
+
+_C01_RUNTIME_READ_CASES = (
+    (
+        "agent-runtime-read-bad-request-error.schema.json",
+        "examples/contracts/agent-runtime-read-bad-request-error.json",
+        "tests/invalid/agent-runtime-read-bad-request-retryable.json",
+        "urn:agent-platform:agent-runtime-read-bad-request-error:v1",
+        "RUNTIME_READ_REQUEST_INVALID",
+        False,
+    ),
+    (
+        "agent-runtime-read-throttled-error.schema.json",
+        "examples/contracts/agent-runtime-read-throttled-error.json",
+        "tests/invalid/agent-runtime-read-throttled-not-retryable.json",
+        "urn:agent-platform:agent-runtime-read-throttled-error:v1",
+        "RUNTIME_READ_THROTTLED",
+        True,
+    ),
+)
+_C01_RUNTIME_SUITE_ACTIVE = "conformance/runtime/v1/suite.json"
+_C01_RUNTIME_SUITE_SNAPSHOT = "conformance/runtime/v1/revisions/1.0.0/suite.json"
+
+
+def _c01_runtime_suite_paths(root: Path) -> list[Path]:
+    active = root / _C01_RUNTIME_SUITE_ACTIVE
+    revisions = root / "conformance/runtime/v1/revisions"
+    paths = ([active] if active.is_file() else []) + (
+        sorted(revisions.rglob("suite.json")) if revisions.is_dir() else []
+    )
+    if active not in paths:
+        raise AssertionError("C01 active Runtime Suite is missing")
+    return paths
+
+
+def validate_c01_runtime_suite_registry(
+    root: Path,
+) -> dict[tuple[str, str, str], Path]:
+    registry: dict[tuple[str, str, str], Path] = {}
+    digest_registry: dict[str, tuple[str, str, str]] = {}
+    by_id: dict[str, list[tuple[str, str, str]]] = {}
+    for path in _c01_runtime_suite_paths(root):
+        suite = strict_loads(path.read_text(encoding="utf-8"))
+        declared = suite.get("suite_digest")
+        unsigned = copy.deepcopy(suite)
+        unsigned.pop("suite_digest", None)
+        calculated = digest(unsigned)
+        if declared != calculated:
+            raise AssertionError(f"C01 Runtime Suite self-digest drift: {path.relative_to(root)}")
+        key = (suite.get("suite_id"), suite.get("suite_version"), declared)
+        if not all(isinstance(item, str) and item for item in key):
+            raise AssertionError("C01 Runtime Suite tuple is incomplete")
+        if key in registry or declared in digest_registry:
+            raise AssertionError("C01 Runtime Suite registry contains a duplicate tuple/digest")
+        registry[key] = path
+        digest_registry[declared] = key
+        by_id.setdefault(key[0], []).append(key)
+    expected_versions = {
+        ("agent-runtime-provider", "1.0.0"),
+        ("agent-runtime-provider", "1.0.1"),
+    }
+    if {(key[0], key[1]) for key in registry} != expected_versions:
+        raise AssertionError("C01 Runtime Suite registry active/snapshot version set drift")
+    if len(by_id.get("agent-runtime-provider", [])) != 2:
+        raise AssertionError("C01 Runtime Suite registry collapsed versions by suite_id")
+    active_path = root / _C01_RUNTIME_SUITE_ACTIVE
+    snapshot_path = root / _C01_RUNTIME_SUITE_SNAPSHOT
+    if not snapshot_path.is_file() or {path.resolve() for path in registry.values()} != {
+        active_path.resolve(), snapshot_path.resolve(),
+    }:
+        raise AssertionError("C01 Runtime Suite registry path set drift")
+    return registry
+
+
+def _c01_registry(root: Path) -> tuple[dict[str, dict[str, Any]], Registry]:
+    local_schemas: dict[str, dict[str, Any]] = {}
+    local_registry = Registry()
+    for path in sorted((root / "schemas").glob("*.json")):
+        schema = strict_loads(path.read_text(encoding="utf-8"))
+        Draft202012Validator.check_schema(schema)
+        local_schemas[path.name] = schema
+        local_registry = local_registry.with_resource(
+            schema["$id"], Resource.from_contents(schema)
+        )
+    return local_schemas, local_registry
+
+
+def _c01_assert_schema_contract(
+    schema: dict[str, Any], schema_id: str, code: str, retryable: bool,
+) -> None:
+    if schema.get("$id") != schema_id or schema.get("unevaluatedProperties") is not False:
+        raise AssertionError("C01 Runtime read error Schema identity/closure drift")
+    if not isinstance(schema.get("allOf"), list) or len(schema["allOf"]) != 2:
+        raise AssertionError("C01 Runtime read error Schema composition drift")
+    if schema["allOf"][0] != {"$ref": "urn:agent-platform:standard-error:v1"}:
+        raise AssertionError("C01 Runtime read error Schema no longer narrows StandardError")
+    properties = schema["allOf"][1].get("properties", {})
+    if properties.get("code") != {"const": code}:
+        raise AssertionError("C01 Runtime read error code drift")
+    if properties.get("retryable") != {"const": retryable}:
+        raise AssertionError("C01 Runtime read error retryable drift")
+    if properties.get("trace_id") != {"type": "string", "minLength": 1}:
+        raise AssertionError("C01 Runtime read trace_id drift")
+    if code == "RUNTIME_READ_REQUEST_INVALID":
+        if properties.get("message") != {"const": "Runtime read request is invalid."}:
+            raise AssertionError("C01 Runtime read 400 message drift")
+    elif properties.get("message") != {"type": "string", "minLength": 1, "maxLength": 2000}:
+        raise AssertionError("C01 Runtime read 429 bounded message drift")
+
+
+def validate_c01_runtime_read_fixtures(root: Path) -> None:
+    local_schemas, local_registry = _c01_registry(root)
+    for schema_name, positive_path, negative_path, schema_id, code, retryable in _C01_RUNTIME_READ_CASES:
+        schema = local_schemas[schema_name]
+        _c01_assert_schema_contract(schema, schema_id, code, retryable)
+        validator = Draft202012Validator(
+            schema, registry=local_registry, format_checker=FormatChecker()
+        )
+        positive = strict_loads((root / positive_path).read_text(encoding="utf-8"))
+        negative = strict_loads((root / negative_path).read_text(encoding="utf-8"))
+        if set(positive) != {"code", "message", "retryable", "trace_id"}:
+            raise AssertionError(f"C01 positive fixture field drift: {positive_path}")
+        if positive["code"] != code or positive["retryable"] is not retryable:
+            raise AssertionError(f"C01 positive fixture semantic drift: {positive_path}")
+        if not isinstance(positive["trace_id"], str) or not positive["trace_id"]:
+            raise AssertionError(f"C01 positive fixture trace drift: {positive_path}")
+        if list(validator.iter_errors(positive)):
+            raise AssertionError(f"C01 positive fixture failed its operation Schema: {positive_path}")
+        differences = {
+            key for key in set(positive) | set(negative)
+            if positive.get(key) != negative.get(key)
+        }
+        if differences != {"retryable"} or negative["retryable"] is not (not retryable):
+            raise AssertionError(f"C01 invalid fixture is not a retryable-only mutation: {negative_path}")
+        errors = list(validator.iter_errors(negative))
+        if len(errors) != 1 or errors[0].validator != "const" or list(errors[0].absolute_path) != ["retryable"]:
+            raise AssertionError(f"C01 invalid fixture did not fail only retryable const: {negative_path}")
+
+
+def _c01_snapshot_protected_state() -> dict[str, str]:
+    roots = [CONTRACT_ROOT, SCRIPT_ROOT / "evidence", SCRIPT_ROOT / "build"]
+    snapshot: dict[str, str] = {}
+    for root in roots:
+        if not root.exists():
+            continue
+        for path in sorted(item for item in root.rglob("*") if item.is_file()):
+            key = f"{root}:{path.relative_to(root).as_posix()}"
+            snapshot[key] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return snapshot
+
+
+def self_test_c01_runtime_read() -> None:
+    protected_before = _c01_snapshot_protected_state()
+    with tempfile.TemporaryDirectory(prefix="c01-contract-fixtures-") as temporary:
+        root = Path(temporary) / "contract"
+        shutil.copytree(CONTRACT_ROOT / "schemas", root / "schemas")
+        shutil.copytree(
+            CONTRACT_ROOT / "conformance/runtime/v1",
+            root / "conformance/runtime/v1",
+        )
+        for relative in [
+            case[index]
+            for case in _C01_RUNTIME_READ_CASES
+            for index in (1, 2)
+        ]:
+            destination = root / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(CONTRACT_ROOT / relative, destination)
+
+        active_suite_path = root / _C01_RUNTIME_SUITE_ACTIVE
+        active_suite = strict_loads(active_suite_path.read_text(encoding="utf-8"))
+        active_suite["suite_digest"] = digest({
+            key: value for key, value in active_suite.items() if key != "suite_digest"
+        })
+        active_suite_path.write_text(json.dumps(active_suite, indent=2) + "\n", encoding="utf-8")
+        validate_c01_runtime_read_fixtures(root)
+        validate_c01_runtime_suite_registry(root)
+
+        mutations = []
+        positive = root / _C01_RUNTIME_READ_CASES[0][1]
+        value = strict_loads(positive.read_text(encoding="utf-8"))
+        value["secret"] = "must-fail"
+        mutations.append((positive, value))
+
+        negative = root / _C01_RUNTIME_READ_CASES[0][2]
+        value = strict_loads(negative.read_text(encoding="utf-8"))
+        value["code"] = "WRONG"
+        mutations.append((negative, value))
+
+        throttled_negative = root / _C01_RUNTIME_READ_CASES[1][2]
+        mutations.append((
+            throttled_negative,
+            strict_loads((root / _C01_RUNTIME_READ_CASES[1][1]).read_text(encoding="utf-8")),
+        ))
+
+        schema_path = root / "schemas" / _C01_RUNTIME_READ_CASES[1][0]
+        schema_value = strict_loads(schema_path.read_text(encoding="utf-8"))
+        schema_value["allOf"][1]["properties"]["retryable"] = {"const": False}
+        mutations.append((schema_path, schema_value))
+
+        originals = {path: path.read_bytes() for path, _value in mutations}
+        for index, (path, candidate) in enumerate(mutations):
+            path.write_text(json.dumps(candidate, indent=2) + "\n", encoding="utf-8")
+            try:
+                validate_c01_runtime_read_fixtures(root)
+            except AssertionError:
+                pass
+            else:
+                raise AssertionError(f"C01 fixture mutation did not fail closed: {index}")
+            path.write_bytes(originals[path])
+        validate_c01_runtime_read_fixtures(root)
+
+        snapshot_path = root / _C01_RUNTIME_SUITE_SNAPSHOT
+        snapshot_bytes = snapshot_path.read_bytes()
+        suite_mutations: list[tuple[str, Any]] = [
+            ("missing-snapshot", lambda: snapshot_path.unlink()),
+            (
+                "wrong-self-digest",
+                lambda: snapshot_path.write_text(
+                    json.dumps({**strict_loads(snapshot_bytes.decode("utf-8")), "suite_digest": "sha256:" + "0" * 64}, indent=2) + "\n",
+                    encoding="utf-8",
+                ),
+            ),
+            (
+                "duplicate-tuple",
+                lambda: (snapshot_path.parent.parent / "duplicate" / "suite.json").write_bytes(snapshot_bytes),
+            ),
+        ]
+        for label, mutate in suite_mutations:
+            snapshot_path.parent.mkdir(parents=True, exist_ok=True)
+            snapshot_path.write_bytes(snapshot_bytes)
+            duplicate = snapshot_path.parent.parent / "duplicate" / "suite.json"
+            if duplicate.exists():
+                duplicate.unlink()
+            duplicate.parent.mkdir(parents=True, exist_ok=True)
+            mutate()
+            try:
+                validate_c01_runtime_suite_registry(root)
+            except AssertionError:
+                pass
+            else:
+                raise AssertionError(f"C01 Runtime Suite registry mutation did not fail closed: {label}")
+        snapshot_path.parent.mkdir(parents=True, exist_ok=True)
+        snapshot_path.write_bytes(snapshot_bytes)
+        duplicate = snapshot_path.parent.parent / "duplicate" / "suite.json"
+        if duplicate.exists():
+            duplicate.unlink()
+        validate_c01_runtime_suite_registry(root)
+
+    if _c01_snapshot_protected_state() != protected_before:
+        raise AssertionError("C01 Contract self-test changed protected Contract/build/evidence state")
+
+
+if "--self-test-c01-runtime-read" in sys.argv:
+    if sys.argv[1:] != ["--self-test-c01-runtime-read"]:
+        raise SystemExit("--self-test-c01-runtime-read cannot be combined with other arguments")
+    self_test_c01_runtime_read()
+    print("C01 Runtime read Schema fixture self-test passed.")
+    raise SystemExit(0)
+if len(sys.argv) != 1:
+    raise SystemExit(f"Unknown arguments: {sys.argv[1:]}")
+
+
+validate_c01_runtime_suite_registry(CONTRACT_ROOT)
 
 
 schemas: dict[str, dict[str, Any]] = {}
@@ -536,6 +803,16 @@ invalid_cases = [
     ("artifact-operation.schema.json", "tests/invalid/artifact-operation-cancel-requested-missing-source.json"),
     ("artifact-ingest-request.schema.json", "tests/invalid/artifact-ingest-client-supplied-admission.json"),
 ]
+valid_cases.extend(
+    (schema_name, positive_path)
+    for schema_name, positive_path, _negative_path, _schema_id, _code, _retryable
+    in _C01_RUNTIME_READ_CASES
+)
+invalid_cases.extend(
+    (schema_name, negative_path)
+    for schema_name, _positive_path, negative_path, _schema_id, _code, _retryable
+    in _C01_RUNTIME_READ_CASES
+)
 for case in valid_cases:
     validate(*case, True)
 for case in invalid_cases:

@@ -1,6 +1,6 @@
 {
   "suite_id": "agent-runtime-provider",
-  "suite_version": "1.0.1",
+  "suite_version": "1.0.0",
   "suite_digest": "sha256:9ef6d50df9f1032476ea2ada2c16d70c15d88368acf59794062df7dfce0bb356",
   "target_kind": "agent_runtime",
   "profiles": [
@@ -54,30 +54,6 @@
           "category": "contract",
           "evidence_type": "artifact",
           "description": "Every core event payload validates against the admitted EventTypeRegistry revision."
-        },
-        {
-          "test_id": "status-read-invalid-request-400",
-          "category": "contract",
-          "evidence_type": "test_log",
-          "description": "After the listener has recognized the exact Status GET route and method and isolated the raw runtime_run_id candidate in its path slot, the closed x-runtime-read-http-authority rejects with 400 a candidate that fails the single-segment or length 1..200 constraint or would require case folding, Unicode normalization, slash collapse, dot-segment processing, or encoded path-separator equivalence; every query form, including an empty marker, unknown key, or repeated key; every body; and nonzero or ambiguous Content-Length, Transfer-Encoding, or Expect framing. Unknown routes, including requests that do not match that exact route shape, and parser failures before operation recognition are c01-out-of-scope and cannot satisfy this case. A syntactically valid descriptor whose digest does not match the token remains 403. A 400 response has no Retry-After, validates against urn:agent-platform:agent-runtime-read-bad-request-error:v1, and exposes only bounded public field/reason diagnostics with no sensitive or cross-tenant data. This case is contract-defined and phase0_implementation_required and does not claim Provider passage."
-        },
-        {
-          "test_id": "event-read-invalid-request-400",
-          "category": "contract",
-          "evidence_type": "test_log",
-          "description": "After the listener has recognized the exact Event GET route and method and isolated the raw runtime_run_id candidate in its path slot, the closed x-runtime-read-http-authority rejects with 400 a candidate that fails the single-segment or length 1..200 constraint or would require case folding, Unicode normalization, slash collapse, dot-segment processing, or encoded path-separator equivalence; every body; and nonzero or ambiguous Content-Length, Transfer-Encoding, or Expect framing. Unknown routes, including requests that do not match that exact route shape, and parser failures before operation recognition are c01-out-of-scope and cannot satisfy this case. Query permits only after_event_sequence and limit, each at most once and in either order; omitted defaults 0 and 1000 are logically identical to explicit defaults. Values must be canonical unsigned ASCII decimal with no sign, leading zero, whitespace, exponent, decimal point, repetition, unknown key, or ambiguous percent encoding, and must be in ranges 0..9007199254740991 and 1..1000 respectively. Malformed or out-of-range input is 400, while only a valid cursor beyond retention is 410; a syntactically valid descriptor whose digest does not match the token remains 403. A 400 response has no Retry-After, validates against urn:agent-platform:agent-runtime-read-bad-request-error:v1, and exposes only bounded public field/reason diagnostics with no sensitive or cross-tenant data. This case is contract-defined and phase0_implementation_required and does not claim Provider passage."
-        },
-        {
-          "test_id": "status-read-throttled-429",
-          "category": "recovery",
-          "evidence_type": "test_log",
-          "description": "For Status, only after exact operation recognition and valid caller-token-descriptor, Attempt, and fencing bindings, and before provider-local state is read, admission may return 429 independently of RuntimeRun existence. A valid 429 body validates against urn:agent-platform:agent-runtime-read-throttled-error:v1 and exposes only bounded public diagnostics with no sensitive or cross-tenant data; exactly one raw Retry-After field value matches ^[1-9][0-9]*$ and safely parses to an integer >=1. Missing, repeated, noncanonical, unsafe-to-parse, zero, or negative Retry-After makes the response invalid and forbids retry. A durable caller waits at least Retry-After, then creates a fresh authorized read Attempt with a fresh token and non-stale fencing and recomputes rather than reuses the descriptor digest from that fresh Attempt, token, and fencing without changing the logical Status target. The adapter performs no automatic retry and replays no mutation. This case is contract-defined and phase0_implementation_required and does not claim Provider passage."
-        },
-        {
-          "test_id": "event-read-throttled-429",
-          "category": "recovery",
-          "evidence_type": "test_log",
-          "description": "For Events, only after exact operation recognition and valid caller-token-descriptor, Attempt, and fencing bindings, and before provider-local Run or cursor state is read, admission may return 429 independently of RuntimeRun existence. A valid 429 body validates against urn:agent-platform:agent-runtime-read-throttled-error:v1 and exposes only bounded public diagnostics with no sensitive or cross-tenant data; exactly one raw Retry-After field value matches ^[1-9][0-9]*$ and safely parses to an integer >=1. Missing, repeated, noncanonical, unsafe-to-parse, zero, or negative Retry-After makes the response invalid and forbids retry. A durable caller waits at least Retry-After, then creates a fresh authorized read Attempt with a fresh token and non-stale fencing, recomputes rather than reuses the descriptor digest from that fresh Attempt, token, and fencing, preserves cursor and limit, and does not advance the cursor. The adapter performs no automatic retry and replays no mutation. This case is contract-defined and phase0_implementation_required and does not claim Provider passage."
         },
         {
           "test_id": "cursor-resume",

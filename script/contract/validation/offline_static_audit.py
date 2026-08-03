@@ -4,6 +4,11 @@ from __future__ import annotations
 import json
 import os
 import re
+import copy
+import hashlib
+import shutil
+import sys
+import tempfile
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -13,6 +18,22 @@ SCRIPT_ROOT = Path(__file__).resolve().parents[2]
 CONTRACT_ROOT = Path(
     os.environ.get("AGENT_CONTRACT_ROOT", SCRIPT_ROOT.parent / "contract")
 ).resolve()
+
+_C01_HISTORICAL_OPENAPI = "agent-runtime-provider-v1.0.0.snapshot.yaml"
+_C01_ACTIVE_OPENAPI = "agent-runtime-provider-v1.yaml"
+_C01_HISTORICAL_OPENAPI_SHA256 = (
+    "f75bd9484d9059435021f65147cab1a22b4cb0376ea47ce6e165fde0494f5811"
+)
+_C01_HISTORICAL_EXTERNAL_REFS = {
+    "agent-runtime-capabilities.schema.json": (1, "02fd8a0c2176539a0807fe88aaf11b915eca7484d56ca0eb8973467614b85872"),
+    "agent-runtime-command.schema.json": (1, "0800078291c1b2544e188c6279d6febde27da7564dbb192babdfdb7f3eb1f930"),
+    "agent-runtime-event-page.schema.json": (1, "450346bec4ccd9dccffaf9cf3d452f6461ed6581e3c3f864076ce66dd419070c"),
+    "agent-runtime-run-status.schema.json": (3, "d43ec7fcd43a7f6690b861aa0f88f2534444dc90a1f456b4e32d2a692ba6ba26"),
+    "agent-runtime-start-request.schema.json": (1, "47d15ab457e9d070a0246b078fbd2bcbf11f9a3d61072db2a04fb4d874f54704"),
+    "standard-error.schema.json": (11, "1d24ba4f5bd8887603cf23bfcf2eef9e2dfc11292c87353682ef106a9d4bdf49"),
+}
+
+
 def source_files(patterns: Iterable[str]) -> list[Path]:
     paths: set[Path] = set()
     for pattern in patterns:
@@ -20,9 +41,463 @@ def source_files(patterns: Iterable[str]) -> list[Path]:
     return sorted(path for path in paths if path.is_file())
 
 
+class _NoDuplicateSafeLoader(yaml.SafeLoader):
+    pass
+
+
+def _construct_unique_mapping(
+    loader: _NoDuplicateSafeLoader, node: yaml.MappingNode, deep: bool = False,
+) -> dict[Any, Any]:
+    result: dict[Any, Any] = {}
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if key in result:
+            raise yaml.constructor.ConstructorError(
+                "while constructing a mapping", node.start_mark,
+                f"found duplicate key {key!r}", key_node.start_mark,
+            )
+        result[key] = loader.construct_object(value_node, deep=deep)
+    return result
+
+
+_NoDuplicateSafeLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _construct_unique_mapping,
+)
+
+
 def load_yaml(path: Path) -> Any:
-    documents = list(yaml.safe_load_all(path.read_text(encoding="utf-8")))
+    documents = list(yaml.load_all(
+        path.read_text(encoding="utf-8"), Loader=_NoDuplicateSafeLoader,
+    ))
     return documents[0] if len(documents) == 1 else documents
+
+
+def _c01_external_schema_refs(value: Any) -> list[str]:
+    references: list[str] = []
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if key == "$ref" and isinstance(child, str) and child.startswith("../schemas/"):
+                if "#" in child or "?" in child:
+                    raise AssertionError("C01 Runtime OpenAPI external Schema reference is not a plain relative path")
+                references.append(Path(child).name)
+            else:
+                references.extend(_c01_external_schema_refs(child))
+    elif isinstance(value, list):
+        for child in value:
+            references.extend(_c01_external_schema_refs(child))
+    return references
+
+
+def _c01_validate_runtime_openapi_registry(root: Path) -> None:
+    openapi_root = root / "openapi"
+    historical_path = openapi_root / _C01_HISTORICAL_OPENAPI
+    active_path = openapi_root / _C01_ACTIVE_OPENAPI
+    if not historical_path.is_file() or not active_path.is_file():
+        raise AssertionError("C01 Runtime active/historical OpenAPI registry is incomplete")
+
+    historical_bytes = historical_path.read_bytes()
+    if hashlib.sha256(historical_bytes).hexdigest() != _C01_HISTORICAL_OPENAPI_SHA256:
+        raise AssertionError("C01 historical Runtime OpenAPI snapshot byte drift")
+    historical = load_yaml(historical_path)
+    active = load_yaml(active_path)
+    if historical.get("info", {}).get("version") != "1.0.0":
+        raise AssertionError("C01 historical Runtime OpenAPI version drift")
+    if active.get("info", {}).get("version") != "1.0.1":
+        raise AssertionError("C01 active Runtime OpenAPI version drift")
+
+    historical_refs = _c01_external_schema_refs(historical)
+    historical_counts = {name: historical_refs.count(name) for name in set(historical_refs)}
+    expected_counts = {name: count for name, (count, _digest) in _C01_HISTORICAL_EXTERNAL_REFS.items()}
+    if len(historical_refs) != 18 or historical_counts != expected_counts:
+        raise AssertionError("C01 historical Runtime OpenAPI external refs must be exactly 18/6")
+    for name, (_count, expected_digest) in _C01_HISTORICAL_EXTERNAL_REFS.items():
+        target = root / "schemas" / name
+        if not target.is_file() or hashlib.sha256(target.read_bytes()).hexdigest() != expected_digest:
+            raise AssertionError(f"C01 historical external Schema target drift: {name}")
+
+    active_refs = _c01_external_schema_refs(active)
+    if len(active_refs) != 20 or len(set(active_refs)) != 8:
+        raise AssertionError("C01 active Runtime OpenAPI external refs must be exactly 20/8")
+    for name in active_refs:
+        if not (root / "schemas" / name).is_file():
+            raise AssertionError(f"C01 active Runtime OpenAPI external Schema target is unresolved: {name}")
+
+    registry: dict[tuple[str, str, str], Path] = {}
+    for path in sorted(openapi_root.glob("agent-runtime-provider*.yaml")):
+        document = load_yaml(path)
+        version = document.get("info", {}).get("version")
+        if version not in {"1.0.0", "1.0.1"}:
+            raise AssertionError(f"C01 Runtime OpenAPI registry contains an unsupported version: {path.name}")
+        key = ("agent-runtime-provider", "v1", "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest())
+        if key in registry:
+            raise AssertionError("C01 Runtime Port registry contains a duplicate tuple/digest")
+        registry[key] = path
+    expected_paths = {historical_path.resolve(), active_path.resolve()}
+    if {path.resolve() for path in registry.values()} != expected_paths:
+        raise AssertionError("C01 Runtime Port registry active/snapshot path set drift")
+
+
+def _c01_snapshot_protected_state() -> dict[str, str]:
+    roots = [CONTRACT_ROOT, SCRIPT_ROOT / "evidence", SCRIPT_ROOT / "build"]
+    snapshot: dict[str, str] = {}
+    for root in roots:
+        if not root.exists():
+            continue
+        for path in sorted(item for item in root.rglob("*") if item.is_file()):
+            key = f"{root}:{path.relative_to(root).as_posix()}"
+            snapshot[key] = __import__("hashlib").sha256(path.read_bytes()).hexdigest()
+    return snapshot
+
+
+def _c01_expected_runtime_read_authority() -> dict[str, dict[str, Any]]:
+    shared_recognition = {
+        "method": "GET",
+        "match": "exact",
+        "unknown-route": "c01-out-of-scope",
+        "pre-operation-parser-failure": "c01-out-of-scope",
+    }
+    runtime_run_id = {
+        "segment-count": 1,
+        "min-length": 1,
+        "max-length": 200,
+        "case-fold": "forbidden",
+        "unicode-normalization": "forbidden",
+        "slash-collapse": "forbidden",
+        "dot-segment-processing": "forbidden",
+        "encoded-path-separator-equivalence": "forbidden",
+    }
+    body = {
+        "mode": "forbidden",
+        "nonzero-content-length": "reject-400",
+        "ambiguous-content-length": "reject-400",
+        "transfer-encoding": "reject-400",
+        "expect": "reject-400",
+    }
+    admission = {
+        "operation-recognition-required": True,
+        "caller-token-descriptor-binding-required": True,
+        "before-provider-state-read": True,
+        "independent-of-run-existence": True,
+        "listener-saturation-eligible": False,
+    }
+    retry_shared = {
+        "authority-version": "runtime-read-retry-authority-v1",
+        "durable-caller-minimum-wait": "at-least-retry-after",
+        "attempt": "fresh-authorized-read-attempt",
+        "token": "fresh",
+        "fencing": "non-stale",
+        "descriptor-digest": "recompute-for-new-attempt-token-fencing",
+        "adapter-auto-retry": "forbidden",
+        "mutation-replay": "forbidden",
+    }
+    return {
+        "getAgentRuntimeRun": {
+            "route": "/v1/runs/{runtime_run_id}",
+            "http": {
+                "authority-version": "runtime-read-http-authority-v1",
+                "operation-recognition": {
+                    **shared_recognition,
+                    "path-shape": "/v1/runs/{runtime_run_id}",
+                },
+                "runtime-run-id": runtime_run_id,
+                "query": {
+                    "mode": "forbidden",
+                    "empty-marker": "reject-400",
+                    "unknown-parameter": "reject-400",
+                    "repeated-parameter": "reject-400",
+                },
+                "body": body,
+                "descriptor-digest-mismatch": "reject-403",
+            },
+            "precedence": ["400", "401", "403", "429", "404", "200"],
+            "admission": admission,
+            "retry": {
+                **retry_shared,
+                "logical-status-target": "unchanged",
+                "event-cursor-limit": "not-applicable",
+                "event-cursor-advance-on-429": "not-applicable",
+            },
+        },
+        "readAgentRuntimeEvents": {
+            "route": "/v1/runs/{runtime_run_id}/events",
+            "http": {
+                "authority-version": "runtime-read-http-authority-v1",
+                "operation-recognition": {
+                    **shared_recognition,
+                    "path-shape": "/v1/runs/{runtime_run_id}/events",
+                },
+                "runtime-run-id": runtime_run_id,
+                "query": {
+                    "mode": "allowlist",
+                    "allowed-parameters": ["after_event_sequence", "limit"],
+                    "multiplicity": "at-most-once-each",
+                    "ordering": "any",
+                    "unknown-parameter": "reject-400",
+                    "repeated-parameter": "reject-400",
+                    "ambiguous-percent-encoding": "reject-400",
+                    "lexical-format": "canonical-unsigned-ascii-decimal",
+                    "lexical-pattern": "^(0|[1-9][0-9]*)$",
+                    "rejected-lexical-forms": [
+                        "sign", "leading-zero", "empty", "whitespace", "exponent", "fraction",
+                    ],
+                    "parameters": {
+                        "after_event_sequence": {
+                            "omission-default": 0,
+                            "explicit-default-equivalent": True,
+                            "minimum": 0,
+                            "maximum": 9_007_199_254_740_991,
+                        },
+                        "limit": {
+                            "omission-default": 1000,
+                            "explicit-default-equivalent": True,
+                            "minimum": 1,
+                            "maximum": 1000,
+                        },
+                    },
+                    "malformed-or-out-of-range": "reject-400",
+                    "valid-retention-expiry": "respond-410",
+                },
+                "body": body,
+                "descriptor-digest-mismatch": "reject-403",
+            },
+            "precedence": ["400", "401", "403", "429", "404", "410", "200"],
+            "admission": admission,
+            "retry": {
+                **retry_shared,
+                "logical-status-target": "not-applicable",
+                "event-cursor-limit": "unchanged",
+                "event-cursor-advance-on-429": "forbidden",
+            },
+        },
+    }
+
+
+def _c01_operation(document: dict[str, Any], operation_id: str) -> tuple[str, dict[str, Any]]:
+    matches = [
+        (route, operation)
+        for route, path_item in document.get("paths", {}).items()
+        for method, operation in path_item.items()
+        if method == "get" and isinstance(operation, dict)
+        and operation.get("operationId") == operation_id
+    ]
+    if len(matches) != 1:
+        raise AssertionError(f"C01 requires exactly one GET operation {operation_id}")
+    return matches[0]
+
+
+def _c01_validate_error_schema(root: Path, filename: str, expected: dict[str, Any]) -> None:
+    schema = json.loads((root / "schemas" / filename).read_text(encoding="utf-8"))
+    if set(schema) != {
+        "$schema", "$id", "title", "description", "allOf", "unevaluatedProperties",
+    }:
+        raise AssertionError(f"C01 error Schema has an open or unexpected top-level shape: {filename}")
+    if schema["$id"] != expected["$id"] or schema.get("unevaluatedProperties") is not False:
+        raise AssertionError(f"C01 error Schema identity/closure drift: {filename}")
+    if not isinstance(schema.get("allOf"), list) or len(schema["allOf"]) != 2:
+        raise AssertionError(f"C01 error Schema composition drift: {filename}")
+    if schema["allOf"][0] != {"$ref": "urn:agent-platform:standard-error:v1"}:
+        raise AssertionError(f"C01 error Schema no longer narrows StandardError: {filename}")
+    if schema["allOf"][1] != {"type": "object", "properties": expected["properties"]}:
+        raise AssertionError(f"C01 error Schema operation-specific constraints drift: {filename}")
+
+
+def validate_c01_runtime_read_authority(root: Path) -> None:
+    _c01_validate_runtime_openapi_registry(root)
+    document = load_yaml(root / "openapi" / "agent-runtime-provider-v1.yaml")
+    if document.get("info", {}).get("version") != "1.0.1":
+        raise AssertionError("C01 Runtime OpenAPI version must be 1.0.1")
+    expected = _c01_expected_runtime_read_authority()
+    for operation_id, authority in expected.items():
+        route, operation = _c01_operation(document, operation_id)
+        if route != authority["route"]:
+            raise AssertionError(f"C01 operation route drift: {operation_id}")
+        if operation.get("x-runtime-read-http-authority") != authority["http"]:
+            raise AssertionError(f"C01 closed HTTP authority drift: {operation_id}")
+        if operation.get("x-runtime-read-response-precedence") != authority["precedence"]:
+            raise AssertionError(f"C01 response precedence drift: {operation_id}")
+        if operation.get("x-runtime-read-admission") != authority["admission"]:
+            raise AssertionError(f"C01 read admission drift: {operation_id}")
+        if operation.get("x-runtime-read-retry") != authority["retry"]:
+            raise AssertionError(f"C01 retry authority drift: {operation_id}")
+        expected_refs = {
+            "400": "#/components/responses/RuntimeReadBadRequest",
+            "429": "#/components/responses/RuntimeReadTooManyRequests",
+        }
+        for status, reference in expected_refs.items():
+            if operation.get("responses", {}).get(status) != {"$ref": reference}:
+                raise AssertionError(f"C01 {operation_id} response {status} reference drift")
+
+    responses = document.get("components", {}).get("responses", {})
+    bad_request = responses.get("RuntimeReadBadRequest", {})
+    if bad_request.get("x-runtime-read-header-authority") != {
+        "authority-version": "runtime-read-header-authority-v1",
+        "retry-after": {"presence": "forbidden"},
+    }:
+        raise AssertionError("C01 400 Retry-After authority drift")
+    if "headers" in bad_request:
+        raise AssertionError("C01 400 response must not declare Retry-After")
+    if bad_request.get("content", {}).get("application/json", {}).get("schema") != {
+        "$ref": "../schemas/agent-runtime-read-bad-request-error.schema.json"
+    }:
+        raise AssertionError("C01 400 error body Schema reference drift")
+
+    throttled = responses.get("RuntimeReadTooManyRequests", {})
+    expected_header_authority = {
+        "authority-version": "runtime-read-header-authority-v1",
+        "retry-after": {
+            "presence": "required",
+            "cardinality": "exactly-one",
+            "wire-format": "canonical-decimal-integer-delta-seconds",
+            "lexical-pattern": "^[1-9][0-9]*$",
+            "rejected-lexical-forms": [
+                "leading-zero", "plus-sign", "minus-sign", "whitespace", "decimal-point",
+                "exponent", "non-ascii-digit", "empty",
+            ],
+            "minimum": 1,
+            "invalid-response-on": [
+                "missing", "repeated", "non-integer", "zero", "negative", "unsafe-parse",
+            ],
+            "invalid-response-retry": "forbidden",
+        },
+    }
+    if throttled.get("x-runtime-read-header-authority") != expected_header_authority:
+        raise AssertionError("C01 429 raw Retry-After authority drift")
+    retry_after = throttled.get("headers", {}).get("Retry-After", {})
+    if retry_after.get("required") is not True or retry_after.get("schema") != {
+        "type": "integer", "minimum": 1,
+    }:
+        raise AssertionError("C01 429 parsed Retry-After Header Object drift")
+    if throttled.get("content", {}).get("application/json", {}).get("schema") != {
+        "$ref": "../schemas/agent-runtime-read-throttled-error.schema.json"
+    }:
+        raise AssertionError("C01 429 error body Schema reference drift")
+
+    _c01_validate_error_schema(root, "agent-runtime-read-bad-request-error.schema.json", {
+        "$id": "urn:agent-platform:agent-runtime-read-bad-request-error:v1",
+        "properties": {
+            "code": {"const": "RUNTIME_READ_REQUEST_INVALID"},
+            "message": {"const": "Runtime read request is invalid."},
+            "retryable": {"const": False},
+            "trace_id": {"type": "string", "minLength": 1},
+        },
+    })
+    _c01_validate_error_schema(root, "agent-runtime-read-throttled-error.schema.json", {
+        "$id": "urn:agent-platform:agent-runtime-read-throttled-error:v1",
+        "properties": {
+            "code": {"const": "RUNTIME_READ_THROTTLED"},
+            "message": {"type": "string", "minLength": 1, "maxLength": 2000},
+            "retryable": {"const": True},
+            "trace_id": {"type": "string", "minLength": 1},
+        },
+    })
+
+
+def self_test_c01_runtime_read() -> None:
+    protected_before = _c01_snapshot_protected_state()
+    with tempfile.TemporaryDirectory(prefix="c01-offline-static-") as temporary:
+        root = Path(temporary) / "contract"
+        shutil.copytree(CONTRACT_ROOT / "openapi", root / "openapi")
+        shutil.copytree(CONTRACT_ROOT / "schemas", root / "schemas")
+        openapi_path = root / "openapi" / "agent-runtime-provider-v1.yaml"
+        original_bytes = openapi_path.read_bytes()
+        original = load_yaml(openapi_path)
+        validate_c01_runtime_read_authority(root)
+
+        def status(document: dict[str, Any]) -> dict[str, Any]:
+            return document["paths"]["/v1/runs/{runtime_run_id}"]["get"]
+
+        def events(document: dict[str, Any]) -> dict[str, Any]:
+            return document["paths"]["/v1/runs/{runtime_run_id}/events"]["get"]
+
+        mutations = [
+            lambda value: status(value)["x-runtime-read-http-authority"].pop("body"),
+            lambda value: status(value)["x-runtime-read-http-authority"].update({"unexpected": "open"}),
+            lambda value: status(value)["x-runtime-read-http-authority"]["query"].update({"mode": "allowlist"}),
+            lambda value: status(value)["x-runtime-read-response-precedence"].__setitem__(0, "401"),
+            lambda value: value["components"]["responses"]["RuntimeReadTooManyRequests"]
+                ["x-runtime-read-header-authority"]["retry-after"].update({"lexical-pattern": "^[0-9]+$"}),
+            lambda value: events(value)["x-runtime-read-http-authority"]["operation-recognition"]
+                .update({"unknown-route": "reject-400"}),
+            lambda value: events(value)["x-runtime-read-http-authority"]["operation-recognition"]
+                .update({"pre-operation-parser-failure": "reject-400"}),
+        ]
+        for index, mutate in enumerate(mutations):
+            candidate = copy.deepcopy(original)
+            mutate(candidate)
+            openapi_path.write_text(yaml.safe_dump(candidate, sort_keys=False), encoding="utf-8")
+            try:
+                validate_c01_runtime_read_authority(root)
+            except AssertionError:
+                pass
+            else:
+                raise AssertionError(f"C01 offline mutation did not fail closed: {index}")
+        openapi_path.write_text(yaml.safe_dump(original, sort_keys=False), encoding="utf-8")
+        validate_c01_runtime_read_authority(root)
+        openapi_path.write_bytes(original_bytes + b"\nopenapi: 3.1.1\n")
+        try:
+            validate_c01_runtime_read_authority(root)
+        except yaml.YAMLError:
+            pass
+        else:
+            raise AssertionError("C01 duplicate YAML mapping key did not fail closed")
+
+        openapi_path.write_bytes(original_bytes)
+        historical_path = root / "openapi" / _C01_HISTORICAL_OPENAPI
+        historical_bytes = historical_path.read_bytes()
+        target_path = root / "schemas" / "standard-error.schema.json"
+        target_bytes = target_path.read_bytes()
+        registry_mutations: list[tuple[str, Any]] = [
+            ("snapshot-missing", lambda: historical_path.unlink()),
+            ("snapshot-byte-drift", lambda: historical_path.write_bytes(historical_bytes + b"\n")),
+            ("external-target-byte-drift", lambda: target_path.write_bytes(target_bytes + b"\n")),
+            (
+                "active-snapshot-swap",
+                lambda: (
+                    historical_path.write_bytes(original_bytes),
+                    openapi_path.write_bytes(historical_bytes),
+                ),
+            ),
+            (
+                "duplicate-port-tuple",
+                lambda: (root / "openapi" / "agent-runtime-provider-v1.0.0.duplicate.yaml")
+                    .write_bytes(historical_bytes),
+            ),
+        ]
+        for label, mutate in registry_mutations:
+            openapi_path.write_bytes(original_bytes)
+            historical_path.write_bytes(historical_bytes)
+            target_path.write_bytes(target_bytes)
+            duplicate = root / "openapi" / "agent-runtime-provider-v1.0.0.duplicate.yaml"
+            if duplicate.exists():
+                duplicate.unlink()
+            mutate()
+            try:
+                validate_c01_runtime_read_authority(root)
+            except (AssertionError, FileNotFoundError):
+                pass
+            else:
+                raise AssertionError(f"C01 Runtime OpenAPI registry mutation did not fail closed: {label}")
+        openapi_path.write_bytes(original_bytes)
+        historical_path.write_bytes(historical_bytes)
+        target_path.write_bytes(target_bytes)
+        duplicate = root / "openapi" / "agent-runtime-provider-v1.0.0.duplicate.yaml"
+        if duplicate.exists():
+            duplicate.unlink()
+        validate_c01_runtime_read_authority(root)
+    if _c01_snapshot_protected_state() != protected_before:
+        raise AssertionError("C01 offline self-test changed protected Contract/build/evidence state")
+
+
+if "--self-test-c01-runtime-read" in sys.argv:
+    if sys.argv[1:] != ["--self-test-c01-runtime-read"]:
+        raise SystemExit("--self-test-c01-runtime-read cannot be combined with other arguments")
+    self_test_c01_runtime_read()
+    print("C01 Runtime read offline static audit self-test passed.")
+    raise SystemExit(0)
+if len(sys.argv) != 1:
+    raise SystemExit(f"Unknown arguments: {sys.argv[1:]}")
+
+validate_c01_runtime_read_authority(CONTRACT_ROOT)
 
 
 json_files = source_files(["*.json"])
@@ -30,7 +505,7 @@ yaml_files = source_files(["*.yaml", "*.yml"])
 for path in json_files:
     json.loads(path.read_text(encoding="utf-8"))
 for path in yaml_files:
-    list(yaml.safe_load_all(path.read_text(encoding="utf-8")))
+    load_yaml(path)
 
 openapi_files = sorted((CONTRACT_ROOT / "openapi").glob("*.yaml"))
 operation_profiles = {

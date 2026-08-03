@@ -7,6 +7,9 @@ import hashlib
 import json
 import os
 import posixpath
+import shutil
+import sys
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -82,6 +85,764 @@ PLUGIN_OPERATION_CONTRACTS = {
     "cancel": ("urn:agent-platform:plugin-cancellation-request:v1", "rfc8785-request-excluding-request-digest-v1"),
     "read_events": ("urn:agent-platform:plugin-event-read-operation-descriptor:v1", "rfc8785-full-document-v1"),
 }
+
+
+_C01_RUNTIME_READ_CHECK = "runtime_read.http_authority"
+_C01_RUNTIME_READ_SCHEMA_CASES = {
+    "urn:agent-platform:agent-runtime-read-bad-request-error:v1": [
+        "status-read-invalid-request-400", "event-read-invalid-request-400",
+    ],
+    "urn:agent-platform:agent-runtime-read-throttled-error:v1": [
+        "status-read-throttled-429", "event-read-throttled-429",
+    ],
+}
+_C01_RUNTIME_SUITE_ACTIVE = "conformance/runtime/v1/suite.json"
+_C01_RUNTIME_SUITE_SNAPSHOT = "conformance/runtime/v1/revisions/1.0.0/suite.json"
+_C01_RUNTIME_OPENAPI_ACTIVE = "openapi/agent-runtime-provider-v1.yaml"
+_C01_RUNTIME_OPENAPI_SNAPSHOT = "openapi/agent-runtime-provider-v1.0.0.snapshot.yaml"
+_C01_HISTORICAL_OPENAPI_SHA256 = (
+    "f75bd9484d9059435021f65147cab1a22b4cb0376ea47ce6e165fde0494f5811"
+)
+
+
+def _c01_jcs_digest(value: dict[str, Any], excluded: str | None = None) -> str:
+    material = copy.deepcopy(value)
+    if excluded is not None:
+        material.pop(excluded, None)
+    return "sha256:" + hashlib.sha256(rfc8785.dumps(material)).hexdigest()
+
+
+def _c01_walk_dicts(value: Any):
+    if isinstance(value, dict):
+        yield value
+        for child in value.values():
+            yield from _c01_walk_dicts(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from _c01_walk_dicts(child)
+
+
+def _c01_validate_runtime_registries(
+    root: Path,
+) -> tuple[dict[tuple[str, str, str], Path], dict[tuple[str, str, str], Path]]:
+    active_suite = root / _C01_RUNTIME_SUITE_ACTIVE
+    revisions = root / "conformance/runtime/v1/revisions"
+    suite_paths = ([active_suite] if active_suite.is_file() else []) + (
+        sorted(revisions.rglob("suite.json")) if revisions.is_dir() else []
+    )
+    suite_registry: dict[tuple[str, str, str], Path] = {}
+    suite_digests: set[str] = set()
+    for path in suite_paths:
+        suite = json.loads(path.read_text(encoding="utf-8"))
+        declared = suite.get("suite_digest")
+        if declared != _c01_jcs_digest(suite, "suite_digest"):
+            raise AssertionError(f"C01 Runtime Suite self-digest drift: {path.relative_to(root)}")
+        key = (suite.get("suite_id"), suite.get("suite_version"), declared)
+        if not all(isinstance(item, str) and item for item in key):
+            raise AssertionError("C01 Runtime Suite tuple is incomplete")
+        if key in suite_registry or declared in suite_digests:
+            raise AssertionError("C01 Runtime Suite registry duplicate tuple/digest")
+        suite_registry[key] = path
+        suite_digests.add(declared)
+    expected_suite_versions = {
+        ("agent-runtime-provider", "1.0.0"),
+        ("agent-runtime-provider", "1.0.1"),
+    }
+    if {(key[0], key[1]) for key in suite_registry} != expected_suite_versions:
+        raise AssertionError("C01 Runtime Suite registry active/snapshot version set drift")
+    expected_suite_paths = {
+        (root / _C01_RUNTIME_SUITE_ACTIVE).resolve(),
+        (root / _C01_RUNTIME_SUITE_SNAPSHOT).resolve(),
+    }
+    if {path.resolve() for path in suite_registry.values()} != expected_suite_paths:
+        raise AssertionError("C01 Runtime Suite registry path set drift")
+
+    openapi_root = root / "openapi"
+    port_registry: dict[tuple[str, str, str], Path] = {}
+    port_digests: set[str] = set()
+    for path in sorted(openapi_root.glob("agent-runtime-provider*.yaml")):
+        document = yaml.safe_load(path.read_text(encoding="utf-8"))
+        version = document.get("info", {}).get("version")
+        if version not in {"1.0.0", "1.0.1"}:
+            raise AssertionError("C01 Runtime Port registry contains an unsupported OpenAPI version")
+        contract_digest = "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+        key = ("agent-runtime-provider", "v1", contract_digest)
+        if key in port_registry or contract_digest in port_digests:
+            raise AssertionError("C01 Runtime Port registry duplicate tuple/digest")
+        port_registry[key] = path
+        port_digests.add(contract_digest)
+    expected_port_paths = {
+        (root / _C01_RUNTIME_OPENAPI_ACTIVE).resolve(),
+        (root / _C01_RUNTIME_OPENAPI_SNAPSHOT).resolve(),
+    }
+    if {path.resolve() for path in port_registry.values()} != expected_port_paths:
+        raise AssertionError("C01 Runtime Port registry active/snapshot path set drift")
+    snapshot_path = root / _C01_RUNTIME_OPENAPI_SNAPSHOT
+    if hashlib.sha256(snapshot_path.read_bytes()).hexdigest() != _C01_HISTORICAL_OPENAPI_SHA256:
+        raise AssertionError("C01 historical Runtime OpenAPI snapshot byte drift")
+    if yaml.safe_load(snapshot_path.read_text(encoding="utf-8"))["info"]["version"] != "1.0.0":
+        raise AssertionError("C01 historical Runtime OpenAPI version drift")
+    if yaml.safe_load((root / _C01_RUNTIME_OPENAPI_ACTIVE).read_text(encoding="utf-8"))["info"]["version"] != "1.0.1":
+        raise AssertionError("C01 active Runtime OpenAPI version drift")
+
+    for path in sorted((root / "examples/contracts").glob("*.json")):
+        document = json.loads(path.read_text(encoding="utf-8"))
+        for item in _c01_walk_dicts(document):
+            if item.get("suite_id") == "agent-runtime-provider" and {
+                "suite_version", "suite_digest",
+            } <= set(item):
+                key = (item["suite_id"], item["suite_version"], item["suite_digest"])
+                if key not in suite_registry:
+                    raise AssertionError(f"C01 unresolved Runtime Suite tuple in {path.name}")
+                if item["suite_version"] == "1.0.1" and item.get("result") in {"passed", "certified"}:
+                    raise AssertionError("C01 active Runtime Suite must not be represented as passed/certified")
+            if item.get("protocol") == "agent-runtime-provider" and {
+                "protocol_version", "contract_digest",
+            } <= set(item):
+                key = (item["protocol"], item["protocol_version"], item["contract_digest"])
+                if key not in port_registry:
+                    raise AssertionError(f"C01 unresolved Runtime Port tuple in {path.name}")
+    return suite_registry, port_registry
+
+
+def _c01_runtime_read_operations(document: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    result: dict[str, dict[str, Any]] = {}
+    for route, path_item in document.get("paths", {}).items():
+        operation = path_item.get("get")
+        if isinstance(operation, dict) and operation.get("operationId") in {
+            "getAgentRuntimeRun", "readAgentRuntimeEvents",
+        }:
+            result[operation["operationId"]] = {"route": route, "operation": operation}
+    if set(result) != {"getAgentRuntimeRun", "readAgentRuntimeEvents"}:
+        raise AssertionError("C01 Runtime read operations are missing or duplicated")
+    return result
+
+
+def _c01_expected_http_authority(events: bool) -> dict[str, Any]:
+    route = "/v1/runs/{runtime_run_id}/events" if events else "/v1/runs/{runtime_run_id}"
+    query: dict[str, Any]
+    if events:
+        query = {
+            "mode": "allowlist",
+            "allowed-parameters": ["after_event_sequence", "limit"],
+            "multiplicity": "at-most-once-each",
+            "ordering": "any",
+            "unknown-parameter": "reject-400",
+            "repeated-parameter": "reject-400",
+            "ambiguous-percent-encoding": "reject-400",
+            "lexical-format": "canonical-unsigned-ascii-decimal",
+            "lexical-pattern": "^(0|[1-9][0-9]*)$",
+            "rejected-lexical-forms": [
+                "sign", "leading-zero", "empty", "whitespace", "exponent", "fraction",
+            ],
+            "parameters": {
+                "after_event_sequence": {
+                    "omission-default": 0,
+                    "explicit-default-equivalent": True,
+                    "minimum": 0,
+                    "maximum": 9_007_199_254_740_991,
+                },
+                "limit": {
+                    "omission-default": 1000,
+                    "explicit-default-equivalent": True,
+                    "minimum": 1,
+                    "maximum": 1000,
+                },
+            },
+            "malformed-or-out-of-range": "reject-400",
+            "valid-retention-expiry": "respond-410",
+        }
+    else:
+        query = {
+            "mode": "forbidden",
+            "empty-marker": "reject-400",
+            "unknown-parameter": "reject-400",
+            "repeated-parameter": "reject-400",
+        }
+    return {
+        "authority-version": "runtime-read-http-authority-v1",
+        "operation-recognition": {
+            "method": "GET",
+            "path-shape": route,
+            "match": "exact",
+            "unknown-route": "c01-out-of-scope",
+            "pre-operation-parser-failure": "c01-out-of-scope",
+        },
+        "runtime-run-id": {
+            "segment-count": 1,
+            "min-length": 1,
+            "max-length": 200,
+            "case-fold": "forbidden",
+            "unicode-normalization": "forbidden",
+            "slash-collapse": "forbidden",
+            "dot-segment-processing": "forbidden",
+            "encoded-path-separator-equivalence": "forbidden",
+        },
+        "query": query,
+        "body": {
+            "mode": "forbidden",
+            "nonzero-content-length": "reject-400",
+            "ambiguous-content-length": "reject-400",
+            "transfer-encoding": "reject-400",
+            "expect": "reject-400",
+        },
+        "descriptor-digest-mismatch": "reject-403",
+    }
+
+
+def _c01_expected_retry(events: bool) -> dict[str, Any]:
+    return {
+        "authority-version": "runtime-read-retry-authority-v1",
+        "durable-caller-minimum-wait": "at-least-retry-after",
+        "attempt": "fresh-authorized-read-attempt",
+        "token": "fresh",
+        "fencing": "non-stale",
+        "descriptor-digest": "recompute-for-new-attempt-token-fencing",
+        "logical-status-target": "not-applicable" if events else "unchanged",
+        "event-cursor-limit": "unchanged" if events else "not-applicable",
+        "event-cursor-advance-on-429": "forbidden" if events else "not-applicable",
+        "adapter-auto-retry": "forbidden",
+        "mutation-replay": "forbidden",
+    }
+
+
+def _c01_validate_openapi_and_schemas(root: Path) -> None:
+    document = yaml.safe_load(
+        (root / "openapi/agent-runtime-provider-v1.yaml").read_text(encoding="utf-8")
+    )
+    if document.get("info", {}).get("version") != "1.0.1":
+        raise AssertionError("C01 Runtime OpenAPI version drift")
+    operations = _c01_runtime_read_operations(document)
+    admission = {
+        "operation-recognition-required": True,
+        "caller-token-descriptor-binding-required": True,
+        "before-provider-state-read": True,
+        "independent-of-run-existence": True,
+        "listener-saturation-eligible": False,
+    }
+    for operation_id, events in (
+        ("getAgentRuntimeRun", False), ("readAgentRuntimeEvents", True),
+    ):
+        operation = operations[operation_id]["operation"]
+        expected_route = (
+            "/v1/runs/{runtime_run_id}/events" if events
+            else "/v1/runs/{runtime_run_id}"
+        )
+        if operations[operation_id]["route"] != expected_route:
+            raise AssertionError(f"C01 Runtime read route drift: {operation_id}")
+        if operation.get("x-runtime-read-http-authority") != _c01_expected_http_authority(events):
+            raise AssertionError(f"C01 Runtime read HTTP authority drift: {operation_id}")
+        expected_precedence = ["400", "401", "403", "429", "404"]
+        if events:
+            expected_precedence.append("410")
+        expected_precedence.append("200")
+        if operation.get("x-runtime-read-response-precedence") != expected_precedence:
+            raise AssertionError(f"C01 Runtime read precedence drift: {operation_id}")
+        if operation.get("x-runtime-read-admission") != admission:
+            raise AssertionError(f"C01 Runtime read admission drift: {operation_id}")
+        if operation.get("x-runtime-read-retry") != _c01_expected_retry(events):
+            raise AssertionError(f"C01 Runtime read retry drift: {operation_id}")
+        for status, response_name in (
+            ("400", "RuntimeReadBadRequest"), ("429", "RuntimeReadTooManyRequests"),
+        ):
+            if operation.get("responses", {}).get(status) != {
+                "$ref": f"#/components/responses/{response_name}"
+            }:
+                raise AssertionError(f"C01 Runtime read {status} response binding drift")
+
+    responses = document["components"]["responses"]
+    bad_request = responses["RuntimeReadBadRequest"]
+    if bad_request.get("x-runtime-read-header-authority") != {
+        "authority-version": "runtime-read-header-authority-v1",
+        "retry-after": {"presence": "forbidden"},
+    } or "headers" in bad_request:
+        raise AssertionError("C01 400 Retry-After authority drift")
+    throttled = responses["RuntimeReadTooManyRequests"]
+    if throttled.get("x-runtime-read-header-authority") != {
+        "authority-version": "runtime-read-header-authority-v1",
+        "retry-after": {
+            "presence": "required",
+            "cardinality": "exactly-one",
+            "wire-format": "canonical-decimal-integer-delta-seconds",
+            "lexical-pattern": "^[1-9][0-9]*$",
+            "rejected-lexical-forms": [
+                "leading-zero", "plus-sign", "minus-sign", "whitespace", "decimal-point",
+                "exponent", "non-ascii-digit", "empty",
+            ],
+            "minimum": 1,
+            "invalid-response-on": [
+                "missing", "repeated", "non-integer", "zero", "negative", "unsafe-parse",
+            ],
+            "invalid-response-retry": "forbidden",
+        },
+    }:
+        raise AssertionError("C01 429 raw Retry-After authority drift")
+    if throttled.get("headers", {}).get("Retry-After", {}).get("required") is not True:
+        raise AssertionError("C01 429 Retry-After cardinality drift")
+    if throttled["headers"]["Retry-After"].get("schema") != {
+        "type": "integer", "minimum": 1,
+    }:
+        raise AssertionError("C01 429 parsed Retry-After boundary drift")
+
+    schema_profiles = {
+        "agent-runtime-read-bad-request-error.schema.json": (
+            "urn:agent-platform:agent-runtime-read-bad-request-error:v1",
+            "RUNTIME_READ_REQUEST_INVALID", False,
+        ),
+        "agent-runtime-read-throttled-error.schema.json": (
+            "urn:agent-platform:agent-runtime-read-throttled-error:v1",
+            "RUNTIME_READ_THROTTLED", True,
+        ),
+    }
+    expected_refs = {
+        "RuntimeReadBadRequest": "../schemas/agent-runtime-read-bad-request-error.schema.json",
+        "RuntimeReadTooManyRequests": "../schemas/agent-runtime-read-throttled-error.schema.json",
+    }
+    for response_name, reference in expected_refs.items():
+        if responses[response_name].get("content", {}).get("application/json", {}).get("schema") != {
+            "$ref": reference
+        }:
+            raise AssertionError(f"C01 response body Schema binding drift: {response_name}")
+    for filename, (schema_id, code, retryable) in schema_profiles.items():
+        schema = json.loads((root / "schemas" / filename).read_text(encoding="utf-8"))
+        if schema.get("$id") != schema_id or schema.get("unevaluatedProperties") is not False:
+            raise AssertionError(f"C01 error Schema identity/closure drift: {filename}")
+        if schema.get("allOf", [{}])[0] != {"$ref": "urn:agent-platform:standard-error:v1"}:
+            raise AssertionError(f"C01 error Schema StandardError binding drift: {filename}")
+        properties = schema.get("allOf", [{}, {}])[1].get("properties", {})
+        if properties.get("code") != {"const": code} or properties.get("retryable") != {
+            "const": retryable
+        }:
+            raise AssertionError(f"C01 error Schema code/retryable drift: {filename}")
+        if properties.get("trace_id") != {"type": "string", "minLength": 1}:
+            raise AssertionError(f"C01 error Schema trace drift: {filename}")
+        if code == "RUNTIME_READ_REQUEST_INVALID":
+            if properties.get("message") != {"const": "Runtime read request is invalid."}:
+                raise AssertionError("C01 400 message drift")
+        elif properties.get("message") != {
+            "type": "string", "minLength": 1, "maxLength": 2000,
+        }:
+            raise AssertionError("C01 429 bounded message drift")
+
+
+def _c01_stable_constraint_id(entry: dict[str, Any]) -> str:
+    material = (
+        f"{entry['schema_id']}\n{entry['constraint_index']}\n{entry['statement']}"
+    ).encode()
+    return "sem-" + hashlib.sha256(material).hexdigest()[:16]
+
+
+def _c01_snapshot_protected_state() -> dict[str, str]:
+    roots = [CONTRACT_ROOT, SCRIPT_ROOT / "evidence", SCRIPT_ROOT / "build"]
+    snapshot: dict[str, str] = {}
+    for root in roots:
+        if not root.exists():
+            continue
+        for path in sorted(item for item in root.rglob("*") if item.is_file()):
+            key = f"{root}:{path.relative_to(root).as_posix()}"
+            snapshot[key] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return snapshot
+
+
+def _c01_partition_traceability(
+    root: Path, traceability: dict[str, Any], known_checks: set[str],
+    executed_checks: set[str],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    if set(traceability) != {
+        "traceability_id", "version", "generated_at", "critical_schema_ids", "constraints",
+    }:
+        raise AssertionError("Semantic traceability top-level shape drift")
+    schemas_by_id: dict[str, dict[str, Any]] = {}
+    for path in sorted((root / "schemas").glob("*.json")):
+        schema = json.loads(path.read_text(encoding="utf-8"))
+        if schema["$id"] in schemas_by_id:
+            raise AssertionError("Semantic traceability Schema ID collision")
+        schemas_by_id[schema["$id"]] = schema
+    expected_critical = {
+        schema_id
+        for schema_id, schema in schemas_by_id.items()
+        if schema.get("x-semantic-constraints")
+    }
+    declared_critical = traceability["critical_schema_ids"]
+    if len(declared_critical) != len(set(declared_critical)) or set(declared_critical) != expected_critical:
+        raise AssertionError(
+            "Semantic traceability does not enumerate every schema with stable semantic constraints"
+        )
+    generated_critical = {
+        (schema_id, index): statement
+        for schema_id in declared_critical
+        for index, statement in enumerate(schemas_by_id[schema_id]["x-semantic-constraints"])
+    }
+    suite_cache: dict[str, set[str]] = {}
+    identifiers: set[str] = set()
+    coordinates: set[tuple[str, int]] = set()
+    critical_entries: list[dict[str, Any]] = []
+    supplemental_entries: list[dict[str, Any]] = []
+    for entry in traceability["constraints"]:
+        if set(entry) != {
+            "constraint_id", "schema_id", "constraint_index", "statement", "enforcements",
+        }:
+            raise AssertionError("Semantic traceability entry shape drift")
+        if entry["schema_id"] not in schemas_by_id:
+            raise AssertionError("Semantic traceability references an unresolved Schema")
+        if not isinstance(entry["constraint_index"], int) or entry["constraint_index"] < 0:
+            raise AssertionError("Semantic traceability constraint index drift")
+        if entry["constraint_id"] != _c01_stable_constraint_id(entry):
+            raise AssertionError("Semantic traceability stable constraint ID drift")
+        coordinate = (entry["schema_id"], entry["constraint_index"])
+        if entry["constraint_id"] in identifiers or coordinate in coordinates:
+            raise AssertionError("Semantic traceability ID or Schema/index collision")
+        identifiers.add(entry["constraint_id"])
+        coordinates.add(coordinate)
+        if coordinate in generated_critical:
+            if entry["statement"] != generated_critical[coordinate]:
+                raise AssertionError("Semantic traceability is stale relative to its source Schema")
+            critical_entries.append(entry)
+        else:
+            if entry["schema_id"] in expected_critical:
+                raise AssertionError("Critical semantic constraint coordinate is outside its source Schema")
+            supplemental_entries.append(copy.deepcopy(entry))
+        if not entry["enforcements"]:
+            raise AssertionError("Semantic traceability constraint has no enforcement responsibility")
+        for enforcement in entry["enforcements"]:
+            if set(enforcement) != {"kind", "artifact", "check_id", "status"}:
+                raise AssertionError("Semantic traceability enforcement shape drift")
+            artifact = enforcement["artifact"]
+            if artifact == SEMANTIC_VALIDATOR_URN:
+                enforcement_path = Path(__file__).resolve()
+            elif artifact.startswith(BLUEPRINT_ARTIFACT_URN_PREFIX):
+                try:
+                    enforcement_path = BLUEPRINT_ARTIFACTS[artifact]
+                except KeyError as error:
+                    raise AssertionError(
+                        f"Unknown Blueprint responsibility URN: {artifact}"
+                    ) from error
+            else:
+                enforcement_path = root / artifact
+            if not enforcement_path.exists():
+                raise AssertionError("Semantic traceability references a missing enforcement artifact")
+            if enforcement["status"] == "contract_gate":
+                if enforcement["kind"] != "semantic_validator" or artifact != SEMANTIC_VALIDATOR_URN:
+                    raise AssertionError(
+                        "Contract-gate semantic evidence must be an executable semantic-validator check"
+                    )
+                if enforcement["check_id"] not in known_checks:
+                    raise AssertionError("Semantic traceability references an unknown contract check ID")
+                if enforcement["check_id"] not in executed_checks:
+                    raise AssertionError(
+                        "Semantic traceability references a contract check not executed in this Gate"
+                    )
+            elif enforcement["status"] == "phase0_implementation_required":
+                if enforcement_path.suffix == ".json":
+                    cache_key = str(enforcement_path)
+                    if cache_key not in suite_cache:
+                        suite = json.loads(enforcement_path.read_text(encoding="utf-8"))
+                        suite_cache[cache_key] = {
+                            test["test_id"]
+                            for profile in suite.get("profiles", [])
+                            for test in profile.get("tests", [])
+                        }
+                    if enforcement["kind"] != "conformance_test" or (
+                        enforcement["check_id"] not in suite_cache[cache_key]
+                    ):
+                        raise AssertionError(
+                            "Semantic traceability references a missing Conformance Suite test_id"
+                        )
+                elif artifact.startswith(BLUEPRINT_ARTIFACT_URN_PREFIX):
+                    if f"`{enforcement['check_id']}`" not in enforcement_path.read_text(
+                        encoding="utf-8"
+                    ):
+                        raise AssertionError(
+                            "Semantic traceability references an undocumented Phase 0 responsibility ID"
+                        )
+                else:
+                    raise AssertionError(
+                        "Phase 0 implementation evidence must resolve to a Suite JSON or responsibility Markdown"
+                    )
+            else:
+                raise AssertionError("Semantic traceability contains an unsupported enforcement status")
+    if set(generated_critical) != {
+        (entry["schema_id"], entry["constraint_index"]) for entry in critical_entries
+    }:
+        raise AssertionError("Semantic traceability does not cover every critical constraint")
+    return critical_entries, supplemental_entries
+
+
+def _c01_validate_supplemental_traceability(
+    root: Path, known_checks: set[str], executed_checks: set[str],
+) -> None:
+    traceability = json.loads((root / "semantic-constraints-v1.json").read_text(encoding="utf-8"))
+    _critical, supplemental = _c01_partition_traceability(
+        root, traceability, known_checks, executed_checks,
+    )
+    if [entry["schema_id"] for entry in supplemental] != list(_C01_RUNTIME_READ_SCHEMA_CASES):
+        raise AssertionError("C01 supplemental traceability order/set drift")
+    for entry in supplemental:
+        expected_suite_ids = _C01_RUNTIME_READ_SCHEMA_CASES[entry["schema_id"]]
+        contract_gate = []
+        suite_checks = []
+        for enforcement in entry["enforcements"]:
+            if set(enforcement) != {"kind", "artifact", "check_id", "status"}:
+                raise AssertionError("C01 supplemental enforcement shape drift")
+            if enforcement["status"] == "contract_gate":
+                contract_gate.append(enforcement)
+                if enforcement != {
+                    "kind": "semantic_validator",
+                    "artifact": SEMANTIC_VALIDATOR_URN,
+                    "check_id": _C01_RUNTIME_READ_CHECK,
+                    "status": "contract_gate",
+                }:
+                    raise AssertionError("C01 supplemental Contract Gate mapping drift")
+            elif enforcement["status"] == "phase0_implementation_required":
+                suite_checks.append(enforcement["check_id"])
+                if enforcement["kind"] != "conformance_test" or enforcement["artifact"] != (
+                    "conformance/runtime/v1/suite.json"
+                ):
+                    raise AssertionError("C01 supplemental Suite reference drift")
+            else:
+                raise AssertionError("C01 supplemental enforcement status drift")
+        if len(contract_gate) != 1 or suite_checks != expected_suite_ids:
+            raise AssertionError("C01 supplemental enforcement order/cardinality drift")
+
+
+def _c01_validate_suite_cases(root: Path) -> None:
+    suite = json.loads((root / "conformance/runtime/v1/suite.json").read_text(encoding="utf-8"))
+    runtime = next(
+        profile for profile in suite["profiles"] if profile["profile_id"] == "runtime-core-v1"
+    )
+    expected = [
+        "status-read-invalid-request-400", "event-read-invalid-request-400",
+        "status-read-throttled-429", "event-read-throttled-429",
+    ]
+    selected = [test for test in runtime["tests"] if test["test_id"] in expected]
+    if [test["test_id"] for test in selected] != expected:
+        raise AssertionError("C01 Runtime Suite case order/set drift")
+    required_tokens = {
+        expected[0]: ["c01-out-of-scope", "cannot satisfy this case", "remains 403", "no Retry-After"],
+        expected[1]: ["c01-out-of-scope", "Malformed or out-of-range input is 400", "retention is 410", "remains 403"],
+        expected[2]: ["exactly one raw Retry-After", "response invalid and forbids retry", "recomputes rather than reuses"],
+        expected[3]: ["exactly one raw Retry-After", "preserves cursor and limit", "does not advance the cursor"],
+    }
+    for test in selected:
+        description = test["description"]
+        if any(token not in description for token in required_tokens[test["test_id"]]):
+            raise AssertionError(f"C01 Runtime Suite authority case drift: {test['test_id']}")
+        if "phase0_implementation_required" not in description or "does not claim Provider passage" not in description:
+            raise AssertionError(f"C01 Runtime Suite maturity boundary drift: {test['test_id']}")
+
+
+def validate_c01_runtime_read_semantics(
+    root: Path, known_checks: set[str], executed_checks: set[str],
+) -> None:
+    executed_before = set(executed_checks)
+    try:
+        _c01_validate_openapi_and_schemas(root)
+        _c01_validate_runtime_registries(root)
+        _c01_validate_suite_cases(root)
+        if _C01_RUNTIME_READ_CHECK not in known_checks:
+            raise AssertionError("C01 Runtime read semantic check is not registered")
+        executed_checks.add(_C01_RUNTIME_READ_CHECK)
+        _c01_validate_supplemental_traceability(root, known_checks, executed_checks)
+    except Exception:
+        executed_checks.clear()
+        executed_checks.update(executed_before)
+        raise
+
+
+def self_test_c01_runtime_read() -> None:
+    protected_before = _c01_snapshot_protected_state()
+    with tempfile.TemporaryDirectory(prefix="c01-semantic-") as temporary:
+        root = Path(temporary) / "contract"
+        shutil.copytree(CONTRACT_ROOT, root)
+        active_suite_path = root / _C01_RUNTIME_SUITE_ACTIVE
+        active_suite = json.loads(active_suite_path.read_text(encoding="utf-8"))
+        active_suite["suite_digest"] = _c01_jcs_digest(active_suite, "suite_digest")
+        active_suite_path.write_text(
+            json.dumps(active_suite, indent=2) + "\n", encoding="utf-8",
+        )
+        known = {_C01_RUNTIME_READ_CHECK}
+        executed: set[str] = set()
+        validate_c01_runtime_read_semantics(root, known, executed)
+        if executed != {_C01_RUNTIME_READ_CHECK}:
+            raise AssertionError("C01 semantic check was not marked after successful structure validation")
+
+        openapi_path = root / "openapi/agent-runtime-provider-v1.yaml"
+        original_openapi = openapi_path.read_bytes()
+        document = yaml.safe_load(original_openapi)
+        document["paths"]["/v1/runs/{runtime_run_id}"]["get"][
+            "x-runtime-read-response-precedence"
+        ][0:2] = ["401", "400"]
+        openapi_path.write_text(yaml.safe_dump(document, sort_keys=False), encoding="utf-8")
+        mutation_executed: set[str] = set()
+        try:
+            validate_c01_runtime_read_semantics(root, known, mutation_executed)
+        except AssertionError:
+            pass
+        else:
+            raise AssertionError("C01 semantic OpenAPI structure mutation did not fail closed")
+        if mutation_executed:
+            raise AssertionError("C01 failed structure mutation retained an executed check mark")
+        openapi_path.write_bytes(original_openapi)
+
+        semantic_path = root / "semantic-constraints-v1.json"
+        original_semantic = semantic_path.read_bytes()
+        traceability = json.loads(original_semantic)
+        supplemental = [
+            entry for entry in traceability["constraints"]
+            if entry["schema_id"] in _C01_RUNTIME_READ_SCHEMA_CASES
+        ]
+        supplemental[0]["enforcements"][0]["check_id"] = "runtime_read.unknown"
+        semantic_path.write_text(json.dumps(traceability, indent=2) + "\n", encoding="utf-8")
+        mutation_executed = set()
+        try:
+            validate_c01_runtime_read_semantics(root, known, mutation_executed)
+        except AssertionError:
+            pass
+        else:
+            raise AssertionError("C01 semantic unknown check mutation did not fail closed")
+        if mutation_executed:
+            raise AssertionError("C01 failed traceability mutation retained an executed check mark")
+        semantic_path.write_bytes(original_semantic)
+
+        traceability = json.loads(original_semantic)
+        supplemental = [
+            entry for entry in traceability["constraints"]
+            if entry["schema_id"] in _C01_RUNTIME_READ_SCHEMA_CASES
+        ]
+        supplemental[0]["enforcements"][0]["check_id"] = "runtime_read.unexecuted"
+        semantic_path.write_text(json.dumps(traceability, indent=2) + "\n", encoding="utf-8")
+        mutation_executed = set()
+        try:
+            validate_c01_runtime_read_semantics(
+                root, known | {"runtime_read.unexecuted"}, mutation_executed,
+            )
+        except AssertionError:
+            pass
+        else:
+            raise AssertionError("C01 semantic known-but-unexecuted mutation did not fail closed")
+        if mutation_executed:
+            raise AssertionError("C01 unexecuted-check mutation retained an executed check mark")
+        semantic_path.write_bytes(original_semantic)
+
+        traceability = json.loads(original_semantic)
+        indexes = [
+            index for index, entry in enumerate(traceability["constraints"])
+            if entry["schema_id"] in _C01_RUNTIME_READ_SCHEMA_CASES
+        ]
+        traceability["constraints"][indexes[0]], traceability["constraints"][indexes[1]] = (
+            traceability["constraints"][indexes[1]], traceability["constraints"][indexes[0]],
+        )
+        semantic_path.write_text(json.dumps(traceability, indent=2) + "\n", encoding="utf-8")
+        try:
+            validate_c01_runtime_read_semantics(root, known, set())
+        except AssertionError:
+            pass
+        else:
+            raise AssertionError("C01 semantic supplemental reorder did not fail closed")
+        semantic_path.write_bytes(original_semantic)
+
+        def expect_failure(label: str) -> None:
+            mutation_executed: set[str] = set()
+            try:
+                validate_c01_runtime_read_semantics(root, known, mutation_executed)
+            except AssertionError:
+                pass
+            else:
+                raise AssertionError(f"C01 semantic mutation did not fail closed: {label}")
+            if mutation_executed:
+                raise AssertionError(f"C01 semantic mutation retained an executed mark: {label}")
+
+        for label, mutate in (
+            (
+                "supplemental-delete",
+                lambda value, indexes: value["constraints"].pop(indexes[0]),
+            ),
+            (
+                "supplemental-statement",
+                lambda value, indexes: value["constraints"][indexes[0]].update({"statement": "drift"}),
+            ),
+            (
+                "supplemental-duplicate-collision",
+                lambda value, indexes: value["constraints"].append(copy.deepcopy(value["constraints"][indexes[0]])),
+            ),
+            (
+                "supplemental-unresolved-schema",
+                lambda value, indexes: value["constraints"][indexes[0]].update({"schema_id": "urn:missing"}),
+            ),
+        ):
+            traceability = json.loads(original_semantic)
+            indexes = [
+                index for index, entry in enumerate(traceability["constraints"])
+                if entry["schema_id"] in _C01_RUNTIME_READ_SCHEMA_CASES
+            ]
+            mutate(traceability, indexes)
+            semantic_path.write_text(json.dumps(traceability, indent=2) + "\n", encoding="utf-8")
+            expect_failure(label)
+            semantic_path.write_bytes(original_semantic)
+
+        capabilities_path = root / "examples/contracts/agent-runtime-capabilities.json"
+        capabilities_bytes = capabilities_path.read_bytes()
+        capabilities = json.loads(capabilities_bytes)
+        capabilities["checkpoint_profiles"][0]["suite_digest"] = "sha256:" + "0" * 64
+        capabilities_path.write_text(json.dumps(capabilities, indent=2) + "\n", encoding="utf-8")
+        expect_failure("unresolved-suite-tuple")
+        capabilities_path.write_bytes(capabilities_bytes)
+
+        revision_path = root / "examples/contracts/agent-runtime-provider-revision.json"
+        revision_bytes = revision_path.read_bytes()
+        revision = json.loads(revision_bytes)
+        revision["port"]["contract_digest"] = "sha256:" + "0" * 64
+        revision_path.write_text(json.dumps(revision, indent=2) + "\n", encoding="utf-8")
+        expect_failure("unresolved-port-tuple")
+        revision_path.write_bytes(revision_bytes)
+
+        revision = json.loads(revision_bytes)
+        revision["conformance"][0].update({
+            "suite_version": "1.0.1",
+            "suite_digest": active_suite["suite_digest"],
+            "result": "passed",
+        })
+        revision_path.write_text(json.dumps(revision, indent=2) + "\n", encoding="utf-8")
+        expect_failure("active-suite-passed")
+        revision_path.write_bytes(revision_bytes)
+
+        snapshot_suite_path = root / _C01_RUNTIME_SUITE_SNAPSHOT
+        snapshot_suite_bytes = snapshot_suite_path.read_bytes()
+        snapshot_suite_path.unlink()
+        expect_failure("missing-suite-snapshot")
+        snapshot_suite_path.parent.mkdir(parents=True, exist_ok=True)
+        snapshot_suite_path.write_bytes(snapshot_suite_bytes)
+
+        duplicate_suite_path = snapshot_suite_path.parent.parent / "duplicate" / "suite.json"
+        duplicate_suite_path.parent.mkdir(parents=True, exist_ok=True)
+        duplicate_suite_path.write_bytes(snapshot_suite_bytes)
+        expect_failure("duplicate-suite-tuple")
+        duplicate_suite_path.unlink()
+
+        active_openapi_path = root / _C01_RUNTIME_OPENAPI_ACTIVE
+        snapshot_openapi_path = root / _C01_RUNTIME_OPENAPI_SNAPSHOT
+        active_openapi_bytes = active_openapi_path.read_bytes()
+        snapshot_openapi_bytes = snapshot_openapi_path.read_bytes()
+        active_openapi_path.write_bytes(snapshot_openapi_bytes)
+        snapshot_openapi_path.write_bytes(active_openapi_bytes)
+        expect_failure("active-snapshot-port-swap")
+        active_openapi_path.write_bytes(active_openapi_bytes)
+        snapshot_openapi_path.write_bytes(snapshot_openapi_bytes)
+
+        final_executed: set[str] = set()
+        validate_c01_runtime_read_semantics(root, known, final_executed)
+    if _c01_snapshot_protected_state() != protected_before:
+        raise AssertionError("C01 semantic self-test changed protected Contract/build/evidence state")
+
+
+if "--self-test-c01-runtime-read" in sys.argv:
+    if sys.argv[1:] != ["--self-test-c01-runtime-read"]:
+        raise SystemExit("--self-test-c01-runtime-read cannot be combined with other arguments")
+    self_test_c01_runtime_read()
+    print("C01 Runtime read semantic authority self-test passed.")
+    raise SystemExit(0)
+if len(sys.argv) != 1:
+    raise SystemExit(f"Unknown arguments: {sys.argv[1:]}")
 
 
 SCHEMA_REGISTRY = Registry()
@@ -258,6 +1019,7 @@ KNOWN_CONTRACT_CHECKS = {
     "usage_observation.incomplete_status",
     "usage_observation.provider_boundary",
     "semantic_traceability.known_but_unexecuted",
+    "runtime_read.http_authority",
 }
 EXECUTED_CONTRACT_CHECKS: set[str] = set()
 
@@ -2105,66 +2867,9 @@ def validate_canonical_event_registry_binding(
 
 
 def validate_semantic_traceability(traceability: dict[str, Any]) -> None:
-    schemas_by_id = {}
-    for path in sorted((CONTRACT_ROOT / "schemas").glob("*.json")):
-        schema = json.loads(path.read_text(encoding="utf-8"))
-        schemas_by_id[schema["$id"]] = schema
-    expected_critical_schema_ids = {
-        schema_id
-        for schema_id, schema in schemas_by_id.items()
-        if schema.get("x-semantic-constraints")
-    }
-    if set(traceability["critical_schema_ids"]) != expected_critical_schema_ids:
-        raise AssertionError("Semantic traceability does not enumerate every schema with stable semantic constraints")
-    entries_by_schema: dict[str, list[dict[str, Any]]] = {}
-    identifiers: set[str] = set()
-    for entry in traceability["constraints"]:
-        if entry["constraint_id"] in identifiers:
-            raise AssertionError("Semantic traceability contains duplicate constraint IDs")
-        identifiers.add(entry["constraint_id"])
-        entries_by_schema.setdefault(entry["schema_id"], []).append(entry)
-        for enforcement in entry["enforcements"]:
-            enforcement_path = resolve_enforcement_artifact(enforcement["artifact"])
-            if not enforcement_path.exists():
-                raise AssertionError("Semantic traceability references a missing enforcement artifact")
-            if enforcement["status"] == "contract_gate":
-                if enforcement["kind"] != "semantic_validator" or enforcement["artifact"] != SEMANTIC_VALIDATOR_URN:
-                    raise AssertionError("Contract-gate semantic evidence must be an executable semantic-validator check")
-                if enforcement["check_id"] not in KNOWN_CONTRACT_CHECKS:
-                    raise AssertionError("Semantic traceability references an unknown contract check ID")
-                if enforcement["check_id"] not in EXECUTED_CONTRACT_CHECKS:
-                    raise AssertionError("Semantic traceability references a contract check not executed in this Gate")
-            elif enforcement["status"] == "phase0_implementation_required":
-                if enforcement_path.suffix == ".json":
-                    suite = json.loads(enforcement_path.read_text(encoding="utf-8"))
-                    test_ids = {
-                        test["test_id"]
-                        for profile in suite.get("profiles", [])
-                        for test in profile.get("tests", [])
-                    }
-                    if enforcement["kind"] != "conformance_test" or enforcement["check_id"] not in test_ids:
-                        raise AssertionError("Semantic traceability references a missing Conformance Suite test_id")
-                elif enforcement["artifact"].startswith(BLUEPRINT_ARTIFACT_URN_PREFIX):
-                    responsibility = f"`{enforcement['check_id']}`"
-                    if responsibility not in enforcement_path.read_text(encoding="utf-8"):
-                        raise AssertionError("Semantic traceability references an undocumented Phase 0 responsibility ID")
-                else:
-                    raise AssertionError("Phase 0 implementation evidence must resolve to a Suite JSON or responsibility Markdown")
-            else:
-                raise AssertionError("Semantic traceability contains an unsupported enforcement status")
-    for schema_id in traceability["critical_schema_ids"]:
-        schema = schemas_by_id.get(schema_id)
-        if schema is None:
-            raise AssertionError("Semantic traceability references an unknown critical Schema")
-        statements = schema.get("x-semantic-constraints", [])
-        entries = sorted(entries_by_schema.get(schema_id, []), key=lambda item: item["constraint_index"])
-        if len(entries) != len(statements):
-            raise AssertionError("Semantic traceability does not cover every critical constraint")
-        for index, (statement, entry) in enumerate(zip(statements, entries)):
-            if entry["constraint_index"] != index or entry["statement"] != statement:
-                raise AssertionError("Semantic traceability is stale relative to its source Schema")
-            if not entry["enforcements"]:
-                raise AssertionError("Critical semantic constraint has no enforcement responsibility")
+    _c01_partition_traceability(
+        CONTRACT_ROOT, traceability, KNOWN_CONTRACT_CHECKS, EXECUTED_CONTRACT_CHECKS,
+    )
 
 
 def validate_work_order_control_contract(request: dict[str, Any]) -> None:
@@ -5548,6 +6253,9 @@ for case in branch_fixture["cases"]:
         raise AssertionError(f"Expected ConversationBranch semantic fixture to fail: {case['id']}")
 
 
+validate_c01_runtime_read_semantics(
+    CONTRACT_ROOT, KNOWN_CONTRACT_CHECKS, EXECUTED_CONTRACT_CHECKS,
+)
 validate_semantic_traceability(semantic_traceability)
 
 phase0_closure_negative = load("tests/semantic-invalid/phase0-closure-cases.json")
