@@ -2,8 +2,8 @@
   "contract_line": "agent",
   "status": "candidate-not-frozen",
   "digest_profile": "RFC8785-JCS+SHA-256; Strict-I-JSON-v2.0",
-  "resource_count": 269,
-  "resources_digest": "sha256:08c30919ec468f3b21762835499af49943c8103b7064c2a6ea38b02e06e9a6ee",
+  "resource_count": 273,
+  "resources_digest": "sha256:49e31b6840d358622520421a4cf4f86c1f9cfe4f394c49c96dff8aecb9914cf4",
   "resources": [
     {
       "path": "conformance/agent-access/v1/suite.json",
@@ -36,10 +36,16 @@
       "digest": "sha256:d110672fe3cbb86377252871888f234fc44afae946ff09324cc6345377c682bc"
     },
     {
+      "path": "conformance/runtime/v1/revisions/1.0.0/suite.json",
+      "kind": "governance",
+      "id": "conformance/runtime/v1/revisions/1.0.0/suite.json",
+      "digest": "sha256:268ff34c549e01f223201262f2dab96d2718146aea383a8180d8cbf26a52eb44"
+    },
+    {
       "path": "conformance/runtime/v1/suite.json",
       "kind": "governance",
       "id": "conformance/runtime/v1/suite.json",
-      "digest": "sha256:268ff34c549e01f223201262f2dab96d2718146aea383a8180d8cbf26a52eb44"
+      "digest": "sha256:488c98c31f754440f7902cee08933dc8e601335028429efec6fa6dfb81a5a264"
     },
     {
       "path": "conformance/sandbox/v1/suite.json",
@@ -114,10 +120,16 @@
       "digest": "sha256:63c9e468912ee9935d0036f3db4a272b9338cae2a9c3687f788cd6204c7c2950"
     },
     {
+      "path": "openapi/agent-runtime-provider-v1.0.0.snapshot.yaml",
+      "kind": "openapi",
+      "id": "openapi/agent-runtime-provider-v1.0.0.snapshot.yaml",
+      "digest": "sha256:f75bd9484d9059435021f65147cab1a22b4cb0376ea47ce6e165fde0494f5811"
+    },
+    {
       "path": "openapi/agent-runtime-provider-v1.yaml",
       "kind": "openapi",
       "id": "openapi/agent-runtime-provider-v1.yaml",
-      "digest": "sha256:f75bd9484d9059435021f65147cab1a22b4cb0376ea47ce6e165fde0494f5811"
+      "digest": "sha256:1436035510fc31e4d78f6fa1df52713e38d49d7ae40919b7ac977c5f254acc07"
     },
     {
       "path": "openapi/artifact-gateway-v1.yaml",
@@ -262,6 +274,18 @@
       "kind": "json-schema",
       "id": "urn:agent-platform:agent-runtime-invocation-token-claims:v1",
       "digest": "sha256:15bb2721233a857c9fe220c9bfed298ea50d90a87b94027ed4bd9fd7d6d60d42"
+    },
+    {
+      "path": "schemas/agent-runtime-read-bad-request-error.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:agent-runtime-read-bad-request-error:v1",
+      "digest": "sha256:a2e6d9360b2c381458735dcd8f78e5171648b0cd9b2d335b6d359db5a845f584"
+    },
+    {
+      "path": "schemas/agent-runtime-read-throttled-error.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:agent-runtime-read-throttled-error:v1",
+      "digest": "sha256:7d751983319d788947cb63dbe86f1fa0c057a568a37c83419f66552cda3d0624"
     },
     {
       "path": "schemas/agent-runtime-run-status.schema.json",
@@ -1620,5 +1644,5 @@
       "digest": "sha256:8a1b114c8c37cc1bcbcc841d7d5519846b2fabe0d3c0120924e3d7bb436219cd"
     }
   ],
-  "manifest_digest": "sha256:fac0299efcf04471f58f1f0668818a5148526371bd413deb5993c5aacb2762ce"
+  "manifest_digest": "sha256:acee4df6908167fb72846718f5f4590f4ac18aea68a62a7f4eafe8943a094b8f"
 }
