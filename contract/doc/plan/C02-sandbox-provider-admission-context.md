@@ -158,6 +158,12 @@ CPython `3.14.6` 基线；生成 evidence 已撤销，完整 pinned Contract Gat
 comparator 也只完成自身检查且返回 `N/A`，因为本地未提供 `CONTRACT_FROZEN_BASE_REF`。因此不能把
 此结果写作 Gate 通过、相对外部 frozen revision 的兼容性、Provider conformance 或生产就绪。
 
+随后在临时目录从 Python 官方源码构建 CPython `3.14.6`。该二进制版本正确，但本次 macOS 构建缺少
+`_ssl`；更关键的是 `requirements-contracts.txt` 的 PyYAML `6.0.3` hash 集不包含 CPython 3.14
+macOS arm64 wheel 的 `sha256:34d5fcd24b8445fadc33f9cf348c1047101756fd760b4dacb5c3e99755703310`。
+不能跳过 `--require-hashes`，所以 pinned Gate 仍须在受支持的、带 hash-pinned 依赖的 Python 3.14.6
+环境执行。此处是验证环境/lock 支持缺口，不是 Contract candidate 通过证据。
+
 ### 2026-08-20 Context fixture closure
 
 Schema positive/negative fixtures 和 semantic negative matrix 已覆盖缺少 digest、未知 member、Context
