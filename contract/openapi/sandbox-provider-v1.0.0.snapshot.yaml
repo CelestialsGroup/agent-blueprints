@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Sandbox Provider API
-  version: 1.1.0
+  version: 1.0.0
   description: >-
     Stable provider contract with no required backend. Phase 0 uses the platform's Native
     Sandbox Controller and an isolated execution backend; another conformant provider
@@ -28,41 +28,6 @@ tags:
 security:
 - SandboxMutualTLS: []
   SandboxInvocationBearer: []
-x-protected-operation-admission-context:
-  header: X-Agent-Sandbox-Admission-Context
-  schema_contract_id: urn:agent-platform:sandbox-provider-admission-context:v1
-  encoding: unpadded-base64url-utf8-rfc8785-jcs-v1
-  max_encoded_bytes: 16384
-  carrier_schema:
-    type: string
-    minLength: 1
-    maxLength: 16384
-    pattern: ^[A-Za-z0-9_-]+$
-  rejection:
-  - whitespace
-  - padding
-  - duplicate_header
-  - duplicate_json_member
-  - unknown_context_member
-  - multiple_json_value
-  - malformed_or_oversized_value
-  required_for_operation_ids:
-  - createSandbox
-  - restoreSandbox
-  - getSandbox
-  - setSandboxDesiredState
-  - extendSandboxLease
-  - executeInSandbox
-  - cancelSandboxExec
-  - openSandboxRuntimeSession
-  - createSandboxSnapshot
-  - terminateSandbox
-  - getSandboxOperation
-  - getSandboxExecResult
-  - getSandboxSnapshotManifest
-  - streamSandboxEvents
-  excluded_operation_ids:
-  - getSandboxCapabilities
 paths:
   /v1/capabilities:
     get:
@@ -638,10 +603,10 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      x-jws-header-contract-id: urn:agent-platform:sandbox-operation-jws-header:v2
-      x-jwt-claims-contract-id: urn:agent-platform:sandbox-operation-token-claims:v2
-      description: Short-lived token bound to the mTLS controller, ProviderRevision, exact
-        request Contract/Digest Profile, Admission Context and approved policy.
+      x-jws-header-contract-id: urn:agent-platform:sandbox-operation-jws-header:v1
+      x-jwt-claims-contract-id: urn:agent-platform:sandbox-operation-token-claims:v1
+      description: Short-lived token bound to ProviderRevision, operation, exact request
+        Contract/Digest Profile, attempt and approved policy.
   parameters:
     SandboxId:
       name: sandbox_id

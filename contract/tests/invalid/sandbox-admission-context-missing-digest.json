@@ -1,0 +1,21 @@
+{
+  "context_contract_id": "urn:agent-platform:sandbox-provider-admission-context:v1",
+  "context_digest_profile": "rfc8785-full-document-excluding-context-digest-v1",
+  "controller_subject": "spn_agent_sandbox_controller",
+  "provider_revision_id": "spr_01J00000000000000000000000",
+  "provider_instance_audience": "urn:agent-platform:provider-instance:spi_native_sandbox",
+  "tenant_id": "ten_01J00000000000000000000000",
+  "work_order_id": "wrk_01J00000000000000000000000",
+  "policy_digest": "sha256:f137d365462bb7d45ce8fcf1e81a30afaaf7a014ed42739fb80a683e7391d168",
+  "policy_decided_at": "2026-07-16T09:00:59Z",
+  "operation": "exec",
+  "sandbox_id": "sbx_01J00000000000000000000000",
+  "operation_id": "sop_exec_01",
+  "attempt_id": "sat_exec_01",
+  "fencing_token": 7,
+  "deadline_at": "2026-07-16T10:30:00Z",
+  "request_contract_id": "urn:agent-platform:sandbox-exec-request:v1",
+  "request_digest_profile": "rfc8785-request-excluding-request-digest-v1",
+  "request_digest": "sha256:d7c0878261b3c9563e14fa4b4cca5b2f960c0397c291312a6acd74592563479b",
+  "http_target": {"method": "POST", "path": "/v1/sandboxes/sbx_01J00000000000000000000000/exec", "normalized_query": []}
+}

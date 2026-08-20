@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:sandbox-operation-jws-header:v2",
+  "title": "SandboxOperationAdmissionJwsHeader",
+  "type": "object",
+  "required": ["alg", "kid", "typ"],
+  "properties": {
+    "alg": { "enum": ["EdDSA", "ES256"] },
+    "kid": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "typ": { "const": "agent-sandbox-operation-admission+jwt" }
+  },
+  "additionalProperties": false
+}

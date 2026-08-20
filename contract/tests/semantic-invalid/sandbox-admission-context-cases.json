@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {"id": "context-digest-mismatch", "mutation": "context_digest_mismatch"},
+    {"id": "controller-mismatch", "mutation": "controller_mismatch"},
+    {"id": "http-target-substitution", "mutation": "http_target_substitution"},
+    {"id": "token-context-digest-mismatch", "mutation": "token_context_digest_mismatch"},
+    {"id": "policy-time-mismatch", "mutation": "policy_time_mismatch"},
+    {"id": "request-digest-mismatch", "mutation": "request_digest_mismatch"},
+    {"id": "carrier-padding", "mutation": "carrier_padding"},
+    {"id": "carrier-duplicate-json-member", "mutation": "carrier_duplicate_json_member"},
+    {"id": "carrier-multiple-json-values", "mutation": "carrier_multiple_json_values"},
+    {"id": "carrier-unknown-member", "mutation": "carrier_unknown_member"}
+  ]
+}

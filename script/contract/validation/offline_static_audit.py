@@ -765,6 +765,7 @@ jws_header_profiles = {
     "egress-invocation-jws-header.schema.json": "agent-egress-invocation+jwt",
     "agent-runtime-invocation-jws-header.schema.json": "agent-runtime-invocation+jwt",
     "sandbox-operation-jws-header.schema.json": "agent-sandbox-operation+jwt",
+    "sandbox-operation-jws-header-v2.schema.json": "agent-sandbox-operation-admission+jwt",
     "credential-operation-jws-header.schema.json": "agent-credential-operation+jwt",
 }
 assert len(set(jws_header_profiles.values())) == len(jws_header_profiles)
@@ -802,7 +803,7 @@ jwt_security_profiles = {
         "agent-runtime-invocation-jws-header.schema.json", "agent-runtime-invocation-token-claims.schema.json",
     ),
     ("sandbox-provider-v1.yaml", "SandboxInvocationBearer"): (
-        "sandbox-operation-jws-header.schema.json", "sandbox-operation-token-claims.schema.json",
+        "sandbox-operation-jws-header-v2.schema.json", "sandbox-operation-token-claims-v2.schema.json",
     ),
     ("credential-gateway-v1.yaml", "CredentialOperationBearer"): (
         "credential-operation-jws-header.schema.json", "credential-operation-token-claims.schema.json",
@@ -815,6 +816,31 @@ for (openapi_name, scheme_name), (header_name, claims_name) in jwt_security_prof
     claims = json.loads((CONTRACT_ROOT / "schemas" / claims_name).read_text(encoding="utf-8"))
     assert scheme.get("x-jws-header-contract-id") == header["$id"], (openapi_name, scheme_name)
     assert scheme.get("x-jwt-claims-contract-id") == claims["$id"], (openapi_name, scheme_name)
+
+sandbox_provider_openapi = load_yaml(CONTRACT_ROOT / "openapi/sandbox-provider-v1.yaml")
+admission_context = sandbox_provider_openapi.get("x-protected-operation-admission-context")
+assert admission_context == {
+    "header": "X-Agent-Sandbox-Admission-Context",
+    "schema_contract_id": "urn:agent-platform:sandbox-provider-admission-context:v1",
+    "encoding": "unpadded-base64url-utf8-rfc8785-jcs-v1",
+    "max_encoded_bytes": 16384,
+    "carrier_schema": {
+        "type": "string", "minLength": 1, "maxLength": 16384,
+        "pattern": "^[A-Za-z0-9_-]+$",
+    },
+    "rejection": [
+        "whitespace", "padding", "duplicate_header", "duplicate_json_member",
+        "unknown_context_member", "multiple_json_value", "malformed_or_oversized_value",
+    ],
+    "required_for_operation_ids": [
+        "createSandbox", "restoreSandbox", "getSandbox", "setSandboxDesiredState",
+        "extendSandboxLease", "executeInSandbox", "cancelSandboxExec",
+        "openSandboxRuntimeSession", "createSandboxSnapshot", "terminateSandbox",
+        "getSandboxOperation", "getSandboxExecResult", "getSandboxSnapshotManifest",
+        "streamSandboxEvents",
+    ],
+    "excluded_operation_ids": ["getSandboxCapabilities"],
+}, "Sandbox Admission Context carrier mapping drift"
 
 sandbox_status = json.loads((CONTRACT_ROOT / "schemas/sandbox-status.schema.json").read_text(encoding="utf-8"))
 forbidden_sandbox_status_fields = {

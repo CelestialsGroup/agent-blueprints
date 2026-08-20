@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:sandbox-provider-admission-context:v1",
+  "title": "SandboxProviderAdmissionContext",
+  "description": "An immutable Platform admission snapshot sent only by an admitted mTLS controller for one protected Sandbox Provider HTTP request.",
+  "type": "object",
+  "required": [
+    "context_contract_id",
+    "context_digest_profile",
+    "context_digest",
+    "controller_subject",
+    "provider_revision_id",
+    "provider_instance_audience",
+    "tenant_id",
+    "work_order_id",
+    "policy_digest",
+    "policy_decided_at",
+    "operation",
+    "sandbox_id",
+    "operation_id",
+    "attempt_id",
+    "fencing_token",
+    "deadline_at",
+    "request_contract_id",
+    "request_digest_profile",
+    "request_digest",
+    "http_target"
+  ],
+  "properties": {
+    "context_contract_id": {
+      "const": "urn:agent-platform:sandbox-provider-admission-context:v1"
+    },
+    "context_digest_profile": {
+      "const": "rfc8785-full-document-excluding-context-digest-v1"
+    },
+    "context_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "controller_subject": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "provider_revision_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "provider_instance_audience": {
+      "type": "string",
+      "pattern": "^urn:agent-platform:provider-instance:[A-Za-z0-9._:-]{1,200}$"
+    },
+    "tenant_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "work_order_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "policy_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "policy_decided_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "operation": {
+      "enum": [
+        "create", "restore", "set_desired_state", "extend_lease", "exec", "cancel_exec",
+        "open_runtime_session", "snapshot", "terminate", "read_sandbox", "read_operation",
+        "read_result", "read_snapshot_manifest", "read_events"
+      ]
+    },
+    "sandbox_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "operation_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "attempt_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "fencing_token": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "deadline_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "request_contract_id": {
+      "type": "string",
+      "pattern": "^urn:agent-platform:[a-z0-9-]+:v1$"
+    },
+    "request_digest_profile": {
+      "enum": [
+        "rfc8785-request-excluding-request-digest-v1",
+        "rfc8785-full-document-v1"
+      ]
+    },
+    "request_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "http_target": {
+      "type": "object",
+      "required": ["method", "path", "normalized_query"],
+      "properties": {
+        "method": { "enum": ["GET", "POST"] },
+        "path": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 600,
+          "pattern": "^/v1(?:/[A-Za-z0-9._:-]+)*$"
+        },
+        "normalized_query": {
+          "type": "array",
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "required": ["name", "value"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+              "value": { "type": "string", "minLength": 1, "maxLength": 100 }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "context_digest is RFC 8785 JCS SHA-256 over this complete object excluding context_digest",
+    "the mTLS-authenticated controller subject exactly equals controller_subject before the carrier is trusted",
+    "http_target has the exact protected method, concrete path, and unique canonical query values; unknown, repeated, ambiguous, malformed, or oversized carrier input is rejected before repository or driver dispatch",
+    "all Context fields exactly bind the new Sandbox Operation Token revision and the request body or read descriptor; the Provider does not infer Platform facts from Bearer, configuration, cache, or ledger"
+  ]
+}

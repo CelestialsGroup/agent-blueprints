@@ -2,8 +2,8 @@
   "contract_line": "agent",
   "status": "candidate-not-frozen",
   "digest_profile": "RFC8785-JCS+SHA-256; Strict-I-JSON-v2.0",
-  "resource_count": 269,
-  "resources_digest": "sha256:08c30919ec468f3b21762835499af49943c8103b7064c2a6ea38b02e06e9a6ee",
+  "resource_count": 278,
+  "resources_digest": "sha256:77c1e4106b20ef02805168bc2bcc092528a1599ffc778ab238e40686e3cf6e7b",
   "resources": [
     {
       "path": "conformance/agent-access/v1/suite.json",
@@ -36,16 +36,28 @@
       "digest": "sha256:d110672fe3cbb86377252871888f234fc44afae946ff09324cc6345377c682bc"
     },
     {
+      "path": "conformance/runtime/v1/revisions/1.0.0/suite.json",
+      "kind": "governance",
+      "id": "conformance/runtime/v1/revisions/1.0.0/suite.json",
+      "digest": "sha256:268ff34c549e01f223201262f2dab96d2718146aea383a8180d8cbf26a52eb44"
+    },
+    {
       "path": "conformance/runtime/v1/suite.json",
       "kind": "governance",
       "id": "conformance/runtime/v1/suite.json",
-      "digest": "sha256:268ff34c549e01f223201262f2dab96d2718146aea383a8180d8cbf26a52eb44"
+      "digest": "sha256:488c98c31f754440f7902cee08933dc8e601335028429efec6fa6dfb81a5a264"
+    },
+    {
+      "path": "conformance/sandbox/v1/revisions/1.0.0/suite.json",
+      "kind": "governance",
+      "id": "conformance/sandbox/v1/revisions/1.0.0/suite.json",
+      "digest": "sha256:d8d7f42c51e2ea472853a2c44f7a28c571ad3bee75585548e916b4690d18e205"
     },
     {
       "path": "conformance/sandbox/v1/suite.json",
       "kind": "governance",
       "id": "conformance/sandbox/v1/suite.json",
-      "digest": "sha256:d8d7f42c51e2ea472853a2c44f7a28c571ad3bee75585548e916b4690d18e205"
+      "digest": "sha256:9290d0d061b1b9b1fdf25b69ee286a1cf17e88656a784f5e8dd62a0f8d3f800f"
     },
     {
       "path": "event-types/agent-runtime-core-v1.json",
@@ -114,10 +126,16 @@
       "digest": "sha256:63c9e468912ee9935d0036f3db4a272b9338cae2a9c3687f788cd6204c7c2950"
     },
     {
+      "path": "openapi/agent-runtime-provider-v1.0.0.snapshot.yaml",
+      "kind": "openapi",
+      "id": "openapi/agent-runtime-provider-v1.0.0.snapshot.yaml",
+      "digest": "sha256:f75bd9484d9059435021f65147cab1a22b4cb0376ea47ce6e165fde0494f5811"
+    },
+    {
       "path": "openapi/agent-runtime-provider-v1.yaml",
       "kind": "openapi",
       "id": "openapi/agent-runtime-provider-v1.yaml",
-      "digest": "sha256:f75bd9484d9059435021f65147cab1a22b4cb0376ea47ce6e165fde0494f5811"
+      "digest": "sha256:1436035510fc31e4d78f6fa1df52713e38d49d7ae40919b7ac977c5f254acc07"
     },
     {
       "path": "openapi/artifact-gateway-v1.yaml",
@@ -156,10 +174,16 @@
       "digest": "sha256:0f60d15e0db80591dc45670a497a218f7c05f8da458c953884d6b3311664f166"
     },
     {
+      "path": "openapi/sandbox-provider-v1.0.0.snapshot.yaml",
+      "kind": "openapi",
+      "id": "openapi/sandbox-provider-v1.0.0.snapshot.yaml",
+      "digest": "sha256:173feeb61f47696778f1c457f275677fc8e5d287088094d0a3c7129c359cbe95"
+    },
+    {
       "path": "openapi/sandbox-provider-v1.yaml",
       "kind": "openapi",
       "id": "openapi/sandbox-provider-v1.yaml",
-      "digest": "sha256:173feeb61f47696778f1c457f275677fc8e5d287088094d0a3c7129c359cbe95"
+      "digest": "sha256:3f9839ae6db5a497b89278ef1377d2a8e93e8274858e7963d1548349fdb0034d"
     },
     {
       "path": "schemas/admitted-capability-definition.schema.json",
@@ -262,6 +286,18 @@
       "kind": "json-schema",
       "id": "urn:agent-platform:agent-runtime-invocation-token-claims:v1",
       "digest": "sha256:15bb2721233a857c9fe220c9bfed298ea50d90a87b94027ed4bd9fd7d6d60d42"
+    },
+    {
+      "path": "schemas/agent-runtime-read-bad-request-error.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:agent-runtime-read-bad-request-error:v1",
+      "digest": "sha256:a2e6d9360b2c381458735dcd8f78e5171648b0cd9b2d335b6d359db5a845f584"
+    },
+    {
+      "path": "schemas/agent-runtime-read-throttled-error.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:agent-runtime-read-throttled-error:v1",
+      "digest": "sha256:7d751983319d788947cb63dbe86f1fa0c057a568a37c83419f66552cda3d0624"
     },
     {
       "path": "schemas/agent-runtime-run-status.schema.json",
@@ -1278,6 +1314,12 @@
       "digest": "sha256:5c9204265cf3b4821e37443abae6117a5104341ad5e5d49e6aee6c72786b618b"
     },
     {
+      "path": "schemas/sandbox-operation-jws-header-v2.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-operation-jws-header:v2",
+      "digest": "sha256:9f9a49499ad0537ed412ec4a264f116d1c4f3b124df8ae8ecafd9dfd71ef9f10"
+    },
+    {
       "path": "schemas/sandbox-operation-jws-header.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:sandbox-operation-jws-header:v1",
@@ -1302,6 +1344,12 @@
       "digest": "sha256:f029f70116f88034e93752f57836fd9730ad032d1da06e3aa370cb5d035be239"
     },
     {
+      "path": "schemas/sandbox-operation-token-claims-v2.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-operation-token-claims:v2",
+      "digest": "sha256:3aa2e02055edbf049a73752bcf205602161a61f08719deb5b8f49d76b97d6e23"
+    },
+    {
       "path": "schemas/sandbox-operation-token-claims.schema.json",
       "kind": "json-schema",
       "id": "urn:agent-platform:sandbox-operation-token-claims:v1",
@@ -1312,6 +1360,12 @@
       "kind": "json-schema",
       "id": "urn:agent-platform:sandbox-operation-response:v1",
       "digest": "sha256:f9ffd00acef7fd46af159dc3791d95e4714e648299dfbf14c1ceeccc29a10cab"
+    },
+    {
+      "path": "schemas/sandbox-provider-admission-context.schema.json",
+      "kind": "json-schema",
+      "id": "urn:agent-platform:sandbox-provider-admission-context:v1",
+      "digest": "sha256:8d7246e157d5aaddab595bd1917430afdab1c51e3d5c0d77cc19c376d0120713"
     },
     {
       "path": "schemas/sandbox-reconciliation-case.schema.json",
@@ -1620,5 +1674,5 @@
       "digest": "sha256:8a1b114c8c37cc1bcbcc841d7d5519846b2fabe0d3c0120924e3d7bb436219cd"
     }
   ],
-  "manifest_digest": "sha256:fac0299efcf04471f58f1f0668818a5148526371bd413deb5993c5aacb2762ce"
+  "manifest_digest": "sha256:9cee7b7f1289ed4df6b4e7facd4a90974a67b5f41b5e571d9be0e8d24c08d0bf"
 }

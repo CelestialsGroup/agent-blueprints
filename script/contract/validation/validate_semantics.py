@@ -570,8 +570,10 @@ def _c01_partition_traceability(
 
 def _c01_validate_supplemental_traceability(
     root: Path, known_checks: set[str], executed_checks: set[str],
+    traceability: dict[str, Any] | None = None,
 ) -> None:
-    traceability = json.loads((root / "semantic-constraints-v1.json").read_text(encoding="utf-8"))
+    if traceability is None:
+        traceability = json.loads((root / "semantic-constraints-v1.json").read_text(encoding="utf-8"))
     _critical, supplemental = _c01_partition_traceability(
         root, traceability, known_checks, executed_checks,
     )
@@ -618,16 +620,16 @@ def _c01_validate_suite_cases(root: Path) -> None:
     if [test["test_id"] for test in selected] != expected:
         raise AssertionError("C01 Runtime Suite case order/set drift")
     required_tokens = {
-        expected[0]: ["c01-out-of-scope", "cannot satisfy this case", "remains 403", "no Retry-After"],
-        expected[1]: ["c01-out-of-scope", "Malformed or out-of-range input is 400", "retention is 410", "remains 403"],
-        expected[2]: ["exactly one raw Retry-After", "response invalid and forbids retry", "recomputes rather than reuses"],
-        expected[3]: ["exactly one raw Retry-After", "preserves cursor and limit", "does not advance the cursor"],
+        expected[0]: ["closed HTTP authority", "400 before provider state", "remains 403", "no Retry-After"],
+        expected[1]: ["closed HTTP authority", "retention expiry remains 410", "remains 403", "no Retry-After"],
+        expected[2]: ["429 before provider state", "canonical Retry-After", "fresh authorized read Attempt", "do not retry automatically"],
+        expected[3]: ["429 before provider state", "canonical Retry-After", "without advancing cursor or limit", "do not retry automatically"],
     }
     for test in selected:
         description = test["description"]
         if any(token not in description for token in required_tokens[test["test_id"]]):
             raise AssertionError(f"C01 Runtime Suite authority case drift: {test['test_id']}")
-        if "phase0_implementation_required" not in description or "does not claim Provider passage" not in description:
+        if "contract-defined Phase 0 work" not in description or "does not claim Provider passage" not in description:
             raise AssertionError(f"C01 Runtime Suite maturity boundary drift: {test['test_id']}")
 
 
@@ -660,10 +662,19 @@ def self_test_c01_runtime_read() -> None:
         active_suite_path.write_text(
             json.dumps(active_suite, indent=2) + "\n", encoding="utf-8",
         )
-        known = {_C01_RUNTIME_READ_CHECK}
-        executed: set[str] = set()
+        traceability = json.loads(
+            (root / "semantic-constraints-v1.json").read_text(encoding="utf-8")
+        )
+        known = {
+            enforcement["check_id"]
+            for entry in traceability["constraints"]
+            for enforcement in entry["enforcements"]
+            if enforcement["status"] == "contract_gate"
+        }
+        baseline_executed = known - {_C01_RUNTIME_READ_CHECK}
+        executed = set(baseline_executed)
         validate_c01_runtime_read_semantics(root, known, executed)
-        if executed != {_C01_RUNTIME_READ_CHECK}:
+        if executed != known:
             raise AssertionError("C01 semantic check was not marked after successful structure validation")
 
         openapi_path = root / "openapi/agent-runtime-provider-v1.yaml"
@@ -673,14 +684,14 @@ def self_test_c01_runtime_read() -> None:
             "x-runtime-read-response-precedence"
         ][0:2] = ["401", "400"]
         openapi_path.write_text(yaml.safe_dump(document, sort_keys=False), encoding="utf-8")
-        mutation_executed: set[str] = set()
+        mutation_executed = set(baseline_executed)
         try:
             validate_c01_runtime_read_semantics(root, known, mutation_executed)
         except AssertionError:
             pass
         else:
             raise AssertionError("C01 semantic OpenAPI structure mutation did not fail closed")
-        if mutation_executed:
+        if mutation_executed != baseline_executed:
             raise AssertionError("C01 failed structure mutation retained an executed check mark")
         openapi_path.write_bytes(original_openapi)
 
@@ -693,14 +704,14 @@ def self_test_c01_runtime_read() -> None:
         ]
         supplemental[0]["enforcements"][0]["check_id"] = "runtime_read.unknown"
         semantic_path.write_text(json.dumps(traceability, indent=2) + "\n", encoding="utf-8")
-        mutation_executed = set()
+        mutation_executed = set(baseline_executed)
         try:
             validate_c01_runtime_read_semantics(root, known, mutation_executed)
         except AssertionError:
             pass
         else:
             raise AssertionError("C01 semantic unknown check mutation did not fail closed")
-        if mutation_executed:
+        if mutation_executed != baseline_executed:
             raise AssertionError("C01 failed traceability mutation retained an executed check mark")
         semantic_path.write_bytes(original_semantic)
 
@@ -711,7 +722,7 @@ def self_test_c01_runtime_read() -> None:
         ]
         supplemental[0]["enforcements"][0]["check_id"] = "runtime_read.unexecuted"
         semantic_path.write_text(json.dumps(traceability, indent=2) + "\n", encoding="utf-8")
-        mutation_executed = set()
+        mutation_executed = set(baseline_executed)
         try:
             validate_c01_runtime_read_semantics(
                 root, known | {"runtime_read.unexecuted"}, mutation_executed,
@@ -720,7 +731,7 @@ def self_test_c01_runtime_read() -> None:
             pass
         else:
             raise AssertionError("C01 semantic known-but-unexecuted mutation did not fail closed")
-        if mutation_executed:
+        if mutation_executed != baseline_executed:
             raise AssertionError("C01 unexecuted-check mutation retained an executed check mark")
         semantic_path.write_bytes(original_semantic)
 
@@ -734,7 +745,7 @@ def self_test_c01_runtime_read() -> None:
         )
         semantic_path.write_text(json.dumps(traceability, indent=2) + "\n", encoding="utf-8")
         try:
-            validate_c01_runtime_read_semantics(root, known, set())
+            validate_c01_runtime_read_semantics(root, known, set(baseline_executed))
         except AssertionError:
             pass
         else:
@@ -742,14 +753,14 @@ def self_test_c01_runtime_read() -> None:
         semantic_path.write_bytes(original_semantic)
 
         def expect_failure(label: str) -> None:
-            mutation_executed: set[str] = set()
+            mutation_executed = set(baseline_executed)
             try:
                 validate_c01_runtime_read_semantics(root, known, mutation_executed)
             except AssertionError:
                 pass
             else:
                 raise AssertionError(f"C01 semantic mutation did not fail closed: {label}")
-            if mutation_executed:
+            if mutation_executed != baseline_executed:
                 raise AssertionError(f"C01 semantic mutation retained an executed mark: {label}")
 
         for label, mutate in (
@@ -829,7 +840,7 @@ def self_test_c01_runtime_read() -> None:
         active_openapi_path.write_bytes(active_openapi_bytes)
         snapshot_openapi_path.write_bytes(snapshot_openapi_bytes)
 
-        final_executed: set[str] = set()
+        final_executed = set(baseline_executed)
         validate_c01_runtime_read_semantics(root, known, final_executed)
     if _c01_snapshot_protected_state() != protected_before:
         raise AssertionError("C01 semantic self-test changed protected Contract/build/evidence state")
@@ -908,6 +919,7 @@ KNOWN_CONTRACT_CHECKS = {
     "commercial_revocation.fanout",
     "sandbox_token.binding",
     "sandbox_token.lifetime",
+    "sandbox_admission_context.binding",
     "sandbox_spec.execution_ceiling",
     "sandbox_spec.workspace_binding",
     "work_order.failure_paths",
@@ -1357,7 +1369,12 @@ def validate_provider_architecture(context: dict[str, Any], suites: list[dict[st
         "agent_runtime": "agent-runtime-provider",
         "sandbox": "sandbox-provider",
     }
-    suites_by_id = {suite["suite_id"]: suite for suite in suites}
+    suites_by_tuple = {
+        (suite["suite_id"], suite["suite_version"], suite["suite_digest"]): suite
+        for suite in suites
+    }
+    if len(suites_by_tuple) != len(suites):
+        raise AssertionError("Conformance Suite registry contains a duplicate immutable tuple")
     for revision in context["provider_revisions"]:
         expected_protocol = protocol_by_kind.get(revision["provider_kind"], "capability-provider")
         if revision["port"]["protocol"] != expected_protocol:
@@ -1368,8 +1385,10 @@ def validate_provider_architecture(context: dict[str, Any], suites: list[dict[st
         if implementation["distribution_type"] == "oci_image" and "image_digest" not in implementation:
             raise AssertionError("OCI Provider implementation is missing image_digest")
         for result in revision["conformance"]:
-            suite = suites_by_id.get(result["suite_id"])
-            if suite is None or result["suite_version"] != suite["suite_version"] or result["suite_digest"] != suite["suite_digest"]:
+            suite = suites_by_tuple.get((
+                result["suite_id"], result["suite_version"], result["suite_digest"],
+            ))
+            if suite is None:
                 raise AssertionError("Provider conformance does not bind an admitted immutable Suite")
             if result["suite_profile_id"] not in {profile["profile_id"] for profile in suite["profiles"]}:
                 raise AssertionError("Provider conformance binds an unknown Suite profile")
@@ -2187,6 +2206,105 @@ def validate_sandbox_token(
     mark_checks("sandbox_token.binding", "sandbox_token.lifetime")
 
 
+def validate_sandbox_admission_context(
+    context: dict[str, Any], token: dict[str, Any], operation_document: dict[str, Any],
+    resolution: dict[str, Any], manifest: dict[str, Any], sandbox_id: str,
+) -> None:
+    validate_self_digest(context, "context_digest")
+    expected_path = f"/v1/sandboxes/{sandbox_id}/exec"
+    expected = {
+        "controller_subject": token["sub"],
+        "provider_revision_id": resolution["selected_provider_revision"]["provider_revision_id"],
+        "provider_instance_audience": resolution["selected_provider_audience"],
+        "tenant_id": manifest["tenant_id"],
+        "work_order_id": manifest["work_order_id"],
+        "policy_digest": manifest["policy_decision"]["decision_digest"],
+        "policy_decided_at": manifest["policy_decision"]["decided_at"],
+        "operation": "exec",
+        "sandbox_id": sandbox_id,
+        "operation_id": operation_document["operation_id"],
+        "attempt_id": operation_document["attempt_id"],
+        "fencing_token": operation_document["fencing_token"],
+        "deadline_at": operation_document["deadline_at"],
+        "request_contract_id": "urn:agent-platform:sandbox-exec-request:v1",
+        "request_digest_profile": "rfc8785-request-excluding-request-digest-v1",
+        "request_digest": operation_document["request_digest"],
+    }
+    if any(context[field] != value for field, value in expected.items()):
+        raise AssertionError("Sandbox Admission Context differs from its admitted operation")
+    if context["http_target"] != {
+        "method": "POST", "path": expected_path, "normalized_query": [],
+    }:
+        raise AssertionError("Sandbox Admission Context does not bind the exact HTTP target")
+    context_fields = {
+        "sub": "controller_subject",
+        "aud": "provider_instance_audience",
+        "provider_revision_id": "provider_revision_id",
+        "tenant_id": "tenant_id",
+        "work_order_id": "work_order_id",
+        "policy_digest": "policy_digest",
+        "policy_decided_at": "policy_decided_at",
+        "operation": "operation",
+        "sandbox_id": "sandbox_id",
+        "operation_id": "operation_id",
+        "attempt_id": "attempt_id",
+        "fencing_token": "fencing_token",
+        "deadline_at": "deadline_at",
+        "request_contract_id": "request_contract_id",
+        "request_digest_profile": "request_digest_profile",
+        "request_digest": "request_digest",
+    }
+    if any(token[token_field] != context[context_field] for token_field, context_field in context_fields.items()):
+        raise AssertionError("Sandbox v2 token and Admission Context do not cross-bind")
+    if (
+        token["admission_context_contract_id"] != context["context_contract_id"]
+        or token["admission_context_digest_profile"] != context["context_digest_profile"]
+        or token["admission_context_digest"] != context["context_digest"]
+    ):
+        raise AssertionError("Sandbox v2 token does not bind the Admission Context digest")
+    if not token["iat"] <= token["nbf"] < token["exp"] or token["exp"] - token["iat"] > 300:
+        raise AssertionError("Sandbox v2 token lifetime is invalid")
+    if datetime.fromtimestamp(token["nbf"], tz=timezone.utc) < parse_datetime(context["policy_decided_at"]):
+        raise AssertionError("Sandbox v2 token predates its Context PolicyDecision")
+    if datetime.fromtimestamp(token["exp"], tz=timezone.utc) > parse_datetime(context["deadline_at"]):
+        raise AssertionError("Sandbox v2 token outlives its Context deadline")
+    mark_checks("sandbox_admission_context.binding")
+
+
+def decode_sandbox_admission_context_carrier(carrier: str) -> dict[str, Any]:
+    if not isinstance(carrier, str) or not 1 <= len(carrier) <= 16384:
+        raise AssertionError("Sandbox Admission Context carrier length is invalid")
+    if any(character not in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_" for character in carrier):
+        raise AssertionError("Sandbox Admission Context carrier is not unpadded base64url")
+    try:
+        raw = base64.urlsafe_b64decode(carrier + "=" * (-len(carrier) % 4))
+        text = raw.decode("utf-8")
+    except (UnicodeDecodeError, ValueError) as error:
+        raise AssertionError("Sandbox Admission Context carrier is not UTF-8 base64url") from error
+
+    def reject_duplicate(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("duplicate JSON member")
+            result[key] = value
+        return result
+
+    try:
+        decoder = json.JSONDecoder(object_pairs_hook=reject_duplicate)
+        value, end = decoder.raw_decode(text)
+        if end != len(text):
+            raise ValueError("multiple JSON values or trailing whitespace")
+        rfc8785.dumps(value)
+    except (TypeError, UnicodeError, ValueError) as error:
+        raise AssertionError("Sandbox Admission Context carrier JSON is not strict I-JSON") from error
+    schema = load("schemas/sandbox-provider-admission-context.schema.json")
+    errors = list(Draft202012Validator(schema, registry=SCHEMA_REGISTRY, format_checker=FormatChecker()).iter_errors(value))
+    if errors:
+        raise AssertionError("Sandbox Admission Context carrier violates its Schema")
+    return value
+
+
 def validate_sandbox_spec(
     spec: dict[str, Any], manifest: dict[str, Any], capabilities: dict[str, Any],
 ) -> None:
@@ -2867,8 +2985,8 @@ def validate_canonical_event_registry_binding(
 
 
 def validate_semantic_traceability(traceability: dict[str, Any]) -> None:
-    _c01_partition_traceability(
-        CONTRACT_ROOT, traceability, KNOWN_CONTRACT_CHECKS, EXECUTED_CONTRACT_CHECKS,
+    _c01_validate_supplemental_traceability(
+        CONTRACT_ROOT, KNOWN_CONTRACT_CHECKS, EXECUTED_CONTRACT_CHECKS, traceability,
     )
 
 
@@ -4240,6 +4358,8 @@ runtime_status_token = load("examples/contracts/agent-runtime-status-token-claim
 runtime_event_descriptor = load("examples/contracts/agent-runtime-event-read-operation-descriptor.json")
 runtime_event_token = load("examples/contracts/agent-runtime-events-token-claims.json")
 sandbox_token = load("examples/contracts/sandbox-operation-token-claims.json")
+sandbox_admission_context = load("examples/contracts/sandbox-provider-admission-context.json")
+sandbox_exec_token_v2 = load("examples/contracts/sandbox-exec-operation-token-claims-v2.json")
 sandbox_create = load("examples/contracts/sandbox-create-request.json")
 sandbox_restore = load("examples/contracts/sandbox-restore-request.json")
 sandbox_desired_state = load("examples/contracts/sandbox-desired-state-request.json")
@@ -4429,7 +4549,9 @@ artifact_ingest_finalize = load("examples/contracts/artifact-ingest-finalize-com
 conformance_suites = [
     load("conformance/agent-access/v1/suite.json"),
     load("conformance/runtime/v1/suite.json"),
+    load("conformance/runtime/v1/revisions/1.0.0/suite.json"),
     load("conformance/sandbox/v1/suite.json"),
+    load("conformance/sandbox/v1/revisions/1.0.0/suite.json"),
     load("conformance/runtime-gateway/v1/suite.json"),
     load("conformance/capability/v1/suite.json"),
     load("conformance/execution-gateway/v1/suite.json"),
@@ -4520,11 +4642,11 @@ if (
     raise AssertionError("ArtifactOperation NoUsageAttestation lacks its admission terminal owner")
 validate_compatibility_decision(
     runtime_checkpoint, runtime_compatibility_decision,
-    load("conformance/runtime/v1/suite.json"),
+    load("conformance/runtime/v1/revisions/1.0.0/suite.json"),
 )
 validate_compatibility_decision(
     sandbox_restore["snapshot"], sandbox_compatibility_decision,
-    load("conformance/sandbox/v1/suite.json"), sandbox_restore,
+    load("conformance/sandbox/v1/revisions/1.0.0/suite.json"), sandbox_restore,
 )
 validate_secret_mediation(
     secret_grant, credential_request, credential_token, credential_delivery,
@@ -4788,7 +4910,7 @@ for case in compatibility_negative["cases"]:
         if case["mutation"].startswith("runtime_"):
             validate_compatibility_decision(
                 compatibility_negative["runtime_subject"], runtime_candidate,
-                load("conformance/runtime/v1/suite.json"),
+                load("conformance/runtime/v1/revisions/1.0.0/suite.json"),
             )
         else:
             validate_compatibility_decision(
@@ -5016,6 +5138,80 @@ for operation_token, operation_document, target_sandbox_id in sandbox_token_case
         operation_token, operation_document, sandbox_resolution, manifest,
         sandbox_id=target_sandbox_id,
     )
+validate_sandbox_admission_context(
+    sandbox_admission_context, sandbox_exec_token_v2, sandbox_exec, sandbox_resolution, manifest,
+    sandbox_spec["sandbox_id"],
+)
+sandbox_admission_context_cases = load("tests/semantic-invalid/sandbox-admission-context-cases.json")
+valid_admission_context_carrier = base64.urlsafe_b64encode(
+    rfc8785.dumps(sandbox_admission_context)
+).decode("ascii").rstrip("=")
+if decode_sandbox_admission_context_carrier(valid_admission_context_carrier) != sandbox_admission_context:
+    raise AssertionError("Sandbox Admission Context carrier does not round-trip")
+for case in sandbox_admission_context_cases["cases"]:
+    candidate_context = copy.deepcopy(sandbox_admission_context)
+    candidate_token = copy.deepcopy(sandbox_exec_token_v2)
+    mutation = case["mutation"]
+    if mutation == "context_digest_mismatch":
+        candidate_context["context_digest"] = "sha256:" + "f" * 64
+        action = lambda: validate_sandbox_admission_context(
+            candidate_context, candidate_token, sandbox_exec, sandbox_resolution, manifest,
+            sandbox_spec["sandbox_id"],
+        )
+    elif mutation == "controller_mismatch":
+        candidate_context["controller_subject"] = "spn_other_controller"
+        action = lambda: validate_sandbox_admission_context(
+            candidate_context, candidate_token, sandbox_exec, sandbox_resolution, manifest,
+            sandbox_spec["sandbox_id"],
+        )
+    elif mutation == "http_target_substitution":
+        candidate_context["http_target"]["path"] = "/v1/operations/sop_exec_01"
+        action = lambda: validate_sandbox_admission_context(
+            candidate_context, candidate_token, sandbox_exec, sandbox_resolution, manifest,
+            sandbox_spec["sandbox_id"],
+        )
+    elif mutation == "token_context_digest_mismatch":
+        candidate_token["admission_context_digest"] = "sha256:" + "f" * 64
+        action = lambda: validate_sandbox_admission_context(
+            candidate_context, candidate_token, sandbox_exec, sandbox_resolution, manifest,
+            sandbox_spec["sandbox_id"],
+        )
+    elif mutation == "policy_time_mismatch":
+        candidate_token["policy_decided_at"] = "2026-07-16T09:01:00Z"
+        action = lambda: validate_sandbox_admission_context(
+            candidate_context, candidate_token, sandbox_exec, sandbox_resolution, manifest,
+            sandbox_spec["sandbox_id"],
+        )
+    elif mutation == "request_digest_mismatch":
+        candidate_token["request_digest"] = "sha256:" + "f" * 64
+        action = lambda: validate_sandbox_admission_context(
+            candidate_context, candidate_token, sandbox_exec, sandbox_resolution, manifest,
+            sandbox_spec["sandbox_id"],
+        )
+    elif mutation == "carrier_padding":
+        action = lambda: decode_sandbox_admission_context_carrier(valid_admission_context_carrier + "=")
+    elif mutation == "carrier_duplicate_json_member":
+        duplicate = base64.urlsafe_b64encode(
+            b'{"context_contract_id":"a","context_contract_id":"b"}'
+        ).decode("ascii").rstrip("=")
+        action = lambda: decode_sandbox_admission_context_carrier(duplicate)
+    elif mutation == "carrier_multiple_json_values":
+        multiple = base64.urlsafe_b64encode(
+            rfc8785.dumps(sandbox_admission_context) + b" {}"
+        ).decode("ascii").rstrip("=")
+        action = lambda: decode_sandbox_admission_context_carrier(multiple)
+    elif mutation == "carrier_unknown_member":
+        candidate_context["provider_private_endpoint"] = "https://not-stable.example.invalid"
+        unknown = base64.urlsafe_b64encode(rfc8785.dumps(candidate_context)).decode("ascii").rstrip("=")
+        action = lambda: decode_sandbox_admission_context_carrier(unknown)
+    else:
+        raise AssertionError(f"Unknown Sandbox Admission Context mutation: {mutation}")
+    try:
+        action()
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError(f"Expected Sandbox Admission Context fixture to fail: {case['id']}")
 validate_service_access_token(
     service_access_token,
     registered_issuer="https://business.example.test",
