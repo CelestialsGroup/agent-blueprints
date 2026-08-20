@@ -151,11 +151,12 @@ sandbox-core-v1、Platform E2E 或生产就绪结论。
 刷新、OpenAPI prepare/lint Gate、全量 semantic negative tests、独立审查或合并。尚未有 consumer lock，
 所以 sandbox-runtime P1.1c 仍然不能开始。
 
-以临时 `pnpm@11.15.1`（不改变 lockfile）执行 `make -C script PYTHON=python3 validate-contract`
-通过；它包含 static audit、OpenAPI prepare/lint、Schema、semantic、Manifest 的 Python/Node 双 verifier、
-Python/Node/Go JCS 与两次 bundle byte determinism，并生成 validation evidence。compatibility comparator
-只完成自身检查且返回 `N/A`，因为本地未提供 `CONTRACT_FROZEN_BASE_REF`；因此该 Gate 仅证明当前
-candidate 的本地闭合，不证明相对外部 frozen revision 的兼容性，也不改变 carrier 或历史快照的语义。
+在临时 `pnpm@11.15.1` 下，`make -C script PYTHON=python3 validate-contract` 的 static、OpenAPI
+prepare/lint、Schema、semantic、Manifest Python/Node 双 verifier、Python/Node/Go JCS 与两次 bundle
+byte determinism 都成功。但该 host 的 `python3` 是 CPython `3.9.6`，不满足 Blueprint 固定的
+CPython `3.14.6` 基线；生成 evidence 已撤销，完整 pinned Contract Gate 仍为待补证。compatibility
+comparator 也只完成自身检查且返回 `N/A`，因为本地未提供 `CONTRACT_FROZEN_BASE_REF`。因此不能把
+此结果写作 Gate 通过、相对外部 frozen revision 的兼容性、Provider conformance 或生产就绪。
 
 ### 2026-08-20 Context fixture closure
 
