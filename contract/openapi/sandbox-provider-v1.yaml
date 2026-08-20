@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Sandbox Provider API
-  version: 1.0.0
+  version: 1.1.0
   description: >-
     Stable provider contract with no required backend. Phase 0 uses the platform's Native
     Sandbox Controller and an isolated execution backend; another conformant provider

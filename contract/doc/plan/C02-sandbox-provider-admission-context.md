@@ -134,6 +134,8 @@ transport 不得开始。
 `openapi/sandbox-provider-v1.0.0.snapshot.yaml` 与
 `conformance/sandbox/v1/revisions/1.0.0/suite.json`，不重格式化、不修改内容。
 
-这只固定历史字节和 version tuple，尚未生成 active `1.1.0`，也未更新 Manifest、fixtures、semantic
-checks、validation support 或任何 consumer lock。因此 P1.1c protected transport 仍阻塞，不能由快照
-本身推出 Contract Gate、sandbox-core-v1、Platform E2E 或生产就绪结论。
+在历史快照创建后，活动 OpenAPI 与 Suite 已分别提升到 `1.1.0`；活动 Suite 自摘要是
+`sha256:0fb0f0007ec6450aac3357f0c3e78de4a22eb8dafb7239d8f52ef0e339437483`。这仍未添加
+Admission Context wire 资源或更新 Manifest、fixtures、semantic checks、validation support 或任何
+consumer lock。因此 P1.1c protected transport 仍阻塞，不能由快照/版本提升本身推出 Contract Gate、
+sandbox-core-v1、Platform E2E 或生产就绪结论。

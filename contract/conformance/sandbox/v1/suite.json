@@ -1,7 +1,7 @@
 {
   "suite_id": "sandbox-provider",
-  "suite_version": "1.0.0",
-  "suite_digest": "sha256:bdebf6fba1cd41072a46b47de451bf039485047e9a9478fad2d6c69ee8ff38b7",
+  "suite_version": "1.1.0",
+  "suite_digest": "sha256:0fb0f0007ec6450aac3357f0c3e78de4a22eb8dafb7239d8f52ef0e339437483",
   "target_kind": "sandbox",
   "profiles": [
     {
