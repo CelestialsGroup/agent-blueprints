@@ -1,7 +1,7 @@
 {
   "suite_id": "agent-runtime-provider",
   "suite_version": "1.0.1",
-  "suite_digest": "sha256:9ef6d50df9f1032476ea2ada2c16d70c15d88368acf59794062df7dfce0bb356",
+  "suite_digest": "sha256:8aae2621e74809b717625ca00c4336d8f5a71dd90d973d637b4758da489ee7e5",
   "target_kind": "agent_runtime",
   "profiles": [
     {
