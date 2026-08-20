@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import shlex
 import subprocess
 from pathlib import Path
 
@@ -11,8 +13,9 @@ BUILD = SCRIPT_ROOT / "build"
 
 
 def bundle() -> dict[str, str]:
+    pnpm = shlex.split(os.environ.get("PNPM", "corepack pnpm"))
     subprocess.run(
-        ["corepack", "pnpm", "run", "bundle:openapi"], cwd=SCRIPT_ROOT, check=True,
+        [*pnpm, "run", "bundle:openapi"], cwd=SCRIPT_ROOT, check=True,
     )
     paths = sorted(BUILD.glob("*.bundle.yaml"))
     if not paths:

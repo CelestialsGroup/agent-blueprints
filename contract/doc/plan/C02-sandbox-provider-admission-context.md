@@ -139,3 +139,18 @@ transport 不得开始。
 Admission Context wire 资源或更新 Manifest、fixtures、semantic checks、validation support 或任何
 consumer lock。因此 P1.1c protected transport 仍阻塞，不能由快照/版本提升本身推出 Contract Gate、
 sandbox-core-v1、Platform E2E 或生产就绪结论。
+
+### 2026-08-20 Wire Contract candidate
+
+活动 `1.1.0` 新增 `SandboxProviderAdmissionContext:v1`、独立的 JWS header/token `:v2`、
+`X-Agent-Sandbox-Admission-Context` carrier contract 和 Context/Token 正向向量。Context 是受 mTLS
+认证 controller 发出的单个、未填充 base64url UTF-8 JCS 文档，最大 16384 encoded bytes；OpenAPI
+枚举全部 14 个 protected operation 为 required，并显式排除 capability discovery。
+
+该候选只定义 carrier、cross-binding 和 Suite 责任；尚未完成每条 operation 的否定 fixture、Manifest
+刷新、OpenAPI prepare/lint Gate、全量 semantic negative tests、独立审查或合并。尚未有 consumer lock，
+所以 sandbox-runtime P1.1c 仍然不能开始。
+
+本地校验已确认 static audit、Schema、semantic、Manifest 和两次 bundle byte determinism；最终
+`generate_validation_evidence.py` 因可用 pnpm 为 `11.19.0` 而仓库 pin 为 `11.15.1` 明确拒绝，
+所以完整 Contract Gate 结论为待补证，不得写作通过。此环境偏差不改变 carrier 或历史快照的语义。

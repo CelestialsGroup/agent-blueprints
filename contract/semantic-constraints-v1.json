@@ -19,6 +19,8 @@
     "urn:agent-platform:commercial-authorization-revocation:v1",
     "urn:agent-platform:commercial-authorization-revocation-accepted:v1",
     "urn:agent-platform:sandbox-operation-token-claims:v1",
+    "urn:agent-platform:sandbox-provider-admission-context:v1",
+    "urn:agent-platform:sandbox-operation-token-claims:v2",
     "urn:agent-platform:sandbox-spec:v1",
     "urn:agent-platform:work-order-control-request:v1",
     "urn:agent-platform:conversation-branch:v1",
@@ -1690,6 +1692,71 @@
           "check_id": "operation-token-binding",
           "status": "phase0_implementation_required"
         }
+      ]
+    },
+    {
+      "constraint_id": "sem-0e434ceb0f93fdbb",
+      "schema_id": "urn:agent-platform:sandbox-provider-admission-context:v1",
+      "constraint_index": 0,
+      "statement": "context_digest is RFC 8785 JCS SHA-256 over this complete object excluding context_digest",
+      "enforcements": [{"kind": "semantic_validator", "artifact": "urn:agent-platform:contract-validation:semantic-validator", "check_id": "sandbox_admission_context.binding", "status": "contract_gate"}]
+    },
+    {
+      "constraint_id": "sem-208e8a6d74af96e0",
+      "schema_id": "urn:agent-platform:sandbox-provider-admission-context:v1",
+      "constraint_index": 1,
+      "statement": "the mTLS-authenticated controller subject exactly equals controller_subject before the carrier is trusted",
+      "enforcements": [{"kind": "semantic_validator", "artifact": "urn:agent-platform:contract-validation:semantic-validator", "check_id": "sandbox_admission_context.binding", "status": "contract_gate"}]
+    },
+    {
+      "constraint_id": "sem-96d8ed05be1cf53b",
+      "schema_id": "urn:agent-platform:sandbox-provider-admission-context:v1",
+      "constraint_index": 2,
+      "statement": "http_target has the exact protected method, concrete path, and unique canonical query values; unknown, repeated, ambiguous, malformed, or oversized carrier input is rejected before repository or driver dispatch",
+      "enforcements": [
+        {"kind": "semantic_validator", "artifact": "urn:agent-platform:contract-validation:semantic-validator", "check_id": "sandbox_admission_context.binding", "status": "contract_gate"},
+        {"kind": "conformance_test", "artifact": "conformance/sandbox/v1/suite.json", "check_id": "admission-context-binding", "status": "phase0_implementation_required"}
+      ]
+    },
+    {
+      "constraint_id": "sem-51f8584040e21cd2",
+      "schema_id": "urn:agent-platform:sandbox-provider-admission-context:v1",
+      "constraint_index": 3,
+      "statement": "all Context fields exactly bind the new Sandbox Operation Token revision and the request body or read descriptor; the Provider does not infer Platform facts from Bearer, configuration, cache, or ledger",
+      "enforcements": [
+        {"kind": "semantic_validator", "artifact": "urn:agent-platform:contract-validation:semantic-validator", "check_id": "sandbox_admission_context.binding", "status": "contract_gate"},
+        {"kind": "conformance_test", "artifact": "conformance/sandbox/v1/suite.json", "check_id": "admission-context-binding", "status": "phase0_implementation_required"}
+      ]
+    },
+    {
+      "constraint_id": "sem-ef587f49c6a979ee",
+      "schema_id": "urn:agent-platform:sandbox-operation-token-claims:v2",
+      "constraint_index": 0,
+      "statement": "iat <= nbf < exp, exp - iat <= 300, nbf is no earlier than policy_decided_at and exp does not exceed deadline_at",
+      "enforcements": [{"kind": "semantic_validator", "artifact": "urn:agent-platform:contract-validation:semantic-validator", "check_id": "sandbox_admission_context.binding", "status": "contract_gate"}]
+    },
+    {
+      "constraint_id": "sem-9804620b36b21da6",
+      "schema_id": "urn:agent-platform:sandbox-operation-token-claims:v2",
+      "constraint_index": 1,
+      "statement": "the JWS header validates against sandbox-operation-jws-header:v2 and signature, key, issuer, audience, caller, ProviderRevision, policy decision, operation, Sandbox, Attempt, fencing, request binding, and Admission Context binding all exactly match the admitted request",
+      "enforcements": [{"kind": "semantic_validator", "artifact": "urn:agent-platform:contract-validation:semantic-validator", "check_id": "sandbox_admission_context.binding", "status": "contract_gate"}]
+    },
+    {
+      "constraint_id": "sem-03476fe11e7f26b5",
+      "schema_id": "urn:agent-platform:sandbox-operation-token-claims:v2",
+      "constraint_index": 2,
+      "statement": "admission_context_digest binds the full strict carrier Context, including controller identity and exact HTTP target; no v1 token may authorize a v1.1 protected operation",
+      "enforcements": [{"kind": "semantic_validator", "artifact": "urn:agent-platform:contract-validation:semantic-validator", "check_id": "sandbox_admission_context.binding", "status": "contract_gate"}]
+    },
+    {
+      "constraint_id": "sem-bdfa86c614f49166",
+      "schema_id": "urn:agent-platform:sandbox-operation-token-claims:v2",
+      "constraint_index": 3,
+      "statement": "stale fencing and replayed jti are rejected before repository or driver dispatch",
+      "enforcements": [
+        {"kind": "semantic_validator", "artifact": "urn:agent-platform:contract-validation:semantic-validator", "check_id": "sandbox_admission_context.binding", "status": "contract_gate"},
+        {"kind": "conformance_test", "artifact": "conformance/sandbox/v1/suite.json", "check_id": "admission-context-binding", "status": "phase0_implementation_required"}
       ]
     },
     {

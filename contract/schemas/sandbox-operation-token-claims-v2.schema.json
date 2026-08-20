@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-platform:sandbox-operation-token-claims:v2",
+  "title": "SandboxOperationAdmissionTokenClaims",
+  "type": "object",
+  "required": [
+    "jti", "iss", "sub", "aud", "iat", "nbf", "exp", "operation",
+    "provider_revision_id", "sandbox_id", "operation_id", "attempt_id", "fencing_token",
+    "tenant_id", "work_order_id", "policy_digest", "policy_decided_at",
+    "request_contract_id", "request_digest_profile", "request_digest", "deadline_at",
+    "admission_context_contract_id", "admission_context_digest_profile", "admission_context_digest"
+  ],
+  "properties": {
+    "jti": { "type": "string", "minLength": 16, "maxLength": 200 },
+    "iss": { "const": "agent-platform" },
+    "sub": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "aud": {
+      "type": "string",
+      "pattern": "^urn:agent-platform:provider-instance:[A-Za-z0-9._:-]{1,200}$"
+    },
+    "iat": { "type": "integer", "minimum": 0 },
+    "nbf": { "type": "integer", "minimum": 0 },
+    "exp": { "type": "integer", "minimum": 0 },
+    "operation": {
+      "enum": [
+        "create", "restore", "set_desired_state", "extend_lease", "exec", "cancel_exec",
+        "open_runtime_session", "snapshot", "terminate", "read_sandbox", "read_operation",
+        "read_result", "read_snapshot_manifest", "read_events"
+      ]
+    },
+    "provider_revision_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "sandbox_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "operation_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "attempt_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "fencing_token": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "work_order_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "policy_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "policy_decided_at": { "type": "string", "format": "date-time" },
+    "request_contract_id": { "type": "string", "pattern": "^urn:agent-platform:[a-z0-9-]+:v1$" },
+    "request_digest_profile": {
+      "enum": ["rfc8785-request-excluding-request-digest-v1", "rfc8785-full-document-v1"]
+    },
+    "request_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "deadline_at": { "type": "string", "format": "date-time" },
+    "admission_context_contract_id": {
+      "const": "urn:agent-platform:sandbox-provider-admission-context:v1"
+    },
+    "admission_context_digest_profile": {
+      "const": "rfc8785-full-document-excluding-context-digest-v1"
+    },
+    "admission_context_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false,
+  "x-semantic-constraints": [
+    "iat <= nbf < exp, exp - iat <= 300, nbf is no earlier than policy_decided_at and exp does not exceed deadline_at",
+    "the JWS header validates against sandbox-operation-jws-header:v2 and signature, key, issuer, audience, caller, ProviderRevision, policy decision, operation, Sandbox, Attempt, fencing, request binding, and Admission Context binding all exactly match the admitted request",
+    "admission_context_digest binds the full strict carrier Context, including controller identity and exact HTTP target; no v1 token may authorize a v1.1 protected operation",
+    "stale fencing and replayed jti are rejected before repository or driver dispatch"
+  ]
+}

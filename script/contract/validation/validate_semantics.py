@@ -919,6 +919,7 @@ KNOWN_CONTRACT_CHECKS = {
     "commercial_revocation.fanout",
     "sandbox_token.binding",
     "sandbox_token.lifetime",
+    "sandbox_admission_context.binding",
     "sandbox_spec.execution_ceiling",
     "sandbox_spec.workspace_binding",
     "work_order.failure_paths",
@@ -2203,6 +2204,71 @@ def validate_sandbox_token(
     ):
         raise AssertionError("Sandbox operation token predates its PolicyDecision")
     mark_checks("sandbox_token.binding", "sandbox_token.lifetime")
+
+
+def validate_sandbox_admission_context(
+    context: dict[str, Any], token: dict[str, Any], operation_document: dict[str, Any],
+    resolution: dict[str, Any], manifest: dict[str, Any], sandbox_id: str,
+) -> None:
+    validate_self_digest(context, "context_digest")
+    expected_path = f"/v1/sandboxes/{sandbox_id}/exec"
+    expected = {
+        "controller_subject": token["sub"],
+        "provider_revision_id": resolution["selected_provider_revision"]["provider_revision_id"],
+        "provider_instance_audience": resolution["selected_provider_audience"],
+        "tenant_id": manifest["tenant_id"],
+        "work_order_id": manifest["work_order_id"],
+        "policy_digest": manifest["policy_decision"]["decision_digest"],
+        "policy_decided_at": manifest["policy_decision"]["decided_at"],
+        "operation": "exec",
+        "sandbox_id": sandbox_id,
+        "operation_id": operation_document["operation_id"],
+        "attempt_id": operation_document["attempt_id"],
+        "fencing_token": operation_document["fencing_token"],
+        "deadline_at": operation_document["deadline_at"],
+        "request_contract_id": "urn:agent-platform:sandbox-exec-request:v1",
+        "request_digest_profile": "rfc8785-request-excluding-request-digest-v1",
+        "request_digest": operation_document["request_digest"],
+    }
+    if any(context[field] != value for field, value in expected.items()):
+        raise AssertionError("Sandbox Admission Context differs from its admitted operation")
+    if context["http_target"] != {
+        "method": "POST", "path": expected_path, "normalized_query": [],
+    }:
+        raise AssertionError("Sandbox Admission Context does not bind the exact HTTP target")
+    context_fields = {
+        "sub": "controller_subject",
+        "aud": "provider_instance_audience",
+        "provider_revision_id": "provider_revision_id",
+        "tenant_id": "tenant_id",
+        "work_order_id": "work_order_id",
+        "policy_digest": "policy_digest",
+        "policy_decided_at": "policy_decided_at",
+        "operation": "operation",
+        "sandbox_id": "sandbox_id",
+        "operation_id": "operation_id",
+        "attempt_id": "attempt_id",
+        "fencing_token": "fencing_token",
+        "deadline_at": "deadline_at",
+        "request_contract_id": "request_contract_id",
+        "request_digest_profile": "request_digest_profile",
+        "request_digest": "request_digest",
+    }
+    if any(token[token_field] != context[context_field] for token_field, context_field in context_fields.items()):
+        raise AssertionError("Sandbox v2 token and Admission Context do not cross-bind")
+    if (
+        token["admission_context_contract_id"] != context["context_contract_id"]
+        or token["admission_context_digest_profile"] != context["context_digest_profile"]
+        or token["admission_context_digest"] != context["context_digest"]
+    ):
+        raise AssertionError("Sandbox v2 token does not bind the Admission Context digest")
+    if not token["iat"] <= token["nbf"] < token["exp"] or token["exp"] - token["iat"] > 300:
+        raise AssertionError("Sandbox v2 token lifetime is invalid")
+    if datetime.fromtimestamp(token["nbf"], tz=timezone.utc) < parse_datetime(context["policy_decided_at"]):
+        raise AssertionError("Sandbox v2 token predates its Context PolicyDecision")
+    if datetime.fromtimestamp(token["exp"], tz=timezone.utc) > parse_datetime(context["deadline_at"]):
+        raise AssertionError("Sandbox v2 token outlives its Context deadline")
+    mark_checks("sandbox_admission_context.binding")
 
 
 def validate_sandbox_spec(
@@ -4258,6 +4324,8 @@ runtime_status_token = load("examples/contracts/agent-runtime-status-token-claim
 runtime_event_descriptor = load("examples/contracts/agent-runtime-event-read-operation-descriptor.json")
 runtime_event_token = load("examples/contracts/agent-runtime-events-token-claims.json")
 sandbox_token = load("examples/contracts/sandbox-operation-token-claims.json")
+sandbox_admission_context = load("examples/contracts/sandbox-provider-admission-context.json")
+sandbox_exec_token_v2 = load("examples/contracts/sandbox-exec-operation-token-claims-v2.json")
 sandbox_create = load("examples/contracts/sandbox-create-request.json")
 sandbox_restore = load("examples/contracts/sandbox-restore-request.json")
 sandbox_desired_state = load("examples/contracts/sandbox-desired-state-request.json")
@@ -4449,6 +4517,7 @@ conformance_suites = [
     load("conformance/runtime/v1/suite.json"),
     load("conformance/runtime/v1/revisions/1.0.0/suite.json"),
     load("conformance/sandbox/v1/suite.json"),
+    load("conformance/sandbox/v1/revisions/1.0.0/suite.json"),
     load("conformance/runtime-gateway/v1/suite.json"),
     load("conformance/capability/v1/suite.json"),
     load("conformance/execution-gateway/v1/suite.json"),
@@ -4543,7 +4612,7 @@ validate_compatibility_decision(
 )
 validate_compatibility_decision(
     sandbox_restore["snapshot"], sandbox_compatibility_decision,
-    load("conformance/sandbox/v1/suite.json"), sandbox_restore,
+    load("conformance/sandbox/v1/revisions/1.0.0/suite.json"), sandbox_restore,
 )
 validate_secret_mediation(
     secret_grant, credential_request, credential_token, credential_delivery,
@@ -5035,6 +5104,10 @@ for operation_token, operation_document, target_sandbox_id in sandbox_token_case
         operation_token, operation_document, sandbox_resolution, manifest,
         sandbox_id=target_sandbox_id,
     )
+validate_sandbox_admission_context(
+    sandbox_admission_context, sandbox_exec_token_v2, sandbox_exec, sandbox_resolution, manifest,
+    sandbox_spec["sandbox_id"],
+)
 validate_service_access_token(
     service_access_token,
     registered_issuer="https://business.example.test",

@@ -1,7 +1,7 @@
 {
   "suite_id": "sandbox-provider",
   "suite_version": "1.1.0",
-  "suite_digest": "sha256:0fb0f0007ec6450aac3357f0c3e78de4a22eb8dafb7239d8f52ef0e339437483",
+  "suite_digest": "sha256:3a40cb60daeb77f0ae385c38fbe82c6a8d6859a8003514a3fa0ce81b6cbfdd30",
   "target_kind": "sandbox",
   "profiles": [
     {
@@ -54,6 +54,12 @@
           "category": "security",
           "evidence_type": "test_log",
           "description": "All 14 token-protected Sandbox operations reject wrong JWS typ, algorithm, key, Provider audience, caller, operation, Contract ID, Digest Profile, request or descriptor digest, Tenant, WorkOrder, Sandbox, Attempt, a token predating PolicyDecision or exceeding deadline, stale fencing and replayed mutation jti."
+        },
+        {
+          "test_id": "admission-context-binding",
+          "category": "security",
+          "evidence_type": "test_log",
+          "description": "All 14 token-protected Sandbox operations require one bounded unpadded-base64url JCS Admission Context from the admitted mTLS controller and reject missing, malformed, padded, duplicate, unknown, oversized, caller, Context digest, policy time, target path/query, request/descriptor, Token, stale fencing or replay binding mismatches before repository or driver dispatch. Capability discovery remains mTLS-only and carries neither Context nor operation token."
         },
         {
           "test_id": "read-descriptor-binding",

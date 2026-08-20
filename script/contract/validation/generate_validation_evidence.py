@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -41,7 +42,9 @@ if node_jcs["contract_manifest_digest"] != manifest["manifest_digest"]:
     raise AssertionError("Node JCS evidence belongs to a different contract manifest")
 package = json.loads((SCRIPT_ROOT / "package.json").read_text(encoding="utf-8"))
 pnpm_version = subprocess.check_output(
-    ["corepack", "pnpm", "--version"], cwd=SCRIPT_ROOT, text=True,
+    [*shlex.split(os.environ.get("PNPM", "corepack pnpm")), "--version"],
+    cwd=SCRIPT_ROOT,
+    text=True,
 ).strip()
 go_version = subprocess.check_output(["go", "version"], cwd=SCRIPT_ROOT, text=True).strip()
 if pnpm_version != package["packageManager"].partition("@")[2]:
