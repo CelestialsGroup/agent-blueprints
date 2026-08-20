@@ -2,21 +2,21 @@
 
 状态：**本地 Contract Gate 已通过；不对 Application 实现、集成、可靠性或生产批准作结论；Blueprint 与 Contract 尚未正式冻结**
 
-验证日期：2026-07-27
+验证日期：2026-08-20
 
 本报告由 `contract/validation/generate_validation_evidence.py` 从本次成功 Gate 的 `build/validation/*.json` 生成；`VALIDATION.json` 是同源机器结果，不手工维护计数。
 
 | 检查项 | 本地结果 |
 |---|---|
-| 纯源码静态审计 | 通过：666 个 JSON、15 个 YAML、9 个 OpenAPI、3 个 Markdown 文件 |
-| JSON Schema 与夹具 | 通过：242 个 Schema、293 个有效夹具、82 个 Schema 负例 |
-| 语义不变量 | 通过：8 个状态机、236 个语义负例 |
-| 语义追踪 | 通过：135 个关键 Schema、496 条约束、294 个 Contract Gate 映射、166 个本次执行 Check ID、286 个 Phase 0 DDL/Conformance 责任 |
+| 纯源码静态审计 | 通过：683 个 JSON、17 个 YAML、9 个 OpenAPI、6 个 Markdown 文件 |
+| JSON Schema 与夹具 | 通过：247 个 Schema、298 个有效夹具、86 个 Schema 负例 |
+| 语义不变量 | 通过：8 个状态机、246 个语义负例 |
+| 语义追踪 | 通过：137 个关键 Schema、506 条约束、304 个 Contract Gate 映射、168 个本次执行 Check ID、293 个 Phase 0 DDL/Conformance 责任 |
 | Core Event Registry | 通过：Platform 30 类、Agent Runtime 17 类闭合 Event Type；CanonicalEvent 按 Producer 所有权绑定对应 Registry |
-| 契约清单 | 通过：269 项受治理资源；Python/Node 一致 |
+| 契约清单 | 通过：278 项受治理资源；Python/Node 一致 |
 | OpenAPI | 通过：9 份文档，0 Error / 0 Warning |
 | Bundle | 通过：9 个 Bundle，连续两次逐字节一致 |
-| JCS / Strict I-JSON | Python：CPython 3.14.6；Node.js 24.18.0；Go/gofmt 均通过 |
+| JCS / Strict I-JSON | Python：CPython 3.14.6；Node.js 24.19.0；Go/gofmt 均通过 |
 | 兼容性 | 比较器自测通过；尚无冻结基线，显式记为首次冻结前 N/A，不记为兼容性通过 |
 | 仓库/供应链/公共 CI | 本轮延后，不计入 Contract Gate 通过条件 |
 
