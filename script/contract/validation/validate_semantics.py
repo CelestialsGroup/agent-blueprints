@@ -570,8 +570,10 @@ def _c01_partition_traceability(
 
 def _c01_validate_supplemental_traceability(
     root: Path, known_checks: set[str], executed_checks: set[str],
+    traceability: dict[str, Any] | None = None,
 ) -> None:
-    traceability = json.loads((root / "semantic-constraints-v1.json").read_text(encoding="utf-8"))
+    if traceability is None:
+        traceability = json.loads((root / "semantic-constraints-v1.json").read_text(encoding="utf-8"))
     _critical, supplemental = _c01_partition_traceability(
         root, traceability, known_checks, executed_checks,
     )
@@ -618,16 +620,16 @@ def _c01_validate_suite_cases(root: Path) -> None:
     if [test["test_id"] for test in selected] != expected:
         raise AssertionError("C01 Runtime Suite case order/set drift")
     required_tokens = {
-        expected[0]: ["c01-out-of-scope", "cannot satisfy this case", "remains 403", "no Retry-After"],
-        expected[1]: ["c01-out-of-scope", "Malformed or out-of-range input is 400", "retention is 410", "remains 403"],
-        expected[2]: ["exactly one raw Retry-After", "response invalid and forbids retry", "recomputes rather than reuses"],
-        expected[3]: ["exactly one raw Retry-After", "preserves cursor and limit", "does not advance the cursor"],
+        expected[0]: ["closed HTTP authority", "400 before provider state", "remains 403", "no Retry-After"],
+        expected[1]: ["closed HTTP authority", "retention expiry remains 410", "remains 403", "no Retry-After"],
+        expected[2]: ["429 before provider state", "canonical Retry-After", "fresh authorized read Attempt", "do not retry automatically"],
+        expected[3]: ["429 before provider state", "canonical Retry-After", "without advancing cursor or limit", "do not retry automatically"],
     }
     for test in selected:
         description = test["description"]
         if any(token not in description for token in required_tokens[test["test_id"]]):
             raise AssertionError(f"C01 Runtime Suite authority case drift: {test['test_id']}")
-        if "phase0_implementation_required" not in description or "does not claim Provider passage" not in description:
+        if "contract-defined Phase 0 work" not in description or "does not claim Provider passage" not in description:
             raise AssertionError(f"C01 Runtime Suite maturity boundary drift: {test['test_id']}")
 
 
@@ -660,10 +662,19 @@ def self_test_c01_runtime_read() -> None:
         active_suite_path.write_text(
             json.dumps(active_suite, indent=2) + "\n", encoding="utf-8",
         )
-        known = {_C01_RUNTIME_READ_CHECK}
-        executed: set[str] = set()
+        traceability = json.loads(
+            (root / "semantic-constraints-v1.json").read_text(encoding="utf-8")
+        )
+        known = {
+            enforcement["check_id"]
+            for entry in traceability["constraints"]
+            for enforcement in entry["enforcements"]
+            if enforcement["status"] == "contract_gate"
+        }
+        baseline_executed = known - {_C01_RUNTIME_READ_CHECK}
+        executed = set(baseline_executed)
         validate_c01_runtime_read_semantics(root, known, executed)
-        if executed != {_C01_RUNTIME_READ_CHECK}:
+        if executed != known:
             raise AssertionError("C01 semantic check was not marked after successful structure validation")
 
         openapi_path = root / "openapi/agent-runtime-provider-v1.yaml"
@@ -673,14 +684,14 @@ def self_test_c01_runtime_read() -> None:
             "x-runtime-read-response-precedence"
         ][0:2] = ["401", "400"]
         openapi_path.write_text(yaml.safe_dump(document, sort_keys=False), encoding="utf-8")
-        mutation_executed: set[str] = set()
+        mutation_executed = set(baseline_executed)
         try:
             validate_c01_runtime_read_semantics(root, known, mutation_executed)
         except AssertionError:
             pass
         else:
             raise AssertionError("C01 semantic OpenAPI structure mutation did not fail closed")
-        if mutation_executed:
+        if mutation_executed != baseline_executed:
             raise AssertionError("C01 failed structure mutation retained an executed check mark")
         openapi_path.write_bytes(original_openapi)
 
@@ -693,14 +704,14 @@ def self_test_c01_runtime_read() -> None:
         ]
         supplemental[0]["enforcements"][0]["check_id"] = "runtime_read.unknown"
         semantic_path.write_text(json.dumps(traceability, indent=2) + "\n", encoding="utf-8")
-        mutation_executed = set()
+        mutation_executed = set(baseline_executed)
         try:
             validate_c01_runtime_read_semantics(root, known, mutation_executed)
         except AssertionError:
             pass
         else:
             raise AssertionError("C01 semantic unknown check mutation did not fail closed")
-        if mutation_executed:
+        if mutation_executed != baseline_executed:
             raise AssertionError("C01 failed traceability mutation retained an executed check mark")
         semantic_path.write_bytes(original_semantic)
 
@@ -711,7 +722,7 @@ def self_test_c01_runtime_read() -> None:
         ]
         supplemental[0]["enforcements"][0]["check_id"] = "runtime_read.unexecuted"
         semantic_path.write_text(json.dumps(traceability, indent=2) + "\n", encoding="utf-8")
-        mutation_executed = set()
+        mutation_executed = set(baseline_executed)
         try:
             validate_c01_runtime_read_semantics(
                 root, known | {"runtime_read.unexecuted"}, mutation_executed,
@@ -720,7 +731,7 @@ def self_test_c01_runtime_read() -> None:
             pass
         else:
             raise AssertionError("C01 semantic known-but-unexecuted mutation did not fail closed")
-        if mutation_executed:
+        if mutation_executed != baseline_executed:
             raise AssertionError("C01 unexecuted-check mutation retained an executed check mark")
         semantic_path.write_bytes(original_semantic)
 
@@ -734,7 +745,7 @@ def self_test_c01_runtime_read() -> None:
         )
         semantic_path.write_text(json.dumps(traceability, indent=2) + "\n", encoding="utf-8")
         try:
-            validate_c01_runtime_read_semantics(root, known, set())
+            validate_c01_runtime_read_semantics(root, known, set(baseline_executed))
         except AssertionError:
             pass
         else:
@@ -742,14 +753,14 @@ def self_test_c01_runtime_read() -> None:
         semantic_path.write_bytes(original_semantic)
 
         def expect_failure(label: str) -> None:
-            mutation_executed: set[str] = set()
+            mutation_executed = set(baseline_executed)
             try:
                 validate_c01_runtime_read_semantics(root, known, mutation_executed)
             except AssertionError:
                 pass
             else:
                 raise AssertionError(f"C01 semantic mutation did not fail closed: {label}")
-            if mutation_executed:
+            if mutation_executed != baseline_executed:
                 raise AssertionError(f"C01 semantic mutation retained an executed mark: {label}")
 
         for label, mutate in (
@@ -829,7 +840,7 @@ def self_test_c01_runtime_read() -> None:
         active_openapi_path.write_bytes(active_openapi_bytes)
         snapshot_openapi_path.write_bytes(snapshot_openapi_bytes)
 
-        final_executed: set[str] = set()
+        final_executed = set(baseline_executed)
         validate_c01_runtime_read_semantics(root, known, final_executed)
     if _c01_snapshot_protected_state() != protected_before:
         raise AssertionError("C01 semantic self-test changed protected Contract/build/evidence state")
@@ -1357,7 +1368,12 @@ def validate_provider_architecture(context: dict[str, Any], suites: list[dict[st
         "agent_runtime": "agent-runtime-provider",
         "sandbox": "sandbox-provider",
     }
-    suites_by_id = {suite["suite_id"]: suite for suite in suites}
+    suites_by_tuple = {
+        (suite["suite_id"], suite["suite_version"], suite["suite_digest"]): suite
+        for suite in suites
+    }
+    if len(suites_by_tuple) != len(suites):
+        raise AssertionError("Conformance Suite registry contains a duplicate immutable tuple")
     for revision in context["provider_revisions"]:
         expected_protocol = protocol_by_kind.get(revision["provider_kind"], "capability-provider")
         if revision["port"]["protocol"] != expected_protocol:
@@ -1368,8 +1384,10 @@ def validate_provider_architecture(context: dict[str, Any], suites: list[dict[st
         if implementation["distribution_type"] == "oci_image" and "image_digest" not in implementation:
             raise AssertionError("OCI Provider implementation is missing image_digest")
         for result in revision["conformance"]:
-            suite = suites_by_id.get(result["suite_id"])
-            if suite is None or result["suite_version"] != suite["suite_version"] or result["suite_digest"] != suite["suite_digest"]:
+            suite = suites_by_tuple.get((
+                result["suite_id"], result["suite_version"], result["suite_digest"],
+            ))
+            if suite is None:
                 raise AssertionError("Provider conformance does not bind an admitted immutable Suite")
             if result["suite_profile_id"] not in {profile["profile_id"] for profile in suite["profiles"]}:
                 raise AssertionError("Provider conformance binds an unknown Suite profile")
@@ -2867,8 +2885,8 @@ def validate_canonical_event_registry_binding(
 
 
 def validate_semantic_traceability(traceability: dict[str, Any]) -> None:
-    _c01_partition_traceability(
-        CONTRACT_ROOT, traceability, KNOWN_CONTRACT_CHECKS, EXECUTED_CONTRACT_CHECKS,
+    _c01_validate_supplemental_traceability(
+        CONTRACT_ROOT, KNOWN_CONTRACT_CHECKS, EXECUTED_CONTRACT_CHECKS, traceability,
     )
 
 
@@ -4429,6 +4447,7 @@ artifact_ingest_finalize = load("examples/contracts/artifact-ingest-finalize-com
 conformance_suites = [
     load("conformance/agent-access/v1/suite.json"),
     load("conformance/runtime/v1/suite.json"),
+    load("conformance/runtime/v1/revisions/1.0.0/suite.json"),
     load("conformance/sandbox/v1/suite.json"),
     load("conformance/runtime-gateway/v1/suite.json"),
     load("conformance/capability/v1/suite.json"),
@@ -4520,7 +4539,7 @@ if (
     raise AssertionError("ArtifactOperation NoUsageAttestation lacks its admission terminal owner")
 validate_compatibility_decision(
     runtime_checkpoint, runtime_compatibility_decision,
-    load("conformance/runtime/v1/suite.json"),
+    load("conformance/runtime/v1/revisions/1.0.0/suite.json"),
 )
 validate_compatibility_decision(
     sandbox_restore["snapshot"], sandbox_compatibility_decision,
@@ -4788,7 +4807,7 @@ for case in compatibility_negative["cases"]:
         if case["mutation"].startswith("runtime_"):
             validate_compatibility_decision(
                 compatibility_negative["runtime_subject"], runtime_candidate,
-                load("conformance/runtime/v1/suite.json"),
+                load("conformance/runtime/v1/revisions/1.0.0/suite.json"),
             )
         else:
             validate_compatibility_decision(

@@ -367,6 +367,13 @@ def _c01_self_test() -> None:
         script_copy = base / "script"
         shutil.copytree(CONTRACT_ROOT, contract_copy)
         shutil.copytree(SCRIPT_ROOT, script_copy, ignore=shutil.ignore_patterns("build", "evidence", ".venv", "node_modules"))
+        active_suite_path = contract_copy / _C01_ACTIVE_SUITE
+        active_suite = read_from(contract_copy, _C01_ACTIVE_SUITE)
+        active_suite["suite_digest"] = "sha256:" + "0" * 64
+        active_suite_path.write_text(
+            json.dumps(active_suite, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
         pre_finalize = _c01_tree_hashes(contract_copy)
         changed = _c01_finalize_active_suite(contract_copy, script_copy)
         if changed != {_C01_ACTIVE_SUITE}:
