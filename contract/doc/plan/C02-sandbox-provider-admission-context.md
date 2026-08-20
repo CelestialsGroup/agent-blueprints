@@ -154,3 +154,11 @@ sandbox-core-v1、Platform E2E 或生产就绪结论。
 本地校验已确认 static audit、Schema、semantic、Manifest 和两次 bundle byte determinism；最终
 `generate_validation_evidence.py` 因可用 pnpm 为 `11.19.0` 而仓库 pin 为 `11.15.1` 明确拒绝，
 所以完整 Contract Gate 结论为待补证，不得写作通过。此环境偏差不改变 carrier 或历史快照的语义。
+
+### 2026-08-20 Context fixture closure
+
+Schema positive/negative fixtures 和 semantic negative matrix 已覆盖缺少 digest、未知 member、Context
+digest、mTLS controller、HTTP target、Token Context digest、Policy time、request digest、carrier padding、
+重复 JSON member、多个 JSON value 与 carrier unknown member。该验证只证明本 Contract validator 的
+candidate 拒绝规则；尚未证明真实 Provider listener 的 header multiplicity、TLS handshake、JWS signature
+validation 或任何 dispatch-before-rejection 行为。

@@ -2271,6 +2271,40 @@ def validate_sandbox_admission_context(
     mark_checks("sandbox_admission_context.binding")
 
 
+def decode_sandbox_admission_context_carrier(carrier: str) -> dict[str, Any]:
+    if not isinstance(carrier, str) or not 1 <= len(carrier) <= 16384:
+        raise AssertionError("Sandbox Admission Context carrier length is invalid")
+    if any(character not in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_" for character in carrier):
+        raise AssertionError("Sandbox Admission Context carrier is not unpadded base64url")
+    try:
+        raw = base64.urlsafe_b64decode(carrier + "=" * (-len(carrier) % 4))
+        text = raw.decode("utf-8")
+    except (UnicodeDecodeError, ValueError) as error:
+        raise AssertionError("Sandbox Admission Context carrier is not UTF-8 base64url") from error
+
+    def reject_duplicate(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("duplicate JSON member")
+            result[key] = value
+        return result
+
+    try:
+        decoder = json.JSONDecoder(object_pairs_hook=reject_duplicate)
+        value, end = decoder.raw_decode(text)
+        if end != len(text):
+            raise ValueError("multiple JSON values or trailing whitespace")
+        rfc8785.dumps(value)
+    except (TypeError, UnicodeError, ValueError) as error:
+        raise AssertionError("Sandbox Admission Context carrier JSON is not strict I-JSON") from error
+    schema = load("schemas/sandbox-provider-admission-context.schema.json")
+    errors = list(Draft202012Validator(schema, registry=SCHEMA_REGISTRY, format_checker=FormatChecker()).iter_errors(value))
+    if errors:
+        raise AssertionError("Sandbox Admission Context carrier violates its Schema")
+    return value
+
+
 def validate_sandbox_spec(
     spec: dict[str, Any], manifest: dict[str, Any], capabilities: dict[str, Any],
 ) -> None:
@@ -5108,6 +5142,76 @@ validate_sandbox_admission_context(
     sandbox_admission_context, sandbox_exec_token_v2, sandbox_exec, sandbox_resolution, manifest,
     sandbox_spec["sandbox_id"],
 )
+sandbox_admission_context_cases = load("tests/semantic-invalid/sandbox-admission-context-cases.json")
+valid_admission_context_carrier = base64.urlsafe_b64encode(
+    rfc8785.dumps(sandbox_admission_context)
+).decode("ascii").rstrip("=")
+if decode_sandbox_admission_context_carrier(valid_admission_context_carrier) != sandbox_admission_context:
+    raise AssertionError("Sandbox Admission Context carrier does not round-trip")
+for case in sandbox_admission_context_cases["cases"]:
+    candidate_context = copy.deepcopy(sandbox_admission_context)
+    candidate_token = copy.deepcopy(sandbox_exec_token_v2)
+    mutation = case["mutation"]
+    if mutation == "context_digest_mismatch":
+        candidate_context["context_digest"] = "sha256:" + "f" * 64
+        action = lambda: validate_sandbox_admission_context(
+            candidate_context, candidate_token, sandbox_exec, sandbox_resolution, manifest,
+            sandbox_spec["sandbox_id"],
+        )
+    elif mutation == "controller_mismatch":
+        candidate_context["controller_subject"] = "spn_other_controller"
+        action = lambda: validate_sandbox_admission_context(
+            candidate_context, candidate_token, sandbox_exec, sandbox_resolution, manifest,
+            sandbox_spec["sandbox_id"],
+        )
+    elif mutation == "http_target_substitution":
+        candidate_context["http_target"]["path"] = "/v1/operations/sop_exec_01"
+        action = lambda: validate_sandbox_admission_context(
+            candidate_context, candidate_token, sandbox_exec, sandbox_resolution, manifest,
+            sandbox_spec["sandbox_id"],
+        )
+    elif mutation == "token_context_digest_mismatch":
+        candidate_token["admission_context_digest"] = "sha256:" + "f" * 64
+        action = lambda: validate_sandbox_admission_context(
+            candidate_context, candidate_token, sandbox_exec, sandbox_resolution, manifest,
+            sandbox_spec["sandbox_id"],
+        )
+    elif mutation == "policy_time_mismatch":
+        candidate_token["policy_decided_at"] = "2026-07-16T09:01:00Z"
+        action = lambda: validate_sandbox_admission_context(
+            candidate_context, candidate_token, sandbox_exec, sandbox_resolution, manifest,
+            sandbox_spec["sandbox_id"],
+        )
+    elif mutation == "request_digest_mismatch":
+        candidate_token["request_digest"] = "sha256:" + "f" * 64
+        action = lambda: validate_sandbox_admission_context(
+            candidate_context, candidate_token, sandbox_exec, sandbox_resolution, manifest,
+            sandbox_spec["sandbox_id"],
+        )
+    elif mutation == "carrier_padding":
+        action = lambda: decode_sandbox_admission_context_carrier(valid_admission_context_carrier + "=")
+    elif mutation == "carrier_duplicate_json_member":
+        duplicate = base64.urlsafe_b64encode(
+            b'{"context_contract_id":"a","context_contract_id":"b"}'
+        ).decode("ascii").rstrip("=")
+        action = lambda: decode_sandbox_admission_context_carrier(duplicate)
+    elif mutation == "carrier_multiple_json_values":
+        multiple = base64.urlsafe_b64encode(
+            rfc8785.dumps(sandbox_admission_context) + b" {}"
+        ).decode("ascii").rstrip("=")
+        action = lambda: decode_sandbox_admission_context_carrier(multiple)
+    elif mutation == "carrier_unknown_member":
+        candidate_context["provider_private_endpoint"] = "https://not-stable.example.invalid"
+        unknown = base64.urlsafe_b64encode(rfc8785.dumps(candidate_context)).decode("ascii").rstrip("=")
+        action = lambda: decode_sandbox_admission_context_carrier(unknown)
+    else:
+        raise AssertionError(f"Unknown Sandbox Admission Context mutation: {mutation}")
+    try:
+        action()
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError(f"Expected Sandbox Admission Context fixture to fail: {case['id']}")
 validate_service_access_token(
     service_access_token,
     registered_issuer="https://business.example.test",
