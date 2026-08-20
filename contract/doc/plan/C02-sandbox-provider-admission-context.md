@@ -151,9 +151,11 @@ sandbox-core-v1、Platform E2E 或生产就绪结论。
 刷新、OpenAPI prepare/lint Gate、全量 semantic negative tests、独立审查或合并。尚未有 consumer lock，
 所以 sandbox-runtime P1.1c 仍然不能开始。
 
-本地校验已确认 static audit、Schema、semantic、Manifest 和两次 bundle byte determinism；最终
-`generate_validation_evidence.py` 因可用 pnpm 为 `11.19.0` 而仓库 pin 为 `11.15.1` 明确拒绝，
-所以完整 Contract Gate 结论为待补证，不得写作通过。此环境偏差不改变 carrier 或历史快照的语义。
+以临时 `pnpm@11.15.1`（不改变 lockfile）执行 `make -C script PYTHON=python3 validate-contract`
+通过；它包含 static audit、OpenAPI prepare/lint、Schema、semantic、Manifest 的 Python/Node 双 verifier、
+Python/Node/Go JCS 与两次 bundle byte determinism，并生成 validation evidence。compatibility comparator
+只完成自身检查且返回 `N/A`，因为本地未提供 `CONTRACT_FROZEN_BASE_REF`；因此该 Gate 仅证明当前
+candidate 的本地闭合，不证明相对外部 frozen revision 的兼容性，也不改变 carrier 或历史快照的语义。
 
 ### 2026-08-20 Context fixture closure
 
