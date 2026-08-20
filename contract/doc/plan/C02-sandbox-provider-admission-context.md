@@ -2,7 +2,7 @@
 
 日期：2026-08-19
 
-状态：计划已建立；机器 Contract、fixtures、Conformance、Manifest、Application dependency lock 和
+状态：revision/snapshot closure 进行中；机器 Wire Contract、fixtures、Conformance、Manifest、Application dependency lock 和
 Provider 实现均未开始。本计划的最高目标是可审查的 Contract candidate；在完整 Contract Gate 和
 独立审查前，不得将其描述为 sandbox-runtime、Agent Platform、sandbox-core-v1、可靠性、
 多租户安全或生产就绪的通过证据。
@@ -123,3 +123,17 @@ production configuration。它也不宣称 aggregate `sandbox-core-v1`、Agent P
 下一入口是先完成 revision/snapshot closure 的只读 inventory 和具体新 revision 选择；若不能同时给出
 old/new revision 的 immutable snapshot 与 compatibility closure，本 C02 保持阻塞，P1.1c protected
 transport 不得开始。
+
+## 7. 实施台账
+
+### 2026-08-20 revision/snapshot closure 第一步
+
+基线 `e7d7e1f` 的 active Sandbox OpenAPI 与 Suite 都是 `1.0.0`；其 Git blob 分别为
+`e304a7f431b79154f7b901497653c47a0b6c35f6` 与
+`3a768e82a37bf6bfa3d2ac83e6a7cf9c95844fbd`。本阶段以这两个精确 blob 创建
+`openapi/sandbox-provider-v1.0.0.snapshot.yaml` 与
+`conformance/sandbox/v1/revisions/1.0.0/suite.json`，不重格式化、不修改内容。
+
+这只固定历史字节和 version tuple，尚未生成 active `1.1.0`，也未更新 Manifest、fixtures、semantic
+checks、validation support 或任何 consumer lock。因此 P1.1c protected transport 仍阻塞，不能由快照
+本身推出 Contract Gate、sandbox-core-v1、Platform E2E 或生产就绪结论。

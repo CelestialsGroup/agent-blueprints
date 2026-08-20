@@ -1,0 +1,706 @@
+openapi: 3.1.1
+info:
+  title: Sandbox Provider API
+  version: 1.0.0
+  description: >-
+    Stable provider contract with no required backend. Phase 0 uses the platform's Native
+    Sandbox Controller and an isolated execution backend; another conformant provider
+    can implement the same protocol. The Agent Platform
+    owns SandboxRegistry, leases, authorization, WorkOrder mapping and RuntimeSession
+    exposure. Providers own backend provisioning and observation.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+servers:
+- url: https://sandbox-provider.agent-platform.internal
+  description: Registered Sandbox Provider endpoint
+tags:
+- name: Capabilities
+  description: Negotiate supported Sandbox features, profiles and provider limits.
+- name: Sandboxes
+  description: Create, observe, lease, suspend, resume and terminate Sandboxes.
+- name: Operations
+  description: Observe and cancel asynchronous Sandbox operations.
+- name: RuntimeSessions
+  description: Open internal Terminal, Browser, Desktop and Port-forward endpoints.
+- name: Snapshots
+  description: Create and restore Workspace, Filesystem and Process snapshots.
+security:
+- SandboxMutualTLS: []
+  SandboxInvocationBearer: []
+paths:
+  /v1/capabilities:
+    get:
+      tags:
+      - Capabilities
+      operationId: getSandboxCapabilities
+      summary: Return immutable capabilities for the active ProviderRevision
+      description: Capability negotiation is a control-plane operation performed before a SandboxOperation exists.
+      security:
+      - SandboxMutualTLS: []
+      responses:
+        '200':
+          description: Provider capabilities
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/sandbox-capabilities.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /v1/sandboxes:
+    post:
+      tags:
+      - Sandboxes
+      operationId: createSandbox
+      summary: Idempotently create a Sandbox
+      x-required-sandbox-token-operation: create
+      x-operation-contract-id: urn:agent-platform:sandbox-create-request:v1
+      x-operation-digest-profile: rfc8785-request-excluding-request-digest-v1
+      x-max-encoded-body-bytes: 1048576
+      description: 'Repeated requests with the same idempotency key and request digest
+        return
+
+        the same Sandbox operation. A stale fencing token must be rejected.
+
+        '
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/sandbox-create-request.schema.json
+      responses:
+        '202':
+          description: Create operation accepted
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/sandbox-operation.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /v1/sandboxes:restore:
+    post:
+      tags:
+      - Snapshots
+      operationId: restoreSandbox
+      summary: Create a Sandbox from a compatible Snapshot
+      x-required-sandbox-token-operation: restore
+      x-operation-contract-id: urn:agent-platform:sandbox-restore-request:v1
+      x-operation-digest-profile: rfc8785-request-excluding-request-digest-v1
+      x-max-encoded-body-bytes: 1048576
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/sandbox-restore-request.schema.json
+      responses:
+        '202':
+          description: Restore operation accepted
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/sandbox-operation.schema.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /v1/sandboxes/{sandbox_id}:
+    parameters:
+    - $ref: '#/components/parameters/SandboxId'
+    get:
+      tags:
+      - Sandboxes
+      operationId: getSandbox
+      summary: Read observed Sandbox state
+      x-required-sandbox-token-operation: read_sandbox
+      x-operation-contract-id: urn:agent-platform:sandbox-status-operation-descriptor:v1
+      x-operation-digest-profile: rfc8785-full-document-v1
+      x-operation-descriptor-schema: ../schemas/sandbox-status-operation-descriptor.schema.json
+      responses:
+        '200':
+          description: Sandbox status
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/sandbox-status.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /v1/sandboxes/{sandbox_id}/desired-state:
+    parameters:
+    - $ref: '#/components/parameters/SandboxId'
+    post:
+      tags:
+      - Sandboxes
+      operationId: setSandboxDesiredState
+      summary: Suspend or resume a Sandbox using generation-based concurrency control
+      x-required-sandbox-token-operation: set_desired_state
+      x-operation-contract-id: urn:agent-platform:sandbox-desired-state-request:v1
+      x-operation-digest-profile: rfc8785-request-excluding-request-digest-v1
+      x-max-encoded-body-bytes: 65536
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/sandbox-desired-state-request.schema.json
+      responses:
+        '202':
+          description: State change accepted
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/sandbox-operation.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /v1/sandboxes/{sandbox_id}/lease:
+    parameters:
+    - $ref: '#/components/parameters/SandboxId'
+    post:
+      tags:
+      - Sandboxes
+      operationId: extendSandboxLease
+      summary: Idempotently extend a Sandbox lease
+      x-required-sandbox-token-operation: extend_lease
+      x-operation-contract-id: urn:agent-platform:sandbox-lease-request:v1
+      x-operation-digest-profile: rfc8785-request-excluding-request-digest-v1
+      x-max-encoded-body-bytes: 65536
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/sandbox-lease-request.schema.json
+      responses:
+        '202':
+          description: Lease extension accepted
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/sandbox-operation.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /v1/sandboxes/{sandbox_id}/exec:
+    parameters:
+    - $ref: '#/components/parameters/SandboxId'
+    post:
+      tags:
+      - Operations
+      operationId: executeInSandbox
+      summary: Execute a command inside /workspace
+      x-required-sandbox-token-operation: exec
+      x-operation-contract-id: urn:agent-platform:sandbox-exec-request:v1
+      x-operation-digest-profile: rfc8785-request-excluding-request-digest-v1
+      x-max-encoded-body-bytes: 262144
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/sandbox-exec-request.schema.json
+      responses:
+        '202':
+          description: Exec operation accepted
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/sandbox-operation.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /v1/sandboxes/{sandbox_id}/exec:cancel:
+    parameters:
+    - $ref: '#/components/parameters/SandboxId'
+    post:
+      tags:
+      - Operations
+      operationId: cancelSandboxExec
+      summary: Cancel a specific Exec Attempt
+      x-required-sandbox-token-operation: cancel_exec
+      x-operation-contract-id: urn:agent-platform:sandbox-cancel-exec-request:v1
+      x-operation-digest-profile: rfc8785-request-excluding-request-digest-v1
+      x-max-encoded-body-bytes: 65536
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/sandbox-cancel-exec-request.schema.json
+      responses:
+        '202':
+          description: Cancellation accepted
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/sandbox-operation.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /v1/sandboxes/{sandbox_id}/runtime-sessions:
+    parameters:
+    - $ref: '#/components/parameters/SandboxId'
+    post:
+      tags:
+      - RuntimeSessions
+      operationId: openSandboxRuntimeSession
+      summary: Open an internal Terminal, Browser, Desktop or Port-forward endpoint
+      x-required-sandbox-token-operation: open_runtime_session
+      x-operation-contract-id: urn:agent-platform:sandbox-runtime-session-open-request:v1
+      x-operation-digest-profile: rfc8785-request-excluding-request-digest-v1
+      x-max-encoded-body-bytes: 65536
+      description: 'The returned endpoint is internal and must never be returned directly
+        to a
+
+        browser. Agent Platform Runtime Gateway translates it into a user-facing RuntimeSession.
+
+        '
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/sandbox-runtime-session-open-request.schema.json
+      responses:
+        '201':
+          description: Internal runtime endpoint created
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/sandbox-runtime-session-endpoint.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /v1/sandboxes/{sandbox_id}/snapshots:
+    parameters:
+    - $ref: '#/components/parameters/SandboxId'
+    post:
+      tags:
+      - Snapshots
+      operationId: createSandboxSnapshot
+      summary: Create a Workspace, Filesystem or Process snapshot
+      x-required-sandbox-token-operation: snapshot
+      x-operation-contract-id: urn:agent-platform:sandbox-snapshot-request:v1
+      x-operation-digest-profile: rfc8785-request-excluding-request-digest-v1
+      x-max-encoded-body-bytes: 262144
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/sandbox-snapshot-request.schema.json
+      responses:
+        '202':
+          description: Snapshot operation accepted
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/sandbox-operation.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /v1/sandboxes/{sandbox_id}:terminate:
+    parameters:
+    - $ref: '#/components/parameters/SandboxId'
+    post:
+      tags:
+      - Sandboxes
+      operationId: terminateSandbox
+      summary: Idempotently terminate a Sandbox
+      x-required-sandbox-token-operation: terminate
+      x-operation-contract-id: urn:agent-platform:sandbox-terminate-request:v1
+      x-operation-digest-profile: rfc8785-request-excluding-request-digest-v1
+      x-max-encoded-body-bytes: 65536
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/sandbox-terminate-request.schema.json
+      responses:
+        '202':
+          description: Termination accepted
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/sandbox-operation.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /v1/operations/{operation_id}:
+    parameters:
+    - $ref: '#/components/parameters/OperationId'
+    get:
+      tags:
+      - Operations
+      operationId: getSandboxOperation
+      summary: Read an asynchronous Sandbox operation
+      x-required-sandbox-token-operation: read_operation
+      x-operation-contract-id: urn:agent-platform:sandbox-operation-read-operation-descriptor:v1
+      x-operation-digest-profile: rfc8785-full-document-v1
+      x-operation-descriptor-schema: ../schemas/sandbox-operation-read-operation-descriptor.schema.json
+      responses:
+        '200':
+          description: Operation status
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/sandbox-operation.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /v1/operations/{operation_id}/exec-result:
+    parameters:
+    - $ref: '#/components/parameters/OperationId'
+    get:
+      tags:
+      - Operations
+      operationId: getSandboxExecResult
+      summary: Read a confirmed Exec result
+      x-required-sandbox-token-operation: read_result
+      x-operation-contract-id: urn:agent-platform:sandbox-exec-result-operation-descriptor:v1
+      x-operation-digest-profile: rfc8785-full-document-v1
+      x-operation-descriptor-schema: ../schemas/sandbox-exec-result-operation-descriptor.schema.json
+      responses:
+        '200':
+          description: Exec result
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/sandbox-exec-result.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /v1/operations/{operation_id}/snapshot-manifest:
+    parameters:
+    - $ref: '#/components/parameters/OperationId'
+    get:
+      tags:
+      - Snapshots
+      operationId: getSandboxSnapshotManifest
+      summary: Read a completed Snapshot manifest
+      x-required-sandbox-token-operation: read_snapshot_manifest
+      x-operation-contract-id: urn:agent-platform:sandbox-snapshot-manifest-operation-descriptor:v1
+      x-operation-digest-profile: rfc8785-full-document-v1
+      x-operation-descriptor-schema: ../schemas/sandbox-snapshot-manifest-operation-descriptor.schema.json
+      responses:
+        '200':
+          description: Snapshot manifest
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/sandbox-snapshot-manifest.schema.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /v1/sandboxes/{sandbox_id}/events:
+    parameters:
+    - $ref: '#/components/parameters/SandboxId'
+    get:
+      tags:
+      - Sandboxes
+      operationId: streamSandboxEvents
+      summary: Stream provider-local durable Sandbox events
+      x-required-sandbox-token-operation: read_events
+      x-operation-contract-id: urn:agent-platform:sandbox-event-read-operation-descriptor:v1
+      x-operation-digest-profile: rfc8785-full-document-v1
+      x-operation-descriptor-schema: ../schemas/sandbox-event-read-operation-descriptor.schema.json
+      parameters:
+      - name: after_sequence
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          default: 0
+      responses:
+        '200':
+          description: Sandbox event stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              example: 'id: 18
+
+                event: sandbox.ready
+
+                data: {"sandbox_id":"sbx_01","sequence":18}
+
+                '
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          $ref: '#/components/responses/Gone'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+components:
+  securitySchemes:
+    SandboxMutualTLS:
+      type: mutualTLS
+      description: Agent Platform workload identity.
+    SandboxInvocationBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      x-jws-header-contract-id: urn:agent-platform:sandbox-operation-jws-header:v1
+      x-jwt-claims-contract-id: urn:agent-platform:sandbox-operation-token-claims:v1
+      description: Short-lived token bound to ProviderRevision, operation, exact request
+        Contract/Digest Profile, attempt and approved policy.
+  parameters:
+    SandboxId:
+      name: sandbox_id
+      in: path
+      required: true
+      schema:
+        type: string
+    OperationId:
+      name: operation_id
+      in: path
+      required: true
+      schema:
+        type: string
+  headers:
+    Location:
+      description: Canonical operation or Sandbox URL.
+      schema:
+        type: string
+        format: uri
+  responses:
+    BadRequest:
+      description: Malformed request.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Unauthorized:
+      description: Invalid workload identity or Sandbox operation token.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Forbidden:
+      description: Tenant, policy, capability or resource authorization denied.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    NotFound:
+      description: Sandbox or operation does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Conflict:
+      description: Idempotency conflict, stale fencing token, generation conflict
+        or invalid state.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Unprocessable:
+      description: Unsupported capability, runtime profile, snapshot or policy combination.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    TooManyRequests:
+      description: Provider capacity or concurrency limit exceeded.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    PayloadTooLarge:
+      description: Encoded request body exceeds the operation limit and is rejected before JSON parsing.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Gone:
+      description: Requested event cursor or result retention has expired.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    InternalError:
+      description: Unexpected provider failure.
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
+    Unavailable:
+      description: Provider is draining or temporarily unavailable.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/standard-error.schema.json
