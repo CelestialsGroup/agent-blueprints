@@ -61,11 +61,9 @@ snapshot/restore 或 P1.2 lifecycle。
 ## 3. 兼容性与版本策略
 
 这是 stable Sandbox Provider wire behavior 的新增安全输入，不能在 `v1.0.0` 原地增加为 required。
-实施前必须选择并在 OpenAPI、Suite、manifest 和 compatibility policy 一致表达下列一种策略：
-
-1. 发布并冻结 `sandbox-provider@1.0.0` 的 immutable snapshot，active Contract/Suite 发行
-   `1.1.0`，新 ProviderRevision 显式锁定 `1.1.0`；或
-2. 发布新的 `sandbox-provider-v2` 路径、Schema IDs、Suite ID/Profile，并保持 v1 immutable。
+本 C02 选择发布并冻结 `sandbox-provider@1.0.0` 的 immutable snapshot，active Contract/Suite
+发行 `1.1.0`，新 ProviderRevision 显式锁定 `1.1.0`。不创建 `sandbox-provider-v2` 路径，也不以
+同一 v1.0.0 身份重写历史资源。
 
 不得以 optional header、content negotiation fallback 或“缺失则从 Token 推导”伪造向后兼容。旧
 ProviderRevision、Run、Operation、Conformance evidence 和 consumer lock 继续只使用旧 revision；
